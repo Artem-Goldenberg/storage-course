@@ -166,24 +166,40 @@ pre .o { color: var(--ink-2); }            /* program output */
 .pager a { text-decoration: none; }
 
 /* ---------- layout ---------- */
-/* The rail shares the first row with the lesson header only; every section
-   after it spans both columns, so the text runs full width below the rail.
-   .lesson is display: contents so its children are items of this grid. */
+/* The rail keeps the left column for the whole lesson, pinned under the top bar.
+   Prose keeps a reading measure of about 75 characters; code, tables and diagrams
+   take the width their content needs, from the measure up to --wide. */
 .layout {
+  --measure: 44rem;
+  --wide: 60rem;
   display: grid;
   grid-template-columns: 15.5rem minmax(0, 1fr);
   column-gap: 3rem;
-  row-gap: 2.75rem;
   padding: 2.25rem clamp(1rem, 2.5vw, 2.5rem) 4rem;
 }
-.layout > .rail { grid-column: 1; grid-row: 1; align-self: start; }
-.lesson { display: contents; }
-.lesson > * { grid-column: 1 / -1; min-width: 0; }
-.lesson > .lesson-head { grid-column: 2; grid-row: 1; }
+.layout > .rail {
+  grid-column: 1;
+  align-self: start;
+  position: sticky;
+  top: 5rem;
+  max-height: calc(100vh - 6rem);
+  overflow-y: auto;
+}
+.lesson { grid-column: 2; display: grid; row-gap: 2.75rem; align-content: start; min-width: 0; }
+.lesson > * { min-width: 0; max-width: var(--measure); }
+.lesson > section { max-width: var(--wide); }
+.lesson > section > * { max-width: var(--measure); }
+.lesson > section > :is(pre, .table-wrap, .diagram) {
+  width: fit-content;
+  min-width: min(100%, var(--measure));
+  max-width: 100%;
+}
+.diagram figcaption { contain: inline-size; } /* a long caption wraps instead of widening its figure */
+.lesson > .lab { max-width: var(--measure); }  /* a boxed section stays as wide as its text */
 @media (max-width: 860px) {
   .layout { grid-template-columns: minmax(0, 1fr); padding-top: 1.25rem; }
   .layout > .rail { display: none; }
-  .lesson > .lesson-head { grid-column: 1; }
+  .lesson { grid-column: 1; }
 }
 
 /* ---------- the stack rail ---------- */
@@ -485,6 +501,33 @@ td code { white-space: nowrap; }
 .layer-chip.fs { --c: var(--l-fs); }
 .layer-chip.block { --c: var(--l-block); }
 .layer-chip.net { --c: var(--l-net); }
+
+/* ---------- back to the top (course.js adds it once the header scrolls away) ---------- */
+.to-top {
+  position: fixed;
+  right: max(1rem, env(safe-area-inset-right));
+  bottom: max(1rem, env(safe-area-inset-bottom));
+  z-index: 35;
+  display: grid;
+  place-items: center;
+  width: 2.75rem;
+  height: 2.75rem;
+  padding: 0;
+  border: 1px solid var(--rule);
+  border-radius: 50%;
+  background: var(--panel);
+  color: var(--ink-2);
+  box-shadow: 0 4px 14px color-mix(in srgb, var(--ink) 16%, transparent);
+  cursor: pointer;
+  opacity: 0;
+  visibility: hidden;
+  transform: translateY(0.5rem);
+  transition: opacity 0.2s, transform 0.2s, visibility 0s 0.2s;
+}
+.to-top.is-shown { opacity: 1; visibility: visible; transform: none; transition: opacity 0.2s, transform 0.2s; }
+.to-top:hover { color: var(--layer); border-color: var(--layer); }
+.to-top svg { display: block; }
+.lesson-head h1:focus { outline: none; }
 
 @media (prefers-reduced-motion: reduce) {
   *, *::before, *::after { transition: none !important; animation: none !important; }

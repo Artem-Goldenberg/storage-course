@@ -53,6 +53,35 @@
   }, { passive: true });
   update();
 })();
+/* a button back to the lesson header, shown once the header has scrolled away */
+(function () {
+  var head = document.querySelector(".lesson-head");
+  if (!head) return;
+  var h1 = head.querySelector("h1");
+  var btn = document.createElement("button");
+  btn.type = "button";
+  btn.className = "to-top";
+  btn.title = "Back to the top";
+  btn.setAttribute("aria-label", "Back to the top of the lesson");
+  btn.innerHTML = '<svg viewBox="0 0 16 16" width="16" height="16" aria-hidden="true"><path d="M8 13V3M3.5 7.5 8 3l4.5 4.5" fill="none" stroke="currentColor" stroke-width="1.6" stroke-linecap="round" stroke-linejoin="round"/></svg>';
+  document.body.appendChild(btn);
+  btn.addEventListener("click", function () {
+    var still = window.matchMedia("(prefers-reduced-motion: reduce)").matches;
+    window.scrollTo({ top: 0, behavior: still ? "auto" : "smooth" });
+    // move focus too, so the next Tab starts from the top rather than from a hidden button
+    if (h1) { h1.setAttribute("tabindex", "-1"); h1.focus({ preventScroll: true }); }
+  });
+  var shown = false, queued = false;
+  function update() {
+    queued = false;
+    var past = head.getBoundingClientRect().bottom < 0;
+    if (past !== shown) { shown = past; btn.classList.toggle("is-shown", past); }
+  }
+  window.addEventListener("scroll", function () {
+    if (!queued) { queued = true; requestAnimationFrame(update); }
+  }, { passive: true });
+  update();
+})();
 /* colour C code in <code class="language-c">; comments reuse the .c class */
 (function () {
   var KEYWORDS = /^(?:asm|auto|break|case|const|continue|default|do|else|enum|extern|for|goto|if|inline|register|restrict|return|sizeof|static|struct|switch|typedef|union|volatile|while|__attribute__)$/;
