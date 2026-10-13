@@ -7,7 +7,7 @@
 <link rel="preconnect" href="https://fonts.googleapis.com">
 <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
 <link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=IBM+Plex+Mono:wght@400;600&family=IBM+Plex+Sans+Condensed:wght@500;600;700&family=Source+Serif+4:ital,opsz,wght@0,8..60,400;0,8..60,600;1,8..60,400&display=swap">
-<link rel="stylesheet" href="course.css?v=7">
+<link rel="stylesheet" href="course.css?v=8">
 </head>
 <body data-layer="user">
 <header class="topbar">
@@ -132,7 +132,7 @@
 </figure>
 <h3>The libc wrapper</h3>
 <p>You rarely write the <code>syscall</code> instruction yourself. The C library (glibc on most Linux systems) provides a small wrapper function for each call. The wrapper moves arguments into registers, executes <code>syscall</code>, and translates the result into the C convention: on failure it stores the positive error number in the thread-local variable <code>errno</code> and returns −1. That is why the man pages say "returns −1 and sets errno".</p>
-<pre><code><span class="c">// Three ways to make the same call (lab 01 runs all three)</span>
+<pre><code class="language-c"><span class="c">// Three ways to make the same call (lab 01 runs all three)</span>
 write(1, msg, len);                      <span class="c">// libc wrapper</span>
 syscall(SYS_write, 1, msg, len);         <span class="c">// generic libc entry: any syscall by number</span>
 asm volatile ("syscall" : "=a"(ret)      <span class="c">// the bare instruction</span>
@@ -145,7 +145,7 @@ asm volatile ("syscall" : "=a"(ret)      <span class="c">// the bare instruction
 </section>
 <section id="file-api">
 <h2>Opening a file</h2>
-<pre><code>#include &lt;fcntl.h&gt;
+<pre><code class="language-c">#include &lt;fcntl.h&gt;
 int open(const char *pathname, int flags, ... /* mode_t mode */);
 int openat(int dirfd, const char *pathname, int flags, ... /* mode_t mode */);</code></pre>
 <p><code>open</code> resolves a path to a file, checks your permissions, creates the kernel's bookkeeping for this "open", and returns a <strong>file descriptor</strong>: a small non-negative integer. POSIX guarantees it is the <em>lowest</em> number not currently in use in your process. Descriptors 0, 1 and 2 are normally standard input, output and error, so the first file you open is usually 3.</p>
@@ -169,7 +169,7 @@ int openat(int dirfd, const char *pathname, int flags, ... /* mode_t mode */);</
 </section>
 <section id="read-write">
 <h2>Reading and writing, including the parts that go wrong</h2>
-<pre><code>#include &lt;unistd.h&gt;
+<pre><code class="language-c">#include &lt;unistd.h&gt;
 ssize_t read(int fd, void *buf, size_t count);
 ssize_t write(int fd, const void *buf, size_t count);
 int close(int fd);</code></pre>
@@ -180,7 +180,7 @@ int close(int fd);</code></pre>
 <li><strong>−1</strong> means an error, with the reason in <code>errno</code>. Two of them are not really failures: <code>EINTR</code> (a signal handler ran before any data moved, so retry) and <code>EAGAIN</code> (non-blocking descriptor, nothing ready yet).</li>
 </ul>
 <p>A correct "write everything" helper therefore looks like this:</p>
-<pre><code>static int write_all(int fd, const void *buf, size_t len)
+<pre><code class="language-c">static int write_all(int fd, const void *buf, size_t len)
 {
     const char *p = buf;
     while (len &gt; 0) {
@@ -213,7 +213,7 @@ int close(int fd);</code></pre>
 </section>
 <section id="offsets">
 <h2>Offsets, holes, and positional I/O</h2>
-<pre><code>off_t   lseek(int fd, off_t offset, int whence);   <span class="c">// SEEK_SET, SEEK_CUR, SEEK_END, SEEK_DATA, SEEK_HOLE</span>
+<pre><code class="language-c">off_t   lseek(int fd, off_t offset, int whence);   <span class="c">// SEEK_SET, SEEK_CUR, SEEK_END, SEEK_DATA, SEEK_HOLE</span>
 ssize_t pread(int fd, void *buf, size_t count, off_t offset);
 ssize_t pwrite(int fd, const void *buf, size_t count, off_t offset);</code></pre>
 <p><code>lseek</code> only changes a number in the kernel. It does no I/O. <code>lseek(fd, 0, SEEK_CUR)</code> is the idiom for "what is my current offset?".</p>
@@ -319,7 +319,7 @@ fd 5   -&gt; pipe:[81567245]
 <section id="metadata">
 <h2>Metadata and directories</h2>
 <h3>stat</h3>
-<pre><code>int stat(const char *path, struct stat *st);   <span class="c">// follows symlinks</span>
+<pre><code class="language-c">int stat(const char *path, struct stat *st);   <span class="c">// follows symlinks</span>
 int lstat(const char *path, struct stat *st);  <span class="c">// does not</span>
 int fstat(int fd, struct stat *st);            <span class="c">// by descriptor</span></code></pre>
 <p><code>stat</code> returns the inode's attributes. The fields you will use in this course:</p>
@@ -339,7 +339,7 @@ int fstat(int fd, struct stat *st);            <span class="c">// by descriptor<
 <p>The newer <code>statx</code> call returns the same information plus extras such as the file's creation (birth) time, and lets the caller ask for only some fields. That matters on network filesystems, where some attributes are expensive to fetch.</p>
 <h3>Reading a directory</h3>
 <p>A directory is a file whose content is a list of (name, inode number) entries. You cannot <code>read</code> it directly. Linux provides <code>getdents64</code>, which fills a buffer with records of this shape:</p>
-<pre><code>struct linux_dirent64 {
+<pre><code class="language-c">struct linux_dirent64 {
     ino64_t        d_ino;     <span class="c">// inode number the name points to</span>
     off64_t        d_off;     <span class="c">// opaque cookie: where the next read continues</span>
     unsigned short d_reclen;  <span class="c">// length of this record</span>
@@ -391,7 +391,7 @@ after fflush:   file size on the kernel side = 19
 1st (fprintf)</span></code></pre>
 <p>Two more consequences matter in practice. A process killed with <code>SIGKILL</code> loses whatever sits in its stdio buffers, though everything it already passed to <code>write</code> survives in the page cache. And a <code>fork</code> with unflushed stdio data duplicates the buffer, so the same output can appear twice. Lab 01 turns off buffering on its own <code>stdout</code> for this reason.</p>
 <h3>fsync and fdatasync</h3>
-<pre><code>int fsync(int fd);       <span class="c">// data + all metadata durable before returning</span>
+<pre><code class="language-c">int fsync(int fd);       <span class="c">// data + all metadata durable before returning</span>
 int fdatasync(int fd);   <span class="c">// data + only the metadata needed to read it back (e.g. size, not mtime)</span></code></pre>
 <p>These are the calls that turn "written" into "durable". They write the file's dirty pages to the device, wait for completion, and then ask the device to flush its own volatile cache. They are slow, milliseconds rather than microseconds, which is why programs batch them. <a href="05-vfs-cache.html">Lesson 05</a> covers the page cache and writeback in detail, and <a href="02-blocks.html">lesson 02</a> covers what FLUSH means to the device.</p>
 <h3>mmap, briefly</h3>
@@ -463,6 +463,6 @@ Example output from this course's WSL machine. Before reading the source, predic
 </nav>
 </main>
 </div>
-<script src="course.js"></script>
+<script src="course.js?v=8"></script>
 </body>
 </html>

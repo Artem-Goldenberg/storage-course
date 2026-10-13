@@ -126,6 +126,13 @@ pre code { background: none; padding: 0; font-size: inherit; overflow-wrap: norm
 pre .c { color: var(--ink-2); }            /* comment */
 pre .p { color: var(--layer); font-weight: 600; } /* shell prompt or highlight */
 pre .o { color: var(--ink-2); }            /* program output */
+/* C syntax, marked up by course.js in <code class="language-c">. Each layer colour
+   is pulled 15% toward the ink so small mono text keeps AA contrast in both themes. */
+.language-c .k { color: color-mix(in srgb, var(--l-user) 85%, var(--ink)); }   /* keyword, #directive */
+.language-c .t { color: color-mix(in srgb, var(--l-fs) 85%, var(--ink)); }     /* type */
+.language-c .f { color: color-mix(in srgb, var(--l-kernel) 85%, var(--ink)); } /* function */
+.language-c .s { color: color-mix(in srgb, var(--l-net) 85%, var(--ink)); }    /* string, <header.h> */
+.language-c .n { color: color-mix(in srgb, var(--l-block) 85%, var(--ink)); }  /* number, CONSTANT */
 
 /* ---------- top bar ---------- */
 .topbar {

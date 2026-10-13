@@ -53,3 +53,32 @@
   }, { passive: true });
   update();
 })();
+/* colour C code in <code class="language-c">; comments reuse the .c class */
+(function () {
+  var KEYWORDS = /^(?:asm|auto|break|case|const|continue|default|do|else|enum|extern|for|goto|if|inline|register|restrict|return|sizeof|static|struct|switch|typedef|union|volatile|while|__attribute__)$/;
+  var TYPES = /^(?:void|char|short|int|long|float|double|signed|unsigned|_Bool|bool|\w+_t|__[lb]e\d+|__[us]\d+|u\d+)$/;
+  // comment | #directive | string, char or <header.h> | number | identifier
+  var TOKEN = /(\/\/[^\n]*|\/\*[\s\S]*?\*\/)|(^[ \t]*#[ \t]*\w+)|("(?:[^"\\\n]|\\.)*"|'(?:[^'\\\n]|\\.)+'|<[\w.\/]+\.h>)|(\b(?:0x[\da-fA-F]+|\d+)[uUlL]*\b)|([A-Za-z_]\w*)/gm;
+  function esc(s) { return s.replace(/&/g, "&amp;").replace(/</g, "&lt;").replace(/>/g, "&gt;"); }
+  document.querySelectorAll("pre code.language-c").forEach(function (code) {
+    var src = code.textContent, out = "", last = 0, tag = false, m;
+    TOKEN.lastIndex = 0;
+    while ((m = TOKEN.exec(src))) {
+      var w = m[0], cls = m[1] ? "c" : m[2] ? "k" : m[3] ? "s" : m[4] ? "n" : null;
+      if (m[5]) {
+        if (KEYWORDS.test(w)) cls = "k";
+        else if (tag || TYPES.test(w)) cls = "t";          // the name after struct is a type
+        else if (/^[A-Z][A-Z\d_]+$/.test(w)) cls = "n";    // O_CREAT, EINTR, DT_REG
+        else {
+          var j = TOKEN.lastIndex;
+          while (src.charAt(j) === " " || src.charAt(j) === "\t") j++;
+          if (src.charAt(j) === "(") cls = "f";
+        }
+        tag = /^(?:struct|union|enum)$/.test(w);
+      }
+      out += esc(src.slice(last, m.index)) + (cls ? '<span class="' + cls + '">' + esc(w) + "</span>" : esc(w));
+      last = TOKEN.lastIndex;
+    }
+    code.innerHTML = out + esc(src.slice(last));
+  });
+})();

@@ -7,7 +7,7 @@
 <link rel="preconnect" href="https://fonts.googleapis.com">
 <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
 <link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=IBM+Plex+Mono:wght@400;600&family=IBM+Plex+Sans+Condensed:wght@500;600;700&family=Source+Serif+4:ital,opsz,wght@0,8..60,400;0,8..60,600;1,8..60,400&display=swap">
-<link rel="stylesheet" href="course.css?v=7">
+<link rel="stylesheet" href="course.css?v=8">
 </head>
 <body data-layer="kernel">
 <header class="topbar">
@@ -107,7 +107,7 @@
 <p>A fifth table matters as much as the four above. Each inode has an <code>i_mapping</code> pointer to a <code>struct address_space</code>: the page cache for that file. Its <code>address_space_operations</code> are how the generic page cache code asks a filesystem to move data between memory and disk: <code>read_folio</code>, <code>readahead</code>, <code>writepages</code>, <code>dirty_folio</code>, <code>write_begin</code>, <code>write_end</code>, <code>direct_IO</code>, <code>release_folio</code>.</p>
 <p>The <code>struct file</code> is the open file description from <a href="01-syscalls.html">lesson 1</a>. The number your program holds is an index into the process's fd table, and that slot points at a <code>struct file</code>. The in-memory <code>struct inode</code> is built from the on-disk inode you decoded by hand in <a href="03-ondisk.html">lesson 3</a>. Filesystems usually wrap it in a bigger struct of their own; ext4 embeds it inside <code>struct ext4_inode_info</code> and gets back to the wrapper with the <code>EXT4_I()</code> macro, which is <code>container_of()</code> underneath.</p>
 <p>Here is ext4's file table, exactly as it appears in <code>fs/ext4/file.c</code> in Linux 6.18 (one <code>#ifdef</code> removed):</p>
-<pre><code>const struct file_operations ext4_file_operations = {
+<pre><code class="language-c">const struct file_operations ext4_file_operations = {
 	.llseek		= ext4_llseek,
 	.read_iter	= ext4_file_read_iter,
 	.write_iter	= ext4_file_write_iter,
@@ -382,7 +382,7 @@ nr_dirty_background_threshold 301512</span></code></pre>
 <p>The device flush is the part people forget. To make a write durable, the filesystem sends the device a FLUSH command (the bio flag <code>REQ_PREFLUSH</code>) to empty its write cache, or marks a write FUA, force unit access (<code>REQ_FUA</code>), so that write bypasses the cache. ext4 does this as part of its journal commit (<a href="02-blocks.html">lesson 2</a> covers the device side). Without it, <code>fsync</code> would only prove that the data reached the drive's RAM.</p>
 <h3>The atomic replace pattern</h3>
 <p>Programs that save a whole file, such as editors, config tools and package managers, must never leave a half-written file after a crash. The standard recipe uses the fact that <code>rename()</code> replaces a directory entry in one journaled step:</p>
-<pre><code><span class="c">/* replace "config" with new contents, crash-safely */</span>
+<pre><code class="language-c"><span class="c">/* replace "config" with new contents, crash-safely */</span>
 int fd = open("config.tmp", O_WRONLY | O_CREAT | O_TRUNC, 0644);
 write_all(fd, data, len);        <span class="c">/* 1. new bytes into the page cache        */</span>
 fsync(fd);                       <span class="c">/* 2. new file's data + inode are durable    */</span>
@@ -616,6 +616,6 @@ On this machine the 1 GiB create slowed to 345 MiB/s, and <code>vmstat</code> sh
 </nav>
 </main>
 </div>
-<script src="course.js"></script>
+<script src="course.js?v=8"></script>
 </body>
 </html>
