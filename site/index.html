@@ -12,6 +12,45 @@
   .hero h1 code { font-size: 0.9em; background: none; padding: 0; color: var(--l-kernel); }
   .hero .lede { font-size: 1.22rem; }
 
+  /* ---- course search (search.js) ---- */
+  .sx { display: grid; gap: 0.45rem; margin-top: 0.5rem; max-width: 42rem; }
+  .sx-label { font-family: var(--display); font-size: 0.85rem; color: var(--ink-2); text-transform: uppercase; letter-spacing: 0.08em; }
+  .sx-field { position: relative; }
+  .sx-field input {
+    width: 100%; font: inherit; font-size: 1.05rem; color: var(--ink); background: var(--panel);
+    border: 1px solid var(--rule); border-radius: 3px; padding: 0.6rem 2.6rem 0.6rem 0.8rem;
+  }
+  .sx-field input:focus { border-color: var(--accent); outline: none; box-shadow: 0 0 0 2px color-mix(in srgb, var(--accent) 30%, transparent); }
+  .sx-key {
+    position: absolute; right: 0.7rem; top: 50%; transform: translateY(-50%); pointer-events: none;
+    font-size: 0.78rem; color: var(--ink-2); background: var(--paper); border: 1px solid var(--rule); padding: 0.05rem 0.45rem;
+  }
+  .sx-field input:focus ~ .sx-key, .sx-field input:not(:placeholder-shown) ~ .sx-key { display: none; }
+  .sx-hint { font-size: 0.9rem; color: var(--ink-2); }
+  .sx-panel {
+    position: absolute; top: calc(100% + 4px); left: 0; right: 0; z-index: 30;
+    max-height: min(70vh, 36rem); overflow-y: auto; padding: 0.35rem;
+    background: var(--panel); border: 1px solid var(--rule); border-radius: 4px;
+    box-shadow: 0 10px 28px color-mix(in srgb, var(--ink) 22%, transparent);
+  }
+  .sx-status:empty { display: none; }
+  .sx-status { font-family: var(--display); font-size: 0.9rem; color: var(--ink-2); padding: 0.4rem 0.55rem; }
+  .sx-group { font-family: var(--display); text-transform: uppercase; letter-spacing: 0.08em; font-size: 0.72rem; font-weight: 700; color: var(--ink-2); padding: 0.55rem 0.55rem 0.2rem; }
+  .sx-item {
+    display: grid; grid-template-columns: 2.1rem minmax(0, 1fr); gap: 0 0.6rem;
+    padding: 0.45rem 0.55rem; border-radius: 3px; color: var(--ink); text-decoration: none;
+  }
+  .sx-item[aria-selected="true"] { background: color-mix(in srgb, var(--c) 12%, var(--panel)); box-shadow: inset 3px 0 0 var(--c); }
+  .sx-item .layer-chip { align-self: start; margin-top: 0.2rem; text-align: center; font-family: var(--mono); font-variant-numeric: tabular-nums; }
+  .sx-main { display: grid; gap: 0.1rem; min-width: 0; }
+  .sx-where { font-family: var(--display); font-size: 0.78rem; color: var(--ink-2); overflow: hidden; text-overflow: ellipsis; white-space: nowrap; }
+  .sx-title { font-family: var(--display); font-weight: 600; font-size: 1.02rem; line-height: 1.3; }
+  .sx-text {
+    font-size: 0.9rem; line-height: 1.45; color: var(--ink-2);
+    display: -webkit-box; -webkit-line-clamp: 2; -webkit-box-orient: vertical; overflow: hidden;
+  }
+  .sx mark { background: color-mix(in srgb, var(--c) 24%, transparent); color: var(--ink); border-radius: 2px; }
+
   /* ---- the stack map ---- */
   .map-wrap { display: grid; gap: 0.9rem; }
   .map-head { display: flex; flex-wrap: wrap; justify-content: space-between; align-items: baseline; gap: 0.5rem 2rem; }
@@ -157,6 +196,18 @@
 <p class="lede">How a file really works: from the C call that opens it, down through the
 kernel to the blocks on a disk, then out across the network to NFS servers, RDMA
 fabrics and clusters of machines. Every lesson ends with a lab you run yourself.</p>
+<div class="sx" role="search">
+<label class="sx-label" for="sx-input">Search the course</label>
+<div class="sx-field">
+<input id="sx-input" type="search" placeholder="fsync, delegation, extent tree, rkey…" autocomplete="off" spellcheck="false" role="combobox" aria-autocomplete="list" aria-expanded="false" aria-controls="sx-list">
+<kbd class="sx-key" aria-hidden="true">/</kbd>
+<div class="sx-panel" id="sx-panel" hidden>
+<p class="sx-status" id="sx-status" role="status"></p>
+<div id="sx-list" role="listbox" aria-label="Search results"></div>
+</div>
+</div>
+<p class="sx-hint">Glossary terms and every section of every lesson. A result opens the lesson at the place where the word is used.</p>
+</div>
 </header>
 <section class="map-wrap" aria-labelledby="map-h">
 <div class="map-head">
@@ -252,5 +303,6 @@ Nine lessons, eight labs, one <a href="glossary.html">glossary</a>. Start with
 <a href="01-syscalls.html">lesson 01</a>.
 </footer>
 </main>
+<script src="search.js?v=1"></script>
 
 </body></html>
