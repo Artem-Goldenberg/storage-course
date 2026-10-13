@@ -1,0 +1,507 @@
+/* Layout: a reading column beside a "stack rail" — the lesson list drawn as the
+   storage stack, each lesson coloured by the layer it lives in. One colour per
+   layer, used the same way in every diagram, eyebrow and rail entry. */
+:root {
+  --paper: #f1f3f2;
+  --panel: #fafbfa;
+  --ink: #1a212b;
+  --ink-2: #4b5563;
+  --rule: #d2d7dc;
+  --code-bg: #e4e8ea;
+  --accent: #2c5cb0;
+
+  /* the five layers of the stack */
+  --l-user: #6a52a8;
+  --l-kernel: #2d6cad;
+  --l-fs: #2b7f62;
+  --l-block: #9c5f16;
+  --l-net: #ad4134;
+
+  --display: "IBM Plex Sans Condensed", "Arial Narrow", "Helvetica Neue", Arial, sans-serif;
+  --body: "Source Serif 4", "Source Serif Pro", Georgia, "Times New Roman", serif;
+  --mono: "IBM Plex Mono", ui-monospace, "SFMono-Regular", Menlo, Consolas, monospace;
+
+  --step--1: 0.875rem;
+  --step-0: 1.0625rem;
+  --step-1: 1.3rem;
+  --step-2: 1.65rem;
+  --step-3: 2.3rem;
+
+  --layer: var(--l-kernel);
+}
+@media (prefers-color-scheme: dark) {
+  :root:not([data-theme="light"]) {
+    --paper: #13171d;
+    --panel: #1a1f27;
+    --ink: #e2e6ea;
+    --ink-2: #a2abb7;
+    --rule: #2d343e;
+    --code-bg: #1f252e;
+    --accent: #86aaf0;
+    --l-user: #ab98e6;
+    --l-kernel: #72a6e4;
+    --l-fs: #62c49e;
+    --l-block: #dba253;
+    --l-net: #ec8473;
+    color-scheme: dark;
+  }
+}
+:root[data-theme="dark"] {
+  --paper: #13171d;
+  --panel: #1a1f27;
+  --ink: #e2e6ea;
+  --ink-2: #a2abb7;
+  --rule: #2d343e;
+  --code-bg: #1f252e;
+  --accent: #86aaf0;
+  --l-user: #ab98e6;
+  --l-kernel: #72a6e4;
+  --l-fs: #62c49e;
+  --l-block: #dba253;
+  --l-net: #ec8473;
+  color-scheme: dark;
+}
+
+body[data-layer="user"]   { --layer: var(--l-user); }
+body[data-layer="kernel"] { --layer: var(--l-kernel); }
+body[data-layer="fs"]     { --layer: var(--l-fs); }
+body[data-layer="block"]  { --layer: var(--l-block); }
+body[data-layer="net"]    { --layer: var(--l-net); }
+
+/* ---------- base ---------- */
+*, *::before, *::after { box-sizing: border-box; }
+html { -webkit-text-size-adjust: 100%; }
+body {
+  margin: 0;
+  background: var(--paper);
+  color: var(--ink);
+  font-family: var(--body);
+  font-size: var(--step-0);
+  line-height: 1.62;
+  font-optical-sizing: auto;
+}
+img, svg { max-width: 100%; }
+[hidden] { display: none !important; }
+a { color: var(--accent); text-underline-offset: 0.18em; text-decoration-thickness: 1px; }
+a:hover { text-decoration-thickness: 2px; }
+:focus-visible { outline: 2px solid var(--accent); outline-offset: 2px; border-radius: 2px; }
+::selection { background: color-mix(in srgb, var(--accent) 28%, transparent); }
+
+h1, h2, h3, h4 {
+  font-family: var(--display);
+  font-weight: 600;
+  line-height: 1.15;
+  text-wrap: balance;
+  margin: 0;
+}
+h1 { font-size: var(--step-3); font-weight: 700; letter-spacing: -0.01em; }
+h2 { font-size: var(--step-2); }
+h3 { font-size: var(--step-1); }
+h4 { font-size: var(--step-0); }
+
+p, ul, ol, dl, pre, table, figure, blockquote { margin: 0; }
+ul, ol { padding-left: 1.4em; }
+li + li { margin-top: 0.3em; }
+strong, b { font-weight: 600; }
+
+code, kbd, samp {
+  font-family: var(--mono);
+  font-size: 0.86em;
+  background: var(--code-bg);
+  padding: 0.08em 0.32em;
+  border-radius: 3px;
+  overflow-wrap: anywhere;
+}
+pre {
+  font-family: var(--mono);
+  font-size: 0.82rem;
+  line-height: 1.5;
+  background: var(--code-bg);
+  padding: 0.9rem 1rem;
+  border-radius: 4px;
+  overflow-x: auto;
+  tab-size: 4;
+}
+pre code { background: none; padding: 0; font-size: inherit; overflow-wrap: normal; }
+pre .c { color: var(--ink-2); }            /* comment */
+pre .p { color: var(--layer); font-weight: 600; } /* shell prompt or highlight */
+pre .o { color: var(--ink-2); }            /* program output */
+
+/* ---------- top bar ---------- */
+.topbar {
+  display: flex;
+  flex-wrap: wrap;
+  align-items: center;
+  justify-content: space-between;
+  gap: 0.5rem 1.5rem;
+  padding: 0.7rem 1.25rem;
+  border-bottom: 1px solid var(--rule);
+  background: var(--panel);
+  font-family: var(--display);
+}
+.brand {
+  font-weight: 700;
+  font-size: 1.05rem;
+  color: var(--ink);
+  text-decoration: none;
+  letter-spacing: 0.01em;
+}
+.brand span { color: var(--ink-2); font-weight: 500; }
+.pager {
+  display: flex;
+  flex-wrap: wrap;
+  align-items: center;
+  gap: 0.4rem 1rem;
+  font-size: 0.92rem;
+  color: var(--ink-2);
+  font-variant-numeric: tabular-nums;
+}
+.pager a { text-decoration: none; }
+
+/* ---------- layout ---------- */
+/* The rail shares the first row with the lesson header only; every section
+   after it spans both columns, so the text runs full width below the rail.
+   .lesson is display: contents so its children are items of this grid. */
+.layout {
+  display: grid;
+  grid-template-columns: 15.5rem minmax(0, 1fr);
+  column-gap: 3rem;
+  row-gap: 2.75rem;
+  padding: 2.25rem clamp(1rem, 2.5vw, 2.5rem) 4rem;
+}
+.layout > .rail { grid-column: 1; grid-row: 1; align-self: start; }
+.lesson { display: contents; }
+.lesson > * { grid-column: 1 / -1; min-width: 0; }
+.lesson > .lesson-head { grid-column: 2; grid-row: 1; }
+@media (max-width: 860px) {
+  .layout { grid-template-columns: minmax(0, 1fr); padding-top: 1.25rem; }
+  .layout > .rail { display: none; }
+  .lesson > .lesson-head { grid-column: 1; }
+}
+
+/* ---------- the stack rail ---------- */
+.rail { font-family: var(--display); font-size: 0.92rem; }
+.rail-title {
+  text-transform: uppercase;
+  letter-spacing: 0.08em;
+  font-size: 0.75rem;
+  color: var(--ink-2);
+  margin-bottom: 0.6rem;
+}
+.rail ol { list-style: none; padding: 0; margin: 0; display: grid; gap: 3px; }
+.rail li { margin: 0; }
+.rail a {
+  display: grid;
+  grid-template-columns: 1.7rem 1fr;
+  align-items: baseline;
+  padding: 0.38rem 0.55rem;
+  text-decoration: none;
+  color: var(--ink);
+  border: 1px solid transparent;
+  border-radius: 3px;
+  background: color-mix(in srgb, var(--c) 9%, var(--paper));
+}
+.rail a:hover { background: color-mix(in srgb, var(--c) 18%, var(--paper)); }
+.rail a .n { font-variant-numeric: tabular-nums; color: var(--c); font-weight: 700; }
+.rail a[aria-current="page"] {
+  background: color-mix(in srgb, var(--c) 24%, var(--panel));
+  border-color: var(--c);
+  font-weight: 600;
+}
+.rail .user   { --c: var(--l-user); }
+.rail .kernel { --c: var(--l-kernel); }
+.rail .fs     { --c: var(--l-fs); }
+.rail .block  { --c: var(--l-block); }
+.rail .net    { --c: var(--l-net); }
+.rail .extra a { background: transparent; border-color: var(--rule); --c: var(--ink-2); }
+.rail-legend {
+  margin-top: 1rem;
+  display: flex;
+  flex-wrap: wrap;
+  gap: 0.35rem 0.8rem;
+  font-size: 0.78rem;
+  color: var(--ink-2);
+}
+.rail-legend span::before {
+  content: "";
+  display: inline-block;
+  width: 0.7em;
+  height: 0.7em;
+  margin-right: 0.35em;
+  border-radius: 2px;
+  background: var(--c);
+  vertical-align: -0.05em;
+}
+
+/* top bar menus: the lesson list (narrow screens only) and the lesson's sections.
+   On wide screens the bar stays on screen, so anchors land below it. */
+.topbar { position: sticky; top: 0; z-index: 40; }
+html { scroll-padding-top: 4.5rem; }
+/* on phones the bar wraps to three lines; pinned it would eat a fifth of the screen */
+@media (max-width: 860px) { .topbar { position: relative; } html { scroll-padding-top: 0.5rem; } }
+.route > summary, .sections > summary {
+  list-style: none;
+  cursor: pointer;
+  padding: 0.3rem 0.6rem;
+  border: 1px solid var(--rule);
+  border-radius: 3px;
+  color: var(--ink);
+  white-space: nowrap;
+}
+.route > summary::-webkit-details-marker, .sections > summary::-webkit-details-marker { display: none; }
+.route > summary::after, .sections > summary::after { content: " ▾"; color: var(--ink-2); }
+.route[open] > summary::after, .sections[open] > summary::after { content: " ▴"; }
+.route > summary:hover, .route[open] > summary,
+.sections > summary:hover, .sections[open] > summary { background: var(--code-bg); }
+.sections > summary { font-weight: 600; }
+.route > .rail, .sections > .toc {
+  position: absolute;
+  top: calc(100% + 4px);
+  right: 1.25rem;
+  z-index: 30;
+  width: min(20rem, calc(100vw - 2rem));
+  max-height: calc(100vh - 6rem);
+  overflow-y: auto;
+  padding: 0.9rem;
+  background: var(--panel);
+  border: 1px solid var(--rule);
+  border-radius: 4px;
+  box-shadow: 0 10px 28px color-mix(in srgb, var(--ink) 22%, transparent);
+  color: var(--ink);
+  font-variant-numeric: normal;
+}
+.sections > .toc { width: min(28rem, calc(100vw - 2rem)); padding: 0.6rem; }
+
+/* contents lists: in the lesson header and in the Sections menu */
+.toc ol { list-style: none; margin: 0; padding: 0; counter-reset: toc; }
+.toc li { counter-increment: toc; margin: 0; break-inside: avoid; }
+.toc a {
+  display: grid;
+  grid-template-columns: 1.9rem 1fr;
+  padding: 0.24rem 0.45rem;
+  border-radius: 3px;
+  color: var(--ink);
+  text-decoration: none;
+  line-height: 1.3;
+}
+.toc a::before { content: counter(toc, decimal-leading-zero); color: var(--ink-2); font-variant-numeric: tabular-nums; }
+.toc a:hover { background: var(--code-bg); }
+.toc a[aria-current] {
+  background: color-mix(in srgb, var(--layer) 16%, var(--panel));
+  box-shadow: inset 3px 0 0 var(--layer);
+}
+.lesson-head .toc { font-family: var(--display); font-size: 0.95rem; }
+.lesson-head .toc b {
+  display: block;
+  margin-bottom: 0.35rem;
+  font-size: 0.75rem;
+  font-weight: 600;
+  letter-spacing: 0.08em;
+  text-transform: uppercase;
+  color: var(--ink-2);
+}
+.lesson-head .toc ol { columns: 2 17rem; column-gap: 1.25rem; }
+
+/* ---------- lesson body ---------- */
+.lesson > section { display: grid; gap: 1rem; min-width: 0; }
+.lesson > section > * { min-width: 0; }
+.lesson h2 { padding-top: 0.25rem; }
+.lesson h2::before {
+  content: "";
+  display: inline-block;
+  width: 0.55em;
+  height: 0.55em;
+  background: var(--layer);
+  margin-right: 0.45em;
+  vertical-align: 0.12em;
+  border-radius: 1px;
+}
+.lesson h3 { margin-top: 0.6rem; }
+
+.lesson-head { display: grid; gap: 0.9rem; padding-bottom: 1.6rem; border-bottom: 1px solid var(--rule); }
+.eyebrow {
+  font-family: var(--display);
+  text-transform: uppercase;
+  letter-spacing: 0.09em;
+  font-size: 0.8rem;
+  font-weight: 600;
+  color: var(--layer);
+}
+.lede { font-size: 1.18rem; line-height: 1.55; color: var(--ink-2); }
+.outcomes {
+  font-size: 0.97rem;
+  color: var(--ink-2);
+  display: grid;
+  gap: 0.15rem;
+}
+.outcomes b { color: var(--ink); font-family: var(--display); font-weight: 600; }
+
+/* ---------- asides: key idea, pitfall, note ---------- */
+.key, .pitfall, .note {
+  background: var(--panel);
+  border: 1px solid var(--rule);
+  border-radius: 4px;
+  padding: 0.85rem 1rem 0.95rem;
+  display: grid;
+  gap: 0.45rem;
+}
+.key > .tag, .pitfall > .tag, .note > .tag {
+  font-family: var(--display);
+  text-transform: uppercase;
+  letter-spacing: 0.08em;
+  font-size: 0.74rem;
+  font-weight: 700;
+  color: var(--ink-2);
+}
+.key { border-color: color-mix(in srgb, var(--layer) 45%, var(--rule)); }
+.key > .tag { color: var(--layer); }
+.pitfall { border-style: dashed; border-color: color-mix(in srgb, var(--l-block) 60%, var(--rule)); }
+.pitfall > .tag { color: var(--l-block); }
+
+/* ---------- diagrams ---------- */
+.diagram {
+  background: var(--panel);
+  border: 1px solid var(--rule);
+  border-radius: 4px;
+  padding: 1rem;
+  overflow-x: auto;
+  display: grid;
+  gap: 0.6rem;
+}
+.diagram svg { display: block; height: auto; margin: 0 auto; }
+.diagram figcaption { font-size: 0.88rem; color: var(--ink-2); line-height: 1.45; }
+.diagram pre { background: transparent; padding: 0; border-radius: 0; }
+
+/* SVG helpers: every shape takes its colour from the theme tokens */
+svg .t   { fill: var(--ink); font-family: var(--mono); font-size: 13px; }
+svg .ts  { fill: var(--ink-2); font-family: var(--mono); font-size: 11px; }
+svg .th  { fill: var(--ink); font-family: var(--display); font-size: 15px; font-weight: 600; }
+svg .box { fill: var(--panel); stroke: var(--rule); stroke-width: 1.2; }
+svg .ln  { stroke: var(--ink-2); stroke-width: 1.4; fill: none; }
+svg .lnd { stroke: var(--ink-2); stroke-width: 1.2; fill: none; stroke-dasharray: 4 3; }
+svg .hl  { stroke: var(--accent); stroke-width: 2; fill: none; }
+svg .ah  { fill: var(--ink-2); }
+svg .k-user   { fill: color-mix(in srgb, var(--l-user) 16%, var(--panel));   stroke: var(--l-user);   stroke-width: 1.3; }
+svg .k-kernel { fill: color-mix(in srgb, var(--l-kernel) 16%, var(--panel)); stroke: var(--l-kernel); stroke-width: 1.3; }
+svg .k-fs     { fill: color-mix(in srgb, var(--l-fs) 16%, var(--panel));     stroke: var(--l-fs);     stroke-width: 1.3; }
+svg .k-block  { fill: color-mix(in srgb, var(--l-block) 16%, var(--panel));  stroke: var(--l-block);  stroke-width: 1.3; }
+svg .k-net    { fill: color-mix(in srgb, var(--l-net) 16%, var(--panel));    stroke: var(--l-net);    stroke-width: 1.3; }
+svg .c-user   { fill: var(--l-user); }
+svg .c-kernel { fill: var(--l-kernel); }
+svg .c-fs     { fill: var(--l-fs); }
+svg .c-block  { fill: var(--l-block); }
+svg .c-net    { fill: var(--l-net); }
+
+/* ---------- tables ---------- */
+.table-wrap { overflow-x: auto; border: 1px solid var(--rule); border-radius: 4px; background: var(--panel); }
+table { border-collapse: collapse; width: 100%; font-size: 0.93rem; line-height: 1.45; }
+th, td { text-align: left; vertical-align: top; padding: 0.5rem 0.75rem; border-bottom: 1px solid var(--rule); }
+tr:last-child td { border-bottom: 0; }
+th {
+  font-family: var(--display);
+  font-weight: 600;
+  font-size: 0.8rem;
+  text-transform: uppercase;
+  letter-spacing: 0.06em;
+  color: var(--ink-2);
+  background: color-mix(in srgb, var(--layer) 7%, var(--panel));
+}
+td code { white-space: nowrap; }
+
+/* ---------- lab ---------- */
+.lab {
+  background: color-mix(in srgb, var(--layer) 6%, var(--panel));
+  border: 1px solid color-mix(in srgb, var(--layer) 35%, var(--rule));
+  border-radius: 4px;
+  padding: 1.25rem 1.25rem 1.4rem;
+}
+.lab .tag {
+  font-family: var(--display);
+  text-transform: uppercase;
+  letter-spacing: 0.08em;
+  font-size: 0.78rem;
+  font-weight: 700;
+  color: var(--layer);
+}
+.lab .where { font-family: var(--mono); font-size: 0.85rem; color: var(--ink-2); }
+.lab ol { display: grid; gap: 0.8rem; }
+.lab ol > li { min-width: 0; }
+.lab ol > li > pre { margin-top: 0.4rem; }
+
+/* ---------- check yourself ---------- */
+.check details {
+  border: 1px solid var(--rule);
+  border-radius: 4px;
+  background: var(--panel);
+  padding: 0.6rem 0.9rem;
+}
+.check details + details { margin-top: 0.5rem; }
+.check summary { cursor: pointer; font-weight: 600; }
+.check summary::marker { color: var(--layer); }
+.check details > *:not(summary) { margin-top: 0.55rem; }
+.check details[open] summary { color: var(--layer); }
+
+/* ---------- further reading + footer pager ---------- */
+.further ul { display: grid; gap: 0.35rem; }
+.further li { margin: 0; }
+.pager-foot {
+  display: flex;
+  justify-content: space-between;
+  flex-wrap: wrap;
+  gap: 1rem;
+  border-top: 1px solid var(--rule);
+  padding-top: 1.25rem;
+  font-family: var(--display);
+}
+.pager-foot a { text-decoration: none; display: grid; gap: 0.1rem; }
+.pager-foot small { color: var(--ink-2); text-transform: uppercase; letter-spacing: 0.08em; font-size: 0.72rem; }
+.pager-foot .next { text-align: right; margin-left: auto; }
+
+/* ---------- utility ---------- */
+.muted { color: var(--ink-2); }
+.small { font-size: 0.9rem; }
+.layer-chip {
+  display: inline-block;
+  font-family: var(--display);
+  font-size: 0.72rem;
+  font-weight: 700;
+  text-transform: uppercase;
+  letter-spacing: 0.07em;
+  padding: 0.05rem 0.45rem;
+  border-radius: 2px;
+  color: var(--paper);
+  background: var(--c, var(--layer));
+  vertical-align: 0.1em;
+}
+.layer-chip.user { --c: var(--l-user); }
+.layer-chip.kernel { --c: var(--l-kernel); }
+.layer-chip.fs { --c: var(--l-fs); }
+.layer-chip.block { --c: var(--l-block); }
+.layer-chip.net { --c: var(--l-net); }
+
+@media (prefers-reduced-motion: reduce) {
+  *, *::before, *::after { transition: none !important; animation: none !important; }
+}
+
+/* ---------- language switch ---------- */
+.lang-switch {
+  display: inline-flex;
+  border: 1px solid var(--rule);
+  border-radius: 3px;
+  overflow: hidden;
+  font-family: var(--mono);
+  font-size: 0.78rem;
+  line-height: 1;
+}
+.lang-switch > * { padding: 0.32rem 0.5rem; text-decoration: none; }
+.lang-switch b { background: var(--ink); color: var(--panel); font-weight: 600; }
+.lang-switch a { color: var(--ink-2); }
+.lang-switch a:hover { color: var(--ink); background: var(--code-bg); }
+
+/* Russian pages: IBM Plex Sans Condensed has no basic Cyrillic, so headings use PT Sans Narrow */
+html[lang="ru"] { --display: "PT Sans Narrow", "Arial Narrow", "Helvetica Neue", Arial, sans-serif; }
+@media (min-width: 861px) {
+  .route > summary { pointer-events: none; padding-inline: 0; border-color: transparent; color: var(--ink-2); }
+  .route > summary::after { content: none; }
+  .route > .rail { display: none; }
+}

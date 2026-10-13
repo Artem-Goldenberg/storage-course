@@ -1,0 +1,575 @@
+<!doctype html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover">
+<title>Inside an ext4 Image</title>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=IBM+Plex+Mono:wght@400;600&family=IBM+Plex+Sans+Condensed:wght@500;600;700&family=Source+Serif+4:ital,opsz,wght@0,8..60,400;0,8..60,600;1,8..60,400&display=swap">
+<link rel="stylesheet" href="course.css?v=7">
+</head>
+<body data-layer="fs">
+<header class="topbar">
+<a class="brand" href="index.html">From open() to RDMA <span>· a storage course</span></a>
+<nav class="pager" aria-label="Lesson pager">
+<a href="02-blocks.html" rel="prev">← Prev</a>
+<details class="route"><summary>Lesson 3 of 9</summary></details>
+<a href="04-btrees.html" rel="next">Next →</a>
+<details class="sections"><summary>Sections</summary></details>
+</nav>
+</header>
+<div class="layout">
+<nav class="rail" aria-label="Lessons">
+<div class="rail-title">The route</div>
+<ol>
+<li class="user"><a href="01-syscalls.html"><span class="n">01</span><span>Syscalls &amp; file descriptors</span></a></li>
+<li class="block"><a href="02-blocks.html"><span class="n">02</span><span>Block devices &amp; addressing</span></a></li>
+<li class="fs"><a href="03-ondisk.html" aria-current="page"><span class="n">03</span><span>Inside an ext4 image</span></a></li>
+<li class="fs"><a href="04-btrees.html"><span class="n">04</span><span>B-trees, really</span></a></li>
+<li class="kernel"><a href="05-vfs-cache.html"><span class="n">05</span><span>The VFS and the caches</span></a></li>
+<li class="net"><a href="06-nfs.html"><span class="n">06</span><span>NFS from v3 to 4.2</span></a></li>
+<li class="net"><a href="07-nfs-caching.html"><span class="n">07</span><span>Caching across the network</span></a></li>
+<li class="net"><a href="08-rdma.html"><span class="n">08</span><span>RDMA and NFS over RDMA</span></a></li>
+<li class="net"><a href="09-distributed.html"><span class="n">09</span><span>Distributed filesystems</span></a></li>
+<li class="extra"><a href="glossary.html"><span class="n">··</span><span>Glossary</span></a></li>
+</ol>
+<div class="rail-legend">
+<span style="--c: var(--l-user)">user space</span>
+<span style="--c: var(--l-kernel)">kernel</span>
+<span style="--c: var(--l-fs)">filesystem</span>
+<span style="--c: var(--l-block)">block</span>
+<span style="--c: var(--l-net)">network</span>
+</div>
+</nav>
+<main class="lesson">
+<header class="lesson-head">
+<p class="eyebrow">Lesson 3 · Filesystem layer</p>
+<h1>Inside an ext4 image</h1>
+<p class="lede">A disk is a numbered array of blocks. This lesson opens a real ext4 filesystem and shows the handful of records that turn those numbers into directories, names and files, down to the byte offset of every field you need.</p>
+<div class="outcomes">
+<b>After this lesson you can</b>
+<ul>
+<li>find and decode the superblock, a group descriptor and an inode in a hex dump;</li>
+<li>turn an inode number into a byte offset on the device with two divisions;</li>
+<li>follow an inode's extents to the file's data, and recognise a hole;</li>
+<li>resolve a path on disk the way the kernel does, one directory per component;</li>
+<li>say what the journal protects after a crash, and what it does not.</li>
+</ul>
+</div>
+<nav class="toc" aria-label="Lesson contents">
+<b>In this lesson</b>
+<ol>
+<li><a href="#the-job">The job: names on top of numbers</a></li>
+<li><a href="#layout">The map of an ext4 volume</a></li>
+<li><a href="#superblock">Step 1: the superblock</a></li>
+<li><a href="#descriptors">Step 2: the group descriptor table</a></li>
+<li><a href="#inode-address">Step 3: an inode number is an address</a></li>
+<li><a href="#inode">The inode record</a></li>
+<li><a href="#extents">From inode to data: block maps and extents</a></li>
+<li><a href="#directories">Directories are files of names</a></li>
+<li><a href="#walk">Resolving a path on disk</a></li>
+<li><a href="#links">Hard links, link counts and deletion</a></li>
+<li><a href="#allocation">Allocation: choosing blocks</a></li>
+<li><a href="#journal">Crash consistency: the journal</a></li>
+<li><a href="#cow">The other answer: copy-on-write</a></li>
+<li><a href="#xfs">XFS in one section</a></li>
+<li><a href="#lab">Lab 03: Walk an ext4 image by hand</a></li>
+<li><a href="#check">Check yourself</a></li>
+<li><a href="#further">Go deeper</a></li>
+</ol>
+</nav>
+</header>
+<section id="the-job">
+<h2>The job: names on top of numbers</h2>
+<p>In <a href="02-blocks.html">lesson 02</a> the device gave us two operations: read block <var>n</var> and write block <var>n</var>. Programs want something else. They ask for <code>/docs/notes/hello.txt</code>, expect it to have an owner, a size and permissions, and expect its bytes to come back in order. A filesystem bridges the two. It is a data structure stored in the blocks themselves, and it has to answer five questions quickly:</p>
+<ol>
+<li>Where does the filesystem begin, and what shape does it have? The <b>superblock</b> answers that.</li>
+<li>For a given file, who owns it, how big is it, and when was it changed? That is the <b>inode</b>.</li>
+<li>Which disk blocks hold the file's bytes, in which order? The inode's <b>block map</b>, which on ext4 is a set of <b>extents</b>.</li>
+<li>Which file does a name refer to? A <b>directory</b>, which is a file full of <code>(name, inode number)</code> records.</li>
+<li>Which blocks and inodes are free? The <b>bitmaps</b>.</li>
+</ol>
+<p>On top of those it needs a way to keep them consistent when the power fails halfway through an update. ext4 uses a <b>journal</b>.</p>
+<p>We use ext4 as the worked example because it is the default on Debian and Ubuntu, it is the filesystem under this WSL's own root (<code>df -T /</code> says <code>ext4</code>), and its format is documented down to the byte in the kernel tree. Every number in this lesson comes from a 16 MiB image built in <a href="#lab">Lab 03</a>, so you can reproduce each one.</p>
+<aside class="key"><span class="tag">Key idea</span><p>A filesystem is a data structure whose nodes are disk blocks. Every operation (open, read, create, delete) is a walk over that structure. If you can follow the pointers by hand, nothing a filesystem does is mysterious.</p></aside>
+</section>
+<section id="layout">
+<h2>The map of an ext4 volume</h2>
+<p>ext4 cuts the volume into <b>block groups</b>. Each group covers <code>s_blocks_per_group</code> blocks, which is 8 × block size: one block of bitmap has 8 bits per byte, and each bit tracks one block. With 4 KiB blocks a group is 32,768 blocks, or 128 MiB. A 1 TiB disk has 8,192 groups.</p>
+<p>Each group can carry:</p>
+<ul>
+<li>a backup copy of the <b>superblock</b> and the <b>group descriptor table</b> (with the <code>sparse_super</code> feature, only groups 0, 1 and powers of 3, 5 and 7 carry them);</li>
+<li>a <b>block bitmap</b>: one bit per block in the group, 1 = in use;</li>
+<li>an <b>inode bitmap</b>: one bit per inode slot in the group;</li>
+<li>an <b>inode table</b>: the group's inodes, stored as an array of fixed-size records;</li>
+<li>data blocks: everything else, including file contents, directory contents and extent tree blocks.</li>
+</ul>
+<p>The groups exist for locality. ext4 tries to put a file's inode, its directory and its data in the same group, so a spinning disk does not seek across the platter to read one file. Groups also keep each bitmap to one block, and let independent allocations proceed in different groups.</p>
+<p>Modern ext4 adds <code>flex_bg</code>. It packs the bitmaps and inode tables of 16 consecutive groups together at the start of the first one, so the metadata of a whole flex group is contiguous and large data extents are not chopped up by metadata every 128 MiB. Here is group 0 of the lab image, from <code>dumpe2fs</code> (where the metadata is) and <code>debugfs -R 'icheck N'</code> (which inode owns block <var>N</var>):</p>
+<figure class="diagram">
+<svg viewBox="0 0 760 240" width="760" role="img" aria-label="Block map of group 0 in the lab image. Row one: block 0 superblock, 1 group descriptor table, 2 reserved descriptor block, 3 block bitmap, 4 to 8 root directory and lost+found, 9 to 18 journal, 19 inode bitmap, 20 to 34 journal. Row two: 35 to 290 inode table, 291 resize inode block, 292 to 1290 journal, 1291 to 1324 the lab's files and directories, 1325 to 4095 free.">
+<text class="ts" x="15" y="22">blocks 0–34 (4 KiB blocks; widths not to scale)</text>
+<rect class="k-fs" x="15" y="34" width="76" height="62" rx="2"/>
+<text class="t" x="53" y="56" text-anchor="middle">0</text>
+<text class="ts" x="53" y="74" text-anchor="middle">superblock</text>
+<rect class="k-fs" x="91" y="34" width="46" height="62" rx="2"/>
+<text class="t" x="114" y="56" text-anchor="middle">1</text>
+<text class="ts" x="114" y="74" text-anchor="middle">GDT</text>
+<rect class="k-fs" x="137" y="34" width="58" height="62" rx="2"/>
+<text class="t" x="166" y="56" text-anchor="middle">2</text>
+<text class="ts" x="166" y="74" text-anchor="middle">rsv GDT</text>
+<rect class="k-fs" x="195" y="34" width="78" height="62" rx="2"/>
+<text class="t" x="234" y="56" text-anchor="middle">3</text>
+<text class="ts" x="234" y="74" text-anchor="middle">blk bitmap</text>
+<rect class="k-user" x="273" y="34" width="84" height="62" rx="2"/>
+<text class="t" x="315" y="56" text-anchor="middle">4–8</text>
+<text class="ts" x="315" y="74" text-anchor="middle">root dir</text>
+<text class="ts" x="315" y="88" text-anchor="middle">lost+found</text>
+<rect class="k-kernel" x="357" y="34" width="80" height="62" rx="2"/>
+<text class="t" x="397" y="56" text-anchor="middle">9–18</text>
+<text class="ts" x="397" y="74" text-anchor="middle">journal</text>
+<rect class="k-fs" x="437" y="34" width="90" height="62" rx="2"/>
+<text class="t" x="482" y="56" text-anchor="middle">19</text>
+<text class="ts" x="482" y="74" text-anchor="middle">inode bitmap</text>
+<rect class="k-kernel" x="527" y="34" width="218" height="62" rx="2"/>
+<text class="t" x="636" y="56" text-anchor="middle">20–34</text>
+<text class="ts" x="636" y="74" text-anchor="middle">journal</text>
+<text class="ts" x="15" y="114">blocks 35–4095</text>
+<rect class="k-fs" x="15" y="124" width="170" height="62" rx="2"/>
+<text class="t" x="100" y="146" text-anchor="middle">35–290</text>
+<text class="ts" x="100" y="164" text-anchor="middle">inode table</text>
+<rect class="box" x="185" y="124" width="64" height="62" rx="2"/>
+<text class="t" x="217" y="146" text-anchor="middle">291</text>
+<text class="ts" x="217" y="164" text-anchor="middle">resize</text>
+<rect class="k-kernel" x="249" y="124" width="210" height="62" rx="2"/>
+<text class="t" x="354" y="146" text-anchor="middle">292–1290</text>
+<text class="ts" x="354" y="164" text-anchor="middle">journal</text>
+<rect class="k-user" x="459" y="124" width="120" height="62" rx="2"/>
+<text class="t" x="519" y="146" text-anchor="middle">1291–1324</text>
+<text class="ts" x="519" y="164" text-anchor="middle">files, dirs</text>
+<text class="ts" x="519" y="178" text-anchor="middle">from tree/</text>
+<rect class="box" x="579" y="124" width="166" height="62" rx="2"/>
+<text class="t" x="662" y="146" text-anchor="middle">1325–4095</text>
+<text class="ts" x="662" y="164" text-anchor="middle">free</text>
+<rect class="k-fs" x="15" y="214" width="14" height="14"/>
+<text class="ts" x="35" y="225">fixed metadata, found by arithmetic</text>
+<rect class="k-kernel" x="285" y="214" width="14" height="14"/>
+<text class="ts" x="305" y="225">jbd2 journal (inode 8)</text>
+<rect class="k-user" x="470" y="214" width="14" height="14"/>
+<text class="ts" x="490" y="225">directory and file data</text>
+</svg>
+<figcaption>Group 0 of <code>disk.img</code> from Lab 03, the only group in this 16 MiB image. With <code>flex_bg</code>, mkfs reserves room for the bitmaps of 16 groups (blocks 3–18 and 19–34). Only one group exists here, so only blocks 3 and 19 are bitmaps, and mkfs filled the gaps with the root directory, <code>lost+found</code> and the first 25 blocks of the 1,024-block journal. Block 2 is reserved so the descriptor table can grow if the filesystem is enlarged, and block 291 is the double-indirect block of the resize inode (inode 7), which tracks those reserved blocks. Byte 1024 of block 0 is where the superblock starts.</figcaption>
+</figure>
+</section>
+<section id="superblock">
+<h2>Step 1: the superblock</h2>
+<p>The superblock is always at <b>byte 1024</b>, whatever the block size. The first 1024 bytes are left free for a boot sector. Reading by byte offset lets a driver find the superblock before it knows the block size, which is itself stored in the superblock. With 4 KiB blocks the superblock sits inside block 0. With 1 KiB blocks it fills block 1, and <code>s_first_data_block</code> is 1.</p>
+<p>All multi-byte fields are little-endian. The magic number <code>0xEF53</code> is stored at byte 1024 + 0x38 = 0x438 as the two bytes <code>53 ef</code>:</p>
+<pre><code><span class="p">$</span> xxd -s $((1024 + 0x38)) -l 2 disk.img
+<span class="o">00000438: 53ef                                     S.</span></code></pre>
+<p>The fields a reader needs to find everything else:</p>
+<div class="table-wrap"><table>
+<thead><tr><th>Offset</th><th>Field</th><th>Size</th><th>Lab value and meaning</th></tr></thead>
+<tbody>
+<tr><td><code>0x00</code></td><td><code>s_inodes_count</code></td><td>4</td><td>4096 inodes in the whole filesystem</td></tr>
+<tr><td><code>0x04</code></td><td><code>s_blocks_count_lo</code></td><td>4</td><td>4096 blocks (low 32 bits; <code>_hi</code> is at <code>0x150</code>)</td></tr>
+<tr><td><code>0x14</code></td><td><code>s_first_data_block</code></td><td>4</td><td>0 (1 with 1 KiB blocks)</td></tr>
+<tr><td><code>0x18</code></td><td><code>s_log_block_size</code></td><td>4</td><td>2, so block size = 1024 &lt;&lt; 2 = 4096</td></tr>
+<tr><td><code>0x20</code></td><td><code>s_blocks_per_group</code></td><td>4</td><td>32768</td></tr>
+<tr><td><code>0x28</code></td><td><code>s_inodes_per_group</code></td><td>4</td><td>4096</td></tr>
+<tr><td><code>0x38</code></td><td><code>s_magic</code></td><td>2</td><td><code>0xEF53</code>: this is ext2/3/4</td></tr>
+<tr><td><code>0x58</code></td><td><code>s_inode_size</code></td><td>2</td><td>256 bytes per inode record</td></tr>
+<tr><td><code>0x5C</code></td><td><code>s_feature_compat</code></td><td>4</td><td>features an old driver may ignore</td></tr>
+<tr><td><code>0x60</code></td><td><code>s_feature_incompat</code></td><td>4</td><td>features an old driver must understand to mount at all</td></tr>
+<tr><td><code>0x64</code></td><td><code>s_feature_ro_compat</code></td><td>4</td><td>features an old driver may read but not write</td></tr>
+<tr><td><code>0x68</code></td><td><code>s_uuid</code></td><td>16</td><td>the filesystem's UUID (what <code>blkid</code> prints)</td></tr>
+<tr><td><code>0x78</code></td><td><code>s_volume_name</code></td><td>16</td><td><code>"lab03"</code></td></tr>
+<tr><td><code>0xFE</code></td><td><code>s_desc_size</code></td><td>2</td><td>64: group descriptor size when <code>64bit</code> is set</td></tr>
+</tbody>
+</table></div>
+<p>The three feature masks are how one on-disk format grew from ext2 (1993) through ext3 (journal) to ext4 (extents, 64-bit block numbers, checksums) without breaking old kernels unsafely:</p>
+<ul>
+<li><b>compat</b> (<code>has_journal</code>, <code>dir_index</code>, <code>ext_attr</code>): an old driver that does not know the bit can still mount read-write.</li>
+<li><b>ro_compat</b> (<code>metadata_csum</code>, <code>huge_file</code>, <code>dir_nlink</code>): an old driver may mount read-only, because writing would leave the new structures stale.</li>
+<li><b>incompat</b> (<code>extents</code>, <code>64bit</code>, <code>flex_bg</code>, <code>filetype</code>): an old driver must refuse, because it would misread the data.</li>
+</ul>
+<p>The lab image has <code>has_journal ext_attr resize_inode dir_index filetype extents 64bit flex_bg sparse_super large_file huge_file dir_nlink extra_isize metadata_csum</code>, which is what <code>mkfs.ext4</code> on Ubuntu 24.04 turns on by default (see <code>/etc/mke2fs.conf</code>).</p>
+</section>
+<section id="descriptors">
+<h2>Step 2: the group descriptor table</h2>
+<p>The group descriptor table (GDT) starts in the block after the one holding the superblock, block <code>s_first_data_block + 1</code>. It is an array with one descriptor per group. Each descriptor is 32 bytes on filesystems without <code>64bit</code>. With <code>64bit</code> it is <code>s_desc_size</code> bytes (64 in practice), and the extra 32 bytes carry the high halves of the block numbers.</p>
+<div class="table-wrap"><table>
+<thead><tr><th>Offset</th><th>Field</th><th>Size</th><th>Meaning</th></tr></thead>
+<tbody>
+<tr><td><code>0x00</code></td><td><code>bg_block_bitmap_lo</code></td><td>4</td><td>block number of this group's block bitmap</td></tr>
+<tr><td><code>0x04</code></td><td><code>bg_inode_bitmap_lo</code></td><td>4</td><td>block number of the inode bitmap</td></tr>
+<tr><td><code>0x08</code></td><td><code>bg_inode_table_lo</code></td><td>4</td><td>first block of the inode table (35 in the lab)</td></tr>
+<tr><td><code>0x0C</code></td><td><code>bg_free_blocks_count_lo</code></td><td>2</td><td>free blocks in the group</td></tr>
+<tr><td><code>0x0E</code></td><td><code>bg_free_inodes_count_lo</code></td><td>2</td><td>free inodes in the group</td></tr>
+<tr><td><code>0x10</code></td><td><code>bg_used_dirs_count_lo</code></td><td>2</td><td>directories in the group (the allocator uses it to spread them)</td></tr>
+<tr><td><code>0x12</code></td><td><code>bg_flags</code></td><td>2</td><td>e.g. <code>INODE_ZEROED</code>: the table was zeroed</td></tr>
+<tr><td><code>0x1E</code></td><td><code>bg_checksum</code></td><td>2</td><td>checksum of the descriptor</td></tr>
+<tr><td><code>0x20</code></td><td><code>bg_block_bitmap_hi</code></td><td>4</td><td>high 32 bits (64-byte descriptors only)</td></tr>
+<tr><td><code>0x28</code></td><td><code>bg_inode_table_hi</code></td><td>4</td><td>high 32 bits of the inode table block</td></tr>
+</tbody>
+</table></div>
+<p>The bitmaps are the simplest structure in the filesystem. Bit <var>i</var> of a group's block bitmap says whether block <code>group_start + i</code> is in use. Finding a free block means scanning for a 0 bit. Freeing a block means clearing one bit and bumping the free counts in the descriptor and the superblock. The inode bitmap does the same for inode slots.</p>
+<p>The free counts are duplicated on purpose. <code>df</code> reads them from the superblock in constant time instead of scanning every bitmap, which is why <code>df</code> is instant on a full 20 TB volume while <code>du</code> on the same volume takes minutes.</p>
+</section>
+<section id="inode-address">
+<h2>Step 3: an inode number is an address</h2>
+<p>Every file and directory has an <b>inode</b>, and inodes are numbered from 1. Because each group's inode table is a fixed array of fixed-size records, an inode number is effectively an address. Two divisions and a multiply find it:</p>
+<pre><code>group  = (ino - 1) / s_inodes_per_group
+index  = (ino - 1) % s_inodes_per_group
+offset = bg_inode_table[group] * block_size + index * s_inode_size</code></pre>
+<figure class="diagram">
+<svg viewBox="0 0 680 360" width="680" role="img" aria-label="Six steps from inode number 17 to the bytes of the file: compute group and index, read the group descriptor, compute the inode's byte offset, read i_block, find the extent, read the data block">
+<defs><marker id="ah-03-1" viewBox="0 0 10 10" refX="9" refY="5" markerWidth="7" markerHeight="7" orient="auto-start-reverse"><path class="ah" d="M0,0 L10,5 L0,10 z"/></marker></defs>
+<text class="ts" x="20" y="38">input</text>
+<rect class="k-user" x="170" y="14" width="490" height="40" rx="3"/>
+<text class="t" x="185" y="39">inode 17   (hello.txt, from its directory entry)</text>
+<line class="ln" x1="415" y1="54" x2="415" y2="68" marker-end="url(#ah-03-1)"/>
+<text class="ts" x="20" y="96">arithmetic</text>
+<rect class="k-fs" x="170" y="72" width="490" height="40" rx="3"/>
+<text class="t" x="185" y="97">group (17-1)/4096 = 0   index (17-1)%4096 = 16</text>
+<line class="ln" x1="415" y1="112" x2="415" y2="126" marker-end="url(#ah-03-1)"/>
+<text class="ts" x="20" y="154">read GDT</text>
+<rect class="k-fs" x="170" y="130" width="490" height="40" rx="3"/>
+<text class="t" x="185" y="155">descriptor 0 at byte 4096: bg_inode_table = 35</text>
+<line class="ln" x1="415" y1="170" x2="415" y2="184" marker-end="url(#ah-03-1)"/>
+<text class="ts" x="20" y="212">read inode</text>
+<rect class="k-fs" x="170" y="188" width="490" height="40" rx="3"/>
+<text class="t" x="185" y="213">byte 35*4096 + 16*256 = 147456: 256-byte record</text>
+<line class="ln" x1="415" y1="228" x2="415" y2="242" marker-end="url(#ah-03-1)"/>
+<text class="ts" x="20" y="270">i_block</text>
+<rect class="k-fs" x="170" y="246" width="490" height="40" rx="3"/>
+<text class="t" x="185" y="271">extent: file block 0, length 1 -&gt; disk block 1321</text>
+<line class="ln" x1="415" y1="286" x2="415" y2="300" marker-end="url(#ah-03-1)"/>
+<text class="ts" x="20" y="328">read data</text>
+<rect class="k-block" x="170" y="304" width="490" height="40" rx="3"/>
+<text class="t" x="185" y="329">byte 1321*4096 = 5410816: "This file lives at..."</text>
+</svg>
+<figcaption>Every step is either arithmetic or one block read. Nothing is searched until we reach a directory.</figcaption>
+</figure>
+<p>Some inode numbers are reserved. Inode 1 tracks bad blocks, inode 2 is <b>always the root directory</b>, inode 7 holds reserved GDT blocks for online resize, inode 8 is the journal, and the first ordinary inode is <code>s_first_ino</code>, normally 11, which <code>mkfs</code> gives to <code>lost+found</code>.</p>
+<p>This design has a consequence you can hit in production. The inode tables are allocated by <code>mkfs</code> and never grow, so the number of files is fixed at format time by the <code>inode_ratio</code> (one inode per 16 KiB of disk by default). A disk filled with millions of tiny files can report <code>No space left on device</code> while <code>df</code> shows free gigabytes. <code>df -i</code> shows the inode count running out. XFS avoids this by allocating inodes dynamically, as we will see at the end of the lesson.</p>
+</section>
+<section id="inode">
+<h2>The inode record</h2>
+<p>An inode holds everything about a file except its name and its data. The first 128 bytes are the classic ext2 layout. The rest of a 256-byte inode holds extensions such as nanosecond timestamps, creation time and small extended attributes.</p>
+<div class="table-wrap"><table>
+<thead><tr><th>Offset</th><th>Field</th><th>Size</th><th>Meaning</th></tr></thead>
+<tbody>
+<tr><td><code>0x00</code></td><td><code>i_mode</code></td><td>2</td><td>file type (top 4 bits) + permission bits; <code>0x81A4</code> = regular file, 0644</td></tr>
+<tr><td><code>0x02</code></td><td><code>i_uid</code></td><td>2</td><td>owner, low 16 bits (high bits in <code>osd2</code>)</td></tr>
+<tr><td><code>0x04</code></td><td><code>i_size_lo</code></td><td>4</td><td>size in bytes, low 32 bits (<code>i_size_high</code> at <code>0x6C</code>)</td></tr>
+<tr><td><code>0x08</code></td><td><code>i_atime</code></td><td>4</td><td>last access, seconds since 1970</td></tr>
+<tr><td><code>0x0C</code></td><td><code>i_ctime</code></td><td>4</td><td>last inode change (chmod, link, rename)</td></tr>
+<tr><td><code>0x10</code></td><td><code>i_mtime</code></td><td>4</td><td>last data modification</td></tr>
+<tr><td><code>0x14</code></td><td><code>i_dtime</code></td><td>4</td><td>deletion time (0 while the file exists)</td></tr>
+<tr><td><code>0x18</code></td><td><code>i_gid</code></td><td>2</td><td>group, low 16 bits</td></tr>
+<tr><td><code>0x1A</code></td><td><code>i_links_count</code></td><td>2</td><td>number of directory entries naming this inode</td></tr>
+<tr><td><code>0x1C</code></td><td><code>i_blocks_lo</code></td><td>4</td><td>space allocated, in 512-byte units (so 8 = one 4 KiB block)</td></tr>
+<tr><td><code>0x20</code></td><td><code>i_flags</code></td><td>4</td><td><code>0x80000</code> EXTENTS_FL, <code>0x1000</code> INDEX_FL (htree directory), ...</td></tr>
+<tr><td><code>0x28</code></td><td><code>i_block[15]</code></td><td>60</td><td>the block map: 15 pointers (ext2/3) or an extent tree root (ext4)</td></tr>
+<tr><td><code>0x64</code></td><td><code>i_generation</code></td><td>4</td><td>bumped when the inode number is reused (NFS file handles use it: <a href="06-nfs.html">lesson 06</a>)</td></tr>
+<tr><td><code>0x6C</code></td><td><code>i_size_high</code></td><td>4</td><td>size, high 32 bits</td></tr>
+<tr><td><code>0x80</code></td><td><code>i_extra_isize</code></td><td>2</td><td>how many bytes past 128 are in use (32 in the lab)</td></tr>
+<tr><td><code>0x90</code></td><td><code>i_crtime</code></td><td>4</td><td>creation time (what <code>statx</code> calls birth time)</td></tr>
+</tbody>
+</table></div>
+<p>Here is inode 17 (<code>/docs/notes/hello.txt</code>) from the lab image, raw, with each field marked:</p>
+<figure class="diagram">
+<pre><span class="p">$</span> xxd -s 147456 -l 64 disk.img
+00024000: <b>a481</b> <b>e803</b> <b>0001 0000</b> cc35 ce6a cc35 ce6a  .........5.j.5.j
+          mode uid  size=0x100   atime     ctime
+          0644 1000 =256 bytes
+00024010: cc35 ce6a 0000 0000 <b>e803</b> <b>0200</b> <b>0800 0000</b>  .5.j............
+          mtime     dtime=0   gid  links i_blocks=8
+                              1000 =2    (8 x 512 B = 4 KiB)
+00024020: <b>0000 0800</b> 0000 0000 <b>0af3 0100 0400 0000</b>  ................
+          flags     osd1      ---- extent header ----
+          0x80000             magic entries max depth
+          EXTENTS             F30A  1      4    0
+00024030: 0000 0000 <b>0000 0000 0100 0000 2905 0000</b>  ............)...
+          eh_gen    -------- one extent -------------
+                    file block 0, len 1, start 0x529 = 1321</pre>
+<figcaption>Little-endian: <code>a481</code> is 0x81A4, <code>2905 0000</code> is 0x00000529. The link count is 2 because <code>/docs/hello-again.txt</code> is a hard link to the same inode.</figcaption>
+</figure>
+<p>Notice what is <em>not</em> in the inode: the file's name. Names live only in directories. That one decision explains hard links, explains why <code>mv</code> within a filesystem is instant for any file size, and explains why a file can stay alive after its last name is removed.</p>
+<aside class="note"><span class="tag">Aside</span><p>The 32-bit timestamps would overflow in 2038. The extra fields in a 256-byte inode add nanoseconds and two extra epoch bits, which push the limit out to the year 2446. Filesystems made with 128-byte inodes do not have that room, and newer <code>mkfs</code> versions warn about it.</p></aside>
+</section>
+<section id="extents">
+<h2>From inode to data: block maps and extents</h2>
+<p>The 60 bytes of <code>i_block</code> say where the file's data is. ext2 and ext3 used them as 15 block pointers of 4 bytes each:</p>
+<figure class="diagram">
+<pre>ext2/ext3: i_block = 15 pointers (4 KiB blocks hold 1024 pointers each)
+
+  i_block[0..11] --&gt; 12 data blocks, directly                 file blocks 0..11
+  i_block[12]    --&gt; indirect block --&gt; 1024 data blocks       12..1035
+  i_block[13]    --&gt; double indirect --&gt; 1024 indirect
+                                     --&gt; 1024^2 data blocks     1036..1049611
+  i_block[14]    --&gt; triple indirect --&gt; ... --&gt; 1024^3 blocks  1049612..1074791436
+
+ext4: i_block = an extent header + up to 4 extents (12 bytes each)
+
+  [ eh_magic 0xF30A | eh_entries 2 | eh_max 4 | eh_depth 0 ]
+  [ ee_block 0   | ee_len 1 | ee_start 1318 ]   file block 0   -&gt; disk 1318
+  [ ee_block 256 | ee_len 1 | ee_start 1319 ]   file block 256 -&gt; disk 1319
+                                                (blocks 1..255: a hole)</pre>
+<figcaption>Two block maps. The pointer scheme stores one pointer per block. An extent stores one record per contiguous run. The extent example is <code>/data/sparse.dat</code> from the lab.</figcaption>
+</figure>
+<p>The pointer scheme is simple and works, but it needs one pointer per block, however neatly the blocks are laid out. A 1 GiB file stored contiguously still needs 262,144 pointers, which is 1 MiB of indirect blocks, and deleting it means reading all of them to learn which blocks to free. The scheme also tops out at 2<sup>32</sup> blocks.</p>
+<p>An <b>extent</b> describes a run: "file blocks <var>L</var> to <var>L+n−1</var> live at disk blocks <var>P</var> to <var>P+n−1</var>". ext4 packs that into 12 bytes:</p>
+<div class="table-wrap"><table>
+<thead><tr><th>Struct</th><th>Fields (offset: name)</th><th>Role</th></tr></thead>
+<tbody>
+<tr><td><code>ext4_extent_header</code></td><td>0x0 <code>eh_magic</code> (0xF30A), 0x2 <code>eh_entries</code>, 0x4 <code>eh_max</code>, 0x6 <code>eh_depth</code>, 0x8 <code>eh_generation</code></td><td>starts every node of the tree</td></tr>
+<tr><td><code>ext4_extent</code></td><td>0x0 <code>ee_block</code>, 0x4 <code>ee_len</code>, 0x6 <code>ee_start_hi</code>, 0x8 <code>ee_start_lo</code></td><td>leaf entry: one run of blocks</td></tr>
+<tr><td><code>ext4_extent_idx</code></td><td>0x0 <code>ei_block</code>, 0x4 <code>ei_leaf_lo</code>, 0x8 <code>ei_leaf_hi</code></td><td>index entry: "file blocks from here on are described by the node in this block"</td></tr>
+</tbody>
+</table></div>
+<p>One extent covers up to 32,768 blocks (128 MiB at 4 KiB). If <code>ee_len</code> is above 32,768 the extent is <b>unwritten</b>: the blocks are reserved, for example by <code>fallocate()</code>, but have never been written, so reads return zeros without touching the disk. A file of 100 KB written in one go needs one extent. In the lab, <code>/data/big.txt</code> is 102,000 bytes: 25 blocks in one extent.</p>
+<p>The inode's 60 bytes hold a 12-byte header and four extents. A file needing a fifth extent grows a tree: the four entries move to a new block that holds 340 of them, and the inode's root becomes an index node pointing to it. That tree is a B+tree, and it is the subject of <a href="04-btrees.html">lesson 04</a>.</p>
+<h3>Holes</h3>
+<p>If no extent covers a file block, that block is a <b>hole</b>. It has no disk block, and reading it returns zeros. <code>/data/sparse.dat</code> in the lab is 1,048,726 bytes long but occupies two blocks: <code>ls -ls</code> shows 8 KiB allocated, and its <code>i_blocks</code> is 16 (512-byte units). <code>i_size</code> is the logical length, and <code>i_blocks</code> is what the file costs on disk. <code>du</code> reports the second, and <code>ls -l</code> the first.</p>
+<h3>Symlinks</h3>
+<p>A symbolic link is an inode whose data is the target path. When the target is shorter than 60 bytes, ext4 stores it directly in <code>i_block</code> and allocates no data block at all. That is a <b>fast symlink</b>, and it has no <code>EXTENTS_FL</code>. Longer targets get a data block like any file. The lab has one of each.</p>
+</section>
+<section id="directories">
+<h2>Directories are files of names</h2>
+<p>A directory is an inode with type <code>S_IFDIR</code> whose data blocks contain directory entries. Each entry is an <code>ext4_dir_entry_2</code>:</p>
+<div class="table-wrap"><table>
+<thead><tr><th>Offset</th><th>Field</th><th>Size</th><th>Meaning</th></tr></thead>
+<tbody>
+<tr><td><code>0x0</code></td><td><code>inode</code></td><td>4</td><td>inode number; 0 means "unused entry"</td></tr>
+<tr><td><code>0x4</code></td><td><code>rec_len</code></td><td>2</td><td>bytes from this entry to the next one</td></tr>
+<tr><td><code>0x6</code></td><td><code>name_len</code></td><td>1</td><td>length of the name</td></tr>
+<tr><td><code>0x7</code></td><td><code>file_type</code></td><td>1</td><td>1 file, 2 dir, 3 char dev, 4 block dev, 5 fifo, 6 socket, 7 symlink</td></tr>
+<tr><td><code>0x8</code></td><td><code>name</code></td><td>name_len</td><td>not NUL-terminated; the entry is padded to a 4-byte boundary</td></tr>
+</tbody>
+</table></div>
+<p>Entries are packed one after another. <code>rec_len</code> is the link to the next entry, and the last entry's <code>rec_len</code> stretches to the end of the block. Here is the <code>/docs</code> directory block of the lab image, decoded:</p>
+<figure class="diagram">
+<pre>/docs, directory block 0
+offset  inode  rec_len  name_len  type     name
+     0     16       12         1  dir      .
+    12      2       12         2  dir      ..
+    24     17       24        15  file     hello-again.txt
+    48     18       16         6  symlink  latest
+    64     19     4020         5  dir      notes             &lt;- rec_len runs to byte 4084
+  4084      0       12         0  0xDE     (checksum tail: looks like an empty entry)</pre>
+<figcaption>Each entry is 8 bytes of header plus the name, rounded up to a multiple of 4. The last 12 bytes hold a checksum dressed up as an unused entry, so software that predates checksums skips it.</figcaption>
+</figure>
+<p>A few consequences follow from this layout:</p>
+<ul>
+<li><code>.</code> and <code>..</code> are real entries, written into every directory.</li>
+<li><b>Deleting</b> an entry does not shift anything. The previous entry's <code>rec_len</code> grows to swallow it, and the bytes stay on disk until reused.</li>
+<li><b>Creating</b> an entry means finding an entry with enough slack after its own name, splitting its <code>rec_len</code>, or appending a new block.</li>
+<li>The <code>file_type</code> byte duplicates information from the inode. It is there so <code>readdir</code> can report each entry's type (<code>d_type</code>) without reading every inode, which makes <code>find -type d</code> and <code>ls --color</code> much cheaper.</li>
+<li><b>Lookup is linear.</b> Finding one name means reading the directory's blocks until it appears. In a directory with 100,000 files, a single <code>open()</code> could scan megabytes. ext4 fixes this with an index called the <b>htree</b>, a B-tree keyed by a hash of the name, covered in <a href="04-btrees.html#htree">lesson 04</a>.</li>
+</ul>
+</section>
+<section id="walk">
+<h2>Resolving a path on disk</h2>
+<p>Now the pieces combine. To open <code>/docs/notes/hello.txt</code> with nothing cached, a reader does this:</p>
+<ol>
+<li>Read inode 2, the root directory. Map its data with its extents.</li>
+<li>Scan the root's directory blocks for <code>docs</code>. Get inode 16.</li>
+<li>Read inode 16, check it is a directory, scan it for <code>notes</code>. Get inode 19.</li>
+<li>Read inode 19, scan it for <code>hello.txt</code>. Get inode 17.</li>
+<li>Read inode 17. Its extents say where the bytes are.</li>
+</ol>
+<p>This is what <code>ext4walk</code> from the lab prints (trimmed):</p>
+<pre><code>-- "/"
+  inode 2: group = (2-1) / 4096 = 0, index = (2-1) % 4096 = 1
+    inode at byte 143616 = 35 * 4096 + 1 * 256
+    i_mode 0040755 (directory)  i_size 4096  i_links_count 5  i_flags 0x80000 EXTENTS
+      extent: file blocks 0..0 -&gt; disk blocks 4..4 (1 block)
+    dir block 0 = disk block 4: .(2) ..(2) lost+found(11) data(12) docs(16)  &lt;- "docs" found
+-- "docs"
+  inode 16: ... dir block 0 = disk block 1320: .(16) ..(2) hello-again.txt(17) latest(18) notes(19)  &lt;- "notes" found
+-- "notes"
+  inode 19: ... dir block 0 = disk block 1322: .(19) ..(16) hello.txt(17)  &lt;- "hello.txt" found
+-- "hello.txt"
+  inode 17: i_mode 0100644 (regular file)  i_size 256  i_links_count 2  i_flags 0x80000 EXTENTS
+      extent: file blocks 0..0 -&gt; disk blocks 1321..1321 (1 block)</code></pre>
+<p>Cold, each component costs at least two block reads, one in the inode table and one in the directory. A path ten levels deep is twenty reads before the first byte of data. The kernel avoids nearly all of them with the <b>dentry cache</b>, which remembers <code>(parent, name) → inode</code>, and the <b>inode cache</b>. Both are the subject of <a href="05-vfs-cache.html#dcache">lesson 05</a>. The on-disk walk only happens on a cache miss.</p>
+<p>The kernel also checks permissions at every step. To pass through a directory you need execute (search) permission on it. That is why <code>chmod 700 ~/private</code> protects every file below it, whatever those files' own modes are.</p>
+<p>Mount points are handled one layer up. When the walk reaches a directory that has another filesystem mounted on it, the VFS switches to that filesystem's root inode. ext4 never sees it.</p>
+</section>
+<section id="links">
+<h2>Hard links, link counts and deletion</h2>
+<p>Because names live in directories, nothing stops two entries from holding the same inode number. That is a <b>hard link</b>. <code>ln a b</code> adds an entry and increments <code>i_links_count</code>. Neither name is the original. In the lab, <code>/docs/hello-again.txt</code> and <code>/docs/notes/hello.txt</code> both resolve to inode 17, and its link count is 2.</p>
+<p>Directories have a predictable link count: 2 + the number of subdirectories. One link is the entry in the parent, one is the directory's own <code>.</code>, and each subdirectory's <code>..</code> adds one. The lab's root has <code>lost+found</code>, <code>data</code> and <code>docs</code>, so its count is 5. (With the <code>dir_nlink</code> feature, a directory with more than 65,000 subdirectories sets its count to 1, meaning "not tracked".)</p>
+<p>Deleting a file with <code>unlink()</code> works on names:</p>
+<ol>
+<li>Remove the directory entry by merging it into its neighbour's <code>rec_len</code>.</li>
+<li>Decrement <code>i_links_count</code>.</li>
+<li>If the count reaches 0 and no process has the file open, free it: walk the extents, clear their bits in the block bitmap, clear the inode's bit in the inode bitmap, set <code>i_dtime</code>, and update the free counts.</li>
+<li>If a process still has it open, the inode goes on the <b>orphan list</b>, and the space is freed at the last <code>close()</code>. If the system crashes first, the next mount finds the orphan and finishes the job, so the space does not leak.</li>
+</ol>
+<p>Nothing is overwritten. The bits flip, and the old bytes remain in the free blocks until something else is allocated there. That is why undelete tools sometimes work and why secure deletion needs more than <code>rm</code>.</p>
+</section>
+<section id="allocation">
+<h2>Allocation: choosing blocks</h2>
+<p>Reading the structures is half the job. The other half is deciding where new things go, and the goal is the same at every scale: put things that are read together next to each other, in long contiguous runs.</p>
+<ul>
+<li><b>Directories are spread, files are clustered.</b> The Orlov allocator places new top-level directories in groups with many free inodes and blocks, and places files and subdirectories in or near their parent's group.</li>
+<li><b>The multi-block allocator</b> (<code>mballoc</code>) allocates many blocks per request, using buddy bitmaps in memory to find free runs of power-of-two sizes quickly. It also keeps per-file and per-CPU preallocations so that small appends land next to each other.</li>
+<li><b>Delayed allocation</b> is the biggest win. A <code>write()</code> only copies data into the page cache and reserves space. Real blocks are chosen later, when the data is written back (<a href="05-vfs-cache.html#write-path">lesson 05</a>). By then the kernel often knows the file's final size and can allocate one large extent instead of a series of small ones.</li>
+</ul>
+<aside class="pitfall"><span class="tag">Pitfall</span><p>Delayed allocation widens the window in which data exists only in memory. In 2009 many applications lost file contents after crashes on early ext4, because they wrote a new file and renamed it over the old one without calling <code>fsync()</code>. The rename was journaled, the data had not been allocated yet, and after the crash the file was empty. ext4 added a heuristic (<code>auto_da_alloc</code>) that forces allocation in that pattern. The safe pattern is still write, <code>fsync</code>, rename, covered in <a href="05-vfs-cache.html#durability">lesson 05</a>.</p></aside>
+<p>Over time free space fragments, and new files get split into many extents. <code>filefrag -v</code> shows a file's extents, and <code>e4defrag</code> rewrites fragmented files. Fragmentation matters less on SSDs than on spinning disks, but it never stops mattering completely, because more extents mean a deeper tree and more, smaller I/Os.</p>
+</section>
+<section id="journal">
+<h2>Crash consistency: the journal</h2>
+<p>Creating one file touches several blocks: the inode bitmap, the inode itself, the parent directory's block, the parent's inode (mtime), and the free counts in the group descriptor. The disk writes them one at a time and can reorder them. If the power fails after some writes and before others, the filesystem is inconsistent. A directory entry might point at an inode still marked free, or a block might be marked used with no file owning it.</p>
+<p>ext2's answer was <code>fsck</code>: after an unclean shutdown, scan every inode, bitmap and directory and repair the contradictions. That takes time proportional to the size of the filesystem, which means hours on large disks.</p>
+<p>ext3 and ext4 add a <b>write-ahead journal</b>, managed by the kernel's <code>jbd2</code> layer and stored in inode 8. Before any metadata block is written to its home location, the change is first written to the journal:</p>
+<figure class="diagram">
+<svg viewBox="0 0 740 268" width="740" role="img" aria-label="Journal timeline: running transaction, write to journal, commit record, checkpoint, free journal space; a crash before commit discards the transaction, a crash after commit replays it">
+<defs><marker id="ah-03-2" viewBox="0 0 10 10" refX="9" refY="5" markerWidth="7" markerHeight="7" orient="auto-start-reverse"><path class="ah" d="M0,0 L10,5 L0,10 z"/></marker></defs>
+<rect class="k-kernel" x="10" y="20" width="132" height="74" rx="3"/>
+<text class="th" x="76" y="42" text-anchor="middle">1 running</text>
+<text class="ts" x="76" y="62" text-anchor="middle">metadata blocks</text>
+<text class="ts" x="76" y="78" text-anchor="middle">changed in RAM</text>
+<line class="ln" x1="142" y1="57" x2="156" y2="57" marker-end="url(#ah-03-2)"/>
+<rect class="k-fs" x="158" y="20" width="132" height="74" rx="3"/>
+<text class="th" x="224" y="42" text-anchor="middle">2 log</text>
+<text class="ts" x="224" y="62" text-anchor="middle">descriptor + copies</text>
+<text class="ts" x="224" y="78" text-anchor="middle">of blocks to journal</text>
+<line class="ln" x1="290" y1="57" x2="304" y2="57" marker-end="url(#ah-03-2)"/>
+<rect class="k-fs" x="306" y="20" width="132" height="74" rx="3"/>
+<text class="th" x="372" y="42" text-anchor="middle">3 commit</text>
+<text class="ts" x="372" y="62" text-anchor="middle">commit block,</text>
+<text class="ts" x="372" y="78" text-anchor="middle">cache flush</text>
+<line class="ln" x1="438" y1="57" x2="452" y2="57" marker-end="url(#ah-03-2)"/>
+<rect class="k-block" x="454" y="20" width="132" height="74" rx="3"/>
+<text class="th" x="520" y="42" text-anchor="middle">4 checkpoint</text>
+<text class="ts" x="520" y="62" text-anchor="middle">write blocks to</text>
+<text class="ts" x="520" y="78" text-anchor="middle">home locations</text>
+<line class="ln" x1="586" y1="57" x2="600" y2="57" marker-end="url(#ah-03-2)"/>
+<rect class="box" x="602" y="20" width="128" height="74" rx="3"/>
+<text class="th" x="666" y="42" text-anchor="middle">5 reuse</text>
+<text class="ts" x="666" y="62" text-anchor="middle">journal space</text>
+<text class="ts" x="666" y="78" text-anchor="middle">released</text>
+<line class="lnd" x1="300" y1="104" x2="300" y2="150"/>
+<text class="t" x="290" y="168" text-anchor="end">crash here:</text>
+<text class="ts" x="290" y="186" text-anchor="end">no commit block, so replay</text>
+<text class="ts" x="290" y="202" text-anchor="end">ignores it. As if it never</text>
+<text class="ts" x="290" y="218" text-anchor="end">happened.</text>
+<line class="lnd" x1="446" y1="104" x2="446" y2="150"/>
+<text class="t" x="456" y="168">crash here:</text>
+<text class="ts" x="456" y="186">mount replays the logged blocks</text>
+<text class="ts" x="456" y="202">to their home locations. As if</text>
+<text class="ts" x="456" y="218">it completed.</text>
+<text class="ts" x="10" y="244">data=ordered: the file's data blocks are written before step 3,</text>
+<text class="ts" x="10" y="260">so committed metadata never points at stale data.</text>
+</svg>
+<figcaption>One jbd2 transaction. Writing the same blocks twice (journal, then home) is the price of being able to replay.</figcaption>
+</figure>
+<p>The commit block is the atomic switch. A transaction either has a valid commit block in the journal or it does not. At mount, recovery replays every committed transaction and discards anything after the last commit. That takes seconds, regardless of the disk's size.</p>
+<p>jbd2 batches many operations into one transaction and commits every 5 seconds by default (the <code>commit=</code> mount option), or sooner when a program calls <code>fsync()</code>. ext4 offers three data modes:</p>
+<div class="table-wrap"><table>
+<thead><tr><th>Mode</th><th>What goes through the journal</th><th>After a crash</th></tr></thead>
+<tbody>
+<tr><td><code>data=ordered</code> (default)</td><td>metadata only; data blocks are forced to disk before the metadata that refers to them commits</td><td>consistent; a file never shows another file's old blocks</td></tr>
+<tr><td><code>data=writeback</code></td><td>metadata only, with no ordering for data</td><td>consistent metadata, but a recently extended file can contain stale garbage</td></tr>
+<tr><td><code>data=journal</code></td><td>metadata and data</td><td>strongest, and every byte is written twice</td></tr>
+</tbody>
+</table></div>
+<aside class="pitfall"><span class="tag">Pitfall</span><p>The journal protects the filesystem's own structures. It does not make your writes durable. Data still in the page cache when the power goes is lost, journal or not, and the journal does not make an update to two files atomic. Durability is the application's job, through <code>fsync()</code>, and <a href="05-vfs-cache.html#durability">lesson 05</a> shows how to do it right.</p></aside>
+</section>
+<section id="cow">
+<h2>The other answer: copy-on-write</h2>
+<p>btrfs and ZFS solve the same problem without a journal. They never overwrite a live block. A change is written to a new location, which means the block that points at it must also change, and so on up to the root. A commit writes the new root's location into the superblock (ZFS calls it the uberblock) in one atomic write. Before that write the old tree is intact, and after it the new tree is complete, so there is never a moment when the disk holds a half-updated structure.</p>
+<p>Copy-on-write has three big benefits. Snapshots are nearly free: keep the old root and its blocks. Every pointer can carry a checksum of the block it points to, so silent corruption is detected on read. And there is no double write of metadata. The costs are fragmentation of files that are overwritten in place (databases, VM images) and more complex free-space accounting, because a block may be shared by several snapshots. <a href="04-btrees.html#btrfs">Lesson 04</a> shows the copy-on-write B-tree that btrfs is built on.</p>
+</section>
+<section id="xfs">
+<h2>XFS in one section</h2>
+<p>XFS, the default filesystem on Red Hat Enterprise Linux, answers the same questions with trees where ext4 uses arrays. It divides the volume into <b>allocation groups</b> (AGs) of up to 1 TiB, each almost an independent filesystem with its own free-space and inode indexes, so many threads can allocate in parallel. Inodes are not preallocated in fixed tables. They are created on demand in chunks of 64 and tracked by a per-AG B+tree, and an inode number encodes the AG, block and slot where it lives, so it is still an address. Free space is tracked by two B+trees per AG instead of a bitmap. A file's extents live in the inode until they outgrow it and then move to a B+tree, and large directories are B+trees keyed by name hash. Metadata is journaled, data is not. Because every structure is a tree, XFS is the natural next stop after this lesson: <a href="04-btrees.html#xfs">lesson 04</a> takes it apart.</p>
+</section>
+<section class="lab" id="lab">
+<p class="tag">Lab 03</p>
+<h2>Walk an ext4 image by hand</h2>
+<p class="where">~/storage-course/labs/03-ondisk/</p>
+<p>You build a 16 MiB ext4 filesystem inside an ordinary file with no root (<code>mkfs.ext4 -d</code> copies a directory tree in while formatting), then resolve paths in it with <code>ext4walk</code>, a 900-line C program that uses nothing but <code>pread()</code>. It narrates every step with field names and byte offsets.</p>
+<ol>
+<li>Build the image and the walker:
+<pre><code><span class="p">$</span> cd ~/storage-course/labs/03-ondisk
+<span class="p">$</span> ./mkimg.sh
+<span class="o">built disk.img (4096-byte blocks) from ./tree</span>
+<span class="p">$</span> gcc -Wall -Wextra -O2 -o ext4walk ext4walk.c</code></pre>
+</li>
+<li>Find the magic number yourself, at byte 1024 + 0x38:
+<pre><code><span class="p">$</span> xxd -s $((1024 + 0x38)) -l 2 disk.img
+<span class="o">00000438: 53ef                                     S.</span></code></pre>
+</li>
+<li>Walk a path and read the narration top to bottom. Example output from this machine (block numbers on yours will differ):
+<pre><code><span class="p">$</span> ./ext4walk disk.img /docs/notes/hello.txt
+<span class="o">== step 1: superblock (bytes 1024..2047 of the image) ==
+  s_magic            0xEF53   (offset 0x38: this is ext2/3/4)
+  s_log_block_size   2   -&gt; block size = 1024 &lt;&lt; 2 = 4096 bytes
+  s_inodes_per_group 4096
+  s_inode_size       256 bytes
+  descriptor size    64 bytes   (64bit feature: s_desc_size)
+  group descriptor table starts at block 1 (byte 4096)
+...
+-- "hello.txt"
+  inode 17: group = (17-1) / 4096 = 0, index = (17-1) % 4096 = 16
+    group 0 descriptor at byte 4096 -&gt; bg_inode_table = block 35
+    inode at byte 147456 = 35 * 4096 + 16 * 256
+...
+  contents (up to 512 visible bytes):
+  | This file lives at /docs/notes/hello.txt.</span></code></pre>
+</li>
+<li>Check every claim against the real tools:
+<pre><code><span class="p">$</span> debugfs -R 'stat /docs/notes/hello.txt' disk.img    <span class="c"># EXTENTS: (0):1321</span>
+<span class="p">$</span> debugfs -R 'ls -l /docs' disk.img
+<span class="p">$</span> xxd -s 147456 -l 64 disk.img                         <span class="c"># the inode, raw</span></code></pre>
+</li>
+<li>Try the other kinds of file and compare what the walker prints:
+<pre><code><span class="p">$</span> ./ext4walk -q disk.img /data/sparse.dat     <span class="c"># 2 extents, a 255-block hole</span>
+<span class="p">$</span> ./ext4walk -q -n 0 disk.img /data/big.txt   <span class="c"># 25 contiguous blocks, 1 extent</span>
+<span class="p">$</span> ./ext4walk -q disk.img /docs/latest         <span class="c"># fast symlink, target inside i_block</span>
+<span class="p">$</span> ./ext4walk -q disk.img /data/long-link      <span class="c"># slow symlink, target in a data block</span>
+<span class="p">$</span> ./ext4walk disk.img /docs/nope              <span class="c"># ENOENT after scanning the block</span></code></pre>
+</li>
+<li>Rebuild with 1 KiB blocks (<code>./mkimg.sh disk1k.img 1024</code>) and watch <code>s_first_data_block</code> become 1 and the descriptor table move to block 2. For the ext2 layout with indirect blocks, see step 8 in the lab's <code>README.md</code>.</li>
+</ol>
+<p class="small muted">Tested on this machine (WSL2, e2fsprogs 1.47.0, kernel 6.18) with 4 KiB and 1 KiB ext4 images and a 1 KiB ext2 image. Everything runs without root.</p>
+</section>
+<section class="check" id="check">
+<h2>Check yourself</h2>
+<details><summary>The superblock is at byte 1024. On a filesystem with 1 KiB blocks, which block is that, and where does the group descriptor table start?</summary><p>Block 1, so <code>s_first_data_block</code> is 1. The descriptor table starts in the next block, block 2. With 4 KiB blocks the superblock is inside block 0 and the table starts at block 1.</p></details>
+<details><summary><code>s_inodes_per_group</code> is 8192, inodes are 256 bytes, blocks are 4 KiB, and group 3's <code>bg_inode_table</code> is 98304. At what byte is inode 24,600?</summary><p>Group = 24599 / 8192 = 3 (integer division), index = 24599 − 3 × 8192 = 23. Byte = 98304 × 4096 + 23 × 256 = 402,653,184 + 5,888 = 402,659,072.</p></details>
+<details><summary>Why does <code>mv big.iso archive/big.iso</code> take the same time for a 1 KB file and a 100 GB file on one filesystem?</summary><p>Only directory entries change: one entry is removed from the source directory and one added to the target. The inode, its extents and the data blocks are untouched, because names are not stored in the inode.</p></details>
+<details><summary>A file's <code>ls -l</code> size is 1 GiB, but <code>du</code> says 8 KiB. How?</summary><p>It is sparse. <code>i_size</code> is the logical length, and only two blocks are mapped by extents. The rest are holes: no extent covers them, they use no disk space, and they read as zeros. <code>du</code> reports <code>i_blocks</code>.</p></details>
+<details><summary>A directory has three subdirectories. What is its link count, and why?</summary><p>5: its entry in the parent, its own <code>.</code>, and the <code>..</code> of each of the three subdirectories.</p></details>
+<details><summary>A 2008 kernel mounts a filesystem whose superblock has an unknown bit in <code>s_feature_ro_compat</code>. What happens? And for an unknown <code>incompat</code> bit?</summary><p>An unknown ro_compat bit allows a read-only mount only, since writing could leave the new structure stale. An unknown incompat bit makes the kernel refuse to mount, since it might misread the data itself.</p></details>
+<details><summary>With <code>data=ordered</code>, can a file that was being appended when the power failed contain another, deleted file's old bytes after reboot?</summary><p>No. In ordered mode the new data blocks are written before the transaction that allocates them commits. Either the allocation is not committed (the append is lost) or it is committed with the right data. With <code>data=writeback</code> this ordering is not enforced, and stale blocks can appear.</p></details>
+<details><summary>Why does ext4 store <code>file_type</code> in each directory entry when the type is already in the inode's <code>i_mode</code>?</summary><p>So <code>readdir()</code> can return each entry's type (<code>d_type</code>) without reading one inode per entry. Tools that only need to know "is this a directory?" (<code>find</code>, <code>ls --color</code>, <code>du</code>) save one random read per file.</p></details>
+</section>
+<section class="further" id="further">
+<h2>Go deeper</h2>
+<ul>
+<li><a href="https://www.kernel.org/doc/html/latest/filesystems/ext4/index.html">ext4 Data Structures and Algorithms</a>: the kernel's own byte-level description of every structure in this lesson.</li>
+<li><a href="https://git.kernel.org/pub/scm/linux/kernel/git/torvalds/linux.git/tree/fs/ext4/ext4.h">fs/ext4/ext4.h</a>: the C structs (<code>ext4_super_block</code>, <code>ext4_group_desc</code>, <code>ext4_inode</code>).</li>
+<li><a href="https://pages.cs.wisc.edu/~remzi/OSTEP/file-implementation.pdf">OSTEP, File System Implementation</a>: a tiny teaching filesystem built step by step; read this if anything above went too fast.</li>
+<li><a href="https://pages.cs.wisc.edu/~remzi/OSTEP/file-ffs.pdf">OSTEP, Locality and the Fast File System</a>: where block groups (cylinder groups) come from.</li>
+<li><a href="https://pages.cs.wisc.edu/~remzi/OSTEP/file-journaling.pdf">OSTEP, Crash Consistency: FSCK and Journaling</a>: the crash scenarios in detail, including ordered vs metadata journaling.</li>
+<li><a href="https://www.kernel.org/doc/html/latest/admin-guide/ext4.html">ext4 admin guide</a>: mount options such as <code>data=</code>, <code>commit=</code> and <code>auto_da_alloc</code>.</li>
+<li><a href="https://man7.org/linux/man-pages/man8/debugfs.8.html">debugfs(8)</a>: the ext2/3/4 debugger used in the lab; <code>stat</code>, <code>ex</code>, <code>ls -l</code>, <code>htree</code>, <code>icheck</code>, <code>ncheck</code>.</li>
+</ul>
+</section>
+<nav class="pager-foot" aria-label="Next and previous lesson">
+<a class="prev" href="02-blocks.html"><small>Previous</small>Block devices and addressing</a>
+<a class="next" href="04-btrees.html"><small>Next</small>B-trees, really</a>
+</nav>
+</main>
+</div>
+<script src="course.js"></script>
+</body>
+</html>

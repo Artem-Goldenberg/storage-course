@@ -1,0 +1,496 @@
+<!doctype html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover">
+<title>Distributed Filesystems</title>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=IBM+Plex+Mono:wght@400;600&family=IBM+Plex+Sans+Condensed:wght@500;600;700&family=Source+Serif+4:ital,opsz,wght@0,8..60,400;0,8..60,600;1,8..60,400&display=swap">
+<link rel="stylesheet" href="course.css?v=7">
+</head>
+<body data-layer="net">
+<header class="topbar">
+<a class="brand" href="index.html">From open() to RDMA <span>· a storage course</span></a>
+<nav class="pager" aria-label="Lesson pager">
+<a href="08-rdma.html" rel="prev">← Prev</a>
+<details class="route"><summary>Lesson 9 of 9</summary></details>
+<a href="glossary.html" rel="next">Glossary →</a>
+<details class="sections"><summary>Sections</summary></details>
+</nav>
+</header>
+<div class="layout">
+<nav class="rail" aria-label="Lessons">
+<div class="rail-title">The route</div>
+<ol>
+<li class="user"><a href="01-syscalls.html"><span class="n">01</span><span>Syscalls &amp; file descriptors</span></a></li>
+<li class="block"><a href="02-blocks.html"><span class="n">02</span><span>Block devices &amp; addressing</span></a></li>
+<li class="fs"><a href="03-ondisk.html"><span class="n">03</span><span>Inside an ext4 image</span></a></li>
+<li class="fs"><a href="04-btrees.html"><span class="n">04</span><span>B-trees, really</span></a></li>
+<li class="kernel"><a href="05-vfs-cache.html"><span class="n">05</span><span>The VFS and the caches</span></a></li>
+<li class="net"><a href="06-nfs.html"><span class="n">06</span><span>NFS from v3 to 4.2</span></a></li>
+<li class="net"><a href="07-nfs-caching.html"><span class="n">07</span><span>Caching across the network</span></a></li>
+<li class="net"><a href="08-rdma.html"><span class="n">08</span><span>RDMA and NFS over RDMA</span></a></li>
+<li class="net"><a href="09-distributed.html" aria-current="page"><span class="n">09</span><span>Distributed filesystems</span></a></li>
+<li class="extra"><a href="glossary.html"><span class="n">··</span><span>Glossary</span></a></li>
+</ol>
+<div class="rail-legend">
+<span style="--c: var(--l-user)">user space</span>
+<span style="--c: var(--l-kernel)">kernel</span>
+<span style="--c: var(--l-fs)">filesystem</span>
+<span style="--c: var(--l-block)">block</span>
+<span style="--c: var(--l-net)">network</span>
+</div>
+</nav>
+<main class="lesson">
+<header class="lesson-head">
+<p class="eyebrow">Lesson 9 · Network</p>
+<h1>Distributed Filesystems</h1>
+<p class="lede">Sooner or later one server runs out of disks, bandwidth or uptime. A distributed filesystem spreads one namespace over many machines. Every design answers the same handful of questions, and this lesson walks through them using the systems you are most likely to meet: Lustre, Ceph, GPFS, HDFS and pNFS.</p>
+<div class="outcomes">
+<b>After this lesson you can</b>
+<ul>
+<li>name the six problems every distributed filesystem must solve;</li>
+<li>place a system in the architecture taxonomy and predict its strengths and weak spots;</li>
+<li>compute which Lustre OST holds a given byte of a striped file;</li>
+<li>follow a Ceph object from its name to a placement group to a list of OSDs;</li>
+<li>compare replication and erasure coding on overhead, failure tolerance and rebuild cost;</li>
+<li>explain leases, quorum and fencing, and why a cluster can never be sure a silent node is dead.</li>
+</ul>
+</div>
+<nav class="toc" aria-label="Lesson contents">
+<b>In this lesson</b>
+<ol>
+<li><a href="#why">Why distribute, and what gets hard</a></li>
+<li><a href="#taxonomy">Six architectures</a></li>
+<li><a href="#nas">Scale-up NAS and shared-disk clusters</a></li>
+<li><a href="#mds">Metadata server plus data servers</a></li>
+<li><a href="#ceph">Computed placement: Ceph</a></li>
+<li><a href="#more">Three more designs</a></li>
+<li><a href="#placement">Placement strategies compared</a></li>
+<li><a href="#redundancy">Redundancy: replication or erasure coding</a></li>
+<li><a href="#consistency">Consistency and caching at scale</a></li>
+<li><a href="#failure">Failure detection, quorum and fencing</a></li>
+<li><a href="#performance">Thinking about performance</a></li>
+<li><a href="#nfs-fit">Where NFS 4.2 and RDMA fit</a></li>
+<li><a href="#lab">Lab 08: Where does an object live?</a></li>
+<li><a href="#check">Check yourself</a></li>
+<li><a href="#further">Go deeper</a></li>
+</ol>
+</nav>
+</header>
+<section id="why">
+<h2>Why distribute, and what gets hard</h2>
+<p>A single NFS server (<a href="06-nfs.html">lesson 6</a>) is the simplest network filesystem, and it hits four walls:</p>
+<ul>
+<li><b>Capacity.</b> A chassis holds a fixed number of drives.</li>
+<li><b>Bandwidth.</b> Every byte passes through one machine's NICs, memory and CPUs. Two 400 Gb/s ports cap it at about 100 GB/s, and the server usually saturates well before that.</li>
+<li><b>Metadata rate.</b> Every create, lookup and rename runs on that one machine's CPUs and its local filesystem's locks.</li>
+<li><b>Availability.</b> One machine is one failure domain. High-availability pairs help with crashes, not with the other three walls.</li>
+</ul>
+<p>Scaling out means adding servers instead of growing one. As soon as there are several, six problems appear, and every system in this lesson is a set of answers to them:</p>
+<ol>
+<li><b>Metadata scaling.</b> Who knows the namespace (names, directories, attributes, which servers hold a file), and how many operations per second can they serve?</li>
+<li><b>Data placement.</b> Which servers hold which bytes, and how does a client find them?</li>
+<li><b>Redundancy.</b> How do the bytes survive the loss of a disk, a server, or a rack?</li>
+<li><b>Consistency and caching.</b> What does a client see while other clients write? This is <a href="07-nfs-caching.html">lesson 7</a>'s question with many more participants.</li>
+<li><b>Failure detection and recovery.</b> Who decides that a node is dead, and how is its state rebuilt?</li>
+<li><b>Rebalancing.</b> What has to move when servers are added or removed?</li>
+</ol>
+<aside class="key"><span class="tag">Key idea</span><p>The biggest single design choice is where metadata lives and how a client goes from a file name to the servers holding its data: ask a server, read a table, or compute it.</p></aside>
+</section>
+<section id="taxonomy">
+<h2>Six architectures</h2>
+<figure class="diagram">
+<svg viewBox="0 0 680 540" width="680" role="img" aria-label="Six distributed filesystem architectures: scale-up NAS, shared-disk cluster, metadata plus data servers, computed placement, hashed placement without a metadata server, and metadata database plus object store">
+<defs><marker id="ah-9-1" viewBox="0 0 10 10" refX="9" refY="5" markerWidth="6" markerHeight="6" orient="auto-start-reverse"><path class="ah" d="M0,0 L10,5 L0,10 z"/></marker></defs>
+<rect class="box" x="0" y="0" width="330" height="170" rx="4"/>
+<text class="th" x="12" y="24">1 · Scale-up NAS</text>
+<rect class="k-user" x="20" y="45" width="64" height="24" rx="3"/><text class="ts" x="52" y="61" text-anchor="middle">client</text>
+<rect class="k-user" x="20" y="83" width="64" height="24" rx="3"/><text class="ts" x="52" y="99" text-anchor="middle">client</text>
+<rect class="k-user" x="20" y="121" width="64" height="24" rx="3"/><text class="ts" x="52" y="137" text-anchor="middle">client</text>
+<rect class="k-net" x="140" y="68" width="96" height="54" rx="3"/><text class="t" x="188" y="91" text-anchor="middle">NFS</text><text class="t" x="188" y="108" text-anchor="middle">server</text>
+<rect class="k-block" x="262" y="75" width="56" height="40" rx="3"/><text class="ts" x="290" y="99" text-anchor="middle">disks</text>
+<line class="ln" x1="84" y1="57" x2="138" y2="82" marker-end="url(#ah-9-1)"/>
+<line class="ln" x1="84" y1="95" x2="138" y2="95" marker-end="url(#ah-9-1)"/>
+<line class="ln" x1="84" y1="133" x2="138" y2="108" marker-end="url(#ah-9-1)"/>
+<line class="ln" x1="236" y1="95" x2="260" y2="95" marker-end="url(#ah-9-1)"/>
+<rect class="box" x="350" y="0" width="330" height="170" rx="4"/>
+<text class="th" x="362" y="24">2 · Shared-disk cluster</text>
+<rect class="k-fs" x="366" y="42" width="92" height="28" rx="3"/><text class="ts" x="412" y="60" text-anchor="middle">node + FS</text>
+<rect class="k-fs" x="469" y="42" width="92" height="28" rx="3"/><text class="ts" x="515" y="60" text-anchor="middle">node + FS</text>
+<rect class="k-fs" x="572" y="42" width="92" height="28" rx="3"/><text class="ts" x="618" y="60" text-anchor="middle">node + FS</text>
+<line class="lnd" x1="412" y1="86" x2="618" y2="86"/>
+<text class="ts" x="515" y="100" text-anchor="middle">lock manager (DLM / tokens)</text>
+<line class="ln" x1="412" y1="70" x2="440" y2="118" marker-end="url(#ah-9-1)"/>
+<line class="ln" x1="515" y1="70" x2="515" y2="118" marker-end="url(#ah-9-1)"/>
+<line class="ln" x1="618" y1="70" x2="590" y2="118" marker-end="url(#ah-9-1)"/>
+<rect class="k-block" x="400" y="120" width="230" height="36" rx="3"/><text class="ts" x="515" y="142" text-anchor="middle">shared block devices (SAN, NVMe-oF)</text>
+<rect class="box" x="0" y="185" width="330" height="170" rx="4"/>
+<text class="th" x="12" y="209">3 · Metadata + data servers</text>
+<rect class="k-user" x="16" y="262" width="70" height="36" rx="3"/><text class="t" x="51" y="285" text-anchor="middle">client</text>
+<rect class="k-net" x="124" y="222" width="80" height="28" rx="3"/><text class="t" x="164" y="241" text-anchor="middle">MDS</text>
+<rect class="k-net" x="246" y="228" width="72" height="26" rx="3"/><text class="ts" x="282" y="245" text-anchor="middle">data srv</text>
+<rect class="k-net" x="246" y="267" width="72" height="26" rx="3"/><text class="ts" x="282" y="284" text-anchor="middle">data srv</text>
+<rect class="k-net" x="246" y="306" width="72" height="26" rx="3"/><text class="ts" x="282" y="323" text-anchor="middle">data srv</text>
+<line class="ln" x1="70" y1="262" x2="122" y2="242" marker-end="url(#ah-9-1)"/>
+<text class="ts" x="92" y="238" text-anchor="middle">1 layout</text>
+<line class="ln" x1="86" y1="276" x2="244" y2="243" marker-end="url(#ah-9-1)"/>
+<line class="ln" x1="86" y1="280" x2="244" y2="280" marker-end="url(#ah-9-1)"/>
+<line class="ln" x1="86" y1="286" x2="244" y2="318" marker-end="url(#ah-9-1)"/>
+<text class="ts" x="150" y="338">2 parallel I/O</text>
+<rect class="box" x="350" y="185" width="330" height="170" rx="4"/>
+<text class="th" x="362" y="209">4 · Computed placement</text>
+<rect class="k-user" x="362" y="258" width="96" height="44" rx="3"/><text class="t" x="410" y="277" text-anchor="middle">client</text><text class="ts" x="410" y="293" text-anchor="middle">+ cluster map</text>
+<rect class="k-net" x="480" y="222" width="76" height="28" rx="3"/><text class="t" x="518" y="241" text-anchor="middle">MONs</text>
+<rect class="k-net" x="596" y="228" width="72" height="26" rx="3"/><text class="ts" x="632" y="245" text-anchor="middle">OSD</text>
+<rect class="k-net" x="596" y="267" width="72" height="26" rx="3"/><text class="ts" x="632" y="284" text-anchor="middle">OSD</text>
+<rect class="k-net" x="596" y="306" width="72" height="26" rx="3"/><text class="ts" x="632" y="323" text-anchor="middle">OSD</text>
+<line class="lnd" x1="480" y1="244" x2="446" y2="256" marker-end="url(#ah-9-1)"/>
+<text class="ts" x="500" y="268">map</text>
+<line class="ln" x1="458" y1="285" x2="594" y2="280" marker-end="url(#ah-9-1)"/>
+<line class="ln" x1="458" y1="294" x2="594" y2="318" marker-end="url(#ah-9-1)"/>
+<text class="ts" x="470" y="338">CRUSH(object) → OSDs</text>
+<rect class="box" x="0" y="370" width="330" height="170" rx="4"/>
+<text class="th" x="12" y="394">5 · Hashed, no metadata server</text>
+<rect class="k-user" x="16" y="446" width="70" height="36" rx="3"/><text class="t" x="51" y="469" text-anchor="middle">client</text>
+<rect class="k-net" x="206" y="412" width="112" height="28" rx="3"/><text class="ts" x="262" y="430" text-anchor="middle">server (brick)</text>
+<rect class="k-net" x="206" y="451" width="112" height="28" rx="3"/><text class="ts" x="262" y="469" text-anchor="middle">server (brick)</text>
+<rect class="k-net" x="206" y="490" width="112" height="28" rx="3"/><text class="ts" x="262" y="508" text-anchor="middle">server (brick)</text>
+<line class="ln" x1="86" y1="458" x2="204" y2="428" marker-end="url(#ah-9-1)"/>
+<line class="ln" x1="86" y1="464" x2="204" y2="465" marker-end="url(#ah-9-1)"/>
+<line class="ln" x1="86" y1="470" x2="204" y2="503" marker-end="url(#ah-9-1)"/>
+<text class="ts" x="100" y="430">hash(name)</text>
+<rect class="box" x="350" y="370" width="330" height="170" rx="4"/>
+<text class="th" x="362" y="394">6 · Metadata DB + object store</text>
+<rect class="k-user" x="366" y="446" width="70" height="36" rx="3"/><text class="t" x="401" y="469" text-anchor="middle">client</text>
+<rect class="k-fs" x="500" y="410" width="166" height="34" rx="3"/><text class="ts" x="583" y="431" text-anchor="middle">metadata database</text>
+<rect class="k-block" x="500" y="486" width="166" height="38" rx="3"/><text class="ts" x="583" y="509" text-anchor="middle">object storage (S3-like)</text>
+<line class="ln" x1="436" y1="456" x2="498" y2="432" marker-end="url(#ah-9-1)"/>
+<line class="ln" x1="436" y1="474" x2="498" y2="500" marker-end="url(#ah-9-1)"/>
+<text class="ts" x="440" y="430">names</text>
+<text class="ts" x="440" y="512">data</text>
+</svg>
+<figcaption>Six answers to "how does a client get from a name to its bytes?" Colours follow the course: clients in violet, servers on the network in red, filesystem code in green, block storage in ochre.</figcaption>
+</figure>
+<div class="table-wrap"><table>
+<thead><tr><th>#</th><th>Architecture</th><th>Examples</th><th>Metadata lives</th><th>Client finds data by</th><th>Weak spot</th></tr></thead>
+<tbody>
+<tr><td>1</td><td>Scale-up NAS</td><td>one Linux knfsd, a NAS appliance</td><td>the server's local FS</td><td>asking the server for everything</td><td>one box: capacity, bandwidth, failure</td></tr>
+<tr><td>2</td><td>Shared-disk cluster</td><td>GFS2, OCFS2, IBM Storage Scale (GPFS)</td><td>on the shared disks, cached by every node</td><td>reading the shared on-disk structures under locks</td><td>lock traffic; needs fencing</td></tr>
+<tr><td>3</td><td>Metadata + data servers</td><td>Lustre, BeeGFS, HDFS, pNFS</td><td>metadata server(s)</td><td>a layout from the metadata server, then direct I/O</td><td>metadata server load and availability</td></tr>
+<tr><td>4</td><td>Computed placement</td><td>Ceph (RADOS; CephFS on top)</td><td>for objects: nowhere, it is computed. For CephFS names: MDS daemons</td><td>CRUSH on a cluster map every client holds</td><td>map changes move data; complex to operate</td></tr>
+<tr><td>5</td><td>Hashed, no metadata server</td><td>GlusterFS</td><td>spread over the servers, as files and xattrs</td><td>hashing the file name</td><td>renames, directory listings, rebalancing</td></tr>
+<tr><td>6</td><td>Metadata DB + object store</td><td>JuiceFS, Google Colossus</td><td>a database (Redis, TiKV, SQL; Bigtable for Colossus)</td><td>asking the database, then fetching objects</td><td>depends on the database; object stores are not POSIX</td></tr>
+</tbody>
+</table></div>
+</section>
+<section id="nas">
+<h2>Scale-up NAS and shared-disk clusters</h2>
+<p>The single NFS server is the baseline. It is simple, every client already supports it, and its semantics are the ones from lessons 6 and 7. High availability usually means two heads in front of the same storage: when the active head dies, the standby imports the storage, takes over the IP address, and clients reclaim their state during the NFSv4 grace period. Capacity and bandwidth still stop at one head.</p>
+<h3 id="shared-disk">Shared-disk clusters</h3>
+<p>A shared-disk cluster removes the single head. Every node sees the same block devices (a SAN, iSCSI or NVMe over Fabrics), and every node runs the whole filesystem itself: it reads and writes the on-disk inodes, bitmaps and directories from <a href="03-ondisk.html">lesson 3</a> directly. The hard part is that each node has its own page cache and inode cache (<a href="05-vfs-cache.html">lesson 5</a>). Two nodes caching the same allocation bitmap and both allocating from it would corrupt the filesystem.</p>
+<p>So every structure is protected by a cluster-wide lock. GFS2 and OCFS2 use an in-kernel <b>distributed lock manager</b> (DLM): before a node reads an inode it takes a shared lock on it, before changing it an exclusive one. When another node asks for a conflicting lock, the holder is told to write back its dirty data, drop its cached copy, and release. The cache is valid only while you hold the lock. That rule turns up in every coherent design in this lesson.</p>
+<p><b>IBM Storage Scale</b> (long known as GPFS) is the large-scale member of this family. Its disks are usually reached over the network through <b>NSD servers</b> (Network Shared Disk), so it looks like architecture 3 on the wire while keeping the shared-disk design inside. A <b>token manager</b> hands out tokens. Byte-range tokens let one node cache and write part of a file while another node works on a different range of the same file. For each open file, one node acts as the <b>metanode</b> and is the only one that updates that file's inode and block map. GPFS is fully POSIX-coherent and runs some of the largest HPC filesystems.</p>
+<aside class="pitfall"><span class="tag">Pitfall</span><p>A node that hangs for 30 seconds and then wakes up still believes it holds its locks. If the cluster has already given those locks to someone else, its delayed writes corrupt the shared disks. Shared-disk clusters therefore require <b>fencing</b>: cut the node's power or its storage access before handing its locks out. See <a href="#failure">failures</a> below.</p></aside>
+</section>
+<section id="mds">
+<h2>Metadata server plus data servers</h2>
+<p>This is the most common design for high-bandwidth file storage. Split the work in two:</p>
+<ul>
+<li>a <b>metadata server</b> (MDS) holds the namespace: directories, names, permissions, and for each file a <b>layout</b> saying which data servers hold its bytes and in what pattern;</li>
+<li>many <b>data servers</b> hold the bytes and do nothing else.</li>
+</ul>
+<p>A client asks the MDS once, at open, for the layout, then talks to the data servers directly and in parallel. The metadata server stays off the data path, so bandwidth grows with the number of data servers. You met the standard version of this in lesson 6: <b>pNFS</b>, where an NFSv4.1+ client gets a layout from the MDS and performs I/O against data servers.</p>
+<h3 id="lustre">Lustre</h3>
+<p>Lustre is the dominant open-source parallel filesystem in HPC. Its pieces:</p>
+<div class="table-wrap"><table>
+<thead><tr><th>Component</th><th>Role</th></tr></thead>
+<tbody>
+<tr><td><b>MGS</b> management server</td><td>holds the configuration; clients and servers fetch it at mount time</td></tr>
+<tr><td><b>MDS</b> / <b>MDT</b></td><td>metadata server and its metadata target (a storage device formatted with ldiskfs, a modified ext4, or ZFS). Holds directories and inodes; each file's layout is stored as an extended attribute of its inode</td></tr>
+<tr><td><b>OSS</b> / <b>OST</b></td><td>object storage server and its object storage targets. A file's data lives in one or more objects on OSTs</td></tr>
+<tr><td><b>Client</b></td><td>a kernel filesystem module. Presents POSIX to applications</td></tr>
+<tr><td><b>LNet</b></td><td>Lustre's own network layer. Its drivers (LNDs) include <code>socklnd</code> for TCP and <code>o2iblnd</code> for RDMA over InfiniBand or RoCE (<a href="08-rdma.html">lesson 8</a>). LNet routers can join different fabrics</td></tr>
+</tbody>
+</table></div>
+<p><b>Striping</b> is RAID 0 across OST objects. A layout has a <code>stripe_size</code> (how many bytes go to one object before moving on) and a <code>stripe_count</code> (how many objects). Many sites default to one stripe of 1 MiB and let users raise the count for big files. The arithmetic is the same kind you did in <a href="02-blocks.html">lesson 2</a>:</p>
+<pre><code>stripe_number = offset / stripe_size
+object_index  = stripe_number % stripe_count          <span class="c"># which object in the layout</span>
+object_offset = (stripe_number / stripe_count) * stripe_size
+              + offset % stripe_size                  <span class="c"># where inside that object</span>
+
+<span class="c"># stripe_size = 1 MiB, stripe_count = 4, offset = 5.5 MiB</span>
+stripe_number = 5,  object_index = 1,  object_offset = 1 MiB + 0.5 MiB = 1.5 MiB</code></pre>
+<figure class="diagram">
+<pre><code>file offset (MiB)  0    1    2    3    4    5    6    7    8
+                   | s0 | s1 | s2 | s3 | s4 | s5 | s6 | s7 |
+
+stripe_count = 4, stripe_size = 1 MiB
+  object 0 on OST 12:  s0 s4      object bytes 0-1 MiB, 1-2 MiB
+  object 1 on OST 3:   s1 s5
+  object 2 on OST 7:   s2 s6
+  object 3 on OST 21:  s3 s7</code></pre>
+<figcaption>An 8 MiB file striped over four OSTs. A large sequential read pulls from all four servers at once. A 4 KiB read touches exactly one.</figcaption>
+</figure>
+<pre><code><span class="p">$</span> lfs setstripe -c 4 -S 4M /lustre/project/run42      <span class="c"># default layout for new files in this dir</span>
+<span class="p">$</span> lfs getstripe /lustre/project/run42/output.h5        <span class="c"># show a file's layout and its OST objects</span>
+<span class="p">$</span> lfs setstripe -E 32M -c 1 -E 1G -c 4 -E -1 -c -1 big.dat   <span class="c"># a progressive layout</span></code></pre>
+<p>The last command is a <b>progressive file layout</b> (PFL, Lustre 2.10): the first 32 MiB use one stripe, up to 1 GiB use four, and the rest use every OST (<code>-c -1</code>). Small files stay cheap and big files get bandwidth, without anyone knowing the size in advance.</p>
+<p>Metadata scales through <b>DNE</b> (distributed namespace), which spreads the namespace over several MDTs. A <b>remote directory</b> places a whole subtree on another MDT (<code>lfs mkdir -i 1 dir</code>). A <b>striped directory</b> (Lustre 2.8) hashes the entries of one directory over several MDTs (<code>lfs mkdir -c 4 dir</code>), which helps when thousands of clients create files in the same directory.</p>
+<p><b>Coherence</b> comes from the Lustre distributed lock manager, <b>LDLM</b>. Each MDT and OST runs a lock server for its own resources. Before a client caches file data, it takes an <b>extent lock</b> on a byte range of the OST object; reads take shared locks and writes take exclusive ones. When another client wants a conflicting range, the server sends the holder a blocking callback. The holder flushes its dirty pages, drops the cached pages in that range, and releases the lock. Metadata uses <b>inodebits</b> locks on the MDT. This is how Lustre lets clients cache aggressively and still gives POSIX semantics: a client may cache only what it holds a lock for.</p>
+<p>The authoritative size of a striped file lives with its OST objects, so a <code>stat()</code> may have to ask the OSTs that hold the file's objects. <code>ls -l</code> on a huge directory of striped files is slower on Lustre than on a local disk for exactly this reason.</p>
+<p><b>Failure handling.</b> Servers commit transactions to disk asynchronously, and clients keep a copy of every request until the server reports that it has committed it (the <code>last_committed</code> transaction number). If a server restarts, clients reconnect and <b>replay</b> their uncommitted requests in order. Traditionally Lustre does not replicate data across servers. Each OST sits on RAID, and servers are arranged in <b>failover pairs</b> that share storage, so a partner can mount the target if its server dies. File Level Redundancy (FLR, Lustre 2.11) adds optional mirroring of a file across OSTs.</p>
+<h3 id="beegfs">BeeGFS</h3>
+<p>BeeGFS follows the same pattern with a management service, metadata services (each directory is owned by one metadata server, so the namespace spreads across them), storage services with storage targets, and a kernel client. It supports RDMA and can mirror metadata and data between pairs of servers, which it calls <b>buddy mirroring</b>. Many sites choose it because it is easier to set up than Lustre.</p>
+<h3 id="hdfs">HDFS</h3>
+<p>The Hadoop Distributed File System, modelled on the Google File System paper, makes different trade-offs because it serves batch analytics jobs that read whole files and write new ones:</p>
+<ul>
+<li>The <b>NameNode</b> keeps the whole namespace and the block map in RAM. Every file costs NameNode memory, so millions of small files hurt.</li>
+<li><b>DataNodes</b> store <b>blocks</b>, typically 128 MB each, as ordinary files on their local disks.</li>
+<li>Each block has three replicas by default, placed rack-aware: the first on the writer's node (or a random node in the writer's rack), the second on a node in a different rack, the third on a different node in that same remote rack.</li>
+<li>Files are <b>write-once</b>: one writer, then only appends and truncates. No writes in the middle of an existing file. That single rule removes almost the whole cache-coherence problem.</li>
+<li>High availability uses an active and a standby NameNode sharing an edit log through a quorum of JournalNodes, with ZooKeeper deciding which one is active.</li>
+</ul>
+<p>HDFS is not POSIX, and applications reach it through a client library rather than a kernel mount. For the workloads it was built for (scan huge files, write new ones), that is the right trade.</p>
+<h3 id="pnfs">pNFS, the standard version</h3>
+<p>pNFS puts the same architecture inside the NFS protocol. The layout types are files, blocks and <b>flexible files</b> (RFC 8435). Flex files is the one most relevant now. Its data servers can be plain NFSv3 or NFSv4 servers, and the layout can tell the client to <b>mirror</b> writes to several data servers itself. An unmodified Linux NFSv4.2 client can therefore do parallel, client-replicated I/O against a scale-out back-end without any special client software.</p>
+</section>
+<section id="ceph">
+<h2>Computed placement: Ceph</h2>
+<p>Ceph removes the lookup step for data altogether. Its base layer, <b>RADOS</b> (Reliable Autonomic Distributed Object Store), stores named objects on <b>OSDs</b> (object storage daemons, usually one per disk). Any client can compute where an object lives from a small, shared <b>cluster map</b>. Block devices (RBD), S3-compatible object storage (RGW) and the filesystem (CephFS) are all built on RADOS.</p>
+<h3 id="ceph-parts">The pieces</h3>
+<ul>
+<li><b>Monitors</b> (MONs): a small odd number, typically 3 or 5, that use Paxos to agree on the cluster maps: which monitors exist, which OSDs exist and whether they are up, the CRUSH map, and the CephFS metadata server map. Every map has an epoch number that increases with each change.</li>
+<li><b>OSDs</b> store objects. The current backend, <b>BlueStore</b>, writes data directly to the raw block device and keeps its own metadata (object names, extent maps, allocation state) in RocksDB, an LSM-tree key-value store. That is the write-optimised alternative to the B-trees of <a href="04-btrees.html">lesson 4</a>.</li>
+<li><b>Managers</b> (mgr) collect statistics and run the dashboard and orchestration modules.</li>
+<li><b>MDS</b> daemons exist only for CephFS, to serve the namespace.</li>
+</ul>
+<h3 id="pgs">From an object name to disks</h3>
+<pre><code>object "rbd_data.1f2e.0000000000000a3c" in pool 7
+   │  hash(name), stable-mod pg_num (say 256)
+   ▼
+placement group 7.b2
+   │  CRUSH(7.b2, pool's rule, cluster map)
+   ▼
+acting set [osd.6, osd.1, osd.11]        osd.6 is the primary</code></pre>
+<p>A <b>pool</b> is a namespace with its own redundancy settings. Objects in a pool are hashed into a fixed number of <b>placement groups</b> (PGs), and CRUSH maps each PG to a list of OSDs. Every object follows its PG. PGs make the system manageable. Ceph tracks state, peers replicas and recovers data per PG, so it deals with thousands of PGs rather than billions of objects. A typical target is around a hundred PGs per OSD, and the PG autoscaler adjusts pools toward it.</p>
+<p>The client computes the mapping itself and sends the operation straight to the PG's <b>primary OSD</b>. For a replicated pool the primary forwards the write to the other OSDs in the set and acknowledges the client only when all of them have persisted it. No metadata server and no lookup table sit in the data path.</p>
+<h3 id="crush">CRUSH</h3>
+<p>CRUSH (Controlled Replication Under Scalable Hashing) is a deterministic function over a <b>hierarchy</b> of the cluster: root, then data centres, rooms, racks, hosts, and OSDs at the leaves, each with a weight (usually its capacity in TiB). A <b>rule</b> says how to descend. For example, "choose 3 distinct racks, then one OSD under each" makes the rack the <b>failure domain</b>: losing a rack loses at most one copy of anything.</p>
+<figure class="diagram">
+<svg viewBox="0 0 680 260" width="680" role="img" aria-label="CRUSH hierarchy with a root, three racks, six hosts and twelve OSDs; one OSD in each rack is selected">
+<rect class="box" x="290" y="10" width="100" height="30" rx="3"/><text class="t" x="340" y="30" text-anchor="middle">root</text>
+<line class="hl" x1="340" y1="40" x2="110" y2="80"/>
+<line class="hl" x1="340" y1="40" x2="340" y2="80"/>
+<line class="hl" x1="340" y1="40" x2="570" y2="80"/>
+<rect class="box" x="60" y="80" width="100" height="30" rx="3"/><text class="t" x="110" y="100" text-anchor="middle">rack1</text>
+<rect class="box" x="290" y="80" width="100" height="30" rx="3"/><text class="t" x="340" y="100" text-anchor="middle">rack2</text>
+<rect class="box" x="520" y="80" width="100" height="30" rx="3"/><text class="t" x="570" y="100" text-anchor="middle">rack3</text>
+<line class="hl" x1="110" y1="110" x2="55" y2="150"/>
+<line class="ln" x1="110" y1="110" x2="165" y2="150"/>
+<line class="ln" x1="340" y1="110" x2="285" y2="150"/>
+<line class="hl" x1="340" y1="110" x2="395" y2="150"/>
+<line class="ln" x1="570" y1="110" x2="515" y2="150"/>
+<line class="hl" x1="570" y1="110" x2="625" y2="150"/>
+<rect class="box" x="10" y="150" width="90" height="28" rx="3"/><text class="ts" x="55" y="168" text-anchor="middle">host-a</text>
+<rect class="box" x="120" y="150" width="90" height="28" rx="3"/><text class="ts" x="165" y="168" text-anchor="middle">host-b</text>
+<rect class="box" x="240" y="150" width="90" height="28" rx="3"/><text class="ts" x="285" y="168" text-anchor="middle">host-c</text>
+<rect class="box" x="350" y="150" width="90" height="28" rx="3"/><text class="ts" x="395" y="168" text-anchor="middle">host-d</text>
+<rect class="box" x="470" y="150" width="90" height="28" rx="3"/><text class="ts" x="515" y="168" text-anchor="middle">host-e</text>
+<rect class="box" x="580" y="150" width="90" height="28" rx="3"/><text class="ts" x="625" y="168" text-anchor="middle">host-f</text>
+<line class="ln" x1="55" y1="178" x2="33" y2="215"/><line class="hl" x1="55" y1="178" x2="77" y2="215"/>
+<line class="ln" x1="165" y1="178" x2="143" y2="215"/><line class="ln" x1="165" y1="178" x2="187" y2="215"/>
+<line class="ln" x1="285" y1="178" x2="263" y2="215"/><line class="ln" x1="285" y1="178" x2="307" y2="215"/>
+<line class="hl" x1="395" y1="178" x2="373" y2="215"/><line class="ln" x1="395" y1="178" x2="417" y2="215"/>
+<line class="ln" x1="515" y1="178" x2="493" y2="215"/><line class="ln" x1="515" y1="178" x2="537" y2="215"/>
+<line class="ln" x1="625" y1="178" x2="603" y2="215"/><line class="hl" x1="625" y1="178" x2="647" y2="215"/>
+<rect class="box" x="13" y="215" width="40" height="26" rx="2"/><text class="ts" x="33" y="232" text-anchor="middle">osd.0</text>
+<rect class="k-net" x="57" y="215" width="40" height="26" rx="2"/><text class="ts" x="77" y="232" text-anchor="middle">osd.1</text>
+<rect class="box" x="123" y="215" width="40" height="26" rx="2"/><text class="ts" x="143" y="232" text-anchor="middle">osd.2</text>
+<rect class="box" x="167" y="215" width="40" height="26" rx="2"/><text class="ts" x="187" y="232" text-anchor="middle">osd.3</text>
+<rect class="box" x="243" y="215" width="40" height="26" rx="2"/><text class="ts" x="263" y="232" text-anchor="middle">osd.4</text>
+<rect class="box" x="287" y="215" width="40" height="26" rx="2"/><text class="ts" x="307" y="232" text-anchor="middle">osd.5</text>
+<rect class="k-net" x="353" y="215" width="40" height="26" rx="2"/><text class="ts" x="373" y="232" text-anchor="middle">osd.6</text>
+<rect class="box" x="397" y="215" width="40" height="26" rx="2"/><text class="ts" x="417" y="232" text-anchor="middle">osd.7</text>
+<rect class="box" x="473" y="215" width="40" height="26" rx="2"/><text class="ts" x="493" y="232" text-anchor="middle">osd.8</text>
+<rect class="box" x="517" y="215" width="40" height="26" rx="2"/><text class="ts" x="537" y="232" text-anchor="middle">osd.9</text>
+<rect class="box" x="583" y="215" width="40" height="26" rx="2"/><text class="ts" x="603" y="232" text-anchor="middle">osd.10</text>
+<rect class="k-net" x="627" y="215" width="40" height="26" rx="2"/><text class="ts" x="647" y="232" text-anchor="middle">osd.11</text>
+</svg>
+<figcaption>A rule with the rack as failure domain picks one OSD per rack for PG 7.b2: the highlighted paths end at osd.6, osd.1 and osd.11. Every client that holds the same map computes the same answer.</figcaption>
+</figure>
+<p>At each level CRUSH chooses among the children with the <b>straw2</b> algorithm. Every child draws a pseudo-random straw length from a hash of (PG, child), scaled by its weight, and the longest straw wins. The draw for one child does not depend on the others, so adding or removing a disk only moves data to or from that disk. The lab implements straw2 and measures exactly this.</p>
+<h3 id="ceph-redundancy">Replicated and erasure-coded pools</h3>
+<p>A <b>replicated pool</b> keeps <code>size</code> copies (typically 3) and keeps serving I/O while at least <code>min_size</code> (typically 2) are available. An <b>erasure-coded pool</b> splits each object into <i>k</i> data chunks plus <i>m</i> coding chunks on <i>k+m</i> OSDs, and survives the loss of any <i>m</i>. Erasure coding saves capacity and costs CPU, latency and small-write performance. It suits object storage and capacity tiers, and it can back CephFS and RBD data when overwrites are enabled on the pool.</p>
+<p>When an OSD stops responding, its PGs become degraded and keep serving from the remaining copies. If it stays down past a timeout (ten minutes by default), the monitors mark it out, CRUSH computes new homes for its PGs, and recovery copies the data from the surviving replicas spread across the whole cluster.</p>
+<h3 id="cephfs">CephFS</h3>
+<p>CephFS adds a POSIX namespace. File data is striped into RADOS objects (4 MiB by default) whose names derive from the inode number and the object index, so clients compute data locations exactly as above. Metadata lives in its own RADOS pool, served and cached by <b>MDS</b> daemons that journal their changes into RADOS too.</p>
+<ul>
+<li>Several MDS daemons can be active at once, each owning a <b>rank</b>. <b>Dynamic subtree partitioning</b> moves busy parts of the directory tree between ranks as load shifts. Administrators can also pin a subtree to a rank with the <code>ceph.dir.pin</code> extended attribute. Standby daemons take over a failed rank.</li>
+<li>Coherence uses <b>capabilities</b> (caps). The MDS grants a client caps on each inode it uses: to read and cache, to write and buffer, to cache attributes. When another client needs conflicting access, the MDS revokes caps, and the holder flushes and gives them back. Lustre's locks, GPFS's tokens and NFS delegations follow the same idea.</li>
+<li>Clients are the in-kernel <code>ceph</code> filesystem (in mainline Linux) or the userspace <code>ceph-fuse</code>, which is slower but can be upgraded without touching the kernel.</li>
+<li>If a client stops answering cap revocations, the MDS evicts it and adds it to the OSD map's <b>blocklist</b>. Every OSD then rejects that client's I/O even if it comes back to life. That is fencing done through the cluster map.</li>
+</ul>
+</section>
+<section id="more">
+<h2>Three more designs</h2>
+<ul>
+<li><b>GlusterFS</b> has no metadata server. Each directory's hash space is split into ranges, one per <b>brick</b> (a server directory that stores data), recorded as extended attributes on the directory. A client hashes a file's name to find its brick. Translators stack features such as replication and dispersal (erasure coding) on top. Renames and rebalancing are awkward, because a renamed file's new name hashes elsewhere and needs a pointer file. Red Hat's commercial Gluster product reached end of life at the end of 2024, so check the state of the upstream project before choosing it.</li>
+<li><b>JuiceFS</b> keeps metadata in a database you choose (Redis, TiKV, MySQL, PostgreSQL, SQLite and others) and file data in an object store such as S3, cut into large chunks that are stored as smaller blocks. The client is usually FUSE (from <a href="05-vfs-cache.html">lesson 5</a>'s point of view, a userspace filesystem) with a local cache. The filesystem's metadata performance is the database's performance.</li>
+<li><b>Google Colossus</b>, the successor to the Google File System, uses a scalable metadata service whose Curators store filesystem metadata in Bigtable. Data flows directly between clients and file servers called D servers. A database solves the metadata scaling problem the single GFS master could not.</li>
+</ul>
+</section>
+<section id="placement">
+<h2>Placement strategies compared</h2>
+<div class="table-wrap"><table>
+<thead><tr><th>Strategy</th><th>How a client finds data</th><th>Data moved when one of N servers is added</th><th>Used by</th></tr></thead>
+<tbody>
+<tr><td><b>Central table</b></td><td>ask the metadata server</td><td>only what you choose to migrate</td><td>HDFS NameNode, Lustre layouts, pNFS</td></tr>
+<tr><td><b>hash mod N</b></td><td>compute</td><td>almost everything</td><td>naive sharding; a warning, not a design</td></tr>
+<tr><td><b>Consistent hashing</b></td><td>compute: first point on a ring clockwise</td><td>about 1/(N+1)</td><td>Dynamo-style stores, OpenStack Swift's ring</td></tr>
+<tr><td><b>Rendezvous / straw2</b></td><td>compute: highest weighted hash wins</td><td>about 1/(N+1), only onto the new server</td><td>CRUSH buckets</td></tr>
+<tr><td><b>CRUSH</b></td><td>compute, descending a weighted hierarchy</td><td>about 1/(N+1), respecting failure domains</td><td>Ceph</td></tr>
+</tbody>
+</table></div>
+<p>A table gives total control and costs a lookup plus a server that must scale and survive. Computation costs nothing at lookup time, but every participant needs the same map, and a map change moves data whether you like it or not. Consistent hashing needs many <b>virtual nodes</b> per server to balance well; straw2 balances without them. The lab measures all of this.</p>
+</section>
+<section id="redundancy">
+<h2>Redundancy: replication or erasure coding</h2>
+<div class="table-wrap"><table>
+<thead><tr><th>Scheme</th><th>Raw bytes per byte stored</th><th>Failures survived</th><th>Reads to rebuild one lost piece</th><th>Small overwrite</th></tr></thead>
+<tbody>
+<tr><td>3× replication</td><td>3.0</td><td>2</td><td>1 (copy a replica)</td><td>write 3 copies</td></tr>
+<tr><td>EC 4+2</td><td>1.5</td><td>2</td><td>4 chunks</td><td>read-modify-write of the stripe and both parities</td></tr>
+<tr><td>EC 8+3</td><td>1.375</td><td>3</td><td>8 chunks</td><td>as above, wider</td></tr>
+</tbody>
+</table></div>
+<p>Erasure coding halves the hardware bill compared with triple replication, at the price of more network and disk traffic during rebuilds and slower small writes. That is why many systems replicate hot or metadata-heavy data and erasure-code the bulk.</p>
+<p>Where the redundancy lives matters as much as which scheme:</p>
+<ul>
+<li><b>Inside each server</b>: RAID or a local erasure code. A dead disk is rebuilt inside the box, but a dead server makes its data unavailable until a failover partner takes over. Classic Lustre works this way.</li>
+<li><b>Across servers</b>: replicas or chunks on different machines, chosen by placement rules. A dead server or rack does not interrupt service. Ceph, HDFS, GlusterFS and BeeGFS buddy mirroring work this way.</li>
+<li><b>By the client</b>: the client writes each copy itself. pNFS flex files mirroring and Lustre FLR work this way.</li>
+</ul>
+<p>Spreading replicas over many servers also speeds up recovery. When one disk fails, its data is rebuilt from many disks onto many disks in parallel (declustered recovery), instead of from one mirror onto one spare. The lab shows each surviving node contributing an almost equal share of the rebuild.</p>
+</section>
+<section id="consistency">
+<h2>Consistency and caching at scale</h2>
+<p>POSIX promises that a <code>read()</code> after a <code>write()</code> sees the new data, even on another machine, that <code>rename()</code> is atomic, and that byte-range locks work. On one machine these promises are cheap because one kernel sees everything (lesson 5). Across many machines, every access that might conflict requires coordination. The systems differ in how much they coordinate:</p>
+<div class="table-wrap"><table>
+<thead><tr><th>Mechanism</th><th>Systems</th><th>Who tracks it</th><th>Guarantee</th><th>Cost</th></tr></thead>
+<tbody>
+<tr><td>Distributed locks on byte ranges and metadata</td><td>Lustre LDLM, GPFS tokens, GFS2/OCFS2 DLM</td><td>lock servers</td><td>POSIX</td><td>lock traffic; ping-pong when clients write near each other</td></tr>
+<tr><td>Capabilities</td><td>CephFS</td><td>MDS</td><td>POSIX, with some relaxed options</td><td>MDS load; revocation latency</td></tr>
+<tr><td>Delegations plus close-to-open</td><td>NFS</td><td>server</td><td>close-to-open, stronger while delegated</td><td>revalidation round trips</td></tr>
+<tr><td>Write-once files</td><td>HDFS, object stores</td><td>nobody</td><td>trivial: data never changes</td><td>applications must be written for it</td></tr>
+</tbody>
+</table></div>
+<h3 id="hotspots">Metadata hot spots</h3>
+<p>Parallel jobs have two classic I/O patterns:</p>
+<ul>
+<li><b>N-to-N</b>: each of N processes writes its own file. Data bandwidth is easy, but N creates in one directory at the same instant all go to the metadata server that owns that directory and serialise on its lock. At tens of thousands of processes that becomes the bottleneck.</li>
+<li><b>N-to-1</b>: all processes write different regions of one shared file. Metadata is cheap, but locks become the problem. If two processes' regions share a stripe or a lock extent, their locks bounce back and forth. Aligning each process's region to the stripe size avoids it.</li>
+</ul>
+<p>The fixes are spreading one directory over several metadata servers (Lustre striped directories, CephFS directory fragmentation and pinning), or changing the application to create files in many subdirectories. Benchmarks such as mdtest exist because metadata rates, not bandwidth, are the usual limit.</p>
+</section>
+<section id="failure">
+<h2>Failure detection, quorum and fencing</h2>
+<p>Nodes check on each other with <b>heartbeats</b>, and a timeout declares a silent node failed. A timeout cannot tell a dead node from a slow one, a partitioned one, or one paused for a long garbage collection or a kernel hang. Every design must stay correct when a node declared dead comes back and carries on as if nothing happened.</p>
+<ul>
+<li><b>Leases.</b> Grant rights for a limited time only. A holder that cannot renew must stop using them, and the grantor waits until the lease has surely expired before giving the rights to someone else. NFSv4 state (lessons 6 and 7), Lustre lock callbacks and CephFS client sessions all work this way.</li>
+<li><b>Quorum.</b> Decisions about membership and maps require agreement from a majority of a small, odd-sized group: Paxos in Ceph's monitors, Raft in etcd and many newer systems, ZooKeeper for HDFS failover. Three members survive one failure; five survive two. In a network split, at most one side can have a majority, so at most one side keeps changing state. That prevents <b>split brain</b>, where two halves each believe they are in charge.</li>
+<li><b>Fencing.</b> Make the old owner harmless before anyone takes over: cut its power through a management controller (STONITH, "shoot the other node in the head"), revoke its storage access (SCSI persistent reservations), or blocklist it (Ceph). <b>Epoch numbers</b> are a lighter form: every map or lease carries a number that only grows, and servers reject requests stamped with an old one.</li>
+<li><b>Replay and reconciliation.</b> After a restart, state is rebuilt from the survivors: Lustre clients replay uncommitted requests, NFSv4 clients reclaim locks during the grace period, Ceph OSDs compare PG logs during peering, and HDFS DataNodes send block reports to the NameNode.</li>
+</ul>
+<aside class="key"><span class="tag">Key idea</span><p>You cannot tell a dead node from a slow one. So a distributed system makes a node harmless before it treats the node as dead: its lease runs out, it is fenced, or its requests carry an epoch the others will refuse.</p></aside>
+</section>
+<section id="performance">
+<h2>Thinking about performance</h2>
+<ul>
+<li><b>Aggregate bandwidth</b> grows roughly with the number of data servers, provided there are enough clients and files are striped widely enough. One file's bandwidth is limited by its stripe count.</li>
+<li><b>Metadata operations</b> are usually the real limit. Creating a file can mean a metadata-server transaction plus object creation on data servers. A <code>stat()</code> can involve several servers.</li>
+<li><b>Tail latency</b> adds up. A read striped over 16 servers finishes when the slowest one answers, so one sick disk slows everything that touches it.</li>
+<li><b>Network transport</b> matters at the top end. This is where RDMA (lesson 8) comes in: Lustre's o2ib, GPFS verbs, BeeGFS RDMA and NFS over RDMA all exist to stop the CPU being the bottleneck.</li>
+</ul>
+<p>The standard tools: <b>fio</b> for single-node workloads of any shape, <b>IOR</b> for parallel bandwidth from many MPI processes (both N-to-N and N-to-1), <b>mdtest</b> for metadata operations per second, and <b>elbencho</b> for distributed file, block and object tests. The IO500 list combines bandwidth and metadata results into one ranking. Always benchmark the access pattern your applications actually have.</p>
+</section>
+<section id="nfs-fit">
+<h2>Where NFS 4.2 and RDMA fit</h2>
+<p>Native clients (Lustre, GPFS, CephFS, BeeGFS) know the layout and speak the coherence protocol directly, which gives them the best performance and full POSIX semantics. They also have to be installed and kept compatible with the servers on every client machine.</p>
+<p>NFS is the client every operating system already has. Several pieces from this course let it reach scale-out performance:</p>
+<ul>
+<li><b>pNFS with flex files</b> gives an NFSv4.2 client layouts, parallel I/O to many data servers, and client-side mirroring;</li>
+<li><b>multiple connections</b> (the <code>nconnect</code> mount option) and session trunking spread one mount's traffic over several TCP connections or server addresses;</li>
+<li><b>NFS over RDMA</b> (lesson 8) removes the copies and protocol work that limit a single client at high link speeds;</li>
+<li>the <b>NFSv4.2 operations</b> from lesson 6 (server-side copy, clone, sparse files, space reservation) move work to the servers.</li>
+</ul>
+<p>A common modern pattern is therefore a scale-out back-end, open source or commercial, that presents NFSv3 or NFSv4.x, often over RDMA, to unmodified clients. The trade-off is semantics. Unless the server hands out delegations, those clients get close-to-open consistency (lesson 7). A native Lustre or GPFS client gets lock-based POSIX coherence.</p>
+</section>
+<section class="lab" id="lab">
+<p class="tag">Lab 08</p>
+<h2>Where does an object live?</h2>
+<p class="where">~/storage-course/labs/08-distributed/</p>
+<ol>
+<li>Run the simulator. It places 100,000 objects on 10 nodes four ways, then adds an 11th node and removes the 10th, and counts what moves:
+<pre><code><span class="p">$</span> cd ~/storage-course/labs/08-distributed
+<span class="p">$</span> python3 -I placement.py</code></pre>
+Example output from this machine (about 8 seconds):
+<pre><code><span class="o">Part 1: 100,000 objects on 10 nodes
+ideal share per node: 10,000
+ideal movement: add a node 9.1%, remove a node 10.0%
+
+strategy                 min     max   stddev  max/mean  moved +1  moved -1
+mod-N                  9,876  10,126       73     1.013     91.0%     89.9%
+ring (100 vnodes)      8,922  11,628      851     1.163      8.4%      9.4%
+ring (1 vnode)           332  20,904     6109     2.090      2.5%      0.3%
+straw2 / HRW           9,894  10,140       73     1.014      9.0%     10.1%
+
+straw2 with node00 at weight 2.0: node00 holds 18,129 objects, the others average 9,097</span></code></pre>
+Read it row by row. mod-N balances perfectly and then moves 91% of the data for one new node. The ring with one point per node moves little, but only because it is badly unbalanced: one node holds 332 objects and another 20,904. A hundred virtual nodes fix most of the imbalance. straw2 balances like mod-N and moves like the ideal, and the weight doubles one node's share exactly as CRUSH does for a bigger disk.
+</li>
+<li>Part 2 stores three replicas on 12 nodes in 4 racks, then fails a whole rack:
+<pre><code><span class="o">Part 2: 3 replicas, 4 racks x 3 nodes = 12 nodes
+failure: all of rack0 goes dark (3 nodes)
+
+placement     objects lost  1 copy left  replicas to rebuild  rebuild sources (min..max per node)
+rack-aware               0            0               74,949             8,185 .. 8,404
+rack-blind             483       12,181               73,635             8,012 .. 8,310</span></code></pre>
+Three copies are not enough on their own. Placed without regard to racks, 483 objects had all three copies in the failed rack and are gone, and 12,181 are down to their last copy. With the rack as failure domain, nothing is lost. In both cases the rebuild is read almost equally from all nine surviving nodes: declustered recovery.
+</li>
+<li>Experiment: <code>--vnodes 10</code> and <code>--vnodes 1000</code> change the ring's balance; edit the weight in <code>part1()</code>; use <code>--racks 3 --per-rack 4</code>. Read <code>straw2_draw()</code>: it is five lines, and it is the heart of CRUSH.</li>
+<li>Optional, in a Linux VM and untested here: a one-node Ceph cluster with MicroCeph lets you inspect a real CRUSH map and ask where an object lives. The README lists the commands (<code>ceph osd tree</code>, <code>ceph osd crush rule dump</code>, <code>ceph osd map &lt;pool&gt; &lt;object&gt;</code>).</li>
+</ol>
+</section>
+<section class="check" id="check">
+<h2>Check yourself</h2>
+<details><summary>Why does <code>hash mod N</code> move about 90% of the data when an 11th node joins a 10-node cluster?</summary><p>An object stays put only if <code>h mod 10 == h mod 11</code>, which holds for about one value in eleven. Every other object changes node. Consistent hashing and straw2 move only the objects the new node takes over, about 1/11.</p></details>
+<details><summary>A Lustre file has stripe_size 1 MiB and stripe_count 4. Which object in its layout holds byte offset 9.25 MiB, and at what offset inside that object?</summary><p>Stripe number 9, so object index 9 mod 4 = 1. Inside it: (9 / 4) × 1 MiB + 0.25 MiB = 2 MiB + 0.25 MiB = 2.25 MiB.</p></details>
+<details><summary>What must a Lustre client have before it may cache a file's data, and where does each piece come from?</summary><p>The file's layout, which comes from the MDS when the file is opened, and an LDLM extent lock covering the byte range, which comes from the lock server on the OST holding that object. The cache is valid only while the lock is held. A conflicting request makes the server send a blocking callback, and the client flushes and drops that range.</p></details>
+<details><summary>What is a Ceph placement group, and why not run CRUSH for every object?</summary><p>A PG is a hash bucket of objects within a pool. CRUSH maps PGs to OSDs, and objects follow their PG. That bounds the state the cluster must track, peer and recover to thousands of PGs instead of billions of objects, and it still spreads data evenly when there are enough PGs per OSD.</p></details>
+<details><summary>Compare 3× replication and 8+3 erasure coding on raw overhead, failures survived, and rebuild reads.</summary><p>Replication: 3.0× raw, survives 2 failures, a lost copy is rebuilt by reading 1 replica. 8+3: 1.375× raw, survives 3 failures, but rebuilding one lost chunk reads 8 chunks, and small overwrites need read-modify-write of the stripe.</p></details>
+<details><summary>Why can't a cluster simply wait for a timeout and then give a silent node's locks to someone else?</summary><p>The node may only be slow. If it wakes up, it still believes it holds the locks and may write stale data over the new owner's changes. The cluster must first make it harmless: wait for its lease to expire, fence it (power, storage access, blocklist), or reject its requests by epoch.</p></details>
+<details><summary>Ten thousand processes each create one file in the same directory at the same moment. Why is that slow, and what are two remedies?</summary><p>All the creates go to the one metadata server that owns the directory and serialise on that directory's lock. Remedies: spread the directory over several metadata servers (Lustre striped directories, CephFS fragmentation or pinning), or have the application create files in many subdirectories.</p></details>
+<details><summary>Why is HDFS not POSIX, and why is that acceptable for its job?</summary><p>Files are write-once (appends and truncates only, one writer), access is through a library, and the NameNode holds all metadata in RAM. Analytics jobs scan large files and write new ones, so they do not need in-place updates or cross-client coherence, and dropping them removes most of the hard problems.</p></details>
+</section>
+<section class="further" id="further">
+<h2>Go deeper</h2>
+<ul>
+<li><a href="https://doc.lustre.org/lustre_manual.xhtml">Lustre Operations Manual</a>: striping, PFL, DNE, FLR and LNet, with the version that introduced each.</li>
+<li><a href="https://docs.ceph.com/en/latest/architecture/">Ceph architecture</a>: RADOS, CRUSH, pools, PGs and CephFS from the project itself.</li>
+<li><a href="https://ceph.io/assets/pdfs/weil-crush-sc06.pdf">CRUSH paper</a> (Weil et al., SC 2006): the placement algorithm and its hierarchy.</li>
+<li><a href="https://hadoop.apache.org/docs/stable/hadoop-project-dist/hadoop-hdfs/HdfsDesign.html">HDFS architecture</a>: NameNode, DataNodes, replica placement and write-once semantics.</li>
+<li><a href="https://research.google/pubs/the-google-file-system/">The Google File System</a> (SOSP 2003) and <a href="https://cloud.google.com/blog/products/storage-data-transfer/a-peek-behind-colossus-googles-file-system">A peek behind Colossus</a>: the single master, and what replaced it.</li>
+<li><a href="https://www.rfc-editor.org/rfc/rfc8435">RFC 8435</a>: pNFS flexible file layout, the NFS route to parallel I/O.</li>
+<li><a href="https://github.com/hpc/ior">IOR and mdtest</a>: the standard parallel bandwidth and metadata benchmarks.</li>
+</ul>
+</section>
+<nav class="pager-foot" aria-label="Next and previous lesson">
+<a class="prev" href="08-rdma.html"><small>Previous</small>RDMA and NFS over RDMA</a>
+<a class="next" href="glossary.html"><small>Next</small>Glossary</a>
+</nav>
+</main>
+</div>
+<script src="course.js"></script>
+</body>
+</html>

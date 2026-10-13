@@ -1,0 +1,468 @@
+<!doctype html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover">
+<title>Syscalls and File Descriptors</title>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=IBM+Plex+Mono:wght@400;600&family=IBM+Plex+Sans+Condensed:wght@500;600;700&family=Source+Serif+4:ital,opsz,wght@0,8..60,400;0,8..60,600;1,8..60,400&display=swap">
+<link rel="stylesheet" href="course.css?v=7">
+</head>
+<body data-layer="user">
+<header class="topbar">
+<a class="brand" href="index.html">From open() to RDMA <span>· a storage course</span></a>
+<nav class="pager" aria-label="Lesson pager">
+<a href="index.html" rel="prev">← Overview</a>
+<details class="route"><summary>Lesson 1 of 9</summary></details>
+<a href="02-blocks.html" rel="next">Next →</a>
+<details class="sections"><summary>Sections</summary></details>
+</nav>
+</header>
+<div class="layout">
+<nav class="rail" aria-label="Lessons">
+<div class="rail-title">The route</div>
+<ol>
+<li class="user"><a href="01-syscalls.html" aria-current="page"><span class="n">01</span><span>Syscalls &amp; file descriptors</span></a></li>
+<li class="block"><a href="02-blocks.html"><span class="n">02</span><span>Block devices &amp; addressing</span></a></li>
+<li class="fs"><a href="03-ondisk.html"><span class="n">03</span><span>Inside an ext4 image</span></a></li>
+<li class="fs"><a href="04-btrees.html"><span class="n">04</span><span>B-trees, really</span></a></li>
+<li class="kernel"><a href="05-vfs-cache.html"><span class="n">05</span><span>The VFS and the caches</span></a></li>
+<li class="net"><a href="06-nfs.html"><span class="n">06</span><span>NFS from v3 to 4.2</span></a></li>
+<li class="net"><a href="07-nfs-caching.html"><span class="n">07</span><span>Caching across the network</span></a></li>
+<li class="net"><a href="08-rdma.html"><span class="n">08</span><span>RDMA and NFS over RDMA</span></a></li>
+<li class="net"><a href="09-distributed.html"><span class="n">09</span><span>Distributed filesystems</span></a></li>
+<li class="extra"><a href="glossary.html"><span class="n">··</span><span>Glossary</span></a></li>
+</ol>
+<div class="rail-legend">
+<span style="--c: var(--l-user)">user space</span>
+<span style="--c: var(--l-kernel)">kernel</span>
+<span style="--c: var(--l-fs)">filesystem</span>
+<span style="--c: var(--l-block)">block</span>
+<span style="--c: var(--l-net)">network</span>
+</div>
+</nav>
+<main class="lesson">
+<header class="lesson-head">
+<p class="eyebrow">Lesson 1 · User space, at the kernel's door</p>
+<h1>Syscalls and file descriptors</h1>
+<p class="lede">Every storage system in this course, from ext4 to an NFS server across an RDMA fabric, exists to answer a handful of calls like <code>open</code>, <code>read</code> and <code>write</code>. This lesson is about those calls: what actually happens when a C program makes one, and what the small integer called a file descriptor really points to.</p>
+<div class="outcomes">
+<b>After this lesson you can</b>
+<ul>
+<li>explain what a system call is at the level of CPU modes and registers;</li>
+<li>use <code>open</code>, <code>read</code>, <code>write</code>, <code>lseek</code>, <code>pread</code>, <code>close</code> and <code>stat</code> correctly, including short counts and errors;</li>
+<li>draw the three tables behind a descriptor and predict who shares an offset after <code>dup</code>, <code>fork</code> or a second <code>open</code>;</li>
+<li>tell a file from its name, and explain why a deleted file can still use disk space;</li>
+<li>name every buffer your bytes pass through before they reach a disk.</li>
+</ul>
+</div>
+<nav class="toc" aria-label="Lesson contents">
+<b>In this lesson</b>
+<ol>
+<li><a href="#why">Why start at the system call</a></li>
+<li><a href="#syscall">What a system call is</a></li>
+<li><a href="#file-api">Opening a file</a></li>
+<li><a href="#read-write">Reading and writing, including the parts that go wrong</a></li>
+<li><a href="#offsets">Offsets, holes, and positional I/O</a></li>
+<li><a href="#tables">The three tables behind a descriptor</a></li>
+<li><a href="#everything-fd">Everything is a descriptor</a></li>
+<li><a href="#metadata">Metadata and directories</a></li>
+<li><a href="#names">A name is not a file</a></li>
+<li><a href="#buffers">Where your bytes wait: buffers above and below the syscall</a></li>
+<li><a href="#next-steps">Where the call goes next</a></li>
+<li><a href="#lab">Lab 01: Descriptors, offsets and names, by experiment</a></li>
+<li><a href="#check">Check yourself</a></li>
+<li><a href="#further">Go deeper</a></li>
+</ol>
+</nav>
+</header>
+<section id="why">
+<h2>Why start at the system call</h2>
+<p>A program cannot touch a disk, a network card or another process's memory. It runs in a sandbox the CPU enforces. Whenever it needs something from outside that sandbox, it asks the kernel, and the only way to ask is a <strong>system call</strong> (syscall for short).</p>
+<p>That makes the syscall interface the contract for everything below it. When you call <code>read(fd, buf, 4096)</code>, you do not know or care whether the bytes come from an NVMe drive, a USB stick, a pipe, or a server in another building speaking NFS over RDMA. The kernel picks the right code based on what <code>fd</code> refers to. Each later lesson in this course is about one implementation behind this same small set of calls, so it pays to know the calls precisely.</p>
+</section>
+<section id="syscall">
+<h2>What a system call is</h2>
+<p>A modern CPU runs code at different <strong>privilege levels</strong>. On x86-64 these are called rings. Your program runs in ring 3, <strong>user mode</strong>: it can compute and touch its own memory, but the CPU refuses to let it execute privileged instructions, program devices, or read memory outside its own address space. The kernel runs in ring 0, <strong>kernel mode</strong>, where everything is allowed.</p>
+<p>A system call is a controlled jump from ring 3 to ring 0 that can only land at one address the kernel chose at boot. On x86-64 Linux the mechanism is the <code>syscall</code> instruction, and the convention is:</p>
+<ul>
+<li>the <strong>syscall number</strong> goes in register <code>rax</code> (<code>read</code> is 0, <code>write</code> is 1, <code>open</code> is 2, <code>close</code> is 3);</li>
+<li>up to six arguments go in <code>rdi</code>, <code>rsi</code>, <code>rdx</code>, <code>r10</code>, <code>r8</code>, <code>r9</code>;</li>
+<li>the CPU saves the return address in <code>rcx</code> and the flags in <code>r11</code>, switches to ring 0 and jumps to the kernel's entry point, <code>entry_SYSCALL_64</code>;</li>
+<li>the kernel uses <code>rax</code> to pick the handler (classically by indexing an array called <code>sys_call_table</code>; recent x86 kernels compile the dispatch into a <code>switch</code> statement for security reasons), runs it, puts the result in <code>rax</code>, and returns to ring 3 with <code>sysret</code>.</li>
+</ul>
+<p>The result is a single integer. A value from −4095 to −1 means failure, and its negation is the error number. Anything else is success: a byte count, a new descriptor, or zero.</p>
+<figure class="diagram">
+<svg viewBox="0 0 700 420" width="700" role="img" aria-label="A read call travels from user code through the glibc wrapper, crosses into the kernel with the syscall instruction, reaches the filesystem's read_iter, and returns a number or a negative errno back up.">
+<defs><marker id="ah-01-1" viewBox="0 0 10 10" refX="9" refY="5" markerWidth="7" markerHeight="7" orient="auto-start-reverse"><path class="ah" d="M0,0 L10,5 L0,10 z"/></marker></defs>
+<rect class="k-user" x="10" y="10" width="680" height="165" rx="4"/>
+<text class="ts" x="24" y="30">USER SPACE · ring 3 · your process</text>
+<rect class="box" x="30" y="45" width="470" height="36" rx="3"/>
+<text class="t" x="44" y="68">n = read(fd, buf, 4096);    // your code</text>
+<rect class="box" x="30" y="115" width="470" height="46" rx="3"/>
+<text class="t" x="44" y="134">glibc read(): eax = 0  (SYS_read)</text>
+<text class="t" x="44" y="152">rdi = fd, rsi = buf, rdx = 4096; syscall</text>
+<rect class="box" x="520" y="115" width="160" height="46" rx="3"/>
+<text class="ts" x="532" y="134">if rax &lt; 0:</text>
+<text class="ts" x="532" y="152">errno=−rax; return −1</text>
+<line class="lnd" x1="10" y1="190" x2="690" y2="190"/>
+<rect class="box" x="168" y="181" width="364" height="18" rx="2"/>
+<text class="ts" x="350" y="194" text-anchor="middle">the syscall instruction: ring 3 → ring 0</text>
+<rect class="k-kernel" x="10" y="205" width="680" height="205" rx="4"/>
+<text class="ts" x="24" y="225">KERNEL · ring 0</text>
+<rect class="box" x="30" y="240" width="470" height="36" rx="3"/>
+<text class="t" x="44" y="263">entry_SYSCALL_64 → do_syscall_64 → ksys_read()</text>
+<rect class="box" x="30" y="296" width="470" height="36" rx="3"/>
+<text class="t" x="44" y="319">fdget(fd) → struct file; vfs_read(file, …, &amp;f_pos)</text>
+<rect class="box" x="30" y="352" width="470" height="36" rx="3"/>
+<text class="t" x="44" y="375">file-&gt;f_op-&gt;read_iter(): ext4, NFS, pipe, socket…</text>
+<rect class="box" x="520" y="352" width="160" height="36" rx="3"/>
+<text class="ts" x="532" y="375">rax = n, or −errno</text>
+<line class="ln" x1="265" y1="81" x2="265" y2="113" marker-end="url(#ah-01-1)"/>
+<line class="ln" x1="265" y1="161" x2="265" y2="238" marker-end="url(#ah-01-1)"/>
+<line class="ln" x1="265" y1="276" x2="265" y2="294" marker-end="url(#ah-01-1)"/>
+<line class="ln" x1="265" y1="332" x2="265" y2="350" marker-end="url(#ah-01-1)"/>
+<line class="ln" x1="500" y1="370" x2="518" y2="370" marker-end="url(#ah-01-1)"/>
+<line class="ln" x1="600" y1="352" x2="600" y2="163" marker-end="url(#ah-01-1)"/>
+<text class="ts" x="608" y="290">sysret</text>
+<polyline class="ln" points="600,115 600,63 502,63" marker-end="url(#ah-01-1)"/>
+</svg>
+<figcaption>One <code>read</code> call, top to bottom and back. The kernel side does not know what kind of thing <code>fd</code> is until it follows the descriptor to a <code>struct file</code> and calls that file's own <code>read_iter</code>.</figcaption>
+</figure>
+<h3>The libc wrapper</h3>
+<p>You rarely write the <code>syscall</code> instruction yourself. The C library (glibc on most Linux systems) provides a small wrapper function for each call. The wrapper moves arguments into registers, executes <code>syscall</code>, and translates the result into the C convention: on failure it stores the positive error number in the thread-local variable <code>errno</code> and returns −1. That is why the man pages say "returns −1 and sets errno".</p>
+<pre><code><span class="c">// Three ways to make the same call (lab 01 runs all three)</span>
+write(1, msg, len);                      <span class="c">// libc wrapper</span>
+syscall(SYS_write, 1, msg, len);         <span class="c">// generic libc entry: any syscall by number</span>
+asm volatile ("syscall" : "=a"(ret)      <span class="c">// the bare instruction</span>
+              : "a"(1L), "D"(1L), "S"(msg), "d"(len)
+              : "rcx", "r11", "memory");</code></pre>
+<p>Wrappers sometimes call a different syscall than their name suggests. On current glibc, <code>open()</code> actually issues <code>openat(AT_FDCWD, path, …)</code>, and <code>fork()</code> issues <code>clone</code>. You will see this if you run a program under <code>strace</code>.</p>
+<h3>What a syscall costs</h3>
+<p>The mode switch itself is cheap compared with I/O: tens to a few hundred nanoseconds on current CPUs, more with some CPU vulnerability mitigations turned on. It is expensive compared with a function call, though, so programs that make millions of tiny calls (one <code>read</code> per byte, say) spend most of their time crossing the boundary. Buffering in user space, batching interfaces like <code>readv</code>, and <code>io_uring</code> all exist to make fewer crossings.</p>
+<aside class="note"><span class="tag">Aside: the vDSO</span><p>A few calls only read information the kernel already publishes, such as the current time. For those, the kernel maps a small shared library called the <strong>vDSO</strong> into every process. <code>clock_gettime</code> and <code>gettimeofday</code> run there entirely in user mode, with no syscall at all. File I/O never qualifies: it always needs the kernel.</p></aside>
+</section>
+<section id="file-api">
+<h2>Opening a file</h2>
+<pre><code>#include &lt;fcntl.h&gt;
+int open(const char *pathname, int flags, ... /* mode_t mode */);
+int openat(int dirfd, const char *pathname, int flags, ... /* mode_t mode */);</code></pre>
+<p><code>open</code> resolves a path to a file, checks your permissions, creates the kernel's bookkeeping for this "open", and returns a <strong>file descriptor</strong>: a small non-negative integer. POSIX guarantees it is the <em>lowest</em> number not currently in use in your process. Descriptors 0, 1 and 2 are normally standard input, output and error, so the first file you open is usually 3.</p>
+<p>The <code>flags</code> argument is a bitwise OR. Exactly one access mode, plus any number of modifiers:</p>
+<div class="table-wrap"><table>
+<thead><tr><th>Flag</th><th>Meaning</th></tr></thead>
+<tbody>
+<tr><td><code>O_RDONLY</code> / <code>O_WRONLY</code> / <code>O_RDWR</code></td><td>The access mode: read, write, or both. Checked against the file's permissions once, at open time.</td></tr>
+<tr><td><code>O_CREAT</code></td><td>Create the file if it does not exist. Requires the third argument, <code>mode</code>.</td></tr>
+<tr><td><code>O_EXCL</code></td><td>With <code>O_CREAT</code>: fail with <code>EEXIST</code> if the name already exists. The check and the creation are one atomic step, which makes this the classic way to build a lock file.</td></tr>
+<tr><td><code>O_TRUNC</code></td><td>If the file exists and is opened for writing, cut it to length 0.</td></tr>
+<tr><td><code>O_APPEND</code></td><td>Before every <code>write</code>, move to the current end of file, atomically with the write. Explained below.</td></tr>
+<tr><td><code>O_CLOEXEC</code></td><td>Close this descriptor automatically when the process calls <code>execve</code>. Prevents descriptors leaking into programs you launch.</td></tr>
+<tr><td><code>O_NONBLOCK</code></td><td>Never sleep waiting for data; return <code>EAGAIN</code> instead. Meaningful for pipes, sockets and terminals, not regular files.</td></tr>
+<tr><td><code>O_SYNC</code> / <code>O_DSYNC</code></td><td>Each <code>write</code> returns only once the data (and, for <code>O_SYNC</code>, all metadata) is on stable storage. Like calling <code>fsync</code> after every write.</td></tr>
+<tr><td><code>O_DIRECT</code></td><td>Bypass the kernel's page cache and DMA straight between your buffer and the device. Comes with alignment rules. Covered in <a href="05-vfs-cache.html">lesson 05</a>.</td></tr>
+</tbody>
+</table></div>
+<p>When <code>O_CREAT</code> creates a file, its permission bits are <code>mode &amp; ~umask</code>. The <strong>umask</strong> is a per-process mask, usually <code>022</code>, which removes write permission for group and others. So the conventional <code>open(path, O_WRONLY|O_CREAT|O_TRUNC, 0666)</code> produces a file with mode <code>0644</code> (<code>rw-r--r--</code>).</p>
+<aside class="pitfall"><span class="tag">Pitfall</span><p>Permissions are checked at <code>open</code>, not at each <code>read</code>. If someone <code>chmod</code>s a file to 000 after you opened it, your descriptor keeps working. A descriptor is a capability: whoever holds it can use it, which is also why you can pass one to another process over a Unix socket.</p></aside>
+</section>
+<section id="read-write">
+<h2>Reading and writing, including the parts that go wrong</h2>
+<pre><code>#include &lt;unistd.h&gt;
+ssize_t read(int fd, void *buf, size_t count);
+ssize_t write(int fd, const void *buf, size_t count);
+int close(int fd);</code></pre>
+<p><code>read</code> copies up to <code>count</code> bytes from the file into <code>buf</code>, starting at the descriptor's current <strong>offset</strong>, and advances the offset by the number of bytes copied. <code>write</code> does the reverse. Both return the number of bytes actually transferred. Three return values need care:</p>
+<ul>
+<li><strong>0 from <code>read</code></strong> means end of file (or, for a pipe or socket, that the other end closed). It is not an error.</li>
+<li><strong>Fewer bytes than asked</strong>, called a <em>short count</em>, is legal. A read from a pipe returns whatever is there. A read near the end of a file returns the remainder. A write to a nearly full disk, a full non-blocking pipe, or a socket may write part of the buffer. Your code must loop.</li>
+<li><strong>−1</strong> means an error, with the reason in <code>errno</code>. Two of them are not really failures: <code>EINTR</code> (a signal handler ran before any data moved, so retry) and <code>EAGAIN</code> (non-blocking descriptor, nothing ready yet).</li>
+</ul>
+<p>A correct "write everything" helper therefore looks like this:</p>
+<pre><code>static int write_all(int fd, const void *buf, size_t len)
+{
+    const char *p = buf;
+    while (len &gt; 0) {
+        ssize_t n = write(fd, p, len);
+        if (n &lt; 0) {
+            if (errno == EINTR)
+                continue;           <span class="c">// interrupted before writing anything: retry</span>
+            return -1;              <span class="c">// real error: ENOSPC, EIO, EBADF, ...</span>
+        }
+        p   += n;                   <span class="c">// short write: move past what was written</span>
+        len -= (size_t)n;
+    }
+    return 0;
+}</code></pre>
+<p>The errors you will meet most often in storage work:</p>
+<div class="table-wrap"><table>
+<thead><tr><th>errno</th><th>Typical cause</th></tr></thead>
+<tbody>
+<tr><td><code>ENOENT</code></td><td>A component of the path does not exist.</td></tr>
+<tr><td><code>EACCES</code> / <code>EPERM</code></td><td>Permission denied by mode bits, an ACL, or a security module.</td></tr>
+<tr><td><code>EEXIST</code></td><td><code>O_CREAT|O_EXCL</code> or <code>mkdir</code> on a name that exists.</td></tr>
+<tr><td><code>EBADF</code></td><td>The descriptor is not open, or not open for this kind of access.</td></tr>
+<tr><td><code>EMFILE</code></td><td>Your process hit its descriptor limit.</td></tr>
+<tr><td><code>ENOSPC</code> / <code>EDQUOT</code></td><td>Disk full / quota exceeded. On network filesystems these can surface late, at <code>close</code> or <code>fsync</code>.</td></tr>
+<tr><td><code>EIO</code></td><td>The device or server reported an I/O failure. Take it seriously; see the fsync story in <a href="05-vfs-cache.html">lesson 05</a>.</td></tr>
+<tr><td><code>ESTALE</code></td><td>NFS only: the server no longer recognises the file handle. <a href="06-nfs.html">Lesson 06</a> explains file handles.</td></tr>
+</tbody>
+</table></div>
+<aside class="pitfall"><span class="tag">Pitfall: close can fail</span><p><code>close</code> returns an error code too, and on NFS it is often where a deferred write error first appears, because the client flushes cached writes at close. Check it. On Linux, do not retry <code>close</code> after <code>EINTR</code>: the descriptor is already released, and retrying may close a descriptor another thread just opened with the same number.</p></aside>
+</section>
+<section id="offsets">
+<h2>Offsets, holes, and positional I/O</h2>
+<pre><code>off_t   lseek(int fd, off_t offset, int whence);   <span class="c">// SEEK_SET, SEEK_CUR, SEEK_END, SEEK_DATA, SEEK_HOLE</span>
+ssize_t pread(int fd, void *buf, size_t count, off_t offset);
+ssize_t pwrite(int fd, const void *buf, size_t count, off_t offset);</code></pre>
+<p><code>lseek</code> only changes a number in the kernel. It does no I/O. <code>lseek(fd, 0, SEEK_CUR)</code> is the idiom for "what is my current offset?".</p>
+<p>You may seek <em>past</em> the end of a file. If you then write, the file's length jumps to cover the new data, and the gap in between is a <strong>hole</strong>. A hole has no disk blocks behind it. Reads from a hole return zeros. The lab creates a file whose length is 1 GiB + 1 byte and whose disk usage is a single 4 KiB block:</p>
+<pre><code><span class="o">st_size   = 1073741825 bytes (apparent size)
+st_blocks = 8 x 512 B = 4096 bytes actually allocated
+SEEK_DATA from 0 -&gt; 1073741824 (everything before is a hole)</span></code></pre>
+<p>Files with holes are called <strong>sparse</strong>. Virtual machine disk images and database files are often sparse. <code>SEEK_DATA</code> and <code>SEEK_HOLE</code> let a program such as <code>cp</code> or <code>tar</code> skip the holes instead of reading gigabytes of zeros. NFS gained the same ability in version 4.2 with its <code>SEEK</code> and <code>READ_PLUS</code> operations (<a href="06-nfs.html">lesson 06</a>).</p>
+<p><code>pread</code> and <code>pwrite</code> take the offset as an argument and leave the descriptor's offset untouched. Use them whenever several threads share one descriptor: separate <code>lseek</code> + <code>read</code> calls from two threads race with each other, while each <code>pread</code> is self-contained. Databases use <code>pread</code>/<code>pwrite</code> almost exclusively.</p>
+<aside class="note"><span class="tag">Aside: a documented Linux quirk</span><p>POSIX says <code>pwrite</code> writes at the offset you give it, even on a descriptor opened with <code>O_APPEND</code>. Linux instead appends to the end of the file. The <code>pwrite(2)</code> man page lists this under BUGS.</p></aside>
+</section>
+<section id="tables">
+<h2>The three tables behind a descriptor</h2>
+<p>The descriptor number is an index. Following it takes you through three kernel structures, and knowing which state lives in which one explains most surprising behaviour around files.</p>
+<ol>
+<li><strong>The per-process descriptor table.</strong> An array owned by each process (<code>struct files_struct</code> in the kernel). Slot <em>n</em> holds a pointer to an open file description, plus one per-descriptor flag: close-on-exec (<code>FD_CLOEXEC</code>).</li>
+<li><strong>The open file description</strong>, the kernel's <code>struct file</code>. One is created by every successful <code>open</code>. It holds the <strong>current offset</strong> (<code>f_pos</code>), the access mode, the status flags such as <code>O_APPEND</code> and <code>O_NONBLOCK</code>, a reference count, and a pointer to the operations table for this kind of file (<code>f_op</code>). The open file descriptions of all processes together form the system-wide open file table.</li>
+<li><strong>The in-memory inode</strong> (<code>struct inode</code>). One per file, no matter how many times it is opened. It holds what is true about the file itself: its size, owner, mode, timestamps, link count, and where its data lives. <a href="03-ondisk.html">Lesson 03</a> shows the on-disk version.</li>
+</ol>
+<figure class="diagram">
+<svg viewBox="0 0 720 440" width="720" role="img" aria-label="Process A has descriptors 3 and 4 pointing to one shared struct file, and descriptor 5 pointing to a second struct file. Its forked child, process B, has copies that point to the same two struct files. Both struct files point to one inode.">
+<defs><marker id="ah-01-2" viewBox="0 0 10 10" refX="9" refY="5" markerWidth="7" markerHeight="7" orient="auto-start-reverse"><path class="ah" d="M0,0 L10,5 L0,10 z"/></marker></defs>
+<text class="ts" x="20" y="40">per-process</text>
+<text class="ts" x="20" y="56">descriptor tables</text>
+<text class="ts" x="250" y="30">open file descriptions (system-wide)</text>
+<text class="th" x="20" y="168">process A</text>
+<rect class="k-user" x="20" y="180" width="130" height="24"/><text class="t" x="30" y="197">0  tty</text>
+<rect class="k-user" x="20" y="204" width="130" height="24"/><text class="t" x="30" y="221">1  tty</text>
+<rect class="k-user" x="20" y="228" width="130" height="24"/><text class="t" x="30" y="245">2  tty</text>
+<rect class="k-user" x="20" y="252" width="130" height="24"/><text class="t" x="30" y="269">3  open()</text>
+<rect class="k-user" x="20" y="276" width="130" height="24"/><text class="t" x="30" y="293">4  dup(3)</text>
+<rect class="k-user" x="20" y="300" width="130" height="24"/><text class="t" x="30" y="317">5  open()</text>
+<text class="th" x="570" y="168">process B = fork(A)</text>
+<rect class="k-user" x="570" y="180" width="130" height="24"/><text class="t" x="580" y="197">0  tty</text>
+<rect class="k-user" x="570" y="204" width="130" height="24"/><text class="t" x="580" y="221">1  tty</text>
+<rect class="k-user" x="570" y="228" width="130" height="24"/><text class="t" x="580" y="245">2  tty</text>
+<rect class="k-user" x="570" y="252" width="130" height="24"/><text class="t" x="580" y="269">3  copy</text>
+<rect class="k-user" x="570" y="276" width="130" height="24"/><text class="t" x="580" y="293">4  copy</text>
+<rect class="k-user" x="570" y="300" width="130" height="24"/><text class="t" x="580" y="317">5  copy</text>
+<rect class="k-kernel" x="250" y="40" width="220" height="86" rx="3"/>
+<text class="t" x="262" y="60">struct file #1</text>
+<text class="ts" x="262" y="80">f_pos   = 6   (shared!)</text>
+<text class="ts" x="262" y="96">f_flags = O_RDWR</text>
+<text class="ts" x="262" y="112">f_count = 4</text>
+<rect class="k-kernel" x="250" y="340" width="220" height="86" rx="3"/>
+<text class="t" x="262" y="360">struct file #2</text>
+<text class="ts" x="262" y="380">f_pos   = 0</text>
+<text class="ts" x="262" y="396">f_flags = O_RDONLY</text>
+<text class="ts" x="262" y="412">f_count = 2</text>
+<rect class="k-fs" x="270" y="190" width="180" height="90" rx="3"/>
+<text class="t" x="282" y="210">struct inode</text>
+<text class="ts" x="282" y="230">i_ino   = 2826040</text>
+<text class="ts" x="282" y="246">i_size  = 26</text>
+<text class="ts" x="282" y="262">i_nlink = 1</text>
+<line class="ln" x1="150" y1="264" x2="248" y2="88" marker-end="url(#ah-01-2)"/>
+<line class="ln" x1="150" y1="288" x2="248" y2="104" marker-end="url(#ah-01-2)"/>
+<line class="ln" x1="150" y1="312" x2="248" y2="372" marker-end="url(#ah-01-2)"/>
+<line class="ln" x1="570" y1="264" x2="472" y2="88" marker-end="url(#ah-01-2)"/>
+<line class="ln" x1="570" y1="288" x2="472" y2="104" marker-end="url(#ah-01-2)"/>
+<line class="ln" x1="570" y1="312" x2="472" y2="372" marker-end="url(#ah-01-2)"/>
+<line class="ln" x1="360" y1="126" x2="360" y2="188" marker-end="url(#ah-01-2)"/>
+<line class="ln" x1="360" y1="340" x2="360" y2="282" marker-end="url(#ah-01-2)"/>
+</svg>
+<figcaption>The state of lab 01's first demo. Descriptors 3 and 4 in process A, and their copies in the forked child B, all lead to <code>struct file #1</code>, so a read through any of them moves the same offset. Descriptor 5 came from a second <code>open</code> and has its own offset. Both descriptions describe the same file, so they share one inode.</figcaption>
+</figure>
+<h3>Who shares what</h3>
+<ul>
+<li><strong><code>dup(fd)</code></strong> creates a new descriptor (the lowest free number) pointing to the <em>same</em> open file description. <code>dup2(old, new)</code> does the same into a specific slot, closing whatever was there first. The shell uses this for redirection: <code>cmd &gt; out.txt</code> is an <code>open</code> followed by <code>dup2(fd, 1)</code>, and <code>2&gt;&amp;1</code> is <code>dup2(1, 2)</code>.</li>
+<li><strong><code>fork()</code></strong> gives the child a copy of the parent's descriptor table. The copies point to the same open file descriptions, so parent and child share offsets. That is why a parent and child both writing to an inherited log file interleave their lines instead of overwriting each other.</li>
+<li><strong>A second <code>open()</code></strong> of the same path, from the same process or another one, creates a new open file description with its own offset. The two only meet at the inode.</li>
+</ul>
+<p>The flags also split along these lines. Close-on-exec lives in the descriptor table, so it is per descriptor and <code>dup</code> does not copy it. Status flags such as <code>O_APPEND</code> and <code>O_NONBLOCK</code> live in the open file description, so setting <code>O_NONBLOCK</code> through one descriptor with <code>fcntl(fd, F_SETFL, …)</code> affects every descriptor, in every process, that shares that description.</p>
+<h3>Two writers, and why O_APPEND exists</h3>
+<p>Suppose two processes each <code>open</code> the same log file for writing, without <code>O_APPEND</code>. Each has its own open file description, and both offsets start at 0. Process A writes <code>AAAA</code>. Process B, whose offset is still 0, writes <code>BB</code> on top of it. The file now holds <code>BBAA</code>. Lab 01 reproduces exactly this.</p>
+<p>Seeking to the end first does not fix it: between A's <code>lseek(fd, 0, SEEK_END)</code> and A's <code>write</code>, B can append, and A then overwrites B's data. <code>O_APPEND</code> makes "move to the end, then write" a single step inside the kernel, done while the kernel holds the inode's lock, so two appenders on the same local filesystem can never overwrite each other. With <code>O_APPEND</code> the lab's file holds <code>AAAABB</code>.</p>
+<aside class="pitfall"><span class="tag">Pitfall: O_APPEND over NFS</span><p>The atomicity of <code>O_APPEND</code> comes from one kernel holding one lock. Two NFS clients appending to the same file each have their own kernel and their own idea of where the end is, so their appends can overwrite each other. <a href="07-nfs-caching.html">Lesson 07</a> explains why, and what to do instead.</p></aside>
+</section>
+<section id="everything-fd">
+<h2>Everything is a descriptor</h2>
+<p>The table holds pointers to <code>struct file</code>, and a <code>struct file</code> can represent almost anything with a <code>read_iter</code> or <code>write_iter</code> function behind it:</p>
+<ul>
+<li>regular files and directories on any filesystem;</li>
+<li>pipes (<code>pipe()</code>), Unix and network sockets (<code>socket()</code>, <code>accept()</code>);</li>
+<li>device files such as <code>/dev/null</code>, <code>/dev/tty</code> and raw disks like <code>/dev/sda</code> (<a href="02-blocks.html">lesson 02</a>);</li>
+<li>kernel event sources: <code>eventfd</code>, <code>timerfd</code>, <code>signalfd</code>, <code>epoll</code>, <code>inotify</code>, <code>io_uring</code>.</li>
+</ul>
+<p>The same <code>read</code>, <code>write</code> and <code>close</code> calls work on all of them, which is what "everything is a file" means in practice.</p>
+<h3>Seeing your descriptors</h3>
+<p>Linux publishes each process's table under <code>/proc/&lt;pid&gt;/fd</code>, as symbolic links whose targets describe what each descriptor points to. <code>/proc/self</code> is the calling process. For each descriptor, <code>/proc/&lt;pid&gt;/fdinfo/&lt;n&gt;</code> shows the open file description's offset and flags. From lab 01:</p>
+<pre><code><span class="o">fd 3   -&gt; /home/artem/storage-course/labs/01-fds/scratch/alphabet.txt
+fd 4   -&gt; pipe:[81567245]
+fd 5   -&gt; pipe:[81567245]
+/proc/self/fdinfo/3:
+  pos:    7
+  flags:  02100000
+  mnt_id: 81
+  ino:    2826040</span></code></pre>
+<p>The flags are in octal: <code>02000000</code> is <code>O_CLOEXEC</code>, <code>0100000</code> is <code>O_LARGEFILE</code> (set automatically on 64-bit), and the access mode in the low bits is 0, <code>O_RDONLY</code>. Both ends of the pipe show the same inode number in brackets. <code>ls -l /proc/$$/fd</code> shows your shell's own descriptors, and <code>lsof -p PID</code> shows the same information for any process you are allowed to inspect.</p>
+<h3>Limits and leaks</h3>
+<p>Each process has a limit on open descriptors, <code>RLIMIT_NOFILE</code>, which the shell shows with <code>ulimit -n</code> and a program reads with <code>getrlimit</code>. Many distributions default the soft limit to 1024; this WSL session reports 1048576. When a process hits it, <code>open</code>, <code>socket</code> and <code>accept</code> fail with <code>EMFILE</code>. A server that never closes descriptors eventually hits the limit, so "too many open files" in a log is almost always a leak.</p>
+<p>Descriptors are inherited across <code>execve</code> unless marked close-on-exec. Setting it later with <code>fcntl</code> leaves a window in which another thread can <code>fork</code> and <code>exec</code>, carrying your descriptor into an unrelated program. Passing <code>O_CLOEXEC</code> to <code>open</code> closes that window, which is why careful code passes it everywhere.</p>
+</section>
+<section id="metadata">
+<h2>Metadata and directories</h2>
+<h3>stat</h3>
+<pre><code>int stat(const char *path, struct stat *st);   <span class="c">// follows symlinks</span>
+int lstat(const char *path, struct stat *st);  <span class="c">// does not</span>
+int fstat(int fd, struct stat *st);            <span class="c">// by descriptor</span></code></pre>
+<p><code>stat</code> returns the inode's attributes. The fields you will use in this course:</p>
+<div class="table-wrap"><table>
+<thead><tr><th>Field</th><th>Meaning</th></tr></thead>
+<tbody>
+<tr><td><code>st_dev</code>, <code>st_ino</code></td><td>The device (filesystem) and inode number. Together they identify a file uniquely on this machine. Two paths with the same pair are hard links to one file.</td></tr>
+<tr><td><code>st_mode</code></td><td>File type (regular, directory, symlink, device, pipe, socket) and permission bits.</td></tr>
+<tr><td><code>st_nlink</code></td><td>How many directory entries (names) point at this inode.</td></tr>
+<tr><td><code>st_uid</code>, <code>st_gid</code></td><td>Owner and group, as numbers. NFS carries these numbers or names across the network, which causes its own problems (<a href="06-nfs.html">lesson 06</a>).</td></tr>
+<tr><td><code>st_size</code></td><td>Length in bytes, holes included.</td></tr>
+<tr><td><code>st_blocks</code></td><td>Space actually allocated, always in 512-byte units whatever the real block size. <code>du</code> reports this; <code>ls -l</code> reports <code>st_size</code>.</td></tr>
+<tr><td><code>st_blksize</code></td><td>The preferred I/O size for efficiency, usually 4096 locally and often 1 MiB on NFS.</td></tr>
+<tr><td><code>st_atim</code>, <code>st_mtim</code>, <code>st_ctim</code></td><td>Last access, last data modification, and last inode change (data writes, but also <code>chmod</code>, <code>chown</code>, <code>link</code>). Nanosecond resolution on modern filesystems.</td></tr>
+</tbody>
+</table></div>
+<p>The newer <code>statx</code> call returns the same information plus extras such as the file's creation (birth) time, and lets the caller ask for only some fields. That matters on network filesystems, where some attributes are expensive to fetch.</p>
+<h3>Reading a directory</h3>
+<p>A directory is a file whose content is a list of (name, inode number) entries. You cannot <code>read</code> it directly. Linux provides <code>getdents64</code>, which fills a buffer with records of this shape:</p>
+<pre><code>struct linux_dirent64 {
+    ino64_t        d_ino;     <span class="c">// inode number the name points to</span>
+    off64_t        d_off;     <span class="c">// opaque cookie: where the next read continues</span>
+    unsigned short d_reclen;  <span class="c">// length of this record</span>
+    unsigned char  d_type;    <span class="c">// DT_REG, DT_DIR, DT_LNK, ... or DT_UNKNOWN</span>
+    char           d_name[];  <span class="c">// NUL-terminated name</span>
+};</code></pre>
+<p>The C library's <code>opendir</code>/<code>readdir</code> wrap it with a buffer. Notice what is missing: sizes, owners, timestamps. A directory listing gives names and inode numbers, so <code>ls -l</code> must call <code>stat</code> once per entry. On a local disk that is cheap when cached. Over a network it was so slow that NFSv3 added <code>READDIRPLUS</code>, which returns attributes along with names. The <code>d_off</code> cookie plays the same role as the cookie NFS uses to resume a long listing across several requests.</p>
+<h3>Names: link, unlink, rename</h3>
+<ul>
+<li><code>link(old, new)</code> adds a second name for an existing inode and increments <code>st_nlink</code>. Both names are equal; neither is the "original".</li>
+<li><code>unlink(path)</code> removes a name and decrements <code>st_nlink</code>. It does not necessarily delete anything; see the next section.</li>
+<li><code>rename(old, new)</code> moves a name, and if <code>new</code> exists, replaces it <strong>atomically</strong>: any other process sees either the old file or the new one under that name, never nothing and never a mix. Applications rely on this to update files safely: write a temporary file, <code>fsync</code> it, then <code>rename</code> it over the real name. <a href="05-vfs-cache.html">Lesson 05</a> covers the full recipe, including the <code>fsync</code> of the directory it also needs.</li>
+</ul>
+</section>
+<section id="names">
+<h2>A name is not a file</h2>
+<p>The kernel frees a file's inode and data only when two counts reach zero: the link count (names in directories) and the number of open references (open file descriptions, plus memory mappings). <code>unlink</code> only affects the first.</p>
+<p>So a program can open a file, have its name removed, and keep reading and writing it. From the lab:</p>
+<pre><code><span class="o">before unlink: inode 2826042, nlink 1
+after unlink:  inode 2826042, nlink 0, access(path) -&gt; No such file or directory
+/proc/self/fd/3 -&gt; /home/artem/storage-course/labs/01-fds/scratch/doomed.txt (deleted)
+pread through the fd still returns "still here"</span></code></pre>
+<p>This is useful, since it gives you anonymous temporary files that clean themselves up when the process exits. It is also the source of a classic operations puzzle: <code>df</code> says the disk is full, <code>du</code> finds nothing big. Usually a long-running process is still writing to a log file that someone deleted. The space returns only when that process closes the file or exits. <code>lsof +L1</code> lists open files with a link count below 1.</p>
+<aside class="note"><span class="tag">Forward pointer</span><p>An NFSv3 server has no idea which files its clients hold open. To keep "deleted but open" working, the NFS client fakes it: instead of removing a file that is still open, it renames it to <code>.nfsXXXXXXXX</code> and removes that name at last close. The Linux client still does this with NFSv4. You will meet these "silly renames" in <a href="07-nfs-caching.html">lesson 07</a>.</p></aside>
+</section>
+<section id="buffers">
+<h2>Where your bytes wait: buffers above and below the syscall</h2>
+<p>When <code>write</code> returns, your data is not on disk. It has been copied into the kernel's <strong>page cache</strong>, the in-memory copy of file contents, and marked dirty. The kernel writes dirty pages to the device later, typically within about 30 seconds. Most programs also add a buffer of their own above the syscall, through C's <code>stdio</code> library.</p>
+<figure class="diagram">
+<pre>  your process          fprintf(f, ...)          FILE* buffer (stdio, ~4-8 KiB, user space)
+                              │  fflush(f), buffer full, newline on a tty, or fclose
+  ── syscall boundary ─────── ▼ write(fd, ...) ──────────────────────────────────────
+  kernel                 page cache                dirty pages in RAM, shared by all processes
+                              │  writeback (seconds later), or fsync(fd)
+  block layer + driver        ▼ (lesson 02)
+  device                 volatile write cache      the drive's own DRAM
+                              │  FLUSH / FUA command (sent by fsync)
+                              ▼
+                         stable media              NAND flash or magnetic platter</pre>
+<figcaption>Four places a byte can wait. Each arrow is a different operation, and only the last one survives a power cut. <code>fflush</code> moves data across the syscall boundary only; <code>fsync</code> pushes it the rest of the way.</figcaption>
+</figure>
+<h3>stdio is a cache in user space</h3>
+<p><code>fopen</code> wraps a descriptor in a <code>FILE</code> object with a buffer. <code>fprintf</code> and <code>fwrite</code> copy into that buffer, and only when it fills (or you call <code>fflush</code> or <code>fclose</code>) does stdio call <code>write</code>. The buffering mode depends on the target: full buffering for files and pipes, line buffering for terminals, and no buffering for <code>stderr</code>. You can change it with <code>setvbuf</code>.</p>
+<p>The lab shows two consequences. After <code>fprintf</code>, the kernel reports the file as 0 bytes long, because the data is still in your process. And mixing stdio with raw <code>write</code> on the same descriptor reorders output:</p>
+<pre><code><span class="o">after fprintf:  file size on the kernel side = 0
+after fflush:   file size on the kernel side = 19
+...
+2nd (write)
+1st (fprintf)</span></code></pre>
+<p>Two more consequences matter in practice. A process killed with <code>SIGKILL</code> loses whatever sits in its stdio buffers, though everything it already passed to <code>write</code> survives in the page cache. And a <code>fork</code> with unflushed stdio data duplicates the buffer, so the same output can appear twice. Lab 01 turns off buffering on its own <code>stdout</code> for this reason.</p>
+<h3>fsync and fdatasync</h3>
+<pre><code>int fsync(int fd);       <span class="c">// data + all metadata durable before returning</span>
+int fdatasync(int fd);   <span class="c">// data + only the metadata needed to read it back (e.g. size, not mtime)</span></code></pre>
+<p>These are the calls that turn "written" into "durable". They write the file's dirty pages to the device, wait for completion, and then ask the device to flush its own volatile cache. They are slow, milliseconds rather than microseconds, which is why programs batch them. <a href="05-vfs-cache.html">Lesson 05</a> covers the page cache and writeback in detail, and <a href="02-blocks.html">lesson 02</a> covers what FLUSH means to the device.</p>
+<h3>mmap, briefly</h3>
+<p><code>mmap</code> maps a file's page-cache pages directly into your address space, so ordinary memory loads and stores read and write the file with no <code>read</code> or <code>write</code> calls. <code>MAP_SHARED</code> mappings write back to the file; <code>MAP_PRIVATE</code> mappings give you a copy-on-write view that never reaches the file. Pages are loaded on first touch through a page fault. <code>msync</code> is the mmap version of <code>fsync</code>. mmap and the page cache are the same memory, which is why <a href="05-vfs-cache.html">lesson 05</a> treats them together.</p>
+</section>
+<section id="next-steps">
+<h2>Where the call goes next</h2>
+<p>Inside the kernel, the descriptor led to a <code>struct file</code>, and the <code>struct file</code> led to an operations table. That table is filled in by whichever filesystem the file lives on. The layer that owns these objects and dispatches through them is the <strong>Virtual File System</strong> (VFS), and it is also where the page cache and the name cache live. That is <a href="05-vfs-cache.html">lesson 05</a>.</p>
+<p>Before getting there, the course drops to the very bottom of the stack: the device that eventually stores the bytes, and how it is addressed. That is <a href="02-blocks.html">lesson 02</a>. Lessons 03 and 04 then build a filesystem on top of it, so that by lesson 05 both ends of the path are familiar.</p>
+</section>
+<section class="lab" id="lab">
+<p class="tag">Lab 01</p>
+<h2>Descriptors, offsets and names, by experiment</h2>
+<p class="where">~/storage-course/labs/01-fds/</p>
+<ol>
+<li>Build and run the raw syscall demo. It prints the same line three ways, then shows the raw kernel return value next to the libc convention:
+<pre><code><span class="p">$</span> cd ~/storage-course/labs/01-fds
+<span class="p">$</span> gcc -Wall -Wextra -O2 -o rawsyscall rawsyscall.c &amp;&amp; ./rawsyscall
+<span class="o">1. libc wrapper write()
+2. generic syscall(SYS_write, ...)
+3. inline asm: the syscall instruction
+raw syscall on a closed fd returned -9 (-EBADF is -9)
+libc write() on a closed fd returned -1, errno=9 (Bad file descriptor)</span></code></pre>
+</li>
+<li>Build and run the six descriptor demos (or one at a time with <code>./fds N</code>). Run it in your home directory, which is ext4; under <code>/mnt/c</code> or <code>/mnt/d</code> the sparse-file numbers differ.
+<pre><code><span class="p">$</span> gcc -Wall -Wextra -O2 -o fds fds.c &amp;&amp; ./fds
+<span class="o">== 1. who shares the offset? ==
+    read 1 byte via fd 3 -&gt; 'a'
+    offset seen by fd 4 (dup)        = 1
+    offset seen by fd 5 (other open) = 0
+    child read 5 bytes via its copy of fd 3
+    parent's offset on fd 3 is now 6 (moved by the child)
+    'other' is still at 0
+== 2. two writers, with and without O_APPEND ==
+    contents of scratch/log.txt: "BBAA"
+    contents of scratch/log.txt: "AAAABB"</span></code></pre>
+Example output from this course's WSL machine. Before reading the source, predict each line from the three-tables diagram.
+</li>
+<li>Read <code>fds.c</code> next to the output. Each demo is a short function with a comment saying what it proves. Change demo 2 to open only one of the two descriptors with <code>O_APPEND</code> and predict the result before running it.</li>
+<li>Look at your shell's own table: <code>ls -l /proc/$$/fd</code> and <code>cat /proc/$$/fdinfo/0</code>. Then run <code>sleep 100 &gt; /tmp/x &amp;</code> and inspect <code>/proc/$!/fd</code> to see the redirection the shell set up with <code>dup2</code>.</li>
+<li>Optional, needs root to install: <code>sudo apt install strace</code>, then <code>strace -f -e trace=openat,read,write,lseek,dup,clone ./fds 1</code>. Notice that <code>fork</code> appears as <code>clone</code> and <code>fopen</code> as <code>openat</code>. This step was not run on the course machine.</li>
+</ol>
+</section>
+<section class="check" id="check">
+<h2>Check yourself</h2>
+<details><summary>A process opens the same file twice, getting descriptors 3 and 4, and writes "hello" through 3. Then it reads 5 bytes through 4. What does it read, and what is 4's offset afterwards?</summary><p>It reads "hello". The two opens created two open file descriptions with separate offsets, so descriptor 4 starts at 0. The data is shared, because both lead to the same inode and the same page cache, so the bytes written through 3 are visible. Afterwards 4's offset is 5 and 3's is also 5, each counted separately.</p></details>
+<details><summary>Why does <code>cmd &gt; log 2&gt;&amp;1</code> keep both streams intact, while <code>cmd &gt; log 2&gt; log</code> can lose output?</summary><p><code>2&gt;&amp;1</code> is <code>dup2(1, 2)</code>: both descriptors share one open file description and one offset, so writes from either land one after another. <code>2&gt; log</code> opens the file a second time, creating a second description whose offset starts at 0, so stderr output overwrites stdout output in the file, exactly like lab demo 2.</p></details>
+<details><summary><code>read</code> returned 100 when you asked for 4096. Is that an error? What about 0? What about −1 with errno EINTR?</summary><p>100 is a short read: legal, and you should loop if you need more. On a regular file it usually means you reached the end. 0 means end of file. −1 with <code>EINTR</code> means a signal interrupted the call before any data moved, so retry it.</p></details>
+<details><summary><code>df</code> shows a filesystem 100% full, but <code>du -sh /</code> adds up to far less. What is the most likely explanation, and how do you confirm it?</summary><p>A process holds a deleted file open. The name is gone, so <code>du</code> (which walks names) cannot see it, but the inode and its blocks stay allocated until the last reference closes. <code>lsof +L1</code> lists such files; restarting or signalling the process to reopen its log frees the space.</p></details>
+<details><summary>A program calls <code>fprintf(f, ...)</code> and is then killed with SIGKILL. Is the text in the file? What if it called <code>fflush(f)</code> before being killed? What if the machine lost power right after the <code>fflush</code>?</summary><p>Without <code>fflush</code>, no: the text was still in the stdio buffer in the process's memory. After <code>fflush</code>, the text is in the kernel's page cache and survives the process dying. A power loss right after <code>fflush</code> can still lose it, because nothing has forced the page cache or the drive's cache to stable media. That needs <code>fsync</code>.</p></details>
+<details><summary><code>ls -l</code> says a file is 10 GiB and <code>du</code> says 12 KiB. How?</summary><p>The file is sparse. <code>ls -l</code> shows <code>st_size</code>, the logical length including holes. <code>du</code> shows <code>st_blocks</code>, the space actually allocated. Most of the file is holes with no blocks behind them.</p></details>
+<details><summary>Why pass <code>O_CLOEXEC</code> to <code>open</code> instead of calling <code>fcntl(fd, F_SETFD, FD_CLOEXEC)</code> right afterwards?</summary><p>In a multithreaded program, another thread can call <code>fork</code> and <code>execve</code> between your <code>open</code> and your <code>fcntl</code>, and the new program inherits the descriptor. Setting the flag inside <code>open</code> leaves no window.</p></details>
+</section>
+<section class="further" id="further">
+<h2>Go deeper</h2>
+<ul>
+<li><a href="https://man7.org/linux/man-pages/man2/open.2.html">open(2)</a>: every flag, with the fine print on <code>O_DIRECT</code>, <code>O_TMPFILE</code> and <code>O_PATH</code>.</li>
+<li><a href="https://man7.org/linux/man-pages/man2/syscall.2.html">syscall(2)</a>: the register conventions for every architecture in one table.</li>
+<li><a href="https://lwn.net/Articles/604287/">Anatomy of a system call, part 1</a> (LWN): what happens inside the kernel on entry and exit.</li>
+<li><a href="https://man7.org/linux/man-pages/man5/proc_pid_fdinfo.5.html">proc_pid_fdinfo(5)</a>: every field in <code>/proc/PID/fdinfo</code>.</li>
+<li><a href="https://man7.org/linux/man-pages/man7/vdso.7.html">vdso(7)</a>: which calls skip the kernel entirely.</li>
+<li><a href="https://pages.cs.wisc.edu/~remzi/OSTEP/file-intro.pdf">OSTEP, "Files and Directories"</a>: a free textbook chapter covering the same API from the operating-systems side.</li>
+<li><a href="https://man7.org/tlpi/">The Linux Programming Interface</a> (Kerrisk), chapters 4, 5 and 13: the definitive book on file I/O, buffering and descriptors.</li>
+</ul>
+</section>
+<nav class="pager-foot" aria-label="Next and previous lesson">
+<a class="prev" href="index.html"><small>Previous</small>Course overview</a>
+<a class="next" href="02-blocks.html"><small>Next</small>Block devices and addressing</a>
+</nav>
+</main>
+</div>
+<script src="course.js"></script>
+</body>
+</html>

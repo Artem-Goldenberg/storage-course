@@ -1,0 +1,621 @@
+<!doctype html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover">
+<title>The VFS and the Caches</title>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=IBM+Plex+Mono:wght@400;600&family=IBM+Plex+Sans+Condensed:wght@500;600;700&family=Source+Serif+4:ital,opsz,wght@0,8..60,400;0,8..60,600;1,8..60,400&display=swap">
+<link rel="stylesheet" href="course.css?v=7">
+</head>
+<body data-layer="kernel">
+<header class="topbar">
+<a class="brand" href="index.html">From open() to RDMA <span>· a storage course</span></a>
+<nav class="pager" aria-label="Lesson pager">
+<a href="04-btrees.html" rel="prev">← Prev</a>
+<details class="route"><summary>Lesson 5 of 9</summary></details>
+<a href="06-nfs.html" rel="next">Next →</a>
+<details class="sections"><summary>Sections</summary></details>
+</nav>
+</header>
+<div class="layout">
+<nav class="rail" aria-label="Lessons">
+<div class="rail-title">The route</div>
+<ol>
+<li class="user"><a href="01-syscalls.html"><span class="n">01</span><span>Syscalls &amp; file descriptors</span></a></li>
+<li class="block"><a href="02-blocks.html"><span class="n">02</span><span>Block devices &amp; addressing</span></a></li>
+<li class="fs"><a href="03-ondisk.html"><span class="n">03</span><span>Inside an ext4 image</span></a></li>
+<li class="fs"><a href="04-btrees.html"><span class="n">04</span><span>B-trees, really</span></a></li>
+<li class="kernel"><a href="05-vfs-cache.html" aria-current="page"><span class="n">05</span><span>The VFS and the caches</span></a></li>
+<li class="net"><a href="06-nfs.html"><span class="n">06</span><span>NFS from v3 to 4.2</span></a></li>
+<li class="net"><a href="07-nfs-caching.html"><span class="n">07</span><span>Caching across the network</span></a></li>
+<li class="net"><a href="08-rdma.html"><span class="n">08</span><span>RDMA and NFS over RDMA</span></a></li>
+<li class="net"><a href="09-distributed.html"><span class="n">09</span><span>Distributed filesystems</span></a></li>
+<li class="extra"><a href="glossary.html"><span class="n">··</span><span>Glossary</span></a></li>
+</ol>
+<div class="rail-legend">
+<span style="--c: var(--l-user)">user space</span>
+<span style="--c: var(--l-kernel)">kernel</span>
+<span style="--c: var(--l-fs)">filesystem</span>
+<span style="--c: var(--l-block)">block</span>
+<span style="--c: var(--l-net)">network</span>
+</div>
+</nav>
+<main class="lesson">
+<header class="lesson-head">
+<p class="eyebrow">Lesson 5 · Kernel</p>
+<h1>The VFS and the caches</h1>
+<p class="lede">Lesson 1 covered the calls a program makes. Lessons 2 to 4 covered the blocks and trees on the disk. This lesson covers the kernel layer between them: how a <code>read()</code> finds the right filesystem, and why most reads and writes never touch the disk at all.</p>
+<div class="outcomes">
+<b>After this lesson you can</b>
+<ul>
+<li>name the four VFS objects and the operation table each one carries;</li>
+<li>trace a <code>read()</code> from the system call to a bio, using the real kernel function names;</li>
+<li>explain the page cache, readahead, dirty pages and writeback, and why <code>write()</code> returns so fast;</li>
+<li>write a file durably with <code>fsync</code> and the rename pattern, and know what a failed <code>fsync</code> means;</li>
+<li>choose between buffered I/O, <code>mmap</code> and <code>O_DIRECT</code>;</li>
+<li>say exactly which guarantees disappear when a second machine can change the file.</li>
+</ul>
+</div>
+<nav class="toc" aria-label="Lesson contents">
+<b>In this lesson</b>
+<ol>
+<li><a href="#where">One layer, two jobs</a></li>
+<li><a href="#objects">Four objects and their operation tables</a></li>
+<li><a href="#mounts">Mounts: where one filesystem ends and the next begins</a></li>
+<li><a href="#dcache">The dentry cache and the inode cache</a></li>
+<li><a href="#trace-read">Trace a read()</a></li>
+<li><a href="#page-cache">The page cache</a></li>
+<li><a href="#readahead">Readahead</a></li>
+<li><a href="#reclaim">Eviction: LRU lists and reclaim</a></li>
+<li><a href="#mmap">mmap uses the same pages</a></li>
+<li><a href="#write-path">Writing: why write() is fast</a></li>
+<li><a href="#durability">Durability: fsync and friends</a></li>
+<li><a href="#direct">Bypassing the cache: O_DIRECT</a></li>
+<li><a href="#hints">Telling the kernel what you will do</a></li>
+<li><a href="#stack">All the caches, top to bottom</a></li>
+<li><a href="#one-machine">Why this is easy on one machine</a></li>
+<li><a href="#lab">Lab 05: Watch the page cache</a></li>
+<li><a href="#check">Check yourself</a></li>
+<li><a href="#further">Go deeper</a></li>
+</ol>
+</nav>
+</header>
+<section id="where">
+<h2>One layer, two jobs</h2>
+<p>Every filesystem call a program makes lands in the same kernel subsystem first: the <b>Virtual File System</b>, or VFS. It has two jobs.</p>
+<ol>
+<li><b>Dispatch.</b> The VFS owns the generic parts of every file operation: looking up the file descriptor, checking permissions, walking path names, keeping the file offset. When it needs something only a specific filesystem knows, such as how to find block 7 of a file, it calls that filesystem through a table of function pointers.</li>
+<li><b>Caching.</b> The VFS and the memory manager keep three big caches that every filesystem shares: the <b>dentry cache</b> (names), the <b>inode cache</b> (file metadata) and the <b>page cache</b> (file contents). A filesystem driver fills them on a miss. On a hit, the driver is often not called at all.</li>
+</ol>
+<p>Because of the first job, ext4, XFS, btrfs, tmpfs, procfs, NFS and FUSE all look the same to <code>cat</code>. Because of the second job, a warm <code>read()</code> costs a memory copy, while a cold one costs a trip to the device that can be a thousand times slower.</p>
+<aside class="key"><span class="tag">Key idea</span><p>The VFS is the place where "a file" stops being the program's idea and becomes a filesystem's data structures. Everything above it is generic; everything below it is specific to one filesystem or one device.</p></aside>
+</section>
+<section id="objects">
+<h2>Four objects and their operation tables</h2>
+<p>The VFS models every mounted filesystem with four kinds of in-memory object. Each has a pointer to a table of functions that the filesystem supplies. In C this is the usual way to get polymorphism: a struct full of function pointers, filled in once per filesystem type.</p>
+<div class="table-wrap"><table>
+<thead><tr><th>Object</th><th>Represents</th><th>Lives</th><th>Its operations</th></tr></thead>
+<tbody>
+<tr><td><code>struct super_block</code></td><td>one mounted filesystem instance: block size, root, device, list of inodes</td><td>from mount to unmount</td><td><code>super_operations</code>: <code>alloc_inode</code>, <code>write_inode</code>, <code>evict_inode</code>, <code>sync_fs</code>, <code>statfs</code>, <code>put_super</code></td></tr>
+<tr><td><code>struct inode</code></td><td>one file or directory: <code>i_ino</code>, <code>i_mode</code>, <code>i_size</code>, timestamps, link count</td><td>while anything refers to it, then in the inode cache until reclaimed</td><td><code>inode_operations</code>: <code>lookup</code>, <code>create</code>, <code>mkdir</code>, <code>unlink</code>, <code>rename</code>, <code>setattr</code>, <code>getattr</code>, <code>permission</code></td></tr>
+<tr><td><code>struct dentry</code></td><td>one name in one directory, linking that name to an inode (or to nothing)</td><td>in the dentry cache until reclaimed</td><td><code>dentry_operations</code>: <code>d_revalidate</code>, <code>d_hash</code>, <code>d_compare</code>, <code>d_release</code></td></tr>
+<tr><td><code>struct file</code></td><td>one open file description: offset <code>f_pos</code>, flags, access mode</td><td>from <code>open()</code> to the last <code>close()</code></td><td><code>file_operations</code>: <code>read_iter</code>, <code>write_iter</code>, <code>llseek</code>, <code>fsync</code>, <code>open</code>, <code>release</code>, <code>unlocked_ioctl</code>, <code>fallocate</code></td></tr>
+</tbody>
+</table></div>
+<p>A fifth table matters as much as the four above. Each inode has an <code>i_mapping</code> pointer to a <code>struct address_space</code>: the page cache for that file. Its <code>address_space_operations</code> are how the generic page cache code asks a filesystem to move data between memory and disk: <code>read_folio</code>, <code>readahead</code>, <code>writepages</code>, <code>dirty_folio</code>, <code>write_begin</code>, <code>write_end</code>, <code>direct_IO</code>, <code>release_folio</code>.</p>
+<p>The <code>struct file</code> is the open file description from <a href="01-syscalls.html">lesson 1</a>. The number your program holds is an index into the process's fd table, and that slot points at a <code>struct file</code>. The in-memory <code>struct inode</code> is built from the on-disk inode you decoded by hand in <a href="03-ondisk.html">lesson 3</a>. Filesystems usually wrap it in a bigger struct of their own; ext4 embeds it inside <code>struct ext4_inode_info</code> and gets back to the wrapper with the <code>EXT4_I()</code> macro, which is <code>container_of()</code> underneath.</p>
+<p>Here is ext4's file table, exactly as it appears in <code>fs/ext4/file.c</code> in Linux 6.18 (one <code>#ifdef</code> removed):</p>
+<pre><code>const struct file_operations ext4_file_operations = {
+	.llseek		= ext4_llseek,
+	.read_iter	= ext4_file_read_iter,
+	.write_iter	= ext4_file_write_iter,
+	.iopoll		= iocb_bio_iopoll,
+	.unlocked_ioctl = ext4_ioctl,
+	.mmap_prepare	= ext4_file_mmap_prepare,
+	.open		= ext4_file_open,
+	.release	= ext4_release_file,
+	.fsync		= ext4_sync_file,
+	.get_unmapped_area = thp_get_unmapped_area,
+	.splice_read	= ext4_file_splice_read,
+	.splice_write	= iter_file_splice_write,
+	.fallocate	= ext4_fallocate,
+	...
+};</code></pre>
+<p>When the VFS wants to read from an ext4 file, it calls <code>file-&gt;f_op-&gt;read_iter(...)</code>, and the pointer leads to <code>ext4_file_read_iter</code>. An NFS file's <code>f_op</code> points at <code>nfs_file_operations</code> instead, and the same call reaches the NFS client. Nothing above this line changes.</p>
+<figure class="diagram">
+<svg viewBox="0 0 760 320" width="760" role="img" aria-label="How the VFS objects point at each other: the process fd table points to a struct file, which points to a dentry and an inode; the inode points to its super_block and to an address_space holding the file's folios.">
+<defs><marker id="ah-05-1" viewBox="0 0 10 10" refX="9" refY="5" markerWidth="7" markerHeight="7" orient="auto-start-reverse"><path class="ah" d="M0,0 L10,5 L0,10 z"/></marker></defs>
+<rect class="k-user" x="16" y="100" width="120" height="120" rx="3"/>
+<text class="th" x="76" y="122" text-anchor="middle">fd table</text>
+<text class="t" x="30" y="146">0 stdin</text>
+<text class="t" x="30" y="166">1 stdout</text>
+<text class="t" x="30" y="186">2 stderr</text>
+<text class="t" x="30" y="206">3</text>
+<line class="ln" x1="48" y1="202" x2="174" y2="190" marker-end="url(#ah-05-1)"/>
+<rect class="k-kernel" x="176" y="140" width="150" height="84" rx="3"/>
+<text class="th" x="251" y="163" text-anchor="middle">struct file</text>
+<text class="ts" x="188" y="185">f_pos, f_flags</text>
+<text class="ts" x="188" y="203">f_op: file_operations</text>
+<rect class="k-kernel" x="372" y="20" width="190" height="72" rx="3"/>
+<text class="th" x="467" y="43" text-anchor="middle">struct dentry</text>
+<text class="ts" x="384" y="64">d_name "notes.txt"</text>
+<text class="ts" x="384" y="81">d_parent, d_op</text>
+<rect class="k-kernel" x="372" y="140" width="190" height="84" rx="3"/>
+<text class="th" x="467" y="163" text-anchor="middle">struct inode</text>
+<text class="ts" x="384" y="185">i_ino, i_mode, i_size</text>
+<text class="ts" x="384" y="203">i_op: inode_operations</text>
+<text class="ts" x="384" y="218">i_fop</text>
+<rect class="k-kernel" x="372" y="252" width="190" height="56" rx="3"/>
+<text class="th" x="467" y="275" text-anchor="middle">address_space</text>
+<text class="ts" x="384" y="296">a_ops, XArray i_pages</text>
+<rect class="k-kernel" x="600" y="140" width="148" height="84" rx="3"/>
+<text class="th" x="674" y="163" text-anchor="middle">super_block</text>
+<text class="ts" x="612" y="185">s_op, s_type</text>
+<text class="ts" x="612" y="203">s_bdev: /dev/sdd</text>
+<text class="ts" x="674" y="250" text-anchor="middle">folios (cached pages)</text>
+<rect class="k-kernel" x="604" y="260" width="40" height="40" rx="2"/>
+<text class="t" x="624" y="285" text-anchor="middle">0</text>
+<rect class="k-kernel" x="654" y="260" width="40" height="40" rx="2"/>
+<text class="t" x="674" y="285" text-anchor="middle">1</text>
+<rect class="k-kernel" x="704" y="260" width="40" height="40" rx="2"/>
+<text class="t" x="724" y="285" text-anchor="middle">7</text>
+<line class="ln" x1="300" y1="140" x2="372" y2="70" marker-end="url(#ah-05-1)"/>
+<text class="ts" x="318" y="98">f_path</text>
+<line class="ln" x1="326" y1="182" x2="370" y2="182" marker-end="url(#ah-05-1)"/>
+<text class="ts" x="349" y="174" text-anchor="middle">f_inode</text>
+<line class="ln" x1="467" y1="92" x2="467" y2="138" marker-end="url(#ah-05-1)"/>
+<text class="ts" x="474" y="120">d_inode</text>
+<line class="ln" x1="467" y1="224" x2="467" y2="250" marker-end="url(#ah-05-1)"/>
+<text class="ts" x="474" y="242">i_mapping</text>
+<line class="ln" x1="562" y1="182" x2="598" y2="182" marker-end="url(#ah-05-1)"/>
+<text class="ts" x="566" y="174">i_sb</text>
+<line class="ln" x1="562" y1="280" x2="602" y2="280" marker-end="url(#ah-05-1)"/>
+</svg>
+<figcaption>The objects behind fd 3. Violet is per-process state; blue is kernel state shared by every process that opens the same file. Two processes that open <code>notes.txt</code> get two <code>struct file</code>s (two offsets) but share one dentry, one inode and one set of cached folios.</figcaption>
+</figure>
+</section>
+<section id="mounts">
+<h2>Mounts: where one filesystem ends and the next begins</h2>
+<p>A <b>mount</b> attaches a filesystem's root to a directory of an already-mounted filesystem. The kernel records each one as a <code>struct mount</code> (with an embedded <code>struct vfsmount</code>) that says: at this dentry on that parent mount, continue in this other <code>super_block</code>. During a path walk, whenever the kernel reaches a dentry flagged as a mount point, it looks up the mount table and jumps to the root of the mounted filesystem.</p>
+<p>Every process sees the mount table of its <b>mount namespace</b>. Containers get their own namespace, which is why a container can have a different <code>/</code>. You can read your view of the table in <code>/proc/self/mountinfo</code>, or more readably with <code>findmnt</code>:</p>
+<pre><code><span class="p">$</span> findmnt -n -o SOURCE,FSTYPE,OPTIONS /
+<span class="o">/dev/sdd ext4   rw,relatime,discard,errors=remount-ro,data=ordered</span></code></pre>
+<p>That line from this machine names the block device (<code>/dev/sdd</code>, lesson 2), the filesystem type whose operation tables will be used (<code>ext4</code>), and mount options that change behaviour inside those tables. <code>data=ordered</code> is the ext4 journaling mode from lesson 3. <code>relatime</code> limits how often a read updates the access time, because every access-time update is a metadata write.</p>
+</section>
+<section id="dcache">
+<h2>The dentry cache and the inode cache</h2>
+<p>In <a href="03-ondisk.html">lesson 3</a> you resolved a path by hand: read the root inode, read its directory blocks, find the name, read the next inode, and repeat. Doing that for every <code>open()</code> would mean several disk reads per call. The kernel avoids it with the <b>dentry cache</b> (dcache).</p>
+<p>A dentry caches the answer to one question: in directory <i>P</i>, what does the name <i>N</i> refer to? The dcache is a hash table keyed by the pair (pointer to the parent dentry, hash of the name). A path walk for <code>/home/artem/notes.txt</code> becomes three hash lookups: <code>("/", "home")</code>, then <code>(home, "artem")</code>, then <code>(artem, "notes.txt")</code>. Only a miss calls the filesystem's <code>inode_operations-&gt;lookup</code>, which reads the directory from disk and adds a new dentry.</p>
+<ul>
+<li>A <b>positive dentry</b> points at an inode.</li>
+<li>A <b>negative dentry</b> records that a name does <em>not</em> exist. When a shell searches <code>$PATH</code> for a command, or a compiler probes twenty include directories for <code>stdio.h</code>, most of those lookups fail. Negative dentries make the second failure free.</li>
+<li>Unused dentries stay on an LRU list and are freed when memory is needed. Any dentry can be rebuilt from disk, so dropping one is always safe.</li>
+</ul>
+<p>Most lookups also avoid locks. The kernel first tries an <b>RCU walk</b>: it walks the dentries without taking reference counts or locks, and checks sequence counters at the end to make sure nothing changed underneath it. If something did change, or a dentry is missing, it falls back to the slower <b>ref walk</b>, which takes references step by step. This is why <code>stat()</code> on a hot path scales well on machines with many cores.</p>
+<p>The <b>inode cache</b> holds the in-memory inodes that dentries point to, hashed by (super_block, inode number). A dentry holds a reference on its inode, so a cached name keeps its inode cached too. You can see both caches on this machine:</p>
+<pre><code><span class="p">$</span> cat /proc/sys/fs/dentry-state     <span class="c"># nr_dentry nr_unused age_limit want_pages nr_negative dummy</span>
+<span class="o">423361	382943	45	0	107134	0</span>
+<span class="p">$</span> cat /proc/sys/fs/inode-nr         <span class="c"># nr_inodes nr_free_inodes</span>
+<span class="o">408281	51650</span></code></pre>
+<p>About 423,000 dentries, of which 107,000 are negative: the system remembers 107,000 names that do not exist. Most dentries are unused (nobody has the file open) and are kept only because the memory is otherwise idle.</p>
+</section>
+<section id="trace-read">
+<h2>Trace a read()</h2>
+<p>Now follow one call, <code>read(fd, buf, 4096)</code> on an ext4 file, through the kernel. These are the function names in Linux 6.18. Names in this area change every few years (folios replaced pages in many of them), so check the source of the kernel you run.</p>
+<pre><code>read(fd, buf, 4096)                                  <span class="c">user space</span>
+└ SYSCALL_DEFINE3(read) → ksys_read()                <span class="c">fs/read_write.c: fd → struct file</span>
+  └ vfs_read()                                       <span class="c">checks mode, range, then dispatches</span>
+    └ new_sync_read()                                <span class="c">wraps buf in a kiocb + iov_iter</span>
+      └ file-&gt;f_op-&gt;read_iter() = ext4_file_read_iter()   <span class="c">fs/ext4/file.c</span>
+        └ generic_file_read_iter()                   <span class="c">mm/filemap.c (O_DIRECT goes elsewhere)</span>
+          └ filemap_read()
+            ├ filemap_get_pages()
+            │ ├ filemap_get_read_batch()             <span class="c">look the page indexes up in the XArray</span>
+            │ ├ page_cache_sync_ra()                 <span class="c">miss: start readahead (mm/readahead.c)</span>
+            │ │ └ … read_pages() → a_ops-&gt;readahead() = ext4_readahead()
+            │ │       └ ext4_mpage_readpages()       <span class="c">extent lookup, build bios, submit_bio()</span>
+            │ ├ filemap_readahead()                  <span class="c">hit a folio marked PG_readahead: read further ahead</span>
+            │ └ filemap_update_page()                <span class="c">folio present but not filled: a_ops-&gt;read_folio()</span>
+            └ copy_folio_to_iter()                   <span class="c">copy the bytes into buf, advance f_pos</span></code></pre>
+<p>Two things stand out. First, ext4's own code appears at only two points: the entry (<code>ext4_file_read_iter</code>) and the miss path (<code>ext4_readahead</code>, which uses the extent tree from <a href="04-btrees.html">lesson 4</a> to turn file block numbers into disk block numbers). Everything else is generic page cache code that every disk filesystem shares. Second, on a cache hit the device is never touched: the call ends in a memory copy.</p>
+<p>On a miss, the reading process sleeps. The bio goes to the block layer (<a href="02-blocks.html">lesson 2</a>), the driver programs the device, and the device writes the data into the folio's memory by DMA. When the I/O completes, a completion callback marks the folio <i>uptodate</i> and unlocks it, which wakes the reader, and the copy proceeds as if it had been a hit.</p>
+<figure class="diagram">
+<svg viewBox="0 0 720 350" width="720" role="img" aria-label="The read path: read() enters vfs_read, then filemap_read looks the page up. On a hit it copies to the user buffer. On a miss, ext4_readahead maps blocks through the extent tree, a bio goes to the device, and the completion wakes the reader to copy.">
+<defs><marker id="ah-05-2" viewBox="0 0 10 10" refX="9" refY="5" markerWidth="7" markerHeight="7" orient="auto-start-reverse"><path class="ah" d="M0,0 L10,5 L0,10 z"/></marker></defs>
+<rect class="k-user" x="200" y="12" width="320" height="34" rx="3"/>
+<text class="t" x="360" y="34" text-anchor="middle">read(fd, buf, 4096)</text>
+<rect class="k-kernel" x="200" y="64" width="320" height="34" rx="3"/>
+<text class="t" x="360" y="86" text-anchor="middle">vfs_read() → f_op-&gt;read_iter()</text>
+<rect class="k-kernel" x="200" y="116" width="320" height="34" rx="3"/>
+<text class="t" x="360" y="138" text-anchor="middle">filemap_read(): folio cached?</text>
+<line class="ln" x1="360" y1="46" x2="360" y2="62" marker-end="url(#ah-05-2)"/>
+<line class="ln" x1="360" y1="98" x2="360" y2="114" marker-end="url(#ah-05-2)"/>
+<line class="ln" x1="290" y1="150" x2="180" y2="278" marker-end="url(#ah-05-2)"/>
+<text class="ts" x="100" y="215">hit: memory copy</text>
+<line class="ln" x1="440" y1="150" x2="530" y2="174" marker-end="url(#ah-05-2)"/>
+<text class="ts" x="540" y="162">miss</text>
+<rect class="k-fs" x="420" y="176" width="290" height="34" rx="3"/>
+<text class="t" x="565" y="198" text-anchor="middle">ext4_readahead(): new folios</text>
+<rect class="k-fs" x="420" y="228" width="290" height="34" rx="3"/>
+<text class="t" x="565" y="250" text-anchor="middle">extent tree: file blk → disk blk</text>
+<rect class="k-block" x="420" y="280" width="290" height="34" rx="3"/>
+<text class="t" x="565" y="302" text-anchor="middle">submit_bio() → driver → DMA</text>
+<line class="ln" x1="565" y1="210" x2="565" y2="226" marker-end="url(#ah-05-2)"/>
+<line class="ln" x1="565" y1="262" x2="565" y2="278" marker-end="url(#ah-05-2)"/>
+<rect class="k-kernel" x="10" y="280" width="330" height="34" rx="3"/>
+<text class="t" x="175" y="302" text-anchor="middle">copy_folio_to_iter() → buf</text>
+<line class="ln" x1="420" y1="297" x2="342" y2="297" marker-end="url(#ah-05-2)"/>
+<text class="ts" x="381" y="336" text-anchor="middle">I/O done: folio uptodate, reader wakes</text>
+</svg>
+<figcaption>The read path, coloured by layer. A hit stays in blue (generic kernel code and RAM). A miss drops through the filesystem (green) to the block layer and device (ochre), then returns to the same copy.</figcaption>
+</figure>
+</section>
+<section id="page-cache">
+<h2>The page cache</h2>
+<p>The page cache is the kernel's copy of file contents in RAM. Its shape follows from the objects above:</p>
+<ul>
+<li>Each inode has one <code>address_space</code>, so each file has exactly one cache, shared by every process and every open file description.</li>
+<li>Inside the <code>address_space</code>, the field <code>i_pages</code> is an <b>XArray</b> that maps a page index (file offset divided by 4096) to a <b>folio</b>.</li>
+<li>A folio is a run of physically contiguous pages, a power of two in count, handled as one unit. Linux added folios in 5.16. Before that the cache was managed one 4 KiB <code>struct page</code> at a time. Large folios let a filesystem cache, say, 64 KiB of a file with one entry and one set of flags.</li>
+</ul>
+<p>The XArray is a radix tree, and the design argument is the one you met for B-trees in <a href="04-btrees.html">lesson 4</a>. Each node has 64 slots, so each level consumes 6 bits of the index. A 1 GiB file has 2<sup>18</sup> pages, so any page is at most three levels down (6 + 6 + 6 bits). High fanout keeps the tree shallow, and a shallow tree means few pointer chases per lookup.</p>
+<p>Each folio carries state flags. The ones you will meet in this course:</p>
+<div class="table-wrap"><table>
+<thead><tr><th>Flag</th><th>Meaning</th></tr></thead>
+<tbody>
+<tr><td><code>uptodate</code></td><td>the folio's contents match (or are newer than) the file; reads can be served from it</td></tr>
+<tr><td><code>dirty</code></td><td>modified in RAM and not yet written to the device</td></tr>
+<tr><td><code>writeback</code></td><td>a write to the device is in flight</td></tr>
+<tr><td><code>locked</code></td><td>someone is doing I/O on it or changing it; others wait</td></tr>
+<tr><td><code>referenced</code>, <code>active</code></td><td>recent use, consulted by reclaim</td></tr>
+<tr><td><code>readahead</code></td><td>the marker that triggers the next asynchronous readahead</td></tr>
+</tbody>
+</table></div>
+<p>File data is not the only thing cached here. Filesystem metadata that ext4 reads through the block device itself, such as bitmaps, inode table blocks and journal blocks, lives in the block device's own <code>address_space</code>. That is the <code>Buffers</code> line in <code>/proc/meminfo</code>. Linux once had a separate "buffer cache" for disk blocks and a page cache for files, and could hold the same data twice. Since 2.4 the two are unified and there is one copy.</p>
+<h3>Why free memory looks so low</h3>
+<p>The page cache uses any RAM that nothing else wants. On this machine, right before running the lab:</p>
+<pre><code><span class="p">$</span> free -h
+<span class="o">               total        used        free      shared  buff/cache   available
+Mem:            15Gi       3.3Gi       1.4Gi       4.7Mi        11Gi        12Gi
+Swap:          4.0Gi       608Ki       4.0Gi</span></code></pre>
+<p>Only 1.4 GiB is free, but 11 GiB is cache, and 12 GiB is <i>available</i>: the kernel can hand it to programs by dropping clean cached pages. Read the <code>available</code> column, not <code>free</code>. Unused RAM does nothing, and RAM holding file pages makes the next read of those files fast.</p>
+</section>
+<section id="readahead">
+<h2>Readahead</h2>
+<p>Programs usually read files from start to end. If the kernel waits for each <code>read()</code> to ask before fetching data, every call pays the full device latency. <b>Readahead</b> guesses that a sequential reader will want the next chunk and fetches it early, so the device works while the program is busy with the current chunk.</p>
+<ul>
+<li><b>Synchronous readahead</b> (<code>page_cache_sync_ra()</code>) runs on a miss. It reads more than was asked for. The first window rounds the request up to a power of two and, if that is small compared with the maximum, multiplies it by four.</li>
+<li><b>Asynchronous readahead</b> (<code>page_cache_async_ra()</code>) is triggered by a marker. Inside each window the kernel flags one folio with <code>PG_readahead</code>. When the reader touches that folio, the kernel starts reading the next window while the current one is still being consumed. The window grows by four times while small, then doubles, up to the maximum.</li>
+</ul>
+<pre><code>file:   |=====window 1=====|=========window 2=========|=================window 3================|
+                     ^ PG_readahead            ^ PG_readahead
+reader:  ---reads-------&gt;|  touching the marker starts window 2 while window 1 is still being read
+                            touching the next marker starts window 3, and so on</code></pre>
+<p>The maximum is the device's <code>read_ahead_kb</code>. The kernel default is 128 KiB, and drivers can raise it. This WSL virtual disk reports 8 MiB:</p>
+<pre><code><span class="p">$</span> cat /sys/block/sdd/queue/read_ahead_kb
+<span class="o">8192</span></code></pre>
+<p>Random access defeats readahead: the kernel sees the reads are not sequential and stops growing the window. A program can also say what it intends with <code>posix_fadvise()</code>: <code>POSIX_FADV_SEQUENTIAL</code> makes Linux use a larger window, and <code>POSIX_FADV_RANDOM</code> turns readahead off for that file.</p>
+</section>
+<section id="reclaim">
+<h2>Eviction: LRU lists and reclaim</h2>
+<p>When a program needs memory and little is free, the kernel <b>reclaims</b> pages. It keeps cached pages on <b>LRU lists</b> (least recently used), separately for file pages and anonymous memory (heap and stack), and separately per memory cgroup and NUMA node.</p>
+<ul>
+<li>A newly cached folio enters the <b>inactive</b> list. If it is accessed again while still there, it is promoted to the <b>active</b> list. A single sequential scan of a huge file therefore fills the inactive list and ages out without pushing the truly hot data off the active list.</li>
+<li>Reclaim scans from the old end of the inactive list. A <b>clean</b> file folio is the cheapest thing to reclaim: the disk already has the same data, so the kernel just drops it. A <b>dirty</b> folio must be written back first. Anonymous memory must go to swap.</li>
+<li>The kernel thread <code>kswapd</code> reclaims in the background when free memory falls below a watermark. If a program allocates faster than that, the allocating program does <b>direct reclaim</b> itself, which shows up as a latency spike in that program.</li>
+</ul>
+<p>Since Linux 6.1 there is also a multi-generational LRU (MGLRU), which sorts pages into several age generations instead of two lists. Some distributions enable it by default. The idea is the same: drop what has not been used for longest, prefer clean file pages.</p>
+<p>To empty the cache for an experiment, root can write to <code>/proc/sys/vm/drop_caches</code> (1 for page cache, 2 for dentries and inodes, 3 for both). It drops only clean objects, so run <code>sync</code> first. Without root you can do it per file with <code>posix_fadvise(fd, 0, 0, POSIX_FADV_DONTNEED)</code>, which is what this lesson's lab does. Both are for experiments. Dropping caches on a production machine only makes it slower.</p>
+</section>
+<section id="mmap">
+<h2>mmap uses the same pages</h2>
+<p><code>mmap()</code> of a file does not create a second copy. When the program touches a mapped address that is not yet mapped, the page fault handler (<code>filemap_fault()</code> for most filesystems) finds the folio in the same page cache that <code>read()</code> uses, reading it in if needed, and maps that physical memory into the process's page tables.</p>
+<ul>
+<li>A <code>read()</code> by one process and a load from a <code>MAP_SHARED</code> mapping by another see the same bytes, because they are the same bytes.</li>
+<li>A store to a <code>MAP_SHARED</code> page marks the folio dirty, through the filesystem's <code>page_mkwrite</code> hook on the first write. It is then written back like any dirty folio. <code>msync()</code> forces that write-back for a range.</li>
+<li><code>MAP_PRIVATE</code> maps the shared page read-only and copies it on the first write (copy-on-write). The private copy is anonymous memory and is never written to the file.</li>
+</ul>
+</section>
+<section id="write-path">
+<h2>Writing: why write() is fast</h2>
+<p>A buffered <code>write()</code> copies your bytes into the page cache and returns. The device is not involved. In Linux 6.18 the path for ext4 is:</p>
+<pre><code>write(fd, buf, n)
+└ ksys_write() → vfs_write() → new_sync_write()
+  └ f_op-&gt;write_iter() = ext4_file_write_iter()
+    └ ext4_buffered_write_iter()
+      └ generic_perform_write()                      <span class="c">mm/filemap.c, loops over the range</span>
+        ├ balance_dirty_pages_ratelimited()          <span class="c">maybe make this writer wait (below)</span>
+        ├ a_ops-&gt;write_begin() = ext4_da_write_begin()   <span class="c">find or create the folio, reserve space</span>
+        ├ copy_folio_from_iter_atomic()              <span class="c">copy user bytes into the folio</span>
+        └ a_ops-&gt;write_end()   = ext4_da_write_end()     <span class="c">mark the folio dirty, update i_size</span></code></pre>
+<p>The <code>da</code> stands for <b>delayed allocation</b>, from <a href="03-ondisk.html">lesson 3</a>. At this point ext4 reserves enough free space to guarantee the data will fit, so it can return <code>ENOSPC</code> now, but it does not choose disk blocks yet. When writeback happens later, it knows how much data the file has and can allocate one long contiguous extent instead of many small ones.</p>
+<h3>Writeback</h3>
+<p>Dirty folios are written to the device later, by kernel worker threads. Each block device has its own writeback work. In <code>ps</code> or <code>top</code> it appears as a <code>kworker</code> whose name includes <code>flush-8:48</code>, the device's major:minor number. Writeback starts when any of these happens:</p>
+<ul>
+<li>dirty data exceeds the <b>background threshold</b>;</li>
+<li>a dirty folio has been dirty longer than <code>dirty_expire_centisecs</code>, checked every <code>dirty_writeback_centisecs</code>;</li>
+<li>a program calls <code>fsync()</code>, <code>fdatasync()</code>, <code>syncfs()</code> or <code>sync()</code>;</li>
+<li>memory reclaim runs into dirty pages and asks the flusher to clean them.</li>
+</ul>
+<p>Writeback calls the filesystem's <code>a_ops-&gt;writepages</code> (<code>ext4_writepages</code>), which now allocates the delayed blocks, builds bios and submits them. The tunables, with the kernel defaults, which are also this machine's values:</p>
+<div class="table-wrap"><table>
+<thead><tr><th>sysctl (vm.)</th><th>Default</th><th>Meaning</th></tr></thead>
+<tbody>
+<tr><td><code>dirty_background_ratio</code></td><td>10</td><td>start background writeback when dirty data exceeds this % of dirtyable memory</td></tr>
+<tr><td><code>dirty_ratio</code></td><td>20</td><td>above this %, processes that write are throttled</td></tr>
+<tr><td><code>dirty_expire_centisecs</code></td><td>3000</td><td>data dirty for longer than 30 s is written on the next flusher pass</td></tr>
+<tr><td><code>dirty_writeback_centisecs</code></td><td>500</td><td>the flusher wakes every 5 s to look for expired data</td></tr>
+<tr><td><code>dirty_background_bytes</code>, <code>dirty_bytes</code></td><td>0</td><td>absolute limits in bytes; when non-zero they replace the ratios</td></tr>
+</tbody>
+</table></div>
+<p>The percentages are of <i>dirtyable</i> memory (roughly free memory plus reclaimable page cache), not of total RAM. The kernel publishes the resulting limits in pages:</p>
+<pre><code><span class="p">$</span> grep -E 'nr_dirty(_background)?_threshold' /proc/vmstat
+<span class="o">nr_dirty_threshold 603763
+nr_dirty_background_threshold 301512</span></code></pre>
+<p>At 4 KiB per page that is about 1.15 GiB before background writeback starts and about 2.3 GiB before writers are throttled. The default 30-second expiry is the number to remember: a buffered <code>write()</code> followed by a power cut can lose up to about half a minute of data.</p>
+<h3>Throttling: balance_dirty_pages</h3>
+<p>If a program could dirty pages faster than the device writes them, dirty memory would grow until RAM ran out. <code>generic_perform_write()</code> therefore calls <code>balance_dirty_pages_ratelimited()</code> as it goes. When dirty memory for the device is over its limit, the kernel makes the writing process sleep in short pauses, sized so that the writer's rate approaches the device's measured write bandwidth. Since Linux 3.2 the throttled writer only sleeps; the flusher does the I/O. From the program's point of view, <code>write()</code> suddenly runs at disk speed instead of memory speed.</p>
+<p>The lab shows the switch. Writing a 256 MiB file ran at about 1.5 GiB/s, entirely into the cache. Writing a 1 GiB file when only 1.4 GiB of memory was free slowed to about 345 MiB/s, and only about 390 MiB were still dirty when the last <code>write()</code> returned: the kernel had to reclaim memory and write back data while the program was still writing.</p>
+</section>
+<section id="durability">
+<h2>Durability: fsync and friends</h2>
+<p>After <code>write()</code> returns, your data can be in four places, and only the last one survives a power cut:</p>
+<ol>
+<li>the page cache (lost if the machine crashes or loses power);</li>
+<li>in flight in the block layer;</li>
+<li>the drive's volatile write cache, a DRAM buffer inside the SSD or HDD (lost on power loss, unless the drive has power-loss protection);</li>
+<li>stable media: NAND flash cells or magnetic platters.</li>
+</ol>
+<p>The system calls that move data down that list:</p>
+<div class="table-wrap"><table>
+<thead><tr><th>Call</th><th>What it guarantees when it returns</th></tr></thead>
+<tbody>
+<tr><td><code>fsync(fd)</code></td><td>the file's data and all its metadata (size, block map, timestamps) are on stable storage, including a cache flush on the device</td></tr>
+<tr><td><code>fdatasync(fd)</code></td><td>the data plus the metadata needed to read it back (size, block map). It may skip timestamps, which saves a journal commit</td></tr>
+<tr><td><code>open(…, O_SYNC)</code> / <code>O_DSYNC</code></td><td>every <code>write()</code> behaves as if followed by <code>fsync</code> / <code>fdatasync</code></td></tr>
+<tr><td><code>syncfs(fd)</code>, <code>sync()</code></td><td>everything on that filesystem / every filesystem</td></tr>
+<tr><td><code>sync_file_range()</code></td><td>starts or waits for writeback of a byte range. It does not commit metadata or flush the device cache, so it is not a durability guarantee</td></tr>
+</tbody>
+</table></div>
+<p>The device flush is the part people forget. To make a write durable, the filesystem sends the device a FLUSH command (the bio flag <code>REQ_PREFLUSH</code>) to empty its write cache, or marks a write FUA, force unit access (<code>REQ_FUA</code>), so that write bypasses the cache. ext4 does this as part of its journal commit (<a href="02-blocks.html">lesson 2</a> covers the device side). Without it, <code>fsync</code> would only prove that the data reached the drive's RAM.</p>
+<h3>The atomic replace pattern</h3>
+<p>Programs that save a whole file, such as editors, config tools and package managers, must never leave a half-written file after a crash. The standard recipe uses the fact that <code>rename()</code> replaces a directory entry in one journaled step:</p>
+<pre><code><span class="c">/* replace "config" with new contents, crash-safely */</span>
+int fd = open("config.tmp", O_WRONLY | O_CREAT | O_TRUNC, 0644);
+write_all(fd, data, len);        <span class="c">/* 1. new bytes into the page cache        */</span>
+fsync(fd);                       <span class="c">/* 2. new file's data + inode are durable    */</span>
+close(fd);
+rename("config.tmp", "config");  <span class="c">/* 3. atomically swap the name               */</span>
+int dfd = open(".", O_RDONLY | O_DIRECTORY);
+fsync(dfd);                      <span class="c">/* 4. the directory change itself is durable */</span>
+close(dfd);</code></pre>
+<ul>
+<li>Crash before step 3: <code>config</code> is the old file, intact. A stray <code>config.tmp</code> may exist.</li>
+<li>Crash after step 3 but before step 4: the rename may or may not have reached the disk, so you get the old file or the new one, never a mix.</li>
+<li>After step 4: the new file, guaranteed.</li>
+</ul>
+<p>Skipping step 2 is the classic bug. The rename can reach the disk before the data does, so after a crash <code>config</code> names an empty or partly written file. ext4 has a heuristic (the <code>auto_da_alloc</code> mount option, on by default) that forces data out early when it sees a file replaced by rename or truncation, because so many programs forgot step 2. Do not rely on it, and do not expect it from other filesystems.</p>
+<h3>When fsync fails</h3>
+<p>Writeback is asynchronous, so a device error usually happens long after the <code>write()</code> that dirtied the page returned. The main places the kernel can report it are <code>fsync()</code>, <code>fdatasync()</code>, <code>sync_file_range()</code> and <code>close()</code> (on some filesystems, notably NFS).</p>
+<p>Since Linux 4.13 each <code>address_space</code> records writeback errors in an <code>errseq_t</code>: an error code plus a counter. Each <code>struct file</code> remembers the counter value it last saw. <code>fsync()</code> reports an error if one has been recorded since that file description last checked, and then advances its copy. Every open file description gets told about each error once.</p>
+<aside class="pitfall"><span class="tag">Pitfall: retrying fsync</span>
+<p>In 2018 PostgreSQL developers found that their recovery logic assumed a failed <code>fsync()</code> could simply be retried. On Linux, after a writeback error the affected pages are no longer dirty: the kernel has marked them clean or dropped them, depending on the filesystem. A second <code>fsync()</code> has nothing left to write and returns success, while the data never reached the disk.</p>
+<p>The lesson: an <code>fsync()</code> error means the data written since the last successful <code>fsync()</code> may be gone. Recover it from your own copy, a write-ahead log for example. PostgreSQL's fix was to treat an <code>fsync()</code> failure as fatal: crash, then replay its WAL. The episode is known as "fsyncgate".</p>
+</aside>
+</section>
+<section id="direct">
+<h2>Bypassing the cache: O_DIRECT</h2>
+<p>Opening a file with <code>O_DIRECT</code> asks the kernel to move data by DMA directly between your buffer and the device, skipping the page cache. ext4 routes it through <code>ext4_dio_read_iter()</code> and the iomap direct I/O code instead of <code>filemap_read()</code>.</p>
+<p>Why anyone wants this:</p>
+<ul>
+<li>Databases such as InnoDB (with <code>innodb_flush_method=O_DIRECT</code>), Oracle and ScyllaDB keep their own buffer pool. With buffered I/O, every page would be cached twice, once in the database and once in the page cache.</li>
+<li>Memory use becomes predictable, and a huge scan cannot evict other applications' cached data.</li>
+<li>No copy between the page cache and user memory.</li>
+</ul>
+<p>The price is strict rules and no help from the kernel:</p>
+<ul>
+<li>The buffer address, the file offset and the length must all be aligned, traditionally to the device's logical block size (512 B or 4 KiB). Some filesystems demand more. Since Linux 6.1, <code>statx()</code> with <code>STATX_DIOALIGN</code> reports the exact requirements for a file. A misaligned request fails with <code>EINVAL</code>; the lab triggers both cases.</li>
+<li>No readahead and no write-behind. Each <code>read()</code> waits for the device, so a program needs many requests in flight (threads, <code>io_uring</code> or AIO) to get good throughput.</li>
+<li><code>O_DIRECT</code> is not a durability guarantee. The data skips the page cache, but metadata changes (file size, newly allocated blocks) and the device's write cache still need <code>fsync()</code> or <code>O_DSYNC</code>.</li>
+<li>Mixing buffered and direct I/O on the same file works but is slow: before each direct I/O the kernel writes back and invalidates any cached pages in the range.</li>
+</ul>
+</section>
+<section id="hints">
+<h2>Telling the kernel what you will do</h2>
+<p>The caches work on guesses. A few calls replace guesses with facts:</p>
+<div class="table-wrap"><table>
+<thead><tr><th>Call</th><th>Effect</th></tr></thead>
+<tbody>
+<tr><td><code>posix_fadvise(fd, off, len, POSIX_FADV_SEQUENTIAL)</code></td><td>larger readahead window</td></tr>
+<tr><td><code>… POSIX_FADV_RANDOM</code></td><td>no readahead</td></tr>
+<tr><td><code>… POSIX_FADV_WILLNEED</code> / <code>readahead(2)</code></td><td>start reading this range into the cache now</td></tr>
+<tr><td><code>… POSIX_FADV_DONTNEED</code></td><td>start writeback of dirty pages in the range and drop the clean ones</td></tr>
+<tr><td><code>madvise(addr, len, MADV_SEQUENTIAL | MADV_RANDOM | MADV_WILLNEED)</code></td><td>the same hints for an <code>mmap</code>'d range</td></tr>
+</tbody>
+</table></div>
+<p><b>io_uring</b> (Linux 5.1) changes how requests are submitted rather than how they are cached. The program and the kernel share two ring buffers in memory: a <b>submission queue</b> where the program places requests, and a <b>completion queue</b> where the kernel places results. One <code>io_uring_enter()</code> call can submit hundreds of reads and writes, and with polling mode no system call is needed at all. It works with buffered and direct I/O. The shape, a submission queue paired with a completion queue, is the same one NVMe uses in hardware (<a href="02-blocks.html">lesson 2</a>) and RDMA uses for network transfers (<a href="08-rdma.html">lesson 8</a>).</p>
+</section>
+<section id="stack">
+<h2>All the caches, top to bottom</h2>
+<p>Put together, a single <code>fwrite()</code> passes through a stack of caches. Each one absorbs writes and serves reads, and each one is emptied by a different mechanism.</p>
+<figure class="diagram">
+<svg viewBox="0 0 720 436" width="720" role="img" aria-label="The stack of caches between an application and stable media: application cache and stdio buffer in user space; dcache, inode cache and page cache in the kernel; the filesystem layer; the block layer; the device write cache; and stable media at the bottom. Each row shows what empties it.">
+<rect class="k-user" x="20" y="16" width="470" height="40" rx="3"/>
+<text class="t" x="34" y="41">application cache (e.g. a DB buffer pool)</text>
+<text class="ts" x="506" y="40">emptied by the application</text>
+<rect class="k-user" x="20" y="68" width="470" height="40" rx="3"/>
+<text class="t" x="34" y="93">stdio buffer: FILE*, fwrite(), printf()</text>
+<text class="ts" x="506" y="86">write() on fflush(), full</text>
+<text class="ts" x="506" y="100">buffer, or exit()</text>
+<line class="lnd" x1="20" y1="126" x2="700" y2="126"/>
+<text class="ts" x="700" y="120" text-anchor="end">system call boundary</text>
+<rect class="k-kernel" x="20" y="138" width="140" height="56" rx="3"/>
+<text class="t" x="90" y="162" text-anchor="middle">dcache</text>
+<text class="ts" x="90" y="180" text-anchor="middle">names</text>
+<rect class="k-kernel" x="170" y="138" width="140" height="56" rx="3"/>
+<text class="t" x="240" y="162" text-anchor="middle">inode cache</text>
+<text class="ts" x="240" y="180" text-anchor="middle">attributes</text>
+<rect class="k-kernel" x="320" y="138" width="170" height="56" rx="3"/>
+<text class="t" x="405" y="162" text-anchor="middle">page cache</text>
+<text class="ts" x="405" y="180" text-anchor="middle">data, dirty folios</text>
+<text class="ts" x="506" y="160">writeback (thresholds,</text>
+<text class="ts" x="506" y="174">30 s expiry) or fsync()</text>
+<rect class="k-fs" x="20" y="208" width="470" height="40" rx="3"/>
+<text class="t" x="34" y="233">filesystem: delayed allocation, journal</text>
+<text class="ts" x="506" y="232">journal commit</text>
+<rect class="k-block" x="20" y="262" width="470" height="40" rx="3"/>
+<text class="t" x="34" y="287">block layer: queued and merged requests</text>
+<text class="ts" x="506" y="286">dispatched to the driver</text>
+<rect class="k-block" x="20" y="316" width="470" height="40" rx="3"/>
+<text class="t" x="34" y="341">device write cache (DRAM in the drive)</text>
+<text class="ts" x="506" y="334">FLUSH command or FUA</text>
+<text class="ts" x="506" y="348">write</text>
+<rect class="box" x="20" y="370" width="470" height="40" rx="3"/>
+<text class="t" x="34" y="395">stable media: NAND flash or platters</text>
+<text class="ts" x="506" y="394">survives power loss</text>
+<text class="ts" x="20" y="430">Everything above the last row is lost when the power goes, unless something has pushed it down.</text>
+</svg>
+<figcaption>Every cache between <code>fwrite()</code> and the platter, coloured by layer. The right column says what pushes data out of each one.</figcaption>
+</figure>
+<div class="table-wrap"><table>
+<thead><tr><th>Cache</th><th>Holds</th><th>Lost on</th><th>You push it down with</th></tr></thead>
+<tbody>
+<tr><td>stdio buffer</td><td>bytes your program wrote with <code>fwrite</code>/<code>printf</code> but not yet passed to <code>write()</code></td><td>process crash (<code>abort()</code>, <code>SIGKILL</code>, <code>_exit()</code>)</td><td><code>fflush()</code></td></tr>
+<tr><td>page cache</td><td>file data, clean and dirty</td><td>kernel crash, power loss</td><td><code>fsync()</code>, <code>fdatasync()</code></td></tr>
+<tr><td>dcache, inode cache</td><td>names and attributes</td><td>nothing important: they are rebuilt from disk; changes go through the journal</td><td><code>fsync()</code> on the file or directory</td></tr>
+<tr><td>device write cache</td><td>blocks the drive has acknowledged</td><td>power loss, unless the drive has power-loss protection</td><td>FLUSH / FUA, sent by the filesystem during <code>fsync()</code></td></tr>
+</tbody>
+</table></div>
+<aside class="note"><span class="tag">Aside: a cache below the disk</span>
+<p>On a virtual machine there is often one more layer: the host caches the file that holds the virtual disk. WSL's root filesystem is ext4 inside a virtual disk file on Windows, and Windows caches that file. That is why this lesson's lab sees "cold" reads at 0.9 to 1.8 GiB/s even after the guest dropped its cache. The data came from the host's RAM, not from the SSD. Every layer you cannot see can have a cache too.</p>
+</aside>
+</section>
+<section id="one-machine">
+<h2>Why this is easy on one machine</h2>
+<p>Nothing in this lesson had to deal with stale data, and that is not luck. On one machine, coherence is free for three reasons:</p>
+<ol>
+<li><b>One copy.</b> For a given (inode, page index) there is exactly one folio in RAM. Every process that reads or maps the file uses that folio. A write by one process is visible to the next <code>read()</code> by any other process immediately, because there is nothing else to update.</li>
+<li><b>One gatekeeper.</b> Every change to a file or directory goes through this kernel's VFS. The same code path that changes a directory on disk also updates the dentry, so the dcache can never disagree with the disk.</li>
+<li><b>Nobody writes behind the kernel's back.</b> The disk changes only when this kernel tells it to. Caches never need to ask "has this changed?", because the answer is always no.</li>
+</ol>
+<p>Now mount the same filesystem on a second machine over a network. Each machine has its own page cache, dcache and inode cache, and neither kernel sees the other's changes. All three reasons fail at once, and each failure has a visible symptom:</p>
+<div class="table-wrap"><table>
+<thead><tr><th>Cached on the client</th><th>What goes wrong when another machine changes the file</th></tr></thead>
+<tbody>
+<tr><td>page cache (data)</td><td>a read returns old contents after another client wrote new ones</td></tr>
+<tr><td>inode cache (attributes)</td><td><code>ls -l</code> shows the old size and mtime; an <code>O_APPEND</code> write lands at the old end of file and overwrites someone else's append</td></tr>
+<tr><td>positive dentry</td><td>the name points at a file another client deleted or renamed; the next operation fails with <code>ESTALE</code></td></tr>
+<tr><td>negative dentry</td><td>a file another client just created is reported as missing</td></tr>
+<tr><td>dirty folios</td><td>your writes are invisible to others until written back, and a write error (<code>ENOSPC</code>, <code>EIO</code>, quota) can only be reported later, at <code>fsync()</code> or <code>close()</code></td></tr>
+<tr><td>locks</td><td><code>flock()</code> and <code>fcntl()</code> locks in one kernel mean nothing to another; locking needs a protocol</td></tr>
+</tbody>
+</table></div>
+<p>A network filesystem has to decide, for every cache in this table, when to trust it and when to ask the server again. Ask too often and every <code>stat()</code> costs a network round trip. Ask too rarely and programs see stale data. <a href="06-nfs.html">Lesson 6</a> covers the NFS protocol itself, and <a href="07-nfs-caching.html">lesson 7</a> covers how it answers this question: attribute timeouts, close-to-open consistency and delegations.</p>
+</section>
+<section class="lab" id="lab">
+<p class="tag">Lab 05</p>
+<h2>Watch the page cache</h2>
+<p class="where">~/storage-course/labs/05-cache/</p>
+<p>One C program, no root needed. It creates a test file and then fills, empties, dirties and bypasses its page cache, printing timings and the number of cached pages at each step. It counts cached pages the way <code>fincore(1)</code> does: <code>mmap()</code> the file (which reads nothing), then ask <code>mincore()</code> which pages are resident.</p>
+<ol>
+<li>Build and run it on an ext4 path such as your home directory, not under <code>/mnt/c</code> or <code>/mnt/d</code>:
+<pre><code><span class="p">$</span> cd ~/storage-course/labs/05-cache
+<span class="p">$</span> gcc -Wall -Wextra -O2 -o cache cache.c
+<span class="p">$</span> ./cache            <span class="c"># 256 MiB; ./cache 1024 for 1 GiB</span></code></pre>
+</li>
+<li>Read the output step by step. Example output from this machine, trimmed (WSL2, Linux 6.18, ext4 on a virtual disk, so the absolute numbers are not representative of real hardware):
+<pre><code><span class="o">1. create with buffered write(), then fsync
+    Dirty after write() returns       264444 kB
+    write() of all data (to cache)          0.163 s    1567.4 MiB/s
+    fsync()                                 0.316 s
+    resident after write+fsync              65536 / 65536 pages (100.0%)
+
+2. posix_fadvise(DONTNEED) on a clean file
+    resident after DONTNEED                     0 / 65536 pages (  0.0%)
+
+3. cold read
+    read, cache cold                        0.142 s    1796.6 MiB/s
+    resident after cold read                65536 / 65536 pages (100.0%)
+
+4. warm read
+    read, cache warm                        0.021 s   12119.7 MiB/s
+
+5. buffered overwrite, sampling /proc/meminfo
+       written     Dirty kB   Writeback kB
+        32 MiB        35104              0
+       128 MiB       133408              0
+       256 MiB       264480              0
+    resident DONTNEED while dirty           63856 / 65536 pages ( 97.4%)
+    fsync() of the overwrite                0.088 s
+    Dirty after fsync                   2336 kB
+    resident DONTNEED after fsync               0 / 65536 pages (  0.0%)
+
+6. O_DIRECT read (bypasses the page cache)
+    read, O_DIRECT, 1 MiB aligned           0.182 s    1402.8 MiB/s
+    resident after O_DIRECT read                0 / 65536 pages (  0.0%)
+    pread(O_DIRECT, buf+1)  -&gt; -1 (Invalid argument)
+    pread(O_DIRECT, off=1)  -&gt; -1 (Invalid argument)</span></code></pre>
+What to notice:
+<ul>
+<li>Step 1: <code>write()</code> finished at memory speed, and Dirty grew by about 256 MiB. The data was only in RAM until <code>fsync()</code>.</li>
+<li>Steps 3 and 4: the warm read was about 7 times faster than the cold one. On a real NVMe drive the gap is larger, and on a hard disk far larger. Here the "cold" read was still served from the Windows host's cache.</li>
+<li>Step 5: Dirty rose one megabyte per megabyte written, and no writeback started, because 256 MiB is far below the 1.15 GiB background threshold. <code>DONTNEED</code> on dirty data dropped only 2.6% of the pages: dirty folios cannot be dropped until they are written.</li>
+<li>Step 6: <code>O_DIRECT</code> read the whole file and left zero pages in the cache. Misaligned requests were refused with <code>EINVAL</code>.</li>
+</ul>
+</li>
+<li>Run it again with 1 GiB while watching the system in a second tmux pane:
+<pre><code><span class="p">$</span> vmstat 1
+<span class="p">$</span> watch -n1 'grep -E "^(Dirty|Writeback):" /proc/meminfo'</code></pre>
+On this machine the 1 GiB create slowed to 345 MiB/s, and <code>vmstat</code> showed a burst of about 1 GB/s in the <code>bo</code> (blocks out) column when writeback hit the disk:
+<pre><code><span class="o"> r  b   swpd   free   buff  cache   si   so    bi    bo   in   cs us sy id wa st gu
+ 2  1    608 1777644 2308908 8986380    0    0 516100 1049188 4157 4654  2  8 86  4  0  0
+ 1  0    608 1536004 2303312 9271064    0    0 550416     0 3666 3111  1 16 82  0  0  0</span></code></pre>
+<code>bi</code> and <code>bo</code> are KiB per second read from and written to block devices. <code>wa</code> is the percentage of time the CPU was idle while waiting for I/O.
+</li>
+<li>Look at the policy knobs and the computed limits:
+<pre><code><span class="p">$</span> cat /proc/sys/vm/dirty_{background_ratio,ratio,expire_centisecs,writeback_centisecs}
+<span class="o">10
+20
+3000
+500</span>
+<span class="p">$</span> grep -E 'nr_dirty(_background)?_threshold' /proc/vmstat</code></pre>
+</li>
+<li>Optional, needs root: empty every cache with <code>sync; echo 3 | sudo tee /proc/sys/vm/drop_caches</code> and watch <code>buff/cache</code> in <code>free -h</code> fall. Install <code>strace</code> and run <code>strace -e trace=pread64,pwrite64,fsync,fadvise64 ./cache 16</code> to see the system calls the program makes. These steps were not run here.</li>
+<li>Clean up: <code>rm -f testfile.bin cache</code>.</li>
+</ol>
+</section>
+<section class="check" id="check">
+<h2>Check yourself</h2>
+<details><summary>Two processes open and read the same 1 GiB file. How much page cache does it use?</summary><p>About 1 GiB, once. The folios belong to the inode's <code>address_space</code>, not to either process or either <code>struct file</code>. The processes get separate offsets and share the cached data.</p></details>
+<details><summary><code>write()</code> returned success, and a second later the power failed. Is the data on disk?</summary><p>Probably not. A buffered write only copies into the page cache. Dirty data is written after it crosses a threshold or ages past 30 seconds (by default), or when someone calls <code>fsync()</code>. Even after writeback, it may sit in the drive's volatile cache until the filesystem sends a FLUSH.</p></details>
+<details><summary>In the atomic replace pattern, why <code>fsync</code> the directory after <code>rename()</code>?</summary><p>The rename changes the directory, not the file. <code>fsync</code> on the file makes its data and inode durable, but the new directory entry is part of the directory's metadata. Until the directory is synced, a crash can bring back the old name.</p></details>
+<details><summary><code>fsync()</code> returned <code>EIO</code>. You call it again and it returns 0. Is the data safe?</summary><p>No. After a writeback error, Linux no longer treats the failed pages as dirty, so the second <code>fsync()</code> has nothing to write and reports success. Treat the data written since the last successful <code>fsync()</code> as lost and rewrite it from your own copy or log.</p></details>
+<details><summary>What is a negative dentry, and which workload benefits from it?</summary><p>A cached record that a name does not exist in a directory. Anything that probes many paths that usually fail benefits: <code>$PATH</code> searches by the shell, include-path searches by compilers, library searches by the dynamic linker.</p></details>
+<details><summary>Why must <code>O_DIRECT</code> buffers, offsets and lengths be aligned?</summary><p>The device transfers data by DMA, in units of its logical block size, straight into or out of your buffer. There is no page cache folio in between that could absorb a partial block or do a read-modify-write, so the request has to line up with what the hardware can do.</p></details>
+<details><summary>How does the kernel start the next readahead before the program asks for it?</summary><p>It flags one folio inside each readahead window with <code>PG_readahead</code>. When the program's reads reach that folio, <code>filemap_get_pages()</code> sees the flag and calls <code>page_cache_async_ra()</code>, which starts reading the next, usually larger, window while the program is still consuming the current one.</p></details>
+<details><summary>Name two caches that make local coherence free, and say what replaces that guarantee on a network filesystem.</summary><p>The page cache (one folio per file page, shared by everyone) and the dcache (updated by the same code that changes the directory). On a network filesystem each client has its own copies, so the client must decide when to revalidate with the server, or get the server to promise to notify it. Lessons 6 and 7 cover how NFS does that.</p></details>
+</section>
+<section class="further" id="further">
+<h2>Go deeper</h2>
+<ul>
+<li><a href="https://docs.kernel.org/filesystems/vfs.html">Overview of the Linux Virtual File System</a>: the kernel's own reference for the objects and every operation table.</li>
+<li><a href="https://docs.kernel.org/filesystems/path-lookup.html">Pathname lookup</a>: how the dcache, RCU walk and mount crossing work, in detail.</li>
+<li><a href="https://docs.kernel.org/admin-guide/sysctl/vm.html">Documentation for /proc/sys/vm</a>: every dirty and reclaim tunable, with exact semantics.</li>
+<li><a href="https://docs.kernel.org/core-api/xarray.html">XArray</a>: the data structure behind the page cache index.</li>
+<li><a href="https://lwn.net/Articles/752063/">PostgreSQL's fsync() surprise</a> (LWN, 2018): the fsyncgate story.</li>
+<li><a href="https://lwn.net/Articles/849538/">Clarifying memory management with page folios</a> (LWN, 2021): why the page cache moved from pages to folios.</li>
+<li><a href="https://man7.org/linux/man-pages/man2/open.2.html">open(2)</a>: the <code>O_DIRECT</code>, <code>O_SYNC</code> and <code>O_DSYNC</code> sections. Also <a href="https://man7.org/linux/man-pages/man2/fsync.2.html">fsync(2)</a>.</li>
+<li><a href="https://kernel.dk/io_uring.pdf">Efficient IO with io_uring</a>: Jens Axboe's design paper.</li>
+</ul>
+</section>
+<nav class="pager-foot" aria-label="Next and previous lesson">
+<a class="prev" href="04-btrees.html"><small>Previous</small>B-trees, really</a>
+<a class="next" href="06-nfs.html"><small>Next</small>NFS from v3 to 4.2</a>
+</nav>
+</main>
+</div>
+<script src="course.js"></script>
+</body>
+</html>

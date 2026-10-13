@@ -1,0 +1,481 @@
+<!doctype html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover">
+<title>Caching across the network</title>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=IBM+Plex+Mono:wght@400;600&family=IBM+Plex+Sans+Condensed:wght@500;600;700&family=Source+Serif+4:ital,opsz,wght@0,8..60,400;0,8..60,600;1,8..60,400&display=swap">
+<link rel="stylesheet" href="course.css?v=7">
+</head>
+<body data-layer="net">
+<header class="topbar">
+<a class="brand" href="index.html">From open() to RDMA <span>· a storage course</span></a>
+<nav class="pager" aria-label="Lesson pager">
+<a href="06-nfs.html" rel="prev">← Prev</a>
+<details class="route"><summary>Lesson 7 of 9</summary></details>
+<a href="08-rdma.html" rel="next">Next →</a>
+<details class="sections"><summary>Sections</summary></details>
+</nav>
+</header>
+<div class="layout">
+<nav class="rail" aria-label="Lessons">
+<div class="rail-title">The route</div>
+<ol>
+<li class="user"><a href="01-syscalls.html"><span class="n">01</span><span>Syscalls &amp; file descriptors</span></a></li>
+<li class="block"><a href="02-blocks.html"><span class="n">02</span><span>Block devices &amp; addressing</span></a></li>
+<li class="fs"><a href="03-ondisk.html"><span class="n">03</span><span>Inside an ext4 image</span></a></li>
+<li class="fs"><a href="04-btrees.html"><span class="n">04</span><span>B-trees, really</span></a></li>
+<li class="kernel"><a href="05-vfs-cache.html"><span class="n">05</span><span>The VFS and the caches</span></a></li>
+<li class="net"><a href="06-nfs.html"><span class="n">06</span><span>NFS from v3 to 4.2</span></a></li>
+<li class="net"><a href="07-nfs-caching.html" aria-current="page"><span class="n">07</span><span>Caching across the network</span></a></li>
+<li class="net"><a href="08-rdma.html"><span class="n">08</span><span>RDMA and NFS over RDMA</span></a></li>
+<li class="net"><a href="09-distributed.html"><span class="n">09</span><span>Distributed filesystems</span></a></li>
+<li class="extra"><a href="glossary.html"><span class="n">··</span><span>Glossary</span></a></li>
+</ol>
+<div class="rail-legend">
+<span style="--c: var(--l-user)">user space</span>
+<span style="--c: var(--l-kernel)">kernel</span>
+<span style="--c: var(--l-fs)">filesystem</span>
+<span style="--c: var(--l-block)">block</span>
+<span style="--c: var(--l-net)">network</span>
+</div>
+</nav>
+<main class="lesson">
+<header class="lesson-head">
+<p class="eyebrow">Lesson 7 · Network</p>
+<h1>Caching across the network</h1>
+<p class="lede">Every NFS client keeps its own copy of the data, the attributes and the names it has seen. This lesson is about when those copies are allowed to be wrong, for how long, and what the protocol and the Linux client do to bound it.</p>
+<div class="outcomes">
+<b>After this lesson you can</b>
+<ul>
+<li>list what the Linux NFS client caches and what makes each cache go stale;</li>
+<li>predict how long a change made on one machine stays invisible on another, from the mount options alone;</li>
+<li>explain close-to-open consistency and write programs that rely on it correctly;</li>
+<li>follow a write from <code>write()</code> to stable storage on the server, and say where errors surface;</li>
+<li>describe how delegations replace polling with a promise, and compare that with AFS, SMB, CephFS, Lustre and GPFS;</li>
+<li>diagnose a "my change did not show up" report with mountstats, cache counters and tracepoints.</li>
+</ul>
+</div>
+<nav class="toc" aria-label="Lesson contents">
+<b>In this lesson</b>
+<ol>
+<li><a href="#problem">Two kernels, one file</a></li>
+<li><a href="#caches">What the client caches</a></li>
+<li><a href="#attr">Polling: the attribute cache</a></li>
+<li><a href="#change">Detecting change: timestamps and the change attribute</a></li>
+<li><a href="#cto">Close-to-open consistency</a></li>
+<li><a href="#locks">Locks as coherence points</a></li>
+<li><a href="#writes">The write path and its errors</a></li>
+<li><a href="#delegations">Delegations: the server promises to call</a></li>
+<li><a href="#newer">Newer promises: timestamps and directories</a></li>
+<li><a href="#compare">How other systems keep caches coherent</a></li>
+<li><a href="#fscache">FS-Cache: a disk cache under NFS</a></li>
+<li><a href="#failures">Failure modes</a></li>
+<li><a href="#diagnose">Diagnosing a caching problem</a></li>
+<li><a href="#lab">Lab 06 · Part B: Watch the caches decide</a></li>
+<li><a href="#check">Check yourself</a></li>
+<li><a href="#further">Go deeper</a></li>
+</ol>
+</nav>
+</header>
+<section id="problem">
+<h2>Two kernels, one file</h2>
+<p>On a single machine, cache coherence comes for free. <a href="05-vfs-cache.html">Lesson 5</a> showed that there is one page cache per file, inside one kernel. When process A writes and process B reads, B reads the very page A modified. There is no second copy to go stale.</p>
+<p>With NFS there are at least three copies of every popular file: the server's page cache (and its disk), and the page cache of each client that has read the file. When client A writes, nothing happens on client B. B's kernel has no idea the file changed until it asks the server, and asking costs a round trip. So every network filesystem picks a point on a spectrum:</p>
+<ul>
+<li><b>Ask every time.</b> Every read and every <code>stat</code> goes to the server. Always correct, and slow: a round trip per call, and the server carries the full load of every client.</li>
+<li><b>Poll.</b> Keep a copy and recheck it now and then. Fast, but a change can stay invisible until the next check. NFSv3 does this, and so does NFSv4 when it has nothing better.</li>
+<li><b>Get a promise.</b> The server promises to tell the client before anyone else changes the file. While the promise holds, the client's copy is correct by construction and it never needs to ask. NFSv4 delegations, AFS callbacks, SMB leases, CephFS capabilities and Lustre locks are all versions of this idea.</li>
+</ul>
+<p>NFS chose polling as its base and added promises later. The rest of this lesson follows that order: what is cached, how polling works and what it guarantees, then delegations, then how other systems made different choices.</p>
+</section>
+<section id="caches">
+<h2>What the client caches</h2>
+<p>"The NFS cache" is really several caches with different lifetimes. All of them live in the client's RAM unless you add FS-Cache.</p>
+<div class="table-wrap"><table>
+<thead><tr><th>Cache</th><th>Holds</th><th>Becomes invalid when</th></tr></thead>
+<tbody>
+<tr><td>Page cache</td><td>file data, in pages, keyed by inode and offset (<a href="05-vfs-cache.html">lesson 5</a>)</td><td>the client sees the file's change attribute (or mtime, ctime or size on v3) differ from the value it cached; the whole file's pages are dropped</td></tr>
+<tr><td>Attribute cache</td><td>size, mode, owner, times, change attribute, link count; in <code>struct nfs_inode</code></td><td>its timeout expires (3 to 60 s for files by default), on open (close-to-open), on lock, or when a reply carries newer attributes</td></tr>
+<tr><td>Dentry cache</td><td>name → inode, including <b>negative</b> entries for names that do not exist</td><td>the parent directory's attributes show a change; checked by NFS's <code>d_revalidate</code> on each use</td></tr>
+<tr><td>Access cache</td><td>results of ACCESS calls, per user credential</td><td>the file's mode, owner or ACL changes, or attributes are revalidated with a change</td></tr>
+<tr><td>Readdir cache</td><td>directory listings, stored as pages of the directory inode</td><td>the directory's change attribute changes</td></tr>
+<tr><td>Xattr and ACL caches</td><td>user xattrs (NFSv4.2) and ACLs</td><td>attribute changes, or explicit invalidation after a SETXATTR or SETACL</td></tr>
+<tr><td>FS-Cache (optional)</td><td>file data on a local disk, surviving reboots</td><td>the coherency data stored with it (change attribute, times, size) no longer matches the server's</td></tr>
+</tbody>
+</table></div>
+<p>The server caches too. Its page cache holds recently read and written data, <code>nfsd</code> keeps recently used files open in its own file cache so it does not reopen them for every NFSv3 READ, and it caches export decisions it got from <code>rpc.mountd</code>. None of these change what clients see, because the server's caches sit behind its own kernel's coherent page cache. The hard problem is purely on the client side.</p>
+<aside class="key"><span class="tag">Key idea</span><p>The attribute cache is the gatekeeper. Data and names are trusted exactly as long as the attributes say nothing changed. Almost every NFS coherence rule is a rule about when to refetch attributes.</p></aside>
+</section>
+<section id="attr">
+<h2>Polling: the attribute cache</h2>
+<p>When the client needs a file's attributes (for <code>stat</code>, for a <code>read</code> that must check the size, for a permission check), it looks at how old its cached copy is. If the copy is younger than the file's current <b>attribute timeout</b>, it uses it. If not, it sends GETATTR, or gets fresh attributes some other way. Many replies carry attributes as a side effect: NFSv3 READ, WRITE and LOOKUP replies include post-operation attributes, and the Linux NFSv4 client appends GETATTR to most COMPOUNDs. Every such reply refreshes the cache.</p>
+<h3>The four timeouts</h3>
+<div class="table-wrap"><table>
+<thead><tr><th>Mount option</th><th>Default</th><th>Meaning</th></tr></thead>
+<tbody>
+<tr><td><code>acregmin</code></td><td>3 s</td><td>shortest attribute timeout for regular files</td></tr>
+<tr><td><code>acregmax</code></td><td>60 s</td><td>longest attribute timeout for regular files</td></tr>
+<tr><td><code>acdirmin</code></td><td>30 s</td><td>shortest attribute timeout for directories</td></tr>
+<tr><td><code>acdirmax</code></td><td>60 s</td><td>longest attribute timeout for directories</td></tr>
+<tr><td><code>actimeo=N</code></td><td></td><td>sets all four to N</td></tr>
+<tr><td><code>noac</code></td><td></td><td>no attribute caching at all, and every write becomes synchronous</td></tr>
+</tbody>
+</table></div>
+<h3>The timeout adapts</h3>
+<p>The timeout of each inode starts at the minimum. Each time the client refetches the attributes after the timeout has run out and finds nothing changed, it doubles the timeout, up to the maximum. As soon as a refetch shows a change, the timeout drops back to the minimum. Files that never change are checked about once a minute; files that keep changing are checked every few seconds. The code is a few lines in <code>nfs_update_inode()</code> in <code>fs/nfs/inode.c</code>, operating on <code>nfsi-&gt;attrtimeo</code>.</p>
+<figure class="diagram">
+<pre>GETATTR at t (s)    0     3     9     21    45    93    153   156   162   174
+attributes          ----  same  same  same  same  same  NEW   same  same  same
+timeout after (s)   3     6     12    24    48    60    3     6     12    24
+                                                       ^
+                          the file changed on the server around t = 100;
+                          this client noticed at t = 153</pre>
+<figcaption>One client calling <code>stat</code> on a file once a second with default options. The gaps between GETATTRs grow 3, 6, 12, 24, 48, 60. A change made at t = 100 stays invisible for 53 seconds. Lab B3 measures this with <code>attrwatch.sh</code>.</figcaption>
+</figure>
+<p>This is the worst case to keep in mind: on a default mount, a client that only calls <code>stat</code> or keeps reading a file it already has open can serve stale attributes and stale data for up to <code>acregmax</code> seconds (60 by default) after another machine changed the file. Directories use <code>acdirmin</code>/<code>acdirmax</code>, so a file created by another client can take 30 to 60 seconds to appear in a cached listing.</p>
+<h3>From stale attributes to stale data</h3>
+<p>When fresh attributes arrive, the client compares them with what it had. If the file changed and the change was not its own doing, it sets <code>NFS_INO_INVALID_DATA</code> on the inode. The next <code>read()</code> or <code>mmap</code> fault sees the flag and throws away every cached page of the file with <code>invalidate_inode_pages2()</code>, then rereads from the server. The invalidation is whole-file. One byte changed by another client in a 10 GiB file costs this client its whole cached copy of that file.</p>
+<p>"Not its own doing" matters. When this client writes, the server's change attribute moves too, and the client must not throw away its own fresh pages. NFSv3 solves this with <b>weak cache consistency</b> (WCC) data: WRITE, SETATTR, CREATE and other modifying replies carry the file's size, mtime and ctime from just <em>before</em> the operation as well as after. If the "before" values match the client's cache, nobody else touched the file in between, and the client can simply adopt the "after" values. NFSv4 operations that modify a directory return the directory's change attribute from before and after the operation (<code>change_info4</code>) for the same purpose.</p>
+<h3>Tuning: noac, actimeo, lookupcache</h3>
+<ul>
+<li><code>noac</code> makes every attribute check a GETATTR and every write synchronous. Use it only for files that several machines change concurrently without locks, and expect a large slowdown. Lab B4 counts roughly one GETATTR per <code>stat</code>.</li>
+<li><code>actimeo=N</code> with a large N suits read-only data that never changes, such as a published software tree. With <code>nocto</code> as well, the client almost never asks.</li>
+<li><code>lookupcache=all</code> (default) caches positive and negative lookups. <code>lookupcache=positive</code> stops caching "no such file" answers, which helps when one machine waits for a file another machine will create. <code>lookupcache=none</code> revalidates every lookup with the server.</li>
+</ul>
+</section>
+<section id="change">
+<h2>Detecting change: timestamps and the change attribute</h2>
+<p>To decide "did the file change?", an NFSv3 client compares mtime, ctime and size. That only works if every change produces a different value. Timestamps in Linux are taken from a <b>coarse clock</b> that ticks once per jiffy (1 to 10 ms, depending on the kernel's <code>HZ</code> setting), because reading a fine-grained clock on every write is expensive. Two writes inside the same tick get the same mtime. If client B fetches attributes between those two writes, it caches mtime T, the second write also leaves mtime T, and B never notices the second change. Its cache stays wrong until something else changes the file.</p>
+<p>NFSv4 fixes the comparison with the <b>change attribute</b>: a 64-bit value that the server must change every time the file's data or metadata changes. Linux filesystems keep it in <code>inode-&gt;i_version</code>. ext4, XFS and btrfs maintain a real counter, and <code>nfsd</code> returns it. For filesystems without one, <code>nfsd</code> builds the change attribute from ctime, which brings back the granularity problem.</p>
+<p>Two refinements followed.</p>
+<ul>
+<li><b><code>change_attr_type</code></b> (NFSv4.2) lets the server state whether its change attribute only ever increases. If it does, a client can tell which of two values is newer, so a reply that arrives late cannot roll its cache back to old attributes.</li>
+<li><b>Multigrain timestamps</b> (Linux 6.13) make the kernel use a fine-grained clock for ctime and mtime only when someone has queried the file's timestamps since the last change. Nobody looking means coarse and cheap; a recent <code>stat</code> or GETATTR means the next change gets a distinct timestamp. That keeps ctime-based change detection reliable without paying the fine-grained cost on every write. Filesystems opt in with a flag; ext4, XFS, btrfs and tmpfs were converted in 6.13.</li>
+</ul>
+</section>
+<section id="cto">
+<h2>Close-to-open consistency</h2>
+<p>Polling alone gives no ordering guarantee at all: a change shows up "eventually, usually within a minute". NFS clients add one rule on top that makes ordinary workflows correct. It is called <b>close-to-open consistency</b> (CTO):</p>
+<aside class="key"><span class="tag">The guarantee</span><p>If client A writes a file and closes it, and client B opens the file after A's <code>close()</code> has returned, B sees everything A wrote.</p></aside>
+<p>Two mechanisms implement it:</p>
+<ul>
+<li><b>Flush on close.</b> A's <code>close()</code> calls the NFS <code>-&gt;flush</code> method, which writes every dirty page of the file to the server and waits for the COMMIT. <code>close()</code> does not return until the server has the data on stable storage.</li>
+<li><b>Revalidate on open.</b> B's <code>open()</code> fetches fresh attributes from the server even if the cached ones have not timed out. NFSv3 sends a GETATTR (or ACCESS, which returns attributes too). NFSv4 asks for the attributes inside the OPEN COMPOUND, so this costs no extra round trip. If the change attribute differs from B's cached value, B's cached pages are invalidated.</li>
+</ul>
+<figure class="diagram">
+<svg viewBox="0 0 720 490" width="720" role="img" aria-label="Timeline of client A, the server and client B. A opens and writes into its cache. B opens and reads the old contents. A closes, which sends WRITE and COMMIT and moves the change attribute from 7 to 8. B reads again without reopening and still sees old data from its cache. B closes and reopens, sees change 8, drops its cached pages and reads the new data.">
+<defs><marker id="ah-07-1" viewBox="0 0 10 10" refX="9" refY="5" markerWidth="7" markerHeight="7" orient="auto-start-reverse"><path class="ah" d="M0,0 L10,5 L0,10 z"/></marker></defs>
+<text class="th" x="130" y="24" text-anchor="middle">client A</text>
+<text class="th" x="360" y="24" text-anchor="middle">server</text>
+<text class="th" x="590" y="24" text-anchor="middle">client B</text>
+<line class="lnd" x1="130" y1="36" x2="130" y2="452"/>
+<line class="lnd" x1="360" y1="36" x2="360" y2="452"/>
+<line class="lnd" x1="590" y1="36" x2="590" y2="452"/>
+<text class="t" x="120" y="66" text-anchor="end">open()</text>
+<line class="ln" x1="130" y1="60" x2="358" y2="72" marker-end="url(#ah-07-1)"/>
+<text class="ts" x="245" y="58" text-anchor="middle">OPEN, GETATTR</text>
+<line class="ln" x1="360" y1="80" x2="132" y2="92" marker-end="url(#ah-07-1)"/>
+<text class="ts" x="245" y="104" text-anchor="middle">change = 7</text>
+<text class="t" x="120" y="138" text-anchor="end">write() ×3</text>
+<text class="ts" x="245" y="132" text-anchor="middle">data stays in A's page cache;</text>
+<text class="ts" x="245" y="148" text-anchor="middle">no RPC yet</text>
+<text class="t" x="600" y="166">open()</text>
+<line class="ln" x1="590" y1="160" x2="362" y2="172" marker-end="url(#ah-07-1)"/>
+<text class="ts" x="475" y="158" text-anchor="middle">OPEN, GETATTR</text>
+<line class="ln" x1="360" y1="180" x2="588" y2="192" marker-end="url(#ah-07-1)"/>
+<text class="ts" x="475" y="204" text-anchor="middle">change = 7</text>
+<text class="t" x="600" y="226">read()</text>
+<line class="ln" x1="590" y1="220" x2="362" y2="232" marker-end="url(#ah-07-1)"/>
+<text class="ts" x="475" y="218" text-anchor="middle">READ</text>
+<line class="ln" x1="360" y1="240" x2="588" y2="252" marker-end="url(#ah-07-1)"/>
+<text class="ts" x="475" y="264" text-anchor="middle">old contents</text>
+<text class="t" x="120" y="286" text-anchor="end">close()</text>
+<line class="hl" x1="130" y1="280" x2="358" y2="292" marker-end="url(#ah-07-1)"/>
+<text class="ts" x="245" y="278" text-anchor="middle">WRITE ×3, COMMIT</text>
+<line class="ln" x1="360" y1="300" x2="132" y2="312" marker-end="url(#ah-07-1)"/>
+<text class="ts" x="245" y="324" text-anchor="middle">ok; change = 8</text>
+<text class="t" x="600" y="346">read()</text>
+<text class="ts" x="475" y="342" text-anchor="middle">served from B's page cache:</text>
+<text class="ts c-net" x="475" y="358" text-anchor="middle">still the old contents</text>
+<text class="t" x="600" y="392">close()</text>
+<text class="t" x="600" y="408">open()</text>
+<line class="hl" x1="590" y1="398" x2="362" y2="410" marker-end="url(#ah-07-1)"/>
+<text class="ts" x="475" y="396" text-anchor="middle">OPEN, GETATTR</text>
+<line class="ln" x1="360" y1="418" x2="588" y2="430" marker-end="url(#ah-07-1)"/>
+<text class="ts" x="475" y="442" text-anchor="middle">change = 8, not 7</text>
+<text class="ts" x="475" y="468" text-anchor="middle">B drops its pages; next read() sends READ</text>
+</svg>
+<figcaption>Close-to-open on NFSv4 without delegations. The highlighted arrows are the two halves of the rule: A's <code>close()</code> pushes the data, B's <code>open()</code> pulls fresh attributes. B's second <code>read()</code>, made while it still had the file open, is not covered by the rule and returns old data.</figcaption>
+</figure>
+<p>The rule says nothing about files that stay open. In the diagram, B opened the file before A closed it, so B's later reads may return old data for as long as its attribute cache allows. That is correct behaviour under CTO. Programs that coordinate through NFS must therefore follow the pattern the rule supports: the writer finishes and closes; the reader opens after that. A very common correct use is "write to a temporary name, close, then <code>rename()</code> over the real name": the rename is atomic on the server, and any reader that opens the name afterwards gets the complete new file.</p>
+<p>The cost of CTO is one attribute round trip per open (free inside an NFSv4 OPEN) and a synchronous flush on every close of a written file. The mount option <code>nocto</code> drops the open-time revalidation and trusts the attribute cache instead. That suits read-only or single-writer data and makes <code>open()</code> cheaper. Lab B1 shows the difference: after a change on the server, a default mount sees it at the next open, and a <code>nocto,actimeo=60</code> mount keeps showing the old contents for up to a minute.</p>
+<aside class="pitfall"><span class="tag">Pitfall</span><p><code>mmap</code> with <code>MAP_SHARED</code> is not coherent between clients, and appends are not atomic across clients. The <code>open(2)</code> man page warns that <code>O_APPEND</code> on NFS can corrupt files when several clients append at once: each client computes "end of file" from its own idea of the size, so two clients can write to the same offset. Logs written by several machines into one NFS file need locking, or one file per writer.</p></aside>
+</section>
+<section id="locks">
+<h2>Locks as coherence points</h2>
+<p>Close-to-open covers programs that open, work and close. Databases and mail servers keep files open for hours and coordinate with byte-range locks (<code>fcntl(F_SETLKW)</code>, <code>lockf</code>). The Linux client turns locking into a coherence point as well. In <code>do_setlk()</code> in <code>fs/nfs/file.c</code>:</p>
+<ol>
+<li>Before asking the server for the lock, the client writes back the file's dirty pages.</li>
+<li>It sends LOCK (NFSv4) or an NLM request (NFSv3) and waits until the server grants it.</li>
+<li>Unless it holds a delegation for the file, it then marks the cached attributes and data invalid. The next read refetches attributes, and if the file changed, rereads the data.</li>
+</ol>
+<p>Unlocking flushes dirty data first, so the next locker on another client sees it. Together these give the guarantee a lock-based program expects: whatever the previous lock holder wrote is visible to the next one. Lab B6 shows a lock pulling fresh data through a <code>nocto,actimeo=60</code> mount that otherwise shows stale contents.</p>
+<p>Two consequences surprise people:</p>
+<ul>
+<li><b>Locking is expensive on NFS.</b> Every lock costs a round trip, a flush, and possibly a reread of the file. Some applications take and drop locks thousands of times a second and become unusable on NFS for this reason.</li>
+<li><b>Byte-range locks invalidate the whole file.</b> Locking bytes 0 to 99 still discards cached pages for the rest of the file if the change attribute moved.</li>
+</ul>
+<p>The <code>local_lock=</code> mount option (<code>flock</code>, <code>posix</code>, <code>all</code>) makes the chosen lock types local to the client. That is only safe if a single client uses the files, because the server and other clients never see those locks.</p>
+</section>
+<section id="writes">
+<h2>The write path and its errors</h2>
+<p>A <code>write()</code> on NFS returns as soon as the data is in the client's page cache, exactly as on a local filesystem. The dirty page then goes through three states before the client may forget it:</p>
+<figure class="diagram">
+<pre>write()      copy into a client page, mark it dirty                   no RPC
+   │
+   │  writeback starts: close(), fsync(), a lock, memory pressure,
+   │  or the page has been dirty for 30 s (vm.dirty_expire_centisecs)
+   ▼
+WRITE        UNSTABLE, up to wsize (1 MiB) per RPC  ──▶  server page cache
+   │         reply carries the server's write verifier V
+   │         page is now "written but not committed"; the client keeps it
+   ▼
+COMMIT       ──▶  server calls fsync on the range  ──▶  reply carries verifier V'
+   │
+   ├─ V' == V   data is on stable storage: page is clean, may be freed
+   └─ V' != V   the server restarted in between: resend the WRITEs, COMMIT again</pre>
+<figcaption>The unstable-write protocol from <a href="06-nfs.html">lesson 6</a>, as the client's page states. NFSv4 uses the same WRITE and COMMIT operations.</figcaption>
+</figure>
+<p>Applications choose how much of this they wait for:</p>
+<div class="table-wrap"><table>
+<thead><tr><th>How the program writes</th><th>What crosses the wire</th><th>When it returns</th></tr></thead>
+<tbody>
+<tr><td>plain <code>write()</code>, then <code>close()</code></td><td>UNSTABLE WRITEs in <code>wsize</code> chunks, one COMMIT at close</td><td><code>write()</code>: at once. <code>close()</code>: after the COMMIT.</td></tr>
+<tr><td><code>fsync()</code></td><td>outstanding WRITEs plus COMMIT</td><td>when the data is stable on the server</td></tr>
+<tr><td><code>O_SYNC</code> or <code>O_DSYNC</code></td><td>stable WRITEs for each call (FILE_SYNC or DATA_SYNC), or UNSTABLE plus COMMIT per call</td><td>each <code>write()</code> waits for stable storage</td></tr>
+<tr><td><code>O_DIRECT</code></td><td>WRITE straight from the user buffer, no client page cache</td><td>when the server replies; still needs <code>fsync()</code> for durability unless the WRITE was stable</td></tr>
+<tr><td>mount with <code>sync</code> or <code>noac</code></td><td>every write is synchronous</td><td>like <code>O_SYNC</code> for every file</td></tr>
+</tbody>
+</table></div>
+<h3>Errors arrive late</h3>
+<p>Because <code>write()</code> returns before any RPC is sent, it cannot report errors that only the server knows about: a full filesystem (<code>ENOSPC</code>), an exceeded quota (<code>EDQUOT</code>), or an I/O failure (<code>EIO</code>). Those errors come back on the WRITE or COMMIT reply, and the client records them against the file's mapping (the <code>errseq_t</code> mechanism from <a href="05-vfs-cache.html">lesson 5</a>). The application sees them on the next <code>fsync()</code> or on <code>close()</code>.</p>
+<p>On a local filesystem <code>close()</code> almost never fails, so much code ignores its return value. On NFS, <code>close()</code> runs the flush, and it is often the first and only place a write error is reported. A program that writes a file, ignores <code>close()</code>'s result, and prints "saved" may have saved nothing. Robust code calls <code>fsync()</code> and checks it, then checks <code>close()</code>.</p>
+<p>The server helps from its side. If <code>nfsd</code> sees a writeback error on a file, it changes its write verifier. Every client with uncommitted data then sees a verifier mismatch on its next COMMIT and resends, instead of assuming data reached disk that never did.</p>
+<h3>The async export, again</h3>
+<p><a href="06-nfs.html">Lesson 6</a> warned about the <code>async</code> export option. In terms of the diagram above: with <code>async</code>, <code>nfsd</code> answers WRITE and COMMIT without waiting for its disk, with the same verifier as always. The client marks the page clean and frees it. If the server then loses power, the data is gone, the verifier after reboot does not help (the client no longer has the pages), and no application ever gets an error. <code>sync</code>, the default, keeps the protocol honest: UNSTABLE writes may still sit in server RAM, but COMMIT really waits for the disk.</p>
+</section>
+<section id="delegations">
+<h2>Delegations: the server promises to call</h2>
+<p>Polling has a floor: the client must ask, at least at every open. NFSv4 delegations remove that floor for files that only one client is using, which in practice is most files.</p>
+<p>When a client OPENs a file, the server may add a <b>delegation</b> to the reply. The client does not ask for it; the server decides, based on whether anyone else has the file open and whether it can reach the client's callback channel.</p>
+<ul>
+<li>A <b>read delegation</b> promises that no other client will open the file for writing without the holder being told first. The holder may open the file for reading again without contacting the server, and may trust its cached attributes and data indefinitely.</li>
+<li>A <b>write delegation</b> promises that no other client will open the file at all without the holder being told first. The holder may also cache writes past <code>close()</code>: the Linux client starts writeback at close but does not wait for it (<code>nfs4_file_flush()</code>), because nobody can see the file until the delegation is recalled, and the recall forces the flush. It can also handle locks locally.</li>
+</ul>
+<p>While a delegation is held, opens, closes, <code>stat</code> calls and reads of cached data generate no RPCs at all. A build that opens the same headers thousands of times, or a program that repeatedly <code>stat</code>s its config file, runs at local-filesystem speed.</p>
+<h3>The recall</h3>
+<p>When a conflicting request arrives, the server must take the promise back before it can proceed. It cannot block the other client indefinitely, so the recall is a short protocol of its own:</p>
+<figure class="diagram">
+<svg viewBox="0 0 720 470" width="720" role="img" aria-label="Client A opens a file and receives a read delegation, then serves opens and reads locally. Client B opens the file for writing. The server replies NFS4ERR_DELAY to B and sends CB_RECALL to A. A acknowledges, flushes, and sends DELEGRETURN. B retries its OPEN and succeeds.">
+<defs><marker id="ah-07-2" viewBox="0 0 10 10" refX="9" refY="5" markerWidth="7" markerHeight="7" orient="auto-start-reverse"><path class="ah" d="M0,0 L10,5 L0,10 z"/></marker></defs>
+<text class="th" x="130" y="24" text-anchor="middle">client A</text>
+<text class="th" x="360" y="24" text-anchor="middle">server</text>
+<text class="th" x="590" y="24" text-anchor="middle">client B</text>
+<line class="lnd" x1="130" y1="36" x2="130" y2="430"/>
+<line class="lnd" x1="360" y1="36" x2="360" y2="430"/>
+<line class="lnd" x1="590" y1="36" x2="590" y2="430"/>
+<text class="t" x="120" y="66" text-anchor="end">open()</text>
+<line class="ln" x1="130" y1="60" x2="358" y2="72" marker-end="url(#ah-07-2)"/>
+<text class="ts" x="245" y="58" text-anchor="middle">OPEN (read)</text>
+<line class="ln" x1="360" y1="80" x2="132" y2="92" marker-end="url(#ah-07-2)"/>
+<text class="ts" x="245" y="104" text-anchor="middle">open stateid + read delegation</text>
+<text class="t" x="120" y="136" text-anchor="end">open()</text>
+<text class="t" x="120" y="152" text-anchor="end">stat()</text>
+<text class="t" x="120" y="168" text-anchor="end">read()</text>
+<rect class="k-net" x="160" y="128" width="170" height="44" rx="3"/>
+<text class="ts" x="245" y="146" text-anchor="middle">answered locally,</text>
+<text class="ts" x="245" y="162" text-anchor="middle">no RPCs</text>
+<text class="t" x="600" y="206">open(O_WRONLY)</text>
+<line class="ln" x1="590" y1="200" x2="362" y2="212" marker-end="url(#ah-07-2)"/>
+<text class="ts" x="475" y="198" text-anchor="middle">OPEN (write)</text>
+<line class="hl" x1="360" y1="228" x2="132" y2="240" marker-end="url(#ah-07-2)"/>
+<text class="ts" x="245" y="226" text-anchor="middle">CB_RECALL</text>
+<line class="ln" x1="360" y1="232" x2="588" y2="244" marker-end="url(#ah-07-2)"/>
+<text class="ts c-net" x="475" y="258" text-anchor="middle">NFS4ERR_DELAY</text>
+<line class="ln" x1="130" y1="262" x2="358" y2="274" marker-end="url(#ah-07-2)"/>
+<text class="ts" x="245" y="260" text-anchor="middle">CB_RECALL reply: OK</text>
+<text class="ts" x="120" y="298" text-anchor="end">flush dirty data,</text>
+<text class="ts" x="120" y="314" text-anchor="end">reclaim opens</text>
+<line class="hl" x1="130" y1="320" x2="358" y2="332" marker-end="url(#ah-07-2)"/>
+<text class="ts" x="245" y="318" text-anchor="middle">DELEGRETURN</text>
+<line class="ln" x1="360" y1="340" x2="132" y2="352" marker-end="url(#ah-07-2)"/>
+<text class="ts" x="245" y="364" text-anchor="middle">OK</text>
+<text class="ts" x="600" y="296">waits, then</text>
+<text class="ts" x="600" y="312">retries</text>
+<line class="ln" x1="590" y1="370" x2="362" y2="382" marker-end="url(#ah-07-2)"/>
+<text class="ts" x="475" y="368" text-anchor="middle">OPEN (write)</text>
+<line class="ln" x1="360" y1="390" x2="588" y2="402" marker-end="url(#ah-07-2)"/>
+<text class="ts" x="475" y="414" text-anchor="middle">open stateid</text>
+<text class="ts" x="360" y="456" text-anchor="middle">If A never answers, the server revokes the delegation after one lease period.</text>
+</svg>
+<figcaption>A delegation recall on NFSv4.1. CB_RECALL travels on A's own connection through the session backchannel. B is told to retry rather than kept waiting inside one RPC, so a slow or dead A cannot tie up a server thread.</figcaption>
+</figure>
+<p>Step by step:</p>
+<ol>
+<li>B's OPEN for writing conflicts with A's read delegation. The server answers B with <code>NFS4ERR_DELAY</code> (in the Linux source, <code>nfserr_jukebox</code>), which tells B to retry after a short pause that grows on each retry.</li>
+<li>The server sends <b>CB_RECALL</b> to A, carrying the delegation's stateid. A replies at once to acknowledge it.</li>
+<li>A puts its state back on the server. With a write delegation it flushes dirty data. Any opens and locks it handled locally become real server state (an OPEN with claim type <code>CLAIM_DELEG_CUR_FH</code> in 4.1, then LOCK). Then it sends <b>DELEGRETURN</b>.</li>
+<li>B's retried OPEN succeeds. A's later opens of the file go to the server like any other, with close-to-open rules again.</li>
+</ol>
+<p>If A does not return the delegation within one lease period (90 seconds by default on Linux), the server revokes it and lets B proceed. A learns about the revocation from status flags in its next SEQUENCE reply and must assume any of its unflushed changes conflict with B. Revocation is rare in practice and always means something went wrong on the client or the network.</p>
+<p>A conflicting <b>GETATTR</b> does not always need a full recall. With a write delegation outstanding, the holder may have cached writes that changed the size and change attribute. The server can send <b>CB_GETATTR</b> to the holder to learn the current values and answer the other client without taking the delegation away. Recent Linux <code>nfsd</code> does this.</p>
+<h3>Delegations in Linux nfsd</h3>
+<p><code>nfsd</code> implements a delegation as a VFS <b>lease</b> on the server's file (the same mechanism as <code>fcntl(F_SETLEASE)</code>, which Samba also uses). Anything that would break a lease breaks the delegation: an NFSv4 OPEN from another client, an NFSv3 request that writes the file (the v3 client gets <code>NFS3ERR_JUKEBOX</code> and retries), and a local process on the server opening the file for writing. That last case is why Lab B7 can trigger a recall with a plain <code>echo &gt;&gt;</code> on the server: the echo blocks until the client returns the delegation.</p>
+<p>Some practical details of the Linux server:</p>
+<ul>
+<li>It has granted read delegations for many years. Write delegations arrived in Linux 6.6, for OPENs with write access when nothing else conflicts.</li>
+<li>It only grants delegations to clients whose callback path works. An NFSv4.0 client behind NAT gets none (<a href="06-nfs.html">lesson 6</a>).</li>
+<li>It remembers recently recalled files for a short time and does not hand out a new delegation on them immediately, to avoid recall storms on contended files.</li>
+<li>The delegations each client holds are listed in <code>/proc/fs/nfsd/clients/*/states</code> with <code>type: deleg</code>.</li>
+</ul>
+</section>
+<section id="newer">
+<h2>Newer promises: timestamps and directories</h2>
+<p><b>Delegated timestamps</b> (RFC 9754) fix an awkward corner of write delegations. Without them, the server sets mtime when a WRITE arrives, which with a write delegation can be long after the application wrote, and <code>stat</code> on the client either shows a wrong mtime or forces a flush to get the real one. With delegated timestamps the delegation holder owns atime and mtime: it sets them as the application writes, reports them when the server asks with CB_GETATTR, and sends them with SETATTR when it returns the delegation. The Linux client supports this since 6.11. In the 6.18 WSL kernel used for this course the server side is compiled out (<code>CONFIG_NFSD_V4_DELEG_TIMESTAMPS</code>).</p>
+<p><b>Directory delegations</b> (NFSv4.1, GET_DIR_DELEGATION) do for directories what file delegations do for files. A client holding one can trust its cached listing and, more valuably, its negative dentries: "no file named <code>config.local</code> here" stays true until the server says otherwise. Build tools and language runtimes that probe dozens of non-existent paths for every import benefit most. Notifications (CB_NOTIFY) can tell the holder exactly which entries changed instead of recalling the whole delegation. Linux 6.19 added initial client support, used for ACCESS, CREATE, UNLINK and RENAME, with a module option to disable it.</p>
+</section>
+<section id="compare">
+<h2>How other systems keep caches coherent</h2>
+<p>NFS is the odd one out: its base protocol polls, and promises are an optimisation. Most other distributed filesystems were designed around promises from the start. <a href="09-distributed.html">Lesson 9</a> covers their architectures; here is how each one answers "may this client use its cached copy?".</p>
+<div class="table-wrap"><table>
+<thead><tr><th>System</th><th>What the client holds</th><th>How it is taken back</th><th>What applications see</th></tr></thead>
+<tbody>
+<tr><td>NFSv3</td><td>nothing; cached attributes with a timeout</td><td>expires on its own (3 to 60 s)</td><td>close-to-open; lock-to-lock; otherwise up to a minute stale</td></tr>
+<tr><td>NFSv4.x</td><td>read or write delegation per file; 4.1 adds directory delegations</td><td>CB_RECALL; revoked after a lease if ignored</td><td>close-to-open; local speed while delegated</td></tr>
+<tr><td>AFS (OpenAFS, AuriStor)</td><td>a <b>callback promise</b> per file, plus a whole-file or large-chunk cache on local disk</td><td>the file server "breaks" the callback when another client stores a new version</td><td>session semantics: other clients see a change when the writer closes and they next open</td></tr>
+<tr><td>SMB 2 and 3</td><td><b>oplocks</b> (level II, exclusive, batch) and since SMB 2.1 <b>leases</b> with R, W and H (handle) bits</td><td>oplock or lease break; the client flushes and acknowledges</td><td>strong while the lease is held; share modes add Windows-style open exclusion</td></tr>
+<tr><td>CephFS</td><td><b>capabilities</b> per inode from the metadata server, written like <code>pAsLsXsFscr</code>: pin, Auth, Link, Xattr, File, each with modifiers such as s (shared), x (exclusive), c (cache), r (read), w (write), b (buffer)</td><td>the MDS revokes caps; the client flushes and releases</td><td>POSIX-like: without the cache or buffer caps, reads and writes go synchronously to the data servers</td></tr>
+<tr><td>Lustre</td><td><b>LDLM locks</b>: extent locks on file data from each storage target, inode-bit locks on metadata</td><td>a <b>blocking AST</b> callback; the client flushes, drops pages and cancels</td><td>POSIX: a read sees the latest completed write from any client</td></tr>
+<tr><td>IBM Storage Scale (GPFS)</td><td><b>tokens</b> from a token manager, including byte-range tokens; one node per open file acts as <b>metanode</b> for its inode</td><td>token revoke; the holder flushes and gives the token up</td><td>POSIX, including fine-grained shared writes to one file</td></tr>
+</tbody>
+</table></div>
+<p>The pattern is the same everywhere. A client may cache exactly as much as its current promise covers. A conflicting request makes the server (or lock manager) call the holder back, and the holder flushes before it gives up the promise. What differs is the granularity of the promise (whole file, byte range, attribute class), who keeps track (one server, a metadata server, a distributed lock manager), and what happens when a client stops answering. NFS without delegations falls back to the timer; the others fall back to revoking locks after a timeout and evicting the client.</p>
+<p>Polling has one advantage that keeps NFSv3 alive: it costs the server nothing when a client disappears. Every promise is state that must be recovered after a crash and revoked when a client goes silent. <a href="06-nfs.html">Lesson 6</a> showed how NFSv4 handles that state with leases and grace periods; <a href="09-distributed.html">lesson 9</a> shows Lustre and Ceph doing the same with eviction and recovery.</p>
+</section>
+<section id="fscache">
+<h2>FS-Cache: a disk cache under NFS</h2>
+<p>The page cache is fast but limited by RAM and lost at reboot. <b>FS-Cache</b> adds a second level on the client's local disk. With the mount option <code>fsc</code>, data the NFS client reads is also written to a local cache, and later reads of the same file can come from local disk instead of the network.</p>
+<ul>
+<li>The kernel side is FS-Cache plus a backend, <b>CacheFiles</b> (<code>CONFIG_CACHEFILES</code>), which stores cached data as files in a directory on a local filesystem. The <code>cachefilesd</code> daemon configures it (<code>/etc/cachefilesd.conf</code>, cache in <code>/var/cache/fscache</code> by default) and culls old data when free space falls below thresholds.</li>
+<li>NFS reaches FS-Cache through the kernel's <b>netfs</b> helper library, which several network filesystems share.</li>
+<li>Coherence does not change. Each cached file is keyed by its file handle and stored with coherency data (change attribute, times and size). NFS revalidates attributes exactly as before; if they no longer match, the disk copy is discarded with the page cache.</li>
+<li>Opening a file for writing invalidates its cached copy and switches caching off for it while it is open. FS-Cache is a read cache.</li>
+</ul>
+<p>It pays off for large read-mostly data read by many clients, such as software installations, container images and machine-learning datasets: it removes load from the server and survives client reboots. It does nothing for metadata-heavy work, and a local disk slower than the network makes things worse.</p>
+<aside class="note"><span class="tag">This machine</span><p>The WSL kernel used here has <code>CONFIG_FSCACHE=y</code> and <code>CONFIG_NFS_FSCACHE=y</code>, but <code>CONFIG_CACHEFILES</code> is not set. Without a backend, <code>fsc</code> is accepted and caches nothing, so the lab has no FS-Cache experiment.</p></aside>
+</section>
+<section id="failures">
+<h2>Failure modes</h2>
+<h3>Hard and soft mounts</h3>
+<p>When the server stops answering, a <code>hard</code> mount (the default) retries forever. The kernel logs <code>nfs: server X not responding, still trying</code>, and every process touching the mount waits in state D until the server comes back, then continues as if nothing happened. The old <code>intr</code> option has been ignored since Linux 2.6.25; instead the waits are killable, so <code>kill -9</code> ends a stuck process.</p>
+<p>A <code>soft</code> mount gives up after <code>retrans</code> retries and returns <code>EIO</code> (<code>softerr</code> returns <code>ETIMEDOUT</code> instead). That sounds friendlier, but nfs(5) warns that it can silently corrupt data. A timed-out WRITE during background writeback has no system call to return an error to. The page is marked with an error, the data is lost, and only a later <code>fsync</code> or <code>close</code> might report it. Use <code>soft</code> only for read-only data where an error is better than a hang. The <code>softreval</code> option lets a soft mount keep serving cached attributes and names while the server is down.</p>
+<h3>Silly rename</h3>
+<p>On a local filesystem you can unlink a file that is still open, and it lives on until the last close. An NFSv3 server keeps no opens, so if the client sent REMOVE, the next READ would fail with <code>ESTALE</code>. The Linux client avoids this with <b>silly rename</b>: when you unlink a file that this client has open, it instead renames it to <code>.nfs</code> followed by 24 hex digits (built from the inode number and a counter), and sends the real REMOVE when the last local user closes it. Lab B8 shows the file appearing and disappearing.</p>
+<ul>
+<li><code>rm</code> on a <code>.nfs…</code> file fails with "Device or resource busy" while it is in use.</li>
+<li><code>rm -rf dir</code> fails with "Directory not empty" when such a file is inside.</li>
+<li>If the client crashes, the <code>.nfs…</code> file stays on the server forever and must be cleaned up by hand.</li>
+<li>Another client that has the file open still loses it: silly rename only protects the client that does the unlink.</li>
+</ul>
+<p>NFSv4.1 lets a server promise to keep unlinked-but-open files itself, with the <code>OPEN4_RESULT_PRESERVE_UNLINKED</code> flag in the OPEN reply. Recent Linux clients skip the silly rename when the server sets it.</p>
+<h3>Stale file handles</h3>
+<p><code>ESTALE</code> ("Stale file handle") means the server no longer recognises a handle the client cached. Usually another client removed the file, or replaced it with <code>rename()</code>, so the inode behind the handle is gone. For system calls that take a path, the Linux VFS retries the lookup once from scratch when it gets <code>ESTALE</code>, so <code>stat("file")</code> after another client replaced the file normally just works. A program holding an open descriptor to the replaced file gets <code>ESTALE</code> on its next read; it must reopen by name.</p>
+<h3>Lost leases and lost locks</h3>
+<p>If a client cannot reach the server for longer than the lease, the server may release its locks. Since Linux 5.19 <code>nfsd</code> is a "courteous server" that keeps an expired client's state until another client actually conflicts with it, so short partitions usually cost nothing. If the locks really were given away, the Linux client by default does not try to take them back, because the file may have changed in between. Operations that depend on the lost lock fail with <code>EIO</code>. The <code>nfs.recover_lost_locks=1</code> parameter restores the old, riskier behaviour of re-requesting them.</p>
+<h3>Clocks</h3>
+<p>The server stamps mtime with its own clock. If client and server clocks differ, a client comparing file times with its own "now" gets confused: <code>make</code> prints "Clock skew detected" and may rebuild too much or too little, and tools that skip "recently modified" files misjudge them. Run NTP (<code>chrony</code> or <code>systemd-timesyncd</code>) on every machine that shares files.</p>
+</section>
+<section id="diagnose">
+<h2>Diagnosing a caching problem</h2>
+<p>A typical report: "machine B does not see the file machine A just wrote." Work through it in order.</p>
+<ol>
+<li><b>Check the options actually in force.</b> <code>nfsstat -m</code> on both machines. Look for <code>nocto</code>, <code>actimeo</code>, <code>noac</code>, <code>lookupcache</code>, the version, and whether another mount of the same export (without <code>nosharecache</code>) set the options first.</li>
+<li><b>Check the access pattern against the guarantees.</b> Did A close (or <code>fsync</code>, or unlock) before B opened (or locked)? If B kept the file open, or polls with <code>stat</code>, it is relying on the attribute timeout and up to 60 seconds of staleness is expected. If B is waiting for a file to appear, negative dentry caching may be hiding it; <code>lookupcache=positive</code> fixes that.</li>
+<li><b>Count what the clients do.</b> <code>opcount.sh</code> shows the RPCs a command causes. <code>events.sh</code> shows the client's cache counters from the <code>events:</code> line of mountstats: <code>inoderevalidates</code>, <code>datainvalidates</code>, <code>attrinvalidates</code>, <code>vfsflush</code>, <code>sillyrenames</code> and 22 more. A <code>cat</code> that produces no GETATTR on a default mount means the client held a delegation, or the open was served from a cache you did not expect.</li>
+<li><b>Trace it.</b> The client has tracepoints for exactly these decisions:
+<pre><code><span class="p">#</span> trace-cmd record -e nfs:nfs_revalidate_inode_enter -e nfs:nfs_invalidate_mapping_enter \
+      -e nfs:nfs_refresh_inode_enter -e nfs4:nfs4_cb_recall -e nfs4:nfs4_delegreturn_exit \
+      -- cat /mnt/nfs42/file
+<span class="p">#</span> trace-cmd report</code></pre>
+The server side adds <code>-e nfsd</code>. <code>trace-cmd list -e nfs</code> lists the rest.</li>
+<li><b>Check delegations on the server.</b> <code>/proc/fs/nfsd/clients/*/states</code> shows which client holds what. A delegation that never gets returned shows up there and in the server's log as a revocation.</li>
+<li><b>Test cold.</b> <code>sync; echo 3 | sudo tee /proc/sys/vm/drop_caches</code> on the client drops its page cache, dentries and inodes, so the next access shows the server's current state. If that fixes it, the bug is staleness, not a server problem.</li>
+</ol>
+</section>
+<section class="lab" id="lab">
+<p class="tag">Lab 06 · Part B</p>
+<h2>Watch the caches decide</h2>
+<p class="where">~/storage-course/labs/06-nfs/   (README.md, Part B)</p>
+<aside class="pitfall"><span class="tag">Untested here</span><p>Part B needs the NFS server and mounts from Part A, which need root. None of the NFS steps were run on the machine this course was written on. <code>events.sh</code> and <code>attrwatch.sh</code> were tested against hand-made files in the mountstats format, and <code>lockread.py</code> on a local file. The expected results come from the Linux client's documented behaviour and source.</p></aside>
+<p>The lab uses two NFSv3 mounts of the same export with separate caches: <code>/mnt/nfs3</code> with default options, and <code>/mnt/nfs3-lazy</code> with <code>nocto,actimeo=60,nosharecache</code>. Writing directly into <code>/srv/nfslab</code> on the server plays the part of a second client. NFSv3 is used for most steps because it has no delegations, which makes the results repeatable.</p>
+<ol>
+<li><b>B1, close-to-open.</b> Change <code>/srv/nfslab/cache.txt</code> on the server, then <code>cat</code> it through both mounts. The default mount shows the new contents at once; the lazy mount shows the old contents for up to 60 seconds.</li>
+<li><b>B2 and B4, the cost.</b> <code>opcount.sh</code> around one <code>cat</code> on each mount: a GETATTR on the default mount, often nothing on the lazy one. With <code>noac</code>, about one GETATTR per <code>stat</code>.</li>
+<li><b>B3, the adaptive timeout.</b> <code>./attrwatch.sh /mnt/nfs3 /mnt/nfs3/hello.txt 150</code> calls <code>stat</code> once a second on an open file and prints a line each time the GETATTR count moves. Expect gaps of about 3, 6, 12, 24, 48 and 60 seconds, and a reset to 3 after you <code>touch</code> the file on the server.</li>
+<li><b>B5, flush on close.</b> Write through <code>/mnt/nfs3</code> with the file held open, read through <code>/mnt/nfs42</code>: empty. Close the writer: the data appears.</li>
+<li><b>B6, a lock as a coherence point.</b> <code>python3 -I lockread.py /mnt/nfs3-lazy/cache.txt</code> shows current data where a plain <code>cat</code> shows stale data.</li>
+<li><b>B7, a delegation recall.</b> Hold <code>/mnt/nfs42/deleg.txt</code> open, check the server's <code>states</code> file for a delegation, then append to the file on the server. Expect one DELEGRETURN in <code>opcount.sh</code> and the delegation gone from <code>states</code>.</li>
+<li><b>B8, silly rename.</b> Unlink a file you hold open on <code>/mnt/nfs3</code> and watch a <code>.nfs…</code> file appear, stay readable, and vanish at close.</li>
+<li><b>B9, the write path.</b> <code>dd</code> 64 MiB buffered, with <code>oflag=sync</code>, and with <code>oflag=direct</code>, each under <code>opcount.sh</code>. Compare WRITE and COMMIT counts and the average RTT.</li>
+</ol>
+<p>Wrap any step in <code>events.sh</code> to see the client's side. Here is its output format, produced on this machine from a hand-edited mountstats file in which the counters were moved by hand to imitate an unlink of an open file followed by a locked read:</p>
+<pre><code><span class="p">$</span> MOUNTSTATS=fake-mountstats ./events.sh /tmp/fake-mnt sh -c '...'
+<span class="o">
+event                  change
+inoderevalidates            4
+dentryrevalidates           2
+datainvalidates             2
+attrinvalidates             2
+vfsopen                     1
+vfsaccess                   2
+vfsflush                    1
+vfslock                     1
+vfsrelease                  1
+sillyrenames                1</span></code></pre>
+<p>On a real mount, drop the <code>MOUNTSTATS=</code> override and pass the mount point, for example <code>./events.sh /mnt/nfs3 rm /mnt/nfs3/doomed.txt</code>. Clean up with <code>sudo ./teardown.sh</code>.</p>
+</section>
+<section class="check" id="check">
+<h2>Check yourself</h2>
+<details><summary>Client B opened a file, then client A wrote it and closed it. B calls <code>read()</code> again on its open descriptor. What does B see?</summary><p>Possibly the old data. Close-to-open only promises fresh data to opens that happen after the writer's close. B's open came first, so B relies on its attribute cache: it sees the change only once the attribute timeout runs out (3 to 60 seconds for files) and a GETATTR shows a new change attribute, or when it reopens the file or takes a lock.</p></details>
+<details><summary>A file has not changed for ten minutes. Another machine changes it now. On a default mount, how long can a client that only calls <code>stat</code> keep reporting the old size?</summary><p>Up to 60 seconds. The adaptive timeout of an unchanged file has grown to <code>acregmax</code>, 60 s by default, so the next GETATTR can be up to a minute away.</p></details>
+<details><summary>Why can two writes in quick succession be invisible to an NFSv3 client, and what does NFSv4 use instead?</summary><p>NFSv3 detects change through mtime, ctime and size. Timestamps come from a coarse clock, so two writes within one tick share an mtime; if the client fetched attributes between them, the second write looks like no change. NFSv4 uses the change attribute, which must differ after every change (on Linux, the inode's <code>i_version</code> counter). Multigrain timestamps in Linux 6.13 also make ctime and mtime fine-grained when someone has looked at them.</p></details>
+<details><summary>A program on an NFS mount takes and releases a POSIX lock around every small read. Why is it slow, and why does the lock help correctness?</summary><p>Each lock and unlock is a round trip to the server, unlocking flushes dirty data, and after each lock the client marks its cached attributes and data invalid, so it may reread the whole file. That same invalidation is what makes the lock useful: whatever the previous lock holder wrote and flushed is visible after the lock is granted.</p></details>
+<details><summary>Client A holds a read delegation. Client B opens the file for writing. List the messages.</summary><p>B's OPEN gets <code>NFS4ERR_DELAY</code>. The server sends CB_RECALL to A, A acknowledges it, moves any locally handled opens and locks to the server, and sends DELEGRETURN. B retries the OPEN and succeeds. If A does nothing for a lease period, the server revokes the delegation.</p></details>
+<details><summary>A program writes 1 GiB to an NFS file, ignores the return value of <code>close()</code>, and reports success. The user's quota was exceeded. What happened?</summary><p><code>write()</code> succeeded because it only filled the client's page cache. The WRITE replies came back with <code>EDQUOT</code> during writeback, and the error was reported by <code>close()</code>, which the program ignored. The data is not on the server. Checking <code>fsync()</code> and <code>close()</code> would have caught it.</p></details>
+<details><summary>Why is a <code>soft</code> mount risky for data you write?</summary><p>A soft timeout during background writeback has no system call to report to. The pages are marked with an error and the data is dropped; a later <code>fsync</code> or <code>close</code> may report it, but a program that never calls them never learns. A hard mount just waits until the server is back and then completes the writes.</p></details>
+<details><summary>How does what a CephFS or Lustre client may cache differ from what an NFSv3 client caches?</summary><p>An NFSv3 client caches on its own authority and polls to find out about changes. A CephFS client caches only what its capabilities from the MDS allow, and a Lustre client only what its LDLM locks cover. When another client conflicts, the server calls the holder back and the holder flushes before giving up the cap or lock. Applications get POSIX-like consistency instead of close-to-open.</p></details>
+</section>
+<section class="further" id="further">
+<h2>Go deeper</h2>
+<ul>
+<li><a href="https://man7.org/linux/man-pages/man5/nfs.5.html">nfs(5)</a>: the sections "Data and metadata coherence" and "Using file locks with NFS" describe exactly what the Linux client promises.</li>
+<li><a href="https://www.rfc-editor.org/rfc/rfc8881#section-10">RFC 8881, section 10, Client-Side Caching</a>: delegations, recalls and the data caching rules of NFSv4.1.</li>
+<li><a href="https://www.rfc-editor.org/rfc/rfc9754">RFC 9754</a>: delegated timestamps and the other open and delegation extensions.</li>
+<li><a href="https://docs.kernel.org/filesystems/multigrain-ts.html">Multigrain timestamps</a>: the kernel documentation, including why NFS needed them.</li>
+<li><a href="https://docs.kernel.org/filesystems/caching/fscache.html">FS-Cache</a>: the kernel's documentation of the local disk cache for network filesystems.</li>
+<li><a href="https://docs.ceph.com/en/latest/cephfs/capabilities/">CephFS capabilities</a>: the cap letters and how the MDS grants and revokes them.</li>
+<li><a href="https://nfs.sourceforge.net/">Linux NFS FAQ</a>: old but still accurate on close-to-open and attribute caching.</li>
+</ul>
+</section>
+<nav class="pager-foot" aria-label="Next and previous lesson">
+<a class="prev" href="06-nfs.html"><small>Previous</small>NFS from v3 to 4.2</a>
+<a class="next" href="08-rdma.html"><small>Next</small>RDMA and NFS over RDMA</a>
+</nav>
+</main>
+</div>
+<script src="course.js"></script>
+</body>
+</html>

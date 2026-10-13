@@ -1,0 +1,256 @@
+<!doctype html><html><head><meta charset=utf8><meta name=viewport content="width=device-width,initial-scale=1,viewport-fit=cover"><style>:root{color-scheme:light;box-sizing:border-box;padding-top:env(safe-area-inset-top,0px);padding-bottom:env(safe-area-inset-bottom,0px)}html{scroll-padding-top:env(safe-area-inset-top,0px)}body{margin:0;padding:0;font:14px -apple-system,BlinkMacSystemFont,sans-serif;background:#fff;color:#000}img{max-width:100%}[hidden]:not([hidden=until-found i]){display:none!important}</style></head><body>
+<title>From open() to RDMA</title>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=IBM+Plex+Mono:wght@400;600&family=IBM+Plex+Sans+Condensed:wght@500;600;700&family=Source+Serif+4:ital,opsz,wght@0,8..60,400;0,8..60,600;1,8..60,400&display=swap">
+<link rel="stylesheet" href="course.css?v=7">
+<style>
+  .home { padding-block: 2.5rem 4rem; padding-inline: 1.5rem; display: grid; gap: 3.5rem; }
+  .home > * { min-width: 0; }
+  .hero { display: grid; gap: 1rem; max-width: 48rem; }
+  .hero h1 { font-size: clamp(2.3rem, 6vw, 3.6rem); letter-spacing: -0.015em; }
+  .hero h1 code { font-size: 0.9em; background: none; padding: 0; color: var(--l-kernel); }
+  .hero .lede { font-size: 1.22rem; }
+
+  /* ---- the stack map ---- */
+  .map-wrap { display: grid; gap: 0.9rem; }
+  .map-head { display: flex; flex-wrap: wrap; justify-content: space-between; align-items: baseline; gap: 0.5rem 2rem; }
+  .map-head h2 { font-size: var(--step-2); }
+  .map {
+    display: grid;
+    grid-template-columns: minmax(0, 1fr) minmax(0, 1fr) 2.75rem minmax(0, 1fr);
+    grid-template-areas:
+      "colA  colA  .    colC"
+      "app   app   .    srv1"
+      "sys   sys   .    srv2"
+      "vfs   vfs   .    srv3"
+      "cache cache .    srv4"
+      "subA  subB  .    ."
+      "fs    nfs   .    ."
+      "bt    rpc   .    ."
+      "blk   xprt  .    ."
+      "dev   nic   wire snic"
+      ".     scale scale scale";
+    gap: 6px 10px;
+    background: var(--panel);
+    border: 1px solid var(--rule);
+    border-radius: 4px;
+    padding: 1.1rem;
+  }
+  .col-title {
+    font-family: var(--display);
+    text-transform: uppercase;
+    letter-spacing: 0.09em;
+    font-size: 0.78rem;
+    font-weight: 700;
+    color: var(--ink-2);
+    padding: 0.1rem 0 0.35rem;
+  }
+  .sub-title { font-family: var(--display); font-size: 0.82rem; color: var(--ink-2); padding-top: 0.6rem; }
+  .lyr {
+    --c: var(--l-kernel);
+    display: grid;
+    grid-template-columns: minmax(0, 1fr) auto;
+    gap: 0.05rem 0.75rem;
+    padding: 0.5rem 0.7rem 0.55rem;
+    background: color-mix(in srgb, var(--c) 12%, var(--panel));
+    border: 1px solid color-mix(in srgb, var(--c) 55%, var(--rule));
+    border-radius: 2px;
+    color: var(--ink);
+    text-decoration: none;
+    min-width: 0;
+  }
+  a.lyr:hover { background: color-mix(in srgb, var(--c) 22%, var(--panel)); }
+  .lyr b { font-family: var(--display); font-weight: 600; font-size: 1rem; line-height: 1.25; }
+  .lyr small { grid-column: 1; color: var(--ink-2); font-size: 0.84rem; line-height: 1.35; }
+  .lyr .no { grid-row: 1 / span 2; grid-column: 2; align-self: center; font-family: var(--mono); font-weight: 600; font-size: 0.85rem; color: var(--c); font-variant-numeric: tabular-nums; }
+  .lyr.user   { --c: var(--l-user); }
+  .lyr.kernel { --c: var(--l-kernel); }
+  .lyr.fs     { --c: var(--l-fs); }
+  .lyr.block  { --c: var(--l-block); }
+  .lyr.net    { --c: var(--l-net); }
+  .lyr.ghost  { background: transparent; border-style: dashed; }
+  .boundary {
+    grid-area: sys;
+    display: flex; align-items: center; gap: 0.6rem;
+    font-family: var(--mono); font-size: 0.78rem; color: var(--ink-2);
+    padding: 0.2rem 0;
+  }
+  .boundary::before, .boundary::after { content: ""; flex: 1; border-top: 1.5px dashed var(--ink-2); opacity: 0.6; }
+  .wire {
+    grid-area: wire;
+    align-self: center;
+    border-top: 2px dashed var(--l-net);
+    position: relative;
+  }
+  .wire span {
+    position: absolute; left: 50%; top: -1.25rem; transform: translateX(-50%);
+    font-family: var(--mono); font-size: 0.7rem; color: var(--l-net); white-space: nowrap;
+  }
+  .a-colA { grid-area: colA; } .a-colC { grid-area: colC; }
+  .a-app { grid-area: app; } .a-vfs { grid-area: vfs; } .a-cache { grid-area: cache; }
+  .a-subA { grid-area: subA; } .a-subB { grid-area: subB; }
+  .a-fs { grid-area: fs; } .a-bt { grid-area: bt; } .a-blk { grid-area: blk; } .a-dev { grid-area: dev; }
+  .a-nfs { grid-area: nfs; } .a-rpc { grid-area: rpc; } .a-xprt { grid-area: xprt; } .a-nic { grid-area: nic; }
+  .a-srv1 { grid-area: srv1; } .a-srv2 { grid-area: srv2; } .a-srv3 { grid-area: srv3; } .a-srv4 { grid-area: srv4; } .a-snic { grid-area: snic; }
+  .a-scale { grid-area: scale; margin-top: 0.6rem; }
+  .map-note { font-size: 0.92rem; color: var(--ink-2); max-width: 46rem; }
+
+  @media (max-width: 860px) {
+    .map {
+      grid-template-columns: minmax(0, 1fr);
+      grid-template-areas:
+        "colA" "app" "sys" "vfs" "cache"
+        "subA" "fs" "bt" "blk" "dev"
+        "subB" "nfs" "rpc" "xprt" "nic" "wire"
+        "colC" "snic" "srv1" "srv2" "srv3" "srv4" "scale";
+    }
+    .wire { height: 2.2rem; border-top: 0; border-left: 2px dashed var(--l-net); justify-self: center; width: 0; }
+    .wire span { left: 0.6rem; top: 50%; transform: translateY(-50%); }
+    .a-colC { padding-top: 0.2rem; }
+  }
+
+  /* ---- route ---- */
+  .route { display: grid; gap: 1rem; }
+  .route ol { list-style: none; padding: 0; display: grid; grid-template-columns: repeat(auto-fill, minmax(min(100%, 21rem), 1fr)); gap: 0.75rem; }
+  .route li { margin: 0; }
+  .route a {
+    --c: var(--l-kernel);
+    display: grid; gap: 0.35rem; height: 100%;
+    padding: 0.9rem 1rem 1rem;
+    background: var(--panel);
+    border: 1px solid var(--rule);
+    border-top: 3px solid var(--c);
+    border-radius: 2px;
+    color: var(--ink); text-decoration: none;
+  }
+  .route a:hover { border-color: var(--c); }
+  .route .meta { display: flex; align-items: baseline; justify-content: space-between; gap: 0.5rem; font-family: var(--display); font-size: 0.78rem; text-transform: uppercase; letter-spacing: 0.08em; color: var(--c); font-weight: 700; }
+  .route .meta span:last-child { font-family: var(--mono); text-transform: none; letter-spacing: 0; font-weight: 400; color: var(--ink-2); }
+  .route h3 { font-size: 1.2rem; }
+  .route p { font-size: 0.95rem; color: var(--ink-2); line-height: 1.5; }
+  .route .user { --c: var(--l-user); } .route .kernel { --c: var(--l-kernel); } .route .fs { --c: var(--l-fs); }
+  .route .block { --c: var(--l-block); } .route .net { --c: var(--l-net); }
+
+  .two { display: grid; grid-template-columns: minmax(0, 1fr) minmax(0, 1fr); gap: 2.5rem; }
+  @media (max-width: 860px) { .two { grid-template-columns: minmax(0, 1fr); } }
+  .two > section { display: grid; gap: 0.9rem; align-content: start; min-width: 0; }
+  .reading dt { font-family: var(--display); font-weight: 600; margin-top: 0.7rem; }
+  .reading dd { margin: 0.15rem 0 0; color: var(--ink-2); font-size: 0.95rem; }
+  .reading dd + dd { margin-top: 0.3rem; }
+  .needs { display: grid; gap: 0.5rem; }
+  .needs div { display: grid; grid-template-columns: 6.5rem minmax(0, 1fr); gap: 0.75rem; font-size: 0.95rem; align-items: baseline; }
+  .needs .layer-chip { justify-self: start; }
+  footer.foot { border-top: 1px solid var(--rule); padding-top: 1.25rem; color: var(--ink-2); font-size: 0.9rem; }
+</style>
+<header class="topbar">
+<a class="brand" href="index.html">From open() to RDMA <span>· a storage course</span></a>
+<nav class="pager" aria-label="Course">
+<a href="01-syscalls.html">Start with lesson 01 →</a>
+<a href="glossary.html">Glossary</a>
+</nav>
+</header>
+<main class="home">
+<header class="hero">
+<p class="eyebrow" style="color: var(--l-net)">A storage course in nine lessons</p>
+<h1>From <code>open()</code> to RDMA</h1>
+<p class="lede">How a file really works: from the C call that opens it, down through the
+kernel to the blocks on a disk, then out across the network to NFS servers, RDMA
+fabrics and clusters of machines. Every lesson ends with a lab you run yourself.</p>
+</header>
+<section class="map-wrap" aria-labelledby="map-h">
+<div class="map-head">
+<h2 id="map-h">The stack</h2>
+<div class="rail-legend" style="margin-top:0">
+<span style="--c: var(--l-user)">user space</span>
+<span style="--c: var(--l-kernel)">kernel</span>
+<span style="--c: var(--l-fs)">filesystem</span>
+<span style="--c: var(--l-block)">block &amp; device</span>
+<span style="--c: var(--l-net)">network</span>
+</div>
+</div>
+<div class="map">
+<div class="col-title a-colA">Your machine</div>
+<div class="col-title a-colC">The server</div>
+<a class="lyr user a-app" href="01-syscalls.html"><b>Your program</b><small><code>open()</code>, <code>read()</code>, <code>write()</code>, <code>fsync()</code> on a file descriptor</small><span class="no">01</span></a>
+<div class="boundary">syscall: user mode ↑ kernel mode ↓</div>
+<a class="lyr kernel a-vfs" href="05-vfs-cache.html"><b>VFS</b><small>one API over every filesystem; picks ext4 or NFS by mount point</small><span class="no">05</span></a>
+<a class="lyr kernel a-cache" href="05-vfs-cache.html"><b>Page cache · dcache · inode cache</b><small>file data and names kept in RAM; dirty pages written back later</small><span class="no">05</span></a>
+<div class="sub-title a-subA">…if the file is on a local disk</div>
+<div class="sub-title a-subB">…if the file is on an NFS mount</div>
+<a class="lyr fs a-fs" href="03-ondisk.html"><b>ext4 / XFS</b><small>superblock, inodes, directories, extents, journal</small><span class="no">03</span></a>
+<a class="lyr fs a-bt" href="04-btrees.html"><b>B-trees inside the FS</b><small>extent trees, hashed directories, free-space trees</small><span class="no">04</span></a>
+<a class="lyr block a-blk" href="02-blocks.html"><b>Block layer</b><small>bios, blk-mq queues, schedulers, FLUSH/FUA</small><span class="no">02</span></a>
+<a class="lyr block a-dev" href="02-blocks.html"><b>NVMe / SSD / HDD</b><small>sectors and LBAs, submission and completion queues</small><span class="no">02</span></a>
+<a class="lyr net a-nfs" href="07-nfs-caching.html"><b>NFS client</b><small>attribute cache, close-to-open, delegations</small><span class="no">07</span></a>
+<a class="lyr net a-rpc" href="06-nfs.html"><b>NFSv4.2 over SUNRPC</b><small>COMPOUNDs, sessions, state, pNFS layouts</small><span class="no">06</span></a>
+<a class="lyr net a-xprt" href="08-rdma.html"><b>TCP or RPC-over-RDMA</b><small>sockets and copies, or queue pairs and chunks</small><span class="no">08</span></a>
+<a class="lyr net a-nic" href="08-rdma.html"><b>NIC</b><small>Ethernet, RoCE or InfiniBand</small><span class="no">08</span></a>
+<div class="wire" aria-hidden="true"><span>wire</span></div>
+<a class="lyr net a-snic" href="08-rdma.html"><b>Server NIC</b><small>RDMA reads and writes into client memory</small><span class="no">08</span></a>
+<a class="lyr net a-srv1" href="06-nfs.html"><b>nfsd</b><small>the kernel NFS server: decodes the call, holds client state</small><span class="no">06</span></a>
+<a class="lyr kernel ghost a-srv2" href="05-vfs-cache.html"><b>Server VFS + page cache</b><small>the same kernel layers, on the server</small><span class="no">05</span></a>
+<a class="lyr fs ghost a-srv3" href="03-ondisk.html"><b>Server filesystem</b><small>an ordinary ext4 or XFS</small><span class="no">03</span></a>
+<a class="lyr block ghost a-srv4" href="02-blocks.html"><b>Server disks</b><small>where the bytes finally live</small><span class="no">02</span></a>
+<a class="lyr net a-scale" href="09-distributed.html"><b>Many servers, one namespace</b><small>pNFS, Lustre, Ceph, GPFS, HDFS: metadata servers, striping, placement, replication, locks</small><span class="no">09</span></a>
+</div>
+<p class="map-note">Read it top to bottom. A <code>read()</code> starts in your program, crosses into
+the kernel, and ends at a disk: your own, or one on a server across the wire. The layers
+below the VFS are interchangeable, which is why an NFS mount behaves like a local directory.
+Each box links to the lesson that opens it up.</p>
+</section>
+<section class="route" aria-labelledby="route-h">
+<h2 id="route-h">The route</h2>
+<p class="muted" style="max-width:46rem">Top of the stack first, then the bottom, then the kernel that joins them, then out
+across the network. Lessons 06–09 lean on everything before them, so take them in order.</p>
+<ol>
+<li><a class="user" href="01-syscalls.html"><div class="meta"><span>01 · user space</span><span>lab 01-fds</span></div><h3>Syscalls and file descriptors</h3><p>What a syscall is, the file API in C, and the three tables behind every fd: descriptor table, open file description, inode.</p></a></li>
+<li><a class="block" href="02-blocks.html"><div class="meta"><span>02 · block</span><span>lab 02-blocks</span></div><h3>Block devices and addressing</h3><p>Sectors, LBAs and blocks; HDDs, SSDs and NVMe queues; the block layer; write caches, FLUSH and FUA.</p></a></li>
+<li><a class="fs" href="03-ondisk.html"><div class="meta"><span>03 · filesystem</span><span>lab 03-ondisk</span></div><h3>Inside an ext4 image</h3><p>Superblock, block groups, inodes, extents, directories and the journal, read byte by byte with a walker you compile.</p></a></li>
+<li><a class="fs" href="04-btrees.html"><div class="meta"><span>04 · filesystem</span><span>lab 04-btrees</span></div><h3>B-trees, really</h3><p>Why disks want wide, shallow trees, and where they live: ext4 extents and htree, XFS, btrfs, databases. With a live B+tree.</p></a></li>
+<li><a class="kernel" href="05-vfs-cache.html"><div class="meta"><span>05 · kernel</span><span>lab 05-cache</span></div><h3>The VFS and the caches</h3><p>How <code>read()</code> dispatches, the dcache and page cache, writeback, <code>fsync</code>, <code>O_DIRECT</code>, and what "durable" means.</p></a></li>
+<li><a class="net" href="06-nfs.html"><div class="meta"><span>06 · network</span><span>lab 06-nfs (A)</span></div><h3>NFS from v3 to 4.2</h3><p>RPC and file handles, stateless v3, stateful v4, sessions and pNFS in 4.1, and every 4.2 feature mapped to the syscall that uses it.</p></a></li>
+<li><a class="net" href="07-nfs-caching.html"><div class="meta"><span>07 · network</span><span>lab 06-nfs (B)</span></div><h3>Caching across the network</h3><p>Attribute timeouts, close-to-open, unstable writes and COMMIT, delegations and recalls, FS-Cache, and how other systems keep caches coherent.</p></a></li>
+<li><a class="net" href="08-rdma.html"><div class="meta"><span>08 · network</span><span>lab 07-rdma</span></div><h3>RDMA and NFS over RDMA</h3><p>Verbs, queue pairs and memory registration; InfiniBand, RoCE and iWARP; how RPC-over-RDMA moves NFS data with read and write chunks.</p></a></li>
+<li><a class="net" href="09-distributed.html"><div class="meta"><span>09 · network</span><span>lab 08-distributed</span></div><h3>Distributed filesystems</h3><p>Metadata servers and striping, CRUSH and consistent hashing, replication and erasure coding, locks and leases, failure and recovery.</p></a></li>
+</ol>
+</section>
+<div class="two">
+<section aria-labelledby="labs-h">
+<h2 id="labs-h">Running the labs</h2>
+<p>The labs live in <code>~/storage-course/labs/</code> in your WSL home, one folder per lab,
+each with a <code>README.md</code>. Most need nothing but the compiler and tools you already
+have, and run without root: the filesystem labs build ext4 images inside ordinary files.</p>
+<div class="needs">
+<div><span class="layer-chip user">no root</span><span>01 descriptors, 02 superblock, 03 ext4 walker, 04 extent and directory trees, 05 page cache, 08 placement.</span></div>
+<div><span class="layer-chip net">sudo</span><span>06 NFS: installs an NFS server and mounts it over loopback inside WSL.</span></div>
+<div><span class="layer-chip block">a Linux VM</span><span>07 RDMA: the WSL kernel has no RDMA support, so soft-RoCE runs in an Ubuntu VM.</span></div>
+</div>
+<p>Optional tools that make the labs richer:</p>
+<pre><code><span class="p">$</span> sudo apt install strace tcpdump tshark xfsprogs fio \
+      nfs-kernel-server nfs-common</code></pre>
+</section>
+<section aria-labelledby="read-h" class="reading">
+<h2 id="read-h">Read alongside</h2>
+<dl>
+<dt>Foundations</dt>
+<dd><a href="https://pages.cs.wisc.edu/~remzi/OSTEP/">Operating Systems: Three Easy Pieces</a>, free online. The persistence chapters: files and directories, file system implementation, FFS, journaling, flash SSDs, NFS and AFS.</dd>
+<dd><a href="https://docs.kernel.org/filesystems/vfs.html">Overview of the Linux VFS</a>, the kernel's own description of the objects in lesson 05.</dd>
+<dt>NFS</dt>
+<dd><a href="https://www.rfc-editor.org/rfc/rfc7862">RFC 7862</a> (NFSv4.2), <a href="https://www.rfc-editor.org/rfc/rfc8881">RFC 8881</a> (NFSv4.1), <a href="https://www.rfc-editor.org/rfc/rfc7530">RFC 7530</a> (NFSv4.0), <a href="https://www.rfc-editor.org/rfc/rfc1813">RFC 1813</a> (NFSv3).</dd>
+<dd><a href="https://man7.org/linux/man-pages/man5/nfs.5.html">nfs(5)</a> and <a href="https://man7.org/linux/man-pages/man5/exports.5.html">exports(5)</a>: every mount and export option.</dd>
+<dt>RDMA</dt>
+<dd><a href="https://www.rfc-editor.org/rfc/rfc8166">RFC 8166</a> (RPC-over-RDMA v1) and <a href="https://www.rfc-editor.org/rfc/rfc8267">RFC 8267</a> (NFS on RPC-over-RDMA).</dd>
+<dd><a href="https://www.rdmamojo.com/">RDMAmojo</a>, a verb-by-verb guide, and <a href="https://github.com/linux-rdma/rdma-core">rdma-core</a> for the libraries and examples.</dd>
+<dt>Distributed</dt>
+<dd><a href="https://docs.ceph.com/en/latest/architecture/">Ceph architecture</a>, the <a href="https://doc.lustre.org/lustre_manual.xhtml">Lustre manual</a>, and <a href="https://dataintensive.net/">Designing Data-Intensive Applications</a> for replication, consensus and consistency in general.</dd>
+</dl>
+</section>
+</div>
+<footer class="foot">
+Nine lessons, eight labs, one <a href="glossary.html">glossary</a>. Start with
+<a href="01-syscalls.html">lesson 01</a>.
+</footer>
+</main>
+
+</body></html>

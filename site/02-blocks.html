@@ -1,0 +1,458 @@
+<!doctype html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover">
+<title>Block Devices and Addressing</title>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=IBM+Plex+Mono:wght@400;600&family=IBM+Plex+Sans+Condensed:wght@500;600;700&family=Source+Serif+4:ital,opsz,wght@0,8..60,400;0,8..60,600;1,8..60,400&display=swap">
+<link rel="stylesheet" href="course.css?v=7">
+</head>
+<body data-layer="block">
+<header class="topbar">
+<a class="brand" href="index.html">From open() to RDMA <span>· a storage course</span></a>
+<nav class="pager" aria-label="Lesson pager">
+<a href="01-syscalls.html" rel="prev">← Prev</a>
+<details class="route"><summary>Lesson 2 of 9</summary></details>
+<a href="03-ondisk.html" rel="next">Next →</a>
+<details class="sections"><summary>Sections</summary></details>
+</nav>
+</header>
+<div class="layout">
+<nav class="rail" aria-label="Lessons">
+<div class="rail-title">The route</div>
+<ol>
+<li class="user"><a href="01-syscalls.html"><span class="n">01</span><span>Syscalls &amp; file descriptors</span></a></li>
+<li class="block"><a href="02-blocks.html" aria-current="page"><span class="n">02</span><span>Block devices &amp; addressing</span></a></li>
+<li class="fs"><a href="03-ondisk.html"><span class="n">03</span><span>Inside an ext4 image</span></a></li>
+<li class="fs"><a href="04-btrees.html"><span class="n">04</span><span>B-trees, really</span></a></li>
+<li class="kernel"><a href="05-vfs-cache.html"><span class="n">05</span><span>The VFS and the caches</span></a></li>
+<li class="net"><a href="06-nfs.html"><span class="n">06</span><span>NFS from v3 to 4.2</span></a></li>
+<li class="net"><a href="07-nfs-caching.html"><span class="n">07</span><span>Caching across the network</span></a></li>
+<li class="net"><a href="08-rdma.html"><span class="n">08</span><span>RDMA and NFS over RDMA</span></a></li>
+<li class="net"><a href="09-distributed.html"><span class="n">09</span><span>Distributed filesystems</span></a></li>
+<li class="extra"><a href="glossary.html"><span class="n">··</span><span>Glossary</span></a></li>
+</ol>
+<div class="rail-legend">
+<span style="--c: var(--l-user)">user space</span>
+<span style="--c: var(--l-kernel)">kernel</span>
+<span style="--c: var(--l-fs)">filesystem</span>
+<span style="--c: var(--l-block)">block</span>
+<span style="--c: var(--l-net)">network</span>
+</div>
+</nav>
+<main class="lesson">
+<header class="lesson-head">
+<p class="eyebrow">Lesson 2 · The block layer and the device</p>
+<h1>Block devices and addressing</h1>
+<p class="lede">At the bottom of every storage stack sits a device that knows nothing about files. It stores numbered sectors and moves them by DMA. This lesson covers what that device is, how it is addressed, how Linux queues requests to it, and what "written" means once a request reaches it.</p>
+<div class="outcomes">
+<b>After this lesson you can</b>
+<ul>
+<li>tell a block device from a character device and read its properties from <code>/sys/block</code>;</li>
+<li>explain why spinning disks, SATA SSDs and NVMe drives perform so differently;</li>
+<li>convert a byte offset to a filesystem block and to a sector address (LBA), and explain alignment;</li>
+<li>trace a request from a filesystem through <code>bio</code>, blk-mq and the driver to the device and back;</li>
+<li>describe NVMe submission and completion queues, the model that RDMA reuses in lesson 08;</li>
+<li>explain the device's volatile write cache, FLUSH and FUA, and torn writes.</li>
+</ul>
+</div>
+<nav class="toc" aria-label="Lesson contents">
+<b>In this lesson</b>
+<ol>
+<li><a href="#what">What a block device is</a></li>
+<li><a href="#hardware">What is behind the abstraction</a></li>
+<li><a href="#addressing">Addressing: bytes, blocks, sectors</a></li>
+<li><a href="#block-layer">The Linux block layer</a></li>
+<li><a href="#durability">When is a write durable?</a></li>
+<li><a href="#users">Who uses block devices directly</a></li>
+<li><a href="#lab">Lab 02: A disk in a file, and the superblock at byte 1024</a></li>
+<li><a href="#check">Check yourself</a></li>
+<li><a href="#further">Go deeper</a></li>
+</ol>
+</nav>
+</header>
+<section id="what">
+<h2>What a block device is</h2>
+<p>Linux has two kinds of device file. A <strong>character device</strong> is a stream of bytes: a terminal, <code>/dev/null</code>, a serial port. You read whatever comes next and usually cannot seek. A <strong>block device</strong> is a fixed-size array of <strong>sectors</strong> that you can read and write in any order: a hard disk, an SSD, a USB stick, a partition of one of those, or a virtual disk.</p>
+<p>From above, a block device offers one abstraction. You can read sector range N..M into memory, or write memory to sector range N..M. There are no files, names or permissions down here. Everything else in this course is built on that.</p>
+<p><code>ls -l</code> shows the difference in the first character, and shows two numbers where a file would show its size:</p>
+<pre><code><span class="p">$</span> ls -l /dev/null /dev/sda /dev/sdd
+<span class="o">crw-rw-rw- 1 root root 1,  3 Oct  8 22:18 /dev/null
+brw-rw---- 1 root disk 8,  0 Oct  8 22:18 /dev/sda
+brw-rw---- 1 root disk 8, 48 Oct  8 22:18 /dev/sdd</span></code></pre>
+<p><code>c</code> marks a character device and <code>b</code> a block device. The pair <code>8, 48</code> is the <strong>major:minor</strong> number. The major number picks the driver (8 is the SCSI disk driver, <code>sd</code>), and the minor number picks the device within it. The <code>sd</code> driver reserves 16 minors per disk, one for the whole disk and fifteen for partitions, which is why <code>sda</code> is 8:0, <code>sdb</code> 8:16 and <code>sdd</code> 8:48. The file in <code>/dev</code> is only a name; the kernel finds the device by these numbers.</p>
+<h3>Names you will meet</h3>
+<div class="table-wrap"><table>
+<thead><tr><th>Name</th><th>What it is</th></tr></thead>
+<tbody>
+<tr><td><code>/dev/sda</code>, <code>/dev/sda1</code></td><td>A disk driven through the SCSI layer (SATA, SAS, USB, Hyper-V and most virtual disks), and its first partition.</td></tr>
+<tr><td><code>/dev/nvme0n1</code>, <code>/dev/nvme0n1p1</code></td><td>NVMe controller 0, namespace 1, and its first partition. A namespace is a slice of an NVMe drive that looks like a whole disk.</td></tr>
+<tr><td><code>/dev/loop0</code></td><td>A loop device: a regular file presented as a block device. Lab 02 shows the optional root-only way to attach one.</td></tr>
+<tr><td><code>/dev/dm-0</code>, <code>/dev/md0</code></td><td>Stacked devices built from other block devices: device-mapper (LVM, encryption, thin provisioning) and software RAID.</td></tr>
+<tr><td><code>/dev/nbd0</code>, iSCSI and NVMe-oF disks</td><td>Block devices whose sectors live on another machine. NVMe over Fabrics on RDMA appears in <a href="08-rdma.html">lesson 08</a>.</td></tr>
+</tbody>
+</table></div>
+<h3>What the device tells the kernel</h3>
+<p><code>lsblk</code> lists block devices. Their properties live under <code>/sys/block/&lt;dev&gt;/queue/</code>. These are the files to know:</p>
+<div class="table-wrap"><table>
+<thead><tr><th>File</th><th>Meaning</th></tr></thead>
+<tbody>
+<tr><td><code>logical_block_size</code></td><td>The sector size used for addressing: the smallest unit the device accepts. 512 or 4096.</td></tr>
+<tr><td><code>physical_block_size</code></td><td>The unit the media really writes. Writes smaller than this, or not aligned to it, cost extra.</td></tr>
+<tr><td><code>rotational</code></td><td>1 if the device says it is a spinning disk. The kernel tunes some behaviour on this.</td></tr>
+<tr><td><code>max_sectors_kb</code></td><td>The largest single request the kernel will send, in KiB.</td></tr>
+<tr><td><code>scheduler</code></td><td>The available I/O schedulers; the active one is in brackets.</td></tr>
+<tr><td><code>write_cache</code></td><td><code>write back</code> if the device has a volatile cache that needs flushing, <code>write through</code> if not.</td></tr>
+</tbody>
+</table></div>
+<p>On this course's WSL machine, the root filesystem lives on a Hyper-V virtual disk, a <code>.vhdx</code> file on the Windows side:</p>
+<pre><code><span class="p">$</span> ./explore-disk.sh     <span class="c"># from lab 02</span>
+<span class="o">dev        lbs   pbs  rot   max_kb hw_queues write_cache  scheduler
+sdd        512  4096    1     4096         4 write_back   [none] mq-deadline kyber</span></code></pre>
+<p>Read that line as: 512-byte logical sectors on 4 KiB physical blocks, claims to be rotational, 4 hardware queues, a volatile write-back cache, and no I/O scheduler. The rotational flag is probably false in reality, since the <code>.vhdx</code> likely sits on an SSD. The kernel only knows what the device reports.</p>
+</section>
+<section id="hardware">
+<h2>What is behind the abstraction</h2>
+<p>The same two operations, read sectors and write sectors, hide hardware that differs in speed by a factor of a thousand. Every design choice above this layer, from filesystem allocators to NFS caching, is shaped by these numbers.</p>
+<h3>Spinning disks</h3>
+<p>A hard disk drive (HDD) stores data magnetically on spinning <strong>platters</strong>. Each platter surface has a <strong>head</strong> on an arm; the ring of data under a head at one arm position is a <strong>track</strong>; tracks are divided into <strong>sectors</strong>; and the set of tracks at the same arm position across all surfaces is a <strong>cylinder</strong>.</p>
+<p>Early PCs addressed sectors by that geometry, as a (cylinder, head, sector) triple, called <strong>CHS</strong>. The old BIOS interface allowed 1024 cylinders, 255 heads and 63 sectors per track, which caps a disk at about 8.4 GB. Drives also stopped having fixed geometry: outer tracks are longer and hold more sectors than inner ones. So CHS was replaced by <strong>Logical Block Addressing</strong> (LBA): sectors are simply numbered 0, 1, 2, … and the drive maps each number to a physical location itself. The conversion from the old scheme, for reference, is <code>LBA = (C × heads + H) × sectors_per_track + (S − 1)</code>. Every device in this lesson, including SSDs and NVMe drives, is addressed by LBA.</p>
+<p>Reading a random sector costs three things:</p>
+<ul>
+<li><strong>Seek</strong>: moving the arm to the right track, typically several milliseconds.</li>
+<li><strong>Rotational latency</strong>: waiting for the sector to come round. At 7200 rpm one revolution takes 60/7200 s = 8.33 ms, so the average wait is half that, 4.17 ms.</li>
+<li><strong>Transfer</strong>: reading the bits as they pass, very fast once in position.</li>
+</ul>
+<p>So a random 4 KiB read costs around 10 ms, and one disk manages on the order of 100 random reads per second, under 1 MB/s. Read sequentially, the same disk streams around 200 MB/s. That gap of more than a hundred times is why filesystems work so hard to keep a file's blocks next to each other (<a href="03-ondisk.html">lesson 03</a>), and why I/O schedulers were invented to sort requests by position.</p>
+<h3>Solid-state drives</h3>
+<p>An SSD stores data in NAND flash, which has no moving parts but two awkward rules:</p>
+<ul>
+<li>You read and program (write) flash in <strong>pages</strong>, typically 4 to 16 KiB.</li>
+<li>You cannot overwrite a page. You must first erase it, and you can only erase a whole <strong>erase block</strong> of hundreds of pages, megabytes in all. Each erase also wears the cells, which survive a limited number of program/erase cycles.</li>
+</ul>
+<p>To hide this, every SSD runs firmware called the <strong>Flash Translation Layer</strong> (FTL). The FTL keeps a map from each LBA to the flash page currently holding it. When the host writes LBA 1000, the FTL writes the new data to a fresh, already-erased page, updates the map, and marks the old page stale. Nothing is overwritten. Internally, then, an SSD is a log-structured store with a giant lookup table.</p>
+<p>Stale pages pile up, so the FTL runs <strong>garbage collection</strong>: it picks an erase block with many stale pages, copies the still-valid pages elsewhere, and erases the block. Those copies are writes the host never asked for. The ratio of flash writes to host writes is called <strong>write amplification</strong>, and it is why SSDs slow down and wear faster when nearly full or under heavy random writes. Drives keep spare capacity, called over-provisioning, to give garbage collection room to work.</p>
+<p>The FTL cannot know when a filesystem deletes a file, because deleting only changes the filesystem's own bitmaps. The <strong>discard</strong> command, called TRIM on SATA, UNMAP on SCSI and Deallocate on NVMe, tells the drive that a range of LBAs no longer holds useful data, so garbage collection can skip copying it. Linux sends it either continuously (the <code>discard</code> mount option) or in batches (<code>fstrim</code>, usually from a weekly timer).</p>
+<h3>NVMe: queues all the way down</h3>
+<p>SATA was designed for spinning disks. Its host interface, AHCI, has a single command queue holding up to 32 commands, shared by every CPU. NVMe was designed for flash on the PCIe bus, and its central idea is many independent queues in host memory.</p>
+<p>An NVMe <strong>queue pair</strong> is a <strong>submission queue</strong> (SQ) and a <strong>completion queue</strong> (CQ). Both are ring buffers in ordinary RAM. The driver puts 64-byte commands into the SQ; the controller puts 16-byte completion entries into the CQ. The specification allows up to 65,535 I/O queues of up to 65,536 entries each, and Linux typically gives every CPU core its own queue pair, so cores submit I/O without sharing a lock. The only thing the CPU writes to the device directly is a <strong>doorbell</strong>: a register on the device, mapped into memory, that the driver writes to say "the tail of my queue has moved".</p>
+<figure class="diagram">
+<svg viewBox="0 0 700 430" width="700" role="img" aria-label="NVMe queue pair: the host's submission and completion rings in RAM, the controller's doorbell registers, and seven numbered steps from writing a command to consuming its completion.">
+<defs><marker id="ah-02-1" viewBox="0 0 10 10" refX="9" refY="5" markerWidth="7" markerHeight="7" orient="auto-start-reverse"><path class="ah" d="M0,0 L10,5 L0,10 z"/></marker></defs>
+<rect class="box" x="10" y="10" width="370" height="295" rx="4"/>
+<text class="ts" x="24" y="30">HOST: RAM + CPU</text>
+<text class="ts" x="30" y="52">submission queue (SQ) · 64-byte entries</text>
+<rect class="box" x="30" y="60" width="40" height="34"/>
+<rect class="box" x="70" y="60" width="40" height="34"/>
+<rect class="k-kernel" x="110" y="60" width="40" height="34"/>
+<rect class="k-kernel" x="150" y="60" width="40" height="34"/>
+<rect class="k-kernel" x="190" y="60" width="40" height="34"/>
+<rect class="box" x="230" y="60" width="40" height="34"/>
+<rect class="box" x="270" y="60" width="40" height="34"/>
+<rect class="box" x="310" y="60" width="40" height="34"/>
+<text class="ts" x="130" y="110" text-anchor="middle">head</text>
+<text class="ts" x="250" y="110" text-anchor="middle">tail</text>
+<rect class="k-fs" x="240" y="124" width="120" height="36" rx="3"/>
+<text class="t" x="300" y="147" text-anchor="middle">data page</text>
+<text class="ts" x="30" y="182">completion queue (CQ) · 16-byte entries</text>
+<rect class="k-block" x="30" y="190" width="40" height="34"/>
+<rect class="k-block" x="70" y="190" width="40" height="34"/>
+<rect class="box" x="110" y="190" width="40" height="34"/>
+<rect class="box" x="150" y="190" width="40" height="34"/>
+<rect class="box" x="190" y="190" width="40" height="34"/>
+<rect class="box" x="230" y="190" width="40" height="34"/>
+<rect class="box" x="270" y="190" width="40" height="34"/>
+<rect class="box" x="310" y="190" width="40" height="34"/>
+<text class="ts" x="50" y="240" text-anchor="middle">head</text>
+<rect class="k-kernel" x="30" y="250" width="150" height="40" rx="3"/>
+<text class="t" x="105" y="275" text-anchor="middle">CPU: nvme driver</text>
+<rect class="k-block" x="470" y="10" width="220" height="295" rx="4"/>
+<text class="ts" x="484" y="30">NVMe CONTROLLER (PCIe)</text>
+<rect class="box" x="490" y="48" width="180" height="82" rx="3"/>
+<text class="t" x="502" y="72">command engine</text>
+<text class="ts" x="502" y="92">executes commands;</text>
+<text class="ts" x="502" y="108">flash sits behind it</text>
+<rect class="box" x="490" y="230" width="180" height="56" rx="3"/>
+<text class="t" x="502" y="253">doorbell registers</text>
+<text class="ts" x="502" y="273">SQ tail · CQ head</text>
+<line class="ln" x1="100" y1="250" x2="236" y2="96" marker-end="url(#ah-02-1)"/>
+<text class="t" x="138" y="180">1</text>
+<line class="ln" x1="180" y1="260" x2="488" y2="260" marker-end="url(#ah-02-1)"/>
+<text class="t" x="320" y="253">2, 7</text>
+<line class="ln" x1="488" y1="68" x2="353" y2="76" marker-end="url(#ah-02-1)"/>
+<text class="t" x="420" y="64">3</text>
+<line class="ln" x1="488" y1="92" x2="362" y2="140" marker-end="url(#ah-02-1)"/>
+<text class="t" x="424" y="106">4</text>
+<line class="ln" x1="488" y1="116" x2="353" y2="205" marker-end="url(#ah-02-1)"/>
+<text class="t" x="430" y="168">5</text>
+<line class="ln" x1="488" y1="282" x2="182" y2="282" marker-end="url(#ah-02-1)"/>
+<text class="t" x="320" y="300">6</text>
+<text class="ts" x="20" y="332">1  driver writes a 64-byte command (opcode, LBA, length, buffer address) into the SQ slot at tail</text>
+<text class="ts" x="20" y="347">2  driver writes the new tail index to the SQ doorbell: one memory-mapped register write</text>
+<text class="ts" x="20" y="362">3  controller fetches the command from host RAM by DMA</text>
+<text class="ts" x="20" y="377">4  controller moves the data by DMA, straight into (read) or out of (write) the page</text>
+<text class="ts" x="20" y="392">5  controller writes a 16-byte completion entry into the CQ</text>
+<text class="ts" x="20" y="407">6  controller raises an MSI-X interrupt, or the driver polls the CQ</text>
+<text class="ts" x="20" y="422">7  driver consumes the completion and writes the new head index to the CQ doorbell</text>
+</svg>
+<figcaption>One NVMe queue pair. The CPU never copies the data: it writes a description of the work into memory and rings a doorbell, and the device does the transfer itself by DMA. Shaded SQ slots are commands waiting for the device; shaded CQ slots are completions waiting for the driver.</figcaption>
+</figure>
+<aside class="key"><span class="tag">Key idea: remember this picture</span><p>Work requests in a ring in host memory, a doorbell write to tell the hardware, DMA straight to and from application buffers, and a completion queue the host polls or gets interrupted about. This is exactly how an RDMA network card works. In <a href="08-rdma.html">lesson 08</a> the queue pair becomes a send queue and a receive queue, the completion queue keeps its name, and the device on the other end of the DMA is a network card that can reach another machine's memory.</p></aside>
+<h3>The numbers that drive every design</h3>
+<p>These are rough orders of magnitude for small (around 4 KiB) operations. Real figures vary by a factor of two or more with hardware, load and configuration; the ratios are what matter. The last column scales time so that one nanosecond becomes one second.</p>
+<div class="table-wrap"><table>
+<thead><tr><th>Operation</th><th>Approximate latency</th><th>If 1 ns were 1 s</th></tr></thead>
+<tbody>
+<tr><td>CPU L1 cache hit</td><td>~1 ns</td><td>1 second</td></tr>
+<tr><td>DRAM access</td><td>~100 ns</td><td>under 2 minutes</td></tr>
+<tr><td>4 KiB <code>read()</code> served from the page cache</td><td>~1 µs</td><td>about 17 minutes</td></tr>
+<tr><td>RDMA one-way small message, same data centre</td><td>~1–3 µs</td><td>under an hour</td></tr>
+<tr><td>NVMe SSD random read</td><td>~10–100 µs</td><td>3 to 28 hours</td></tr>
+<tr><td>TCP round trip inside a data centre</td><td>~10–100 µs and up</td><td>3 to 28 hours</td></tr>
+<tr><td>SATA SSD random read</td><td>~100 µs</td><td>about a day</td></tr>
+<tr><td>HDD random read (seek + rotation)</td><td>~5–10 ms</td><td>2 to 4 months</td></tr>
+</tbody>
+</table></div>
+<p>Two lessons follow from this table. First, a page-cache hit is so much cheaper than any device that caching dominates storage performance (<a href="05-vfs-cache.html">lesson 05</a>). Second, once storage got as fast as NVMe, the network round trip and the software around it became the bottleneck for remote storage, which is the reason RDMA matters (<a href="08-rdma.html">lesson 08</a>).</p>
+</section>
+<section id="addressing">
+<h2>Addressing: bytes, blocks, sectors</h2>
+<p>Three units meet at this layer, and they are easy to mix up:</p>
+<ul>
+<li>The <strong>byte offset</strong> is what programs use: "byte 1,000,000 of the disk".</li>
+<li>The <strong>filesystem block</strong> is the unit a filesystem allocates and tracks, almost always 4096 bytes on Linux. Block <em>n</em> starts at byte <em>n</em> × block size.</li>
+<li>The <strong>sector</strong> is the device's addressing unit, named by its LBA. Its size is the device's logical block size, 512 or 4096 bytes.</li>
+</ul>
+<p>Converting between them is division with remainder:</p>
+<pre><code>block_number    = byte_offset / block_size        offset_in_block  = byte_offset % block_size
+lba             = byte_offset / sector_size       offset_in_sector = byte_offset % sector_size
+first_lba(blk)  = blk * (block_size / sector_size)</code></pre>
+<p>Lab 02's program does this for byte 1,000,000 on a filesystem with 4 KiB blocks:</p>
+<figure class="diagram">
+<pre>byte offset 1,000,000
+
+filesystem view (4096-byte blocks):   1,000,000 / 4096 = 244, remainder 576
+  ┌──── block 243 ────┬──────────────── block 244 ────────────────┬──── block 245 ────┐
+                      ▲ byte 999,424                               ▲ byte 1,003,520
+                      └─ 576 bytes in: our byte
+
+device view (512-byte sectors):       1,000,000 / 512  = 1953, remainder 64
+                      ┌─1952─┬─1953─┬─1954─┬─1955─┬─1956─┬─1957─┬─1958─┬─1959─┐
+                              ▲ 64 bytes into LBA 1953
+
+one 4 KiB block = 8 sectors:  block 244 → LBAs 244 × 8 = 1952 … 1959</pre>
+<figcaption>The same byte seen by the filesystem and by a 512-byte-sector device. A 4 KiB block always covers eight 512-byte sectors, so the filesystem asks the block layer for "8 sectors starting at 1952".</figcaption>
+</figure>
+<aside class="note"><span class="tag">Inside Linux</span><p>The Linux block layer counts in 512-byte units internally, whatever the device's real sector size. A <code>bio</code>'s start sector, <code>/sys/block/&lt;dev&gt;/size</code> and <code>/proc/partitions</code> all use 512-byte sectors, and the driver converts at the bottom. On a 4 KiB-sector device, the kernel simply never issues a request that is not a multiple of 8 of these units.</p></aside>
+<h3>512n, 512e and 4Kn</h3>
+<p>Disks moved from 512-byte to 4096-byte physical sectors around 2010 because larger sectors need less error-correction overhead per byte. Software expected 512, so three kinds of drive exist:</p>
+<div class="table-wrap"><table>
+<thead><tr><th>Type</th><th>Logical sector</th><th>Physical sector</th><th>Notes</th></tr></thead>
+<tbody>
+<tr><td>512n (native)</td><td>512</td><td>512</td><td>Older drives.</td></tr>
+<tr><td>512e (emulated)</td><td>512</td><td>4096</td><td>Addressed in 512-byte LBAs, but the media writes 4 KiB at a time. WSL's virtual disk reports this.</td></tr>
+<tr><td>4Kn (native)</td><td>4096</td><td>4096</td><td>LBAs count 4 KiB sectors, so the same byte has an LBA eight times smaller.</td></tr>
+</tbody>
+</table></div>
+<h3>Alignment and read-modify-write</h3>
+<p>On a 512e drive, what happens if you write a single 512-byte sector? The drive cannot write less than 4 KiB of media, so it must read the 4 KiB physical sector, replace the 512 bytes, and write all 4 KiB back. This is a <strong>read-modify-write</strong> (RMW): one extra read and a larger write, and a window in which a power cut can damage the neighbouring 3.5 KiB.</p>
+<p>A filesystem writing whole 4 KiB blocks avoids this, but only if its blocks line up with the physical sectors. That depends on where the partition starts. Old DOS partitioning tools started the first partition at sector 63, byte 32,256, which is not a multiple of 4096. Every filesystem block then straddled two physical sectors, and every block write became two read-modify-writes:</p>
+<figure class="diagram">
+<pre>aligned: partition starts at LBA 2048 (1 MiB, a multiple of 4096)
+  physical 4 KiB │   P256   │   P257   │   P258   │
+  fs blocks      │    B0    │    B1    │    B2    │    one block = one physical sector
+
+misaligned: partition starts at LBA 63 (byte 32,256)
+  physical 4 KiB │    P7    │    P8    │    P9    │
+  fs blocks           │    B0    │    B1    │         each block straddles two physical sectors
+                      └ 3,584 bytes into P7     →    every write is two read-modify-writes</pre>
+<figcaption>Partition alignment. Modern tools start partitions at 1 MiB, which is a multiple of every common physical sector size, SSD page size and RAID stripe unit.</figcaption>
+</figure>
+<p>Read-modify-write is a pattern you will see at every layer. The page cache does it when you write 100 bytes into the middle of a file that is not cached: it reads the 4 KiB page first. RAID 5 does it for writes smaller than a stripe. In every case the cure is to write in whole, aligned units.</p>
+</section>
+<section id="block-layer">
+<h2>The Linux block layer</h2>
+<p>Filesystems do not talk to drivers directly. They hand requests to the <strong>block layer</strong>, which batches, merges, schedules and dispatches them. Its unit of work is the <code>bio</code>.</p>
+<h3>bio: one I/O, described</h3>
+<pre><code>struct bio {                          <span class="c">// simplified, from include/linux/blk_types.h</span>
+    struct block_device *bi_bdev;     <span class="c">// which device</span>
+    blk_opf_t            bi_opf;      <span class="c">// REQ_OP_READ / WRITE / FLUSH / DISCARD + flags (REQ_FUA, REQ_PREFLUSH, REQ_SYNC)</span>
+    struct bvec_iter     bi_iter;     <span class="c">// bi_sector (start, 512-byte units), bi_size (bytes)</span>
+    struct bio_vec      *bi_io_vec;   <span class="c">// list of (page, offset, length) memory segments</span>
+    bio_end_io_t        *bi_end_io;   <span class="c">// called when the I/O completes</span>
+};</code></pre>
+<p>A <code>bio</code> says: "transfer <code>bi_size</code> bytes starting at sector <code>bi_sector</code>, to or from these pieces of memory, and call <code>bi_end_io</code> when done". The memory does not have to be contiguous: the <code>bio_vec</code> list can point at scattered pages, and the device's DMA engine gathers or scatters them. A filesystem builds a <code>bio</code> and calls <code>submit_bio()</code>; from then on it is the block layer's job.</p>
+<h3>From bio to the device</h3>
+<figure class="diagram">
+<svg viewBox="0 0 700 520" width="700" role="img" aria-label="Path of a read: ext4 builds a bio, the plug list merges it into a request, it passes through a per-CPU software queue and a hardware queue to the driver and the device, and completion flows back up through bi_end_io.">
+<defs><marker id="ah-02-2" viewBox="0 0 10 10" refX="9" refY="5" markerWidth="7" markerHeight="7" orient="auto-start-reverse"><path class="ah" d="M0,0 L10,5 L0,10 z"/></marker></defs>
+<rect class="k-fs" x="10" y="10" width="630" height="56" rx="4"/>
+<text class="ts" x="24" y="28">FILESYSTEM (lesson 03)</text>
+<text class="t" x="24" y="52">ext4 needs block 244 → read 8 sectors from 1952 into a page</text>
+<rect class="k-kernel" x="10" y="80" width="630" height="320" rx="4"/>
+<text class="ts" x="24" y="98">BLOCK LAYER</text>
+<rect class="box" x="40" y="106" width="570" height="46" rx="3"/>
+<text class="t" x="54" y="125">submit_bio(): struct bio { bi_sector = 1952, bi_size = 4096,</text>
+<text class="t" x="54" y="143">                        bi_io_vec → page, bi_end_io }</text>
+<rect class="box" x="40" y="170" width="570" height="36" rx="3"/>
+<text class="t" x="54" y="193">plug list: hold briefly, merge neighbours into a struct request</text>
+<text class="ts" x="40" y="226">software staging queues, one per CPU (or the I/O scheduler, if one is set)</text>
+<rect class="box" x="40" y="234" width="120" height="30" rx="3"/><text class="t" x="100" y="254" text-anchor="middle">ctx cpu0</text>
+<rect class="box" x="190" y="234" width="120" height="30" rx="3"/><text class="t" x="250" y="254" text-anchor="middle">ctx cpu1</text>
+<rect class="box" x="340" y="234" width="120" height="30" rx="3"/><text class="t" x="400" y="254" text-anchor="middle">ctx cpu2</text>
+<rect class="box" x="490" y="234" width="120" height="30" rx="3"/><text class="t" x="550" y="254" text-anchor="middle">ctx cpu3</text>
+<text class="ts" x="40" y="296">hardware dispatch queues, mapped onto the device's own queues</text>
+<rect class="box" x="40" y="304" width="120" height="30" rx="3"/><text class="t" x="100" y="324" text-anchor="middle">hctx 0</text>
+<rect class="box" x="190" y="304" width="120" height="30" rx="3"/><text class="t" x="250" y="324" text-anchor="middle">hctx 1</text>
+<rect class="box" x="340" y="304" width="120" height="30" rx="3"/><text class="t" x="400" y="324" text-anchor="middle">hctx 2</text>
+<rect class="box" x="490" y="304" width="120" height="30" rx="3"/><text class="t" x="550" y="324" text-anchor="middle">hctx 3</text>
+<rect class="box" x="40" y="350" width="570" height="36" rx="3"/>
+<text class="t" x="54" y="373">driver (nvme; sd + storvsc on WSL): build command, ring doorbell</text>
+<rect class="k-block" x="10" y="414" width="630" height="96" rx="4"/>
+<text class="ts" x="24" y="432">DEVICE</text>
+<text class="t" x="24" y="456">fetch command · read flash or platter · DMA 4096 bytes into the page</text>
+<text class="t" x="24" y="478">post completion · interrupt (or the CPU polls)</text>
+<text class="ts" x="24" y="498">cache, FTL and media are all inside the device; the kernel sees only LBAs</text>
+<line class="ln" x1="325" y1="66" x2="325" y2="104" marker-end="url(#ah-02-2)"/>
+<line class="ln" x1="325" y1="152" x2="325" y2="168" marker-end="url(#ah-02-2)"/>
+<line class="ln" x1="325" y1="206" x2="252" y2="232" marker-end="url(#ah-02-2)"/>
+<line class="ln" x1="100" y1="264" x2="100" y2="302"/>
+<line class="ln" x1="250" y1="264" x2="250" y2="302" marker-end="url(#ah-02-2)"/>
+<line class="ln" x1="400" y1="264" x2="400" y2="302"/>
+<line class="ln" x1="550" y1="264" x2="550" y2="302"/>
+<line class="ln" x1="250" y1="334" x2="250" y2="348" marker-end="url(#ah-02-2)"/>
+<line class="ln" x1="325" y1="386" x2="325" y2="412" marker-end="url(#ah-02-2)"/>
+<line class="lnd" x1="668" y1="470" x2="668" y2="132"/>
+<line class="lnd" x1="640" y1="470" x2="668" y2="470"/>
+<line class="lnd" x1="668" y1="132" x2="612" y2="132" marker-end="url(#ah-02-2)"/>
+<text class="ts" transform="translate(688,290) rotate(-90)" text-anchor="middle">completion: interrupt → bi_end_io() → page up to date → wake reader</text>
+</svg>
+<figcaption>A read leaving ext4 on CPU 1. The dashed path on the right is the completion: the device's interrupt runs the driver, which completes the request, which calls the bio's <code>bi_end_io</code>, which marks the page valid and wakes the process waiting for it.</figcaption>
+</figure>
+<p>Step by step:</p>
+<ol>
+<li><strong>Plugging.</strong> A task that is about to submit several bios can plug its queue. The bios then collect in a per-task list instead of going straight down. When the task unplugs (or sleeps), the list is flushed. This creates batches large enough to merge.</li>
+<li><strong>Merging.</strong> A bio for sectors 1960–1967 arriving right after one for 1952–1959 is joined to it, forming one <code>struct request</code> for 1952–1967. Fewer, larger requests are cheaper for every device and much cheaper for a spinning disk.</li>
+<li><strong>Software queues.</strong> Since the multi-queue block layer (blk-mq, merged in Linux 3.13 in 2014; the old single-queue path was removed in 5.0), each CPU has its own staging queue, so CPUs do not fight over one lock. If an I/O scheduler is configured, requests go into the scheduler at this stage instead, and it decides their order.</li>
+<li><strong>Hardware queues.</strong> Software queues map onto hardware dispatch queues, which correspond to the device's real queues: NVMe queue pairs, or the single queue of a SATA disk. WSL's virtual disk exposes 4.</li>
+<li><strong>Driver.</strong> The driver turns the request into a device command (an NVMe command, or a SCSI CDB) and rings the device's doorbell.</li>
+<li><strong>Completion.</strong> The device signals completion by interrupt. For the fastest devices, interrupts cost more than they save, so the kernel can instead <strong>poll</strong> the completion queue in a loop; <code>io_uring</code> with <code>IORING_SETUP_IOPOLL</code> on NVMe poll queues does this.</li>
+</ol>
+<h3>I/O schedulers</h3>
+<div class="table-wrap"><table>
+<thead><tr><th>Scheduler</th><th>What it does</th><th>Typical use</th></tr></thead>
+<tbody>
+<tr><td><code>none</code></td><td>No reordering. Requests go straight to the hardware queues.</td><td>NVMe and other fast devices with their own internal parallelism; virtual disks, whose host does its own scheduling.</td></tr>
+<tr><td><code>mq-deadline</code></td><td>Sorts by sector, and gives every request a deadline (reads sooner than writes) so none starves.</td><td>SATA HDDs and SSDs, many server defaults.</td></tr>
+<tr><td><code>bfq</code></td><td>Budget Fair Queueing: divides device time fairly between processes, favouring interactive ones.</td><td>Desktops, slow devices, per-cgroup fairness.</td></tr>
+<tr><td><code>kyber</code></td><td>Throttles dispatch to meet target read and write latencies.</td><td>Fast multi-queue devices where latency matters.</td></tr>
+</tbody>
+</table></div>
+<p>You can watch the block layer work in <code>/sys/block/&lt;dev&gt;/stat</code> (lab 02 prints it) or with <code>iostat -x 1</code> from the sysstat package, whose <code>rrqm/s</code> and <code>wrqm/s</code> columns count merges.</p>
+</section>
+<section id="durability">
+<h2>When is a write durable?</h2>
+<p>When a device reports a write as complete, the data is not necessarily on the media. Almost every drive has a <strong>volatile write cache</strong>: DRAM on the drive that accepts writes quickly and writes them to flash or platter later, possibly in a different order. If power fails first, the data in that cache is lost. <code>/sys/block/&lt;dev&gt;/queue/write_cache</code> reads <code>write back</code> when such a cache is present.</p>
+<p>Two mechanisms let software get real durability:</p>
+<ul>
+<li><strong>FLUSH</strong> (SCSI <code>SYNCHRONIZE CACHE</code>, ATA <code>FLUSH CACHE</code>, NVMe <code>Flush</code>): write everything currently in the cache to stable media, and only then report completion. In Linux this is a bio with <code>REQ_PREFLUSH</code>.</li>
+<li><strong>FUA</strong>, Force Unit Access: a flag on a single write meaning "do not report this write complete until it is on stable media". In Linux, <code>REQ_FUA</code>.</li>
+</ul>
+<p>A journaling filesystem's commit uses both: flush the cache so the journal entries written before are stable, then write the commit record with FUA. <code>fsync</code> ends in a flush. If the device reports no volatile cache, the block layer drops these flags because there is nothing to flush.</p>
+<aside class="pitfall"><span class="tag">Pitfall: writing to write_cache</span><p>Writing <code>write through</code> into <code>/sys/block/&lt;dev&gt;/queue/write_cache</code> does not change the drive. It only tells the kernel to stop sending flushes. On a drive whose cache really is volatile, that turns every <code>fsync</code> into a promise the hardware does not keep.</p></aside>
+<p>Enterprise SSDs often have <strong>power-loss protection</strong> (PLP): capacitors that hold enough energy to write the cache out after power disappears. For such drives the cache is effectively non-volatile, flushes are cheap, and they can safely report write-through. This is one reason enterprise SSDs are so much faster than consumer ones for workloads that <code>fsync</code> often, such as databases and NFS servers committing client writes.</p>
+<p>Virtual disks add a layer. On WSL, the device is really a <code>.vhdx</code> file, and a flush from Linux becomes a request to Windows to flush that file and, ideally, the physical drive under it. Whether that happens end to end depends on the hypervisor's configuration, which is a good reason never to benchmark durability inside a VM and assume the result holds on bare metal.</p>
+<h3>Torn writes</h3>
+<p>A device generally guarantees that a single sector is written entirely or not at all, but makes no such promise for a multi-sector write. If power fails in the middle of a 16 KiB write, some sectors may hold new data and others old: a <strong>torn write</strong>. NVMe drives advertise how much they can write atomically across a power failure (the AWUPF field), and Linux 6.11 added an <code>RWF_ATOMIC</code> flag for <code>pwritev2</code> so applications can request untorn writes where the device and filesystem support it.</p>
+<p>Before that existed, databases protected themselves. PostgreSQL logs a full copy of a page the first time it changes after a checkpoint (<code>full_page_writes</code>), and MySQL's InnoDB writes each page twice, first to a doublewrite buffer, so a torn page can always be repaired from an intact copy. Filesystems face the same problem for their own metadata, and solve it with journaling or copy-on-write (<a href="03-ondisk.html">lesson 03</a>).</p>
+</section>
+<section id="users">
+<h2>Who uses block devices directly</h2>
+<ul>
+<li><strong>Filesystems</strong>, almost always. They turn the sector array into files, which is <a href="03-ondisk.html">lesson 03</a>.</li>
+<li><strong>Stacking drivers</strong>: device-mapper (LVM, dm-crypt, thin provisioning) and md RAID take block devices in and present new block devices out. Each layer receives bios, remaps or splits them, and submits new bios below.</li>
+<li><strong>Programs reading raw devices</strong>: <code>dd</code>, partitioning tools, <code>mkfs</code> itself, backup tools, and some databases that manage their own space. Reading <code>/dev/sdX</code> with ordinary <code>read</code> calls goes through the page cache of the device itself; opening it with <code>O_DIRECT</code> bypasses that cache.</li>
+<li><strong>Network block protocols</strong>: iSCSI and NVMe over Fabrics carry sector reads and writes over a network, so a remote disk looks local. Compare that with NFS, which carries <em>file</em> operations (<a href="06-nfs.html">lesson 06</a>). Both run over RDMA (<a href="08-rdma.html">lesson 08</a>).</li>
+</ul>
+<p>Lab 02 relies on the fact that a regular file is also an array of bytes. <code>mkfs.ext4</code> does not care whether its target is <code>/dev/sdd</code> or <code>disk.img</code>, so you can build and dissect a filesystem with no root access and no risk to your real disk. The next lesson walks into that image structure by structure.</p>
+</section>
+<section class="lab" id="lab">
+<p class="tag">Lab 02</p>
+<h2>A disk in a file, and the superblock at byte 1024</h2>
+<p class="where">~/storage-course/labs/02-blocks/</p>
+<ol>
+<li>Make a 512 MiB ext4 filesystem in a plain file. No root is needed, because to <code>mkfs</code> a file is just bytes.
+<pre><code><span class="p">$</span> cd ~/storage-course/labs/02-blocks
+<span class="p">$</span> truncate -s 512M disk.img
+<span class="p">$</span> mkfs.ext4 -F -q -b 4096 -L lab02 disk.img
+<span class="p">$</span> ls -ls disk.img
+<span class="o">16772 -rw-r--r-- 1 artem artem 536870912 Oct 13 16:36 disk.img</span></code></pre>
+The file is 512 MiB long but uses about 16 MiB: it is sparse (lesson 01), and mkfs wrote only metadata.
+</li>
+<li>Find the superblock by hand. It always starts at byte 1024, and its magic number sits 0x38 bytes in:
+<pre><code><span class="p">$</span> xxd -s 0x438 -l 2 disk.img
+<span class="o">00000438: 53ef                                     S.</span></code></pre>
+The bytes <code>53 ef</code> are the value 0xEF53 stored little-endian, low byte first. Run <code>xxd -s 1024 -l 128 disk.img</code> to see the surrounding fields.
+</li>
+<li>Decode the superblock in C. <code>superblock.c</code> calls <code>pread</code> at offset 1024 and assembles each little-endian field at the offsets from the kernel's <code>struct ext4_super_block</code>:
+<pre><code><span class="p">$</span> gcc -Wall -Wextra -O2 -o superblock superblock.c &amp;&amp; ./superblock disk.img
+<span class="o">superblock at byte 1024 of disk.img
+  s_magic (0x38)         0xEF53 (ext2/3/4 magic: OK)
+  s_log_block_size       2 -&gt; block size = 1024 &lt;&lt; 2 = 4096 bytes
+  blocks count           131072 (512.0 MiB)
+  s_blocks_per_group     32768
+  s_inodes_per_group     8192
+  block groups           4  (= ceil((blocks - first_data_block) / blocks_per_group))
+  s_inode_size           256 bytes
+  s_first_ino            11  (inodes 1..10 are reserved; root is 2)
+  s_feature_incompat     0x002c2  filetype extent 64bit flex_bg
+
+addressing byte offset 1000000:
+  filesystem block  = 1000000 / 4096 = block 244, offset 576 inside it
+  512-byte sectors  = LBA 1953 (offset 64)
+  4096-byte sectors = LBA 244 (offset 576)
+  block 244 covers 512-byte sectors 1952..1959
+
+backup superblocks (sparse_super: groups 0, 1, and powers of 3, 5, 7):
+  group 1   block 32768    byte 134217728    magic 0xEF53  s_block_group_nr=1
+  group 3   block 98304    byte 402653184    magic 0xEF53  s_block_group_nr=3</span></code></pre>
+Example output from this course's WSL machine, trimmed. The last part uses the block arithmetic to compute where backup copies of the superblock must be, then reads them to prove it. Compare everything with <code>dumpe2fs -h disk.img</code>.
+</li>
+<li>Try other offsets: <code>./superblock disk.img 4096</code>, <code>./superblock disk.img 134217728</code>. Predict the block and LBA before running.</li>
+<li>Look at your real disks, read-only: <code>./explore-disk.sh</code>. It prints <code>lsblk</code>, every device's queue properties, the major:minor numbers in <code>/dev</code>, and the I/O counters of the disk holding <code>/</code>.</li>
+<li>Optional, needs root, not run on the course machine: attach the image as a loop device with <code>sudo losetup -f --show disk.img</code>, then run <code>sudo ./superblock /dev/loop0</code> and get identical output. The README has the full sequence including mount and cleanup.</li>
+</ol>
+</section>
+<section class="check" id="check">
+<h2>Check yourself</h2>
+<details><summary>A filesystem with 4 KiB blocks sits on a device with 512-byte sectors, starting at LBA 0. Which block and which LBA hold byte 10,000,000? Which LBAs does that block cover?</summary><p>10,000,000 / 4096 = 2441 remainder 1664, so block 2441, 1664 bytes in. 10,000,000 / 512 = 19531 remainder 128, so LBA 19531. Block 2441 covers LBAs 2441 × 8 = 19528 through 19535.</p></details>
+<details><summary>A 7200 rpm disk has an average seek time of 8.5 ms. Roughly how many random 4 KiB reads per second can it serve, and what throughput is that?</summary><p>Each read costs about 8.5 ms seek + 4.17 ms average rotational latency + a tiny transfer time, roughly 12.7 ms. That is about 79 reads per second, or about 0.3 MB/s. The same disk streams around 200 MB/s sequentially.</p></details>
+<details><summary>On a 512e drive, what does a single 512-byte write cost inside the drive, and why do partitions start at 1 MiB?</summary><p>The media writes 4 KiB physical sectors, so the drive reads the whole 4 KiB, changes 512 bytes and writes 4 KiB back: a read-modify-write. Starting partitions at 1 MiB (LBA 2048) makes every 4 KiB filesystem block line up with exactly one physical sector, and also with SSD pages and RAID stripes.</p></details>
+<details><summary>Why does an SSD get slower when it is nearly full, and how does discard (TRIM) help?</summary><p>The FTL never overwrites in place, so it must garbage-collect: pick an erase block, copy its still-valid pages elsewhere, erase it. On a full drive, most pages are valid, so each reclaimed block needs many copies, raising write amplification. Discard tells the drive which LBAs the filesystem no longer uses, so those pages count as stale and need not be copied.</p></details>
+<details><summary>Why does NVMe use many queue pairs when AHCI had one queue of 32 commands?</summary><p>Flash can serve many requests in parallel, and modern machines have many cores. One shared queue needs a lock that every core contends on and caps the number of requests in flight. With a queue pair per core, each core submits and completes I/O on its own rings with no locking, and tens of thousands of commands can be outstanding.</p></details>
+<details><summary>An application called <code>write</code> and then <code>fsync</code>, both succeeded, and the data was still lost in a power cut. Name two ways this can happen.</summary><p>The device acknowledged the flush without really persisting its volatile cache, or someone set <code>write_cache</code> to <code>write through</code> so the kernel never sent a flush. In a virtual machine, the hypervisor may also have acknowledged the flush without forcing the host's cache to disk.</p></details>
+<details><summary>What is the difference between FLUSH and FUA?</summary><p>FLUSH applies to the whole cache: every write completed before it is made durable before it completes. FUA applies to one write: that write is durable before it completes, and nothing is said about other cached writes. Journal commits use a flush followed by a FUA write of the commit record.</p></details>
+</section>
+<section class="further" id="further">
+<h2>Go deeper</h2>
+<ul>
+<li><a href="https://pages.cs.wisc.edu/~remzi/OSTEP/file-disks.pdf">OSTEP, "Hard Disk Drives"</a> and <a href="https://pages.cs.wisc.edu/~remzi/OSTEP/file-ssd.pdf">"Flash-based SSDs"</a>: free textbook chapters with worked latency calculations and a clear FTL model.</li>
+<li><a href="https://codecapsule.com/2014/02/12/coding-for-ssds-part-1-introduction-and-table-of-contents/">Coding for SSDs</a> (Emmanuel Goossaert): a six-part series on how flash behaves and what that means for software.</li>
+<li><a href="https://lwn.net/Articles/552904/">The multiqueue block layer</a> (LWN) and the kernel's <a href="https://docs.kernel.org/block/blk-mq.html">blk-mq documentation</a>: why blk-mq exists and how its queues map.</li>
+<li><a href="https://docs.kernel.org/block/writeback_cache_control.html">Explicit volatile write back cache control</a>: the kernel's own short document on <code>REQ_PREFLUSH</code> and <code>REQ_FUA</code>.</li>
+<li><a href="https://www.kernel.org/doc/Documentation/ABI/stable/sysfs-block">sysfs-block ABI</a>: every file under <code>/sys/block</code>, defined.</li>
+<li><a href="https://lwn.net/Articles/974578/">Atomic writes without tears</a> (LWN): torn writes and the <code>RWF_ATOMIC</code> work.</li>
+<li><a href="https://nvmexpress.org/specifications/">NVM Express specifications</a>: the base specification defines queues, doorbells and commands.</li>
+</ul>
+</section>
+<nav class="pager-foot" aria-label="Next and previous lesson">
+<a class="prev" href="01-syscalls.html"><small>Previous</small>Syscalls and file descriptors</a>
+<a class="next" href="03-ondisk.html"><small>Next</small>Inside an ext4 image</a>
+</nav>
+</main>
+</div>
+<script src="course.js"></script>
+</body>
+</html>

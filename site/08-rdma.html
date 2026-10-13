@@ -1,0 +1,538 @@
+<!doctype html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover">
+<title>RDMA and NFS over RDMA</title>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=IBM+Plex+Mono:wght@400;600&family=IBM+Plex+Sans+Condensed:wght@500;600;700&family=Source+Serif+4:ital,opsz,wght@0,8..60,400;0,8..60,600;1,8..60,400&display=swap">
+<link rel="stylesheet" href="course.css?v=7">
+</head>
+<body data-layer="net">
+<header class="topbar">
+<a class="brand" href="index.html">From open() to RDMA <span>· a storage course</span></a>
+<nav class="pager" aria-label="Lesson pager">
+<a href="07-nfs-caching.html" rel="prev">← Prev</a>
+<details class="route"><summary>Lesson 8 of 9</summary></details>
+<a href="09-distributed.html" rel="next">Next →</a>
+<details class="sections"><summary>Sections</summary></details>
+</nav>
+</header>
+<div class="layout">
+<nav class="rail" aria-label="Lessons">
+<div class="rail-title">The route</div>
+<ol>
+<li class="user"><a href="01-syscalls.html"><span class="n">01</span><span>Syscalls &amp; file descriptors</span></a></li>
+<li class="block"><a href="02-blocks.html"><span class="n">02</span><span>Block devices &amp; addressing</span></a></li>
+<li class="fs"><a href="03-ondisk.html"><span class="n">03</span><span>Inside an ext4 image</span></a></li>
+<li class="fs"><a href="04-btrees.html"><span class="n">04</span><span>B-trees, really</span></a></li>
+<li class="kernel"><a href="05-vfs-cache.html"><span class="n">05</span><span>The VFS and the caches</span></a></li>
+<li class="net"><a href="06-nfs.html"><span class="n">06</span><span>NFS from v3 to 4.2</span></a></li>
+<li class="net"><a href="07-nfs-caching.html"><span class="n">07</span><span>Caching across the network</span></a></li>
+<li class="net"><a href="08-rdma.html" aria-current="page"><span class="n">08</span><span>RDMA and NFS over RDMA</span></a></li>
+<li class="net"><a href="09-distributed.html"><span class="n">09</span><span>Distributed filesystems</span></a></li>
+<li class="extra"><a href="glossary.html"><span class="n">··</span><span>Glossary</span></a></li>
+</ol>
+<div class="rail-legend">
+<span style="--c: var(--l-user)">user space</span>
+<span style="--c: var(--l-kernel)">kernel</span>
+<span style="--c: var(--l-fs)">filesystem</span>
+<span style="--c: var(--l-block)">block</span>
+<span style="--c: var(--l-net)">network</span>
+</div>
+</nav>
+<main class="lesson">
+<header class="lesson-head">
+<p class="eyebrow">Lesson 8 · Network</p>
+<h1>RDMA and NFS over RDMA</h1>
+<p class="lede">At 100 to 400 Gb/s the network is no longer the slow part. The CPU is, because it copies every byte and processes every packet. RDMA hands that work to the network card. This lesson builds the model from the hardware up, then shows exactly how NFS uses it.</p>
+<div class="outcomes">
+<b>After this lesson you can</b>
+<ul>
+<li>explain where the CPU time goes in an ordinary TCP read, and which part RDMA removes;</li>
+<li>tell InfiniBand, RoCE v2 and iWARP apart, and say why RoCE cares about lossless Ethernet;</li>
+<li>name every verbs object (PD, MR, QP, CQ, WR, WC) and what it is for;</li>
+<li>say which CPUs take part in SEND, RDMA WRITE, RDMA READ and atomics;</li>
+<li>trace an NFS READ and an NFS WRITE over RPC-over-RDMA, chunk by chunk;</li>
+<li>set up soft-RoCE in a VM and mount NFS with <code>proto=rdma</code>.</li>
+</ul>
+</div>
+<nav class="toc" aria-label="Lesson contents">
+<b>In this lesson</b>
+<ol>
+<li><a href="#tcp-cost">What an ordinary network read costs</a></li>
+<li><a href="#idea">The RDMA idea</a></li>
+<li><a href="#fabrics">Fabrics: InfiniBand, RoCE and iWARP</a></li>
+<li><a href="#verbs">The verbs objects</a></li>
+<li><a href="#qp">Bringing a queue pair up</a></li>
+<li><a href="#ops">The operations</a></li>
+<li><a href="#costs">Costs and pitfalls</a></li>
+<li><a href="#storage">Storage over RDMA</a></li>
+<li><a href="#nfs-rdma">NFS over RDMA in depth</a></li>
+<li><a href="#lab">Lab 07: Soft-RoCE, a verbs program, and NFS over RDMA</a></li>
+<li><a href="#check">Check yourself</a></li>
+<li><a href="#further">Go deeper</a></li>
+</ol>
+</nav>
+</header>
+<section id="tcp-cost">
+<h2>What an ordinary network read costs</h2>
+<p>Follow one 1 MiB NFS READ over TCP, the way <a href="06-nfs.html">lesson 6</a> set it up, and count the work on the client.</p>
+<ol>
+<li>The NIC receives Ethernet frames and writes them by <b>DMA</b> into kernel memory that the driver set aside in advance: a ring of receive buffers. Each frame becomes a socket buffer (<code>sk_buff</code>, usually called an skb).</li>
+<li>The NIC raises an interrupt, or the kernel's NAPI poll loop notices new frames. The CPU runs the IP and TCP code for each packet: checksums (often offloaded), sequence numbers, acknowledgements, reassembly into a byte stream.</li>
+<li>The SUNRPC layer finds the RPC record boundaries in that stream, matches the reply to its request by XID, and decodes the XDR.</li>
+<li>The NFS client <b>copies</b> the READ data out of the skbs into the page-cache pages of the file (<a href="05-vfs-cache.html">lesson 5</a>).</li>
+<li>The application's <code>read()</code> <b>copies</b> again, from the page cache into the user buffer.</li>
+</ol>
+<p>The server pays a similar bill on the way out, although sending is easier to make zero-copy than receiving (the kernel can hand page-cache pages to the NIC with <code>sendfile</code>-style paths).</p>
+<p>Each copy costs memory bandwidth twice, because the CPU reads every byte and then writes it. Do the arithmetic for a fast link:</p>
+<div class="table-wrap"><table>
+<thead><tr><th>Link</th><th>Bytes per second</th><th>Packets per second at 9000-byte MTU</th><th>Memory traffic for one receive copy</th></tr></thead>
+<tbody>
+<tr><td>10 Gb/s</td><td>1.25 GB/s</td><td>~140 thousand</td><td>2.5 GB/s</td></tr>
+<tr><td>100 Gb/s</td><td>12.5 GB/s</td><td>~1.4 million</td><td>25 GB/s</td></tr>
+<tr><td>400 Gb/s</td><td>50 GB/s</td><td>~5.6 million</td><td>100 GB/s</td></tr>
+</tbody>
+</table></div>
+<p>At 10 Gb/s one core keeps up and nobody cares. At 400 Gb/s the copies alone eat a large share of a server socket's memory bandwidth, and the per-packet protocol work needs several cores. Offloads such as TSO (the NIC splits large sends into packets) and GRO (the kernel merges received packets) cut the per-packet cost. They do nothing about the copies or about the CPU having to look at every byte.</p>
+<h3 id="dma">DMA in one paragraph</h3>
+<p><b>Direct memory access</b> means a device reads and writes host RAM by itself. The CPU writes a small <b>descriptor</b> ("put the next frame at physical address X, up to 2048 bytes") into a ring in memory, and the device does the transfer. Two consequences matter for everything below. The memory must stay where it is while the device uses it, so it is <b>pinned</b>: the kernel will not swap or migrate those pages. And the device needs addresses it can use, either physical addresses or addresses translated by an <b>IOMMU</b>. You already saw this pattern in <a href="02-blocks.html">lesson 2</a>: an NVMe SSD reads commands from a submission queue and DMAs data straight into the buffers they name.</p>
+<figure class="diagram">
+<svg viewBox="0 0 680 310" width="680" role="img" aria-label="TCP receive path with two CPU copies compared to RDMA placing data directly into the final buffer">
+<defs><marker id="ah-8-1" viewBox="0 0 10 10" refX="9" refY="5" markerWidth="7" markerHeight="7" orient="auto-start-reverse"><path class="ah" d="M0,0 L10,5 L0,10 z"/></marker></defs>
+<text class="th" x="170" y="18" text-anchor="middle">TCP</text>
+<text class="th" x="510" y="18" text-anchor="middle">RDMA</text>
+<line class="lnd" x1="340" y1="8" x2="340" y2="300"/>
+<rect class="k-user" x="60" y="30" width="220" height="36" rx="3"/>
+<text class="t" x="170" y="53" text-anchor="middle">application buffer</text>
+<rect class="k-kernel" x="60" y="100" width="220" height="36" rx="3"/>
+<text class="t" x="170" y="123" text-anchor="middle">page cache (NFS client)</text>
+<rect class="k-kernel" x="60" y="170" width="220" height="36" rx="3"/>
+<text class="t" x="170" y="193" text-anchor="middle">socket buffers (skb)</text>
+<rect class="k-net" x="60" y="240" width="220" height="36" rx="3"/>
+<text class="t" x="170" y="263" text-anchor="middle">NIC</text>
+<line class="ln" x1="170" y1="240" x2="170" y2="209" marker-end="url(#ah-8-1)"/>
+<text class="ts" x="180" y="229">DMA</text>
+<line class="ln" x1="170" y1="170" x2="170" y2="139" marker-end="url(#ah-8-1)"/>
+<text class="ts" x="180" y="159">copy by CPU</text>
+<line class="ln" x1="170" y1="100" x2="170" y2="69" marker-end="url(#ah-8-1)"/>
+<text class="ts" x="180" y="89">copy by CPU</text>
+<text class="ts" x="170" y="298" text-anchor="middle">+ interrupts, TCP/IP, RPC decode per packet</text>
+<rect class="k-user" x="400" y="30" width="220" height="48" rx="3"/>
+<text class="t" x="510" y="50" text-anchor="middle">registered buffer</text>
+<text class="ts" x="510" y="68" text-anchor="middle">page-cache page or app memory</text>
+<rect class="k-net" x="400" y="240" width="220" height="36" rx="3"/>
+<text class="t" x="510" y="263" text-anchor="middle">RDMA NIC (transport inside)</text>
+<line class="ln" x1="510" y1="240" x2="510" y2="81" marker-end="url(#ah-8-1)"/>
+<text class="ts" x="520" y="152">DMA to the final</text>
+<text class="ts" x="520" y="166">address, no copy</text>
+<text class="ts" x="510" y="298" text-anchor="middle">+ CPU polls one completion</text>
+</svg>
+<figcaption>The same incoming data. On the left the CPU touches every byte twice and runs the protocol for every packet. On the right the NIC runs the transport and places the bytes where the receiver said they should go.</figcaption>
+</figure>
+</section>
+<section id="idea">
+<h2>The RDMA idea</h2>
+<p><b>Remote Direct Memory Access</b> extends DMA across the network. Your NIC can write into, or read from, memory on another machine, and the other machine's NIC does the work on its side. Three ideas make that possible.</p>
+<ul>
+<li><b>The transport runs on the NIC.</b> Segmentation, acknowledgements, retransmission and ordering are done in NIC hardware. The CPU posts a request ("send these 1 MiB") and later reads one completion.</li>
+<li><b>Memory is registered up front.</b> Before the NIC may touch a buffer, the program registers it. Registration pins the pages and loads their addresses into the NIC's translation table. From then on the NIC can DMA to that buffer directly, so no intermediate kernel buffer exists to copy from. This is <b>zero-copy</b>.</li>
+<li><b>The data path bypasses the kernel.</b> Setting things up (opening the device, registering memory, creating queues) goes through the kernel driver. Moving data does not. The NIC's queues are mapped into the process, so posting work is a write to ordinary memory plus one write to a NIC register. No system call, no context switch.</li>
+</ul>
+<p>Kernel bypass only matters for user-space programs (MPI jobs, databases, AI frameworks). Kernel users of RDMA such as the NFS client and server, NVMe over Fabrics or iSER are in the kernel already. For them the gains are zero-copy and the offloaded transport.</p>
+<aside class="key"><span class="tag">Key idea</span><p>RDMA moves the transport into the NIC and lets the NIC place data exactly where the application said it should go. The receiving CPU does not copy the bytes and, for one-sided operations, does not even know they arrived.</p></aside>
+<p>The price is a different programming model. A socket is a byte stream that the kernel buffers for you. RDMA is a set of queues, explicit memory registrations, and explicit permission keys. The rest of this lesson is that model.</p>
+</section>
+<section id="fabrics">
+<h2>Fabrics: InfiniBand, RoCE and iWARP</h2>
+<p>The same programming interface, called <b>verbs</b>, runs over three families of networks. They differ in what carries the packets and in how they cope with loss.</p>
+<div class="table-wrap"><table>
+<thead><tr><th>Fabric</th><th>Runs over</th><th>Addresses</th><th>How loss is handled</th><th>Where you meet it</th></tr></thead>
+<tbody>
+<tr><td><b>InfiniBand</b></td><td>its own links, switches and routers (a complete stack, L1 to L4)</td><td>LID: 16-bit local ID inside a subnet, assigned by the subnet manager. GID: 128-bit global ID, for routing between subnets</td><td>credit-based link-level flow control: a port transmits only when the next hop has advertised buffer space, so switches do not drop packets under congestion</td><td>HPC clusters, AI training clusters, storage back-ends</td></tr>
+<tr><td><b>RoCE v1</b></td><td>Ethernet frames, Ethertype 0x8915</td><td>MAC address + GID</td><td>needs lossless Ethernet</td><td>rare today; cannot cross an IP router</td></tr>
+<tr><td><b>RoCE v2</b></td><td>UDP/IP, destination port 4791</td><td>IP address (the GID is derived from it)</td><td>Ethernet may drop; usually configured with PFC and ECN plus DCQCN</td><td>data centres that standardise on Ethernet</td></tr>
+<tr><td><b>iWARP</b></td><td>TCP (RFC 5040, 5041, 5044)</td><td>IP address + TCP port</td><td>TCP retransmission and congestion control, inside the NIC</td><td>some NICs; runs on ordinary networks</td></tr>
+</tbody>
+</table></div>
+<p>An InfiniBand network needs a <b>subnet manager</b> (OpenSM, or one built into a switch). It discovers the topology, assigns LIDs and programs every switch's forwarding table. Nothing works until it has run, which is the first thing to check on a broken IB cluster (<code>ibstat</code> shows the port state and LID).</p>
+<p><b>RoCE</b> (RDMA over Converged Ethernet) puts the InfiniBand transport layer on top of Ethernet. Version 2 wraps it in UDP/IP so it can be routed like any IP traffic. The catch is loss. The InfiniBand transport was designed for a fabric that does not drop packets, and the original retransmission scheme is go-back-N: after a loss, the sender resends everything from the lost packet onward. On a congested Ethernet that is slow. So most RoCE deployments make Ethernet behave more like InfiniBand:</p>
+<ul>
+<li><b>PFC</b> (Priority Flow Control, IEEE 802.1Qbb) lets a switch port tell its neighbour "pause traffic of priority 3" when its buffer fills. RoCE traffic goes in a paused-not-dropped priority class. PFC brings its own problems: pauses spread backwards through the network (head-of-line blocking, pause storms), and badly designed topologies can deadlock.</li>
+<li><b>ECN</b> (Explicit Congestion Notification) lets switches mark packets instead of dropping them. With <b>DCQCN</b>, the receiving NIC turns marks into congestion notification packets and the sending NIC lowers its rate. The aim is to slow senders down before PFC has to pause anything.</li>
+</ul>
+<p>Newer NICs recover from loss better (selective retransmission), and some operators run RoCE with little or no PFC. Which configuration is right depends on the NIC and switch generation, so follow the vendor's guidance for your hardware.</p>
+<p><b>iWARP</b> takes the opposite route: it runs RDMA over TCP inside the NIC, so it inherits TCP's congestion control and works on any network. It never became as common as RoCE.</p>
+<aside class="note"><span class="tag">Soft-RoCE</span><p>The Linux driver <code>rdma_rxe</code> implements RoCE v2 in software on top of any Ethernet interface. It is slow and burns CPU, which defeats the purpose in production, but the verbs API, the packets and the NFS behaviour are real. The lab uses it.</p></aside>
+</section>
+<section id="verbs">
+<h2>The verbs objects</h2>
+<p>The InfiniBand specification describes what an RDMA NIC can do as abstract <b>verbs</b>. On Linux the user-space library is <code>libibverbs</code> (part of the rdma-core project) and the kernel side is the <code>ib_core</code> subsystem. Kernel users like NFS call the same verbs through in-kernel functions. You create the objects in this order.</p>
+<div class="table-wrap"><table>
+<thead><tr><th>Object</th><th>Created with</th><th>What it is</th></tr></thead>
+<tbody>
+<tr><td>Device context</td><td><code>ibv_open_device</code></td><td>an open handle on one RDMA NIC (<code>struct ibv_context</code>)</td></tr>
+<tr><td>Protection domain (PD)</td><td><code>ibv_alloc_pd</code></td><td>a namespace for permissions. A queue pair can only use memory regions from its own PD</td></tr>
+<tr><td>Memory region (MR)</td><td><code>ibv_reg_mr(pd, addr, len, access)</code></td><td>a registered buffer: pages pinned, addresses loaded into the NIC. Returns an <b>lkey</b> and an <b>rkey</b></td></tr>
+<tr><td>Completion queue (CQ)</td><td><code>ibv_create_cq</code></td><td>a ring where the NIC reports finished work as completions (<code>struct ibv_wc</code>)</td></tr>
+<tr><td>Queue pair (QP)</td><td><code>ibv_create_qp</code></td><td>a send queue plus a receive queue, each tied to a CQ. Identified by a 24-bit QP number (QPN). The RDMA equivalent of a socket</td></tr>
+<tr><td>Work request (WR)</td><td><code>ibv_post_send</code>, <code>ibv_post_recv</code></td><td>one operation, with a scatter-gather list of <code>{addr, length, lkey}</code> entries</td></tr>
+<tr><td>Work completion (WC)</td><td><code>ibv_poll_cq</code></td><td>the result of one WR: its <code>wr_id</code>, a status, the byte count</td></tr>
+</tbody>
+</table></div>
+<p>The two keys returned by registration are the core of RDMA's security model:</p>
+<ul>
+<li>the <b>lkey</b> (local key) goes into your own work requests. It proves to your NIC that the buffer you name belongs to a region you registered;</li>
+<li>the <b>rkey</b> (remote key) is what you give a peer. A peer that holds your buffer's address and rkey can read or write that region directly, within the access flags you chose at registration (<code>IBV_ACCESS_REMOTE_WRITE</code>, <code>IBV_ACCESS_REMOTE_READ</code>, <code>IBV_ACCESS_REMOTE_ATOMIC</code>).</li>
+</ul>
+<h3 id="doorbell">Posting work: queues and doorbells</h3>
+<p>The queues are rings in host memory shared with the NIC. Posting a send works like this:</p>
+<figure class="diagram">
+<svg viewBox="0 0 680 380" width="680" role="img" aria-label="Verbs objects: your code posts a work queue element, rings the doorbell, the NIC fetches it and the payload by DMA, sends packets, and writes a completion that your code polls">
+<defs><marker id="ah-8-2" viewBox="0 0 10 10" refX="9" refY="5" markerWidth="7" markerHeight="7" orient="auto-start-reverse"><path class="ah" d="M0,0 L10,5 L0,10 z"/></marker></defs>
+<rect class="k-user" x="20" y="20" width="300" height="40" rx="3"/>
+<text class="t" x="170" y="45" text-anchor="middle">your code on the CPU</text>
+<text class="ts" x="20" y="92">host memory</text>
+<rect class="lnd" x="20" y="100" width="300" height="170" rx="3"/>
+<text class="ts" x="30" y="116">protection domain (PD)</text>
+<rect class="k-user" x="35" y="125" width="125" height="60" rx="3"/>
+<text class="t" x="97" y="149" text-anchor="middle">memory region</text>
+<text class="ts" x="97" y="169" text-anchor="middle">lkey / rkey</text>
+<rect class="k-net" x="175" y="125" width="130" height="130" rx="3"/>
+<text class="t" x="225" y="145" text-anchor="middle">queue pair</text>
+<rect class="box" x="187" y="158" width="106" height="36" rx="2"/>
+<text class="t" x="240" y="181" text-anchor="middle">SQ: WQEs</text>
+<rect class="box" x="187" y="204" width="106" height="36" rx="2"/>
+<text class="t" x="240" y="227" text-anchor="middle">RQ: WQEs</text>
+<rect class="k-net" x="175" y="290" width="130" height="50" rx="3"/>
+<text class="t" x="240" y="320" text-anchor="middle">CQ: CQEs</text>
+<rect class="k-net" x="440" y="100" width="220" height="240" rx="3"/>
+<text class="th" x="550" y="124" text-anchor="middle">RDMA NIC</text>
+<rect class="box" x="455" y="140" width="190" height="34" rx="2"/>
+<text class="t" x="550" y="162" text-anchor="middle">doorbell register</text>
+<rect class="box" x="455" y="190" width="190" height="34" rx="2"/>
+<text class="t" x="550" y="212" text-anchor="middle">MR translation table</text>
+<rect class="box" x="455" y="240" width="190" height="34" rx="2"/>
+<text class="t" x="550" y="262" text-anchor="middle">RC transport engine</text>
+<rect class="box" x="455" y="290" width="190" height="34" rx="2"/>
+<text class="t" x="550" y="312" text-anchor="middle">DMA engine</text>
+<line class="ln" x1="280" y1="60" x2="280" y2="156" marker-end="url(#ah-8-2)"/>
+<text class="ts" x="274" y="90" text-anchor="end">1 post WQE</text>
+<line class="ln" x1="320" y1="40" x2="453" y2="155" marker-end="url(#ah-8-2)"/>
+<text class="ts" x="400" y="78" text-anchor="middle">2 doorbell (MMIO)</text>
+<line class="ln" x1="295" y1="176" x2="438" y2="176" marker-end="url(#ah-8-2)"/>
+<text class="ts" x="366" y="170" text-anchor="middle">3 DMA: fetch WQE</text>
+<path class="ln" d="M97,185 L97,275 L438,275" marker-end="url(#ah-8-2)"/>
+<text class="ts" x="372" y="269" text-anchor="middle">4 DMA: read payload</text>
+<line class="ln" x1="550" y1="340" x2="550" y2="372" marker-end="url(#ah-8-2)"/>
+<text class="ts" x="560" y="366">5 packets to peer</text>
+<line class="ln" x1="440" y1="315" x2="307" y2="315" marker-end="url(#ah-8-2)"/>
+<text class="ts" x="372" y="309" text-anchor="middle">6 DMA: write CQE</text>
+<path class="ln" d="M175,330 L12,330 L12,40 L18,40" marker-end="url(#ah-8-2)"/>
+<text class="ts" x="30" y="324">7 ibv_poll_cq()</text>
+</svg>
+<figcaption>One RDMA WRITE from the sender's side. (1) <code>ibv_post_send</code> writes a work queue element (WQE) into the send queue ring. (2) It writes to the NIC's doorbell register through memory-mapped I/O. (3) The NIC fetches the WQE by DMA, (4) reads the payload from the registered region by DMA, and (5) sends the packets. (6) When the peer acknowledges, the NIC writes a completion queue entry (CQE). (7) Your code finds it with <code>ibv_poll_cq</code>. No step enters the kernel.</figcaption>
+</figure>
+<p>Compare this with NVMe from <a href="02-blocks.html">lesson 2</a>. An NVMe SSD has submission queues and completion queues in host memory, and the driver rings a doorbell register to say "new commands are in the queue". An RDMA NIC uses the same pattern. Its submission entries describe network operations instead of disk commands. This is why NVMe over Fabrics maps so naturally onto RDMA: an NVMe command travels in a SEND, the data moves by RDMA READ or WRITE, and the completion comes back in another SEND.</p>
+<aside class="note"><span class="tag">Aside</span><p>Each work request carries a 64-bit <code>wr_id</code> that you choose and the completion hands back. Programs usually store a pointer to their own request context there, so a completion leads straight back to whatever was waiting for it.</p></aside>
+</section>
+<section id="qp">
+<h2>Bringing a queue pair up</h2>
+<p>A new QP cannot send anything. You walk it through a state machine with <code>ibv_modify_qp</code>, and each step needs information about the other side:</p>
+<figure class="diagram">
+<pre><code>         modify                  modify                        modify
+ RESET ─────────▶ INIT ────────────────────▶ RTR ─────────────────────▶ RTS
+         port, P_Key,      remote QPN, remote GID/LID,    timeouts, retry counts,
+         access flags      remote start PSN, path MTU     own start PSN
+                           (can now receive)              (can now send)
+
+ any fatal error ──▶ ERR   every outstanding work request completes
+                           with status IBV_WC_WR_FLUSH_ERR</code></pre>
+<figcaption>RTR is "ready to receive", RTS is "ready to send". PSN is the packet sequence number the transport starts counting from.</figcaption>
+</figure>
+<p>So two peers must exchange their QP numbers, GIDs (or LIDs) and starting PSNs before either QP reaches RTR. If one side is going to read or write the other's memory, it also needs the remote buffer's address and rkey. This exchange happens <b>out of band</b>, outside the QPs being set up:</p>
+<ul>
+<li><b>A plain TCP socket.</b> <code>ibv_rc_pingpong</code> and the perftest tools do this: connect over TCP, swap a small struct, then drive <code>ibv_modify_qp</code> by hand.</li>
+<li><b>The RDMA connection manager</b> (<code>librdmacm</code>, <code>rdma_cm</code> in the kernel). It gives RDMA a socket-like API built on IP addresses: <code>rdma_resolve_addr</code> turns an IP address into a device and GID, <code>rdma_resolve_route</code> finds a path, and <code>rdma_connect</code> / <code>rdma_accept</code> run the InfiniBand connection protocol and move the QP through all its states for you. Connect and accept can each carry a small <b>private data</b> blob. The lab's <code>rc_hello.c</code> uses it to pass a buffer's address and rkey, and NFS over RDMA uses it to advertise buffer sizes.</li>
+</ul>
+<h3 id="transports">Transport services</h3>
+<div class="table-wrap"><table>
+<thead><tr><th>Service</th><th>Connection</th><th>Reliable</th><th>Operations</th><th>Notes</th></tr></thead>
+<tbody>
+<tr><td><b>RC</b> reliable connected</td><td>one QP talks to exactly one remote QP</td><td>yes: acks, retransmission, in-order</td><td>SEND, RDMA WRITE, RDMA READ, atomics</td><td>what storage protocols use</td></tr>
+<tr><td><b>UC</b> unreliable connected</td><td>one to one</td><td>no</td><td>SEND, RDMA WRITE</td><td>rarely used</td></tr>
+<tr><td><b>UD</b> unreliable datagram</td><td>one QP talks to many</td><td>no</td><td>SEND only, each message at most one MTU (up to 4 KiB)</td><td>scales to many peers; used by subnet management and some MPI transports</td></tr>
+<tr><td><b>XRC</b> extended RC</td><td>shares receive resources across processes on a node</td><td>yes</td><td>as RC</td><td>cuts the number of QPs a large job needs</td></tr>
+<tr><td><b>DC</b> dynamically connected</td><td>connects on demand in hardware</td><td>yes</td><td>as RC</td><td>vendor-specific (NVIDIA)</td></tr>
+</tbody>
+</table></div>
+</section>
+<section id="ops">
+<h2>The operations</h2>
+<p>RDMA has two kinds of operation, and the difference decides which CPUs do any work.</p>
+<h3>Two-sided: SEND and RECV</h3>
+<p>The sender posts a SEND with a buffer. The receiver must already have posted a RECV with a buffer large enough to hold the message. The receiving NIC takes the next posted RECV from the receive queue, writes the message into its buffer, and produces a completion on the receiver's CQ. Both CPUs take part: one posts, the other pre-posts and then polls.</p>
+<p>If no RECV is posted when a SEND arrives, the receiving NIC answers <b>RNR</b> (receiver not ready) and the sender's NIC retries after a delay, up to <code>rnr_retry_count</code> times. Seven means retry forever. RNR retries waste time, so protocols built on SEND/RECV make sure it does not happen, usually with credits (below).</p>
+<h3>One-sided: RDMA WRITE, RDMA READ, atomics</h3>
+<ul>
+<li><b>RDMA WRITE</b>: the initiator names a local buffer and a remote <code>(address, rkey)</code>. The target's NIC checks the rkey, the range and the access rights, then DMAs the data into place. The target's CPU gets no completion and does not know anything happened.</li>
+<li><b>RDMA WRITE with immediate</b>: the same, plus a 32-bit value that consumes one posted RECV on the target and produces a completion there. "Data is in place, here is a tag" in a single operation.</li>
+<li><b>RDMA READ</b>: the initiator names a remote <code>(address, rkey)</code> and a local buffer. The target's NIC reads its own memory and returns the data. Again the target's CPU is not involved. The number of READs in flight per QP is limited by the <code>initiator_depth</code> and <code>responder_resources</code> negotiated at connect time.</li>
+<li><b>Atomics</b>: 64-bit compare-and-swap and fetch-and-add on remote memory, executed by the target NIC. Useful for distributed locks and counters without waking the remote CPU.</li>
+</ul>
+<figure class="diagram">
+<svg viewBox="0 0 730 300" width="730" role="img" aria-label="Matrix of RDMA operations showing which CPUs and NICs take part">
+<defs><marker id="ah-8-3" viewBox="0 0 10 10" refX="9" refY="5" markerWidth="7" markerHeight="7" orient="auto-start-reverse"><path class="ah" d="M0,0 L10,5 L0,10 z"/></marker></defs>
+<text class="th" x="212" y="24" text-anchor="middle">A: CPU</text>
+<text class="th" x="347" y="24" text-anchor="middle">A: NIC</text>
+<text class="th" x="522" y="24" text-anchor="middle">B: NIC</text>
+<text class="th" x="657" y="24" text-anchor="middle">B: CPU</text>
+<text class="t" x="6" y="62">SEND / RECV</text>
+<rect class="k-net" x="150" y="40" width="125" height="36" rx="3"/><text class="ts" x="212" y="62" text-anchor="middle">posts SEND</text>
+<rect class="k-net" x="285" y="40" width="125" height="36" rx="3"/><text class="ts" x="347" y="62" text-anchor="middle">reads payload</text>
+<line class="ln" x1="412" y1="58" x2="458" y2="58" marker-end="url(#ah-8-3)"/>
+<rect class="k-net" x="460" y="40" width="125" height="36" rx="3"/><text class="ts" x="522" y="62" text-anchor="middle">fills RECV buffer</text>
+<rect class="k-net" x="595" y="40" width="125" height="36" rx="3"/><text class="ts" x="657" y="62" text-anchor="middle">pre-posts, polls</text>
+<text class="t" x="6" y="112">RDMA WRITE</text>
+<rect class="k-net" x="150" y="90" width="125" height="36" rx="3"/><text class="ts" x="212" y="112" text-anchor="middle">posts WRITE</text>
+<rect class="k-net" x="285" y="90" width="125" height="36" rx="3"/><text class="ts" x="347" y="112" text-anchor="middle">reads payload</text>
+<line class="ln" x1="412" y1="108" x2="458" y2="108" marker-end="url(#ah-8-3)"/>
+<rect class="k-net" x="460" y="90" width="125" height="36" rx="3"/><text class="ts" x="522" y="112" text-anchor="middle">checks rkey, writes</text>
+<rect class="box" x="595" y="90" width="125" height="36" rx="3"/><text class="ts" x="657" y="112" text-anchor="middle">not involved</text>
+<text class="t" x="6" y="162">WRITE + imm</text>
+<rect class="k-net" x="150" y="140" width="125" height="36" rx="3"/><text class="ts" x="212" y="162" text-anchor="middle">posts WRITE_IMM</text>
+<rect class="k-net" x="285" y="140" width="125" height="36" rx="3"/><text class="ts" x="347" y="162" text-anchor="middle">reads payload</text>
+<line class="ln" x1="412" y1="158" x2="458" y2="158" marker-end="url(#ah-8-3)"/>
+<rect class="k-net" x="460" y="140" width="125" height="36" rx="3"/><text class="ts" x="522" y="162" text-anchor="middle">writes, eats a RECV</text>
+<rect class="k-net" x="595" y="140" width="125" height="36" rx="3"/><text class="ts" x="657" y="162" text-anchor="middle">gets imm + CQE</text>
+<text class="t" x="6" y="212">RDMA READ</text>
+<rect class="k-net" x="150" y="190" width="125" height="36" rx="3"/><text class="ts" x="212" y="212" text-anchor="middle">posts READ</text>
+<rect class="k-net" x="285" y="190" width="125" height="36" rx="3"/><text class="ts" x="347" y="212" text-anchor="middle">writes local buffer</text>
+<line class="ln" x1="458" y1="208" x2="412" y2="208" marker-end="url(#ah-8-3)"/>
+<rect class="k-net" x="460" y="190" width="125" height="36" rx="3"/><text class="ts" x="522" y="212" text-anchor="middle">checks rkey, reads</text>
+<rect class="box" x="595" y="190" width="125" height="36" rx="3"/><text class="ts" x="657" y="212" text-anchor="middle">not involved</text>
+<text class="t" x="6" y="262">atomic</text>
+<rect class="k-net" x="150" y="240" width="125" height="36" rx="3"/><text class="ts" x="212" y="262" text-anchor="middle">posts CAS / FAA</text>
+<rect class="k-net" x="285" y="240" width="125" height="36" rx="3"/><text class="ts" x="347" y="262" text-anchor="middle">gets old value</text>
+<line class="ln" x1="414" y1="258" x2="456" y2="258" marker-start="url(#ah-8-3)" marker-end="url(#ah-8-3)"/>
+<rect class="k-net" x="460" y="240" width="125" height="36" rx="3"/><text class="ts" x="522" y="262" text-anchor="middle">executes atomically</text>
+<rect class="box" x="595" y="240" width="125" height="36" rx="3"/><text class="ts" x="657" y="262" text-anchor="middle">not involved</text>
+</svg>
+<figcaption>A initiates every row. Coloured cells do work; plain cells do nothing. Arrows show which way the data moves. For one-sided operations B's CPU is idle, which is the whole appeal and also the reason B needs some other way to learn that something happened.</figcaption>
+</figure>
+<p>That last point leads to the classic pattern in <code>rc_hello.c</code>: RDMA WRITE the data, then SEND a small message. On a reliable connected QP operations are delivered in order, so by the time the target sees the SEND's completion, the bytes of the earlier WRITE are already in its memory. (RDMA READs are an exception to the simple ordering story. A later operation can overtake a READ unless you set <code>IBV_SEND_FENCE</code>.)</p>
+</section>
+<section id="costs">
+<h2>Costs and pitfalls</h2>
+<h3>Registration is expensive</h3>
+<p><code>ibv_reg_mr</code> pins every page (the kernel walks the page tables and takes references) and loads the translations into the NIC. For a large buffer that takes from microseconds to milliseconds, which is far too slow to do for each I/O. Programs avoid it in three ways:</p>
+<ul>
+<li><b>Register once, reuse forever.</b> Allocate a pool of buffers at start-up and keep it registered. Simple, but the data must be copied into the pool, which brings back a copy.</li>
+<li><b>Registration caches.</b> Libraries such as UCX remember which user buffers are already registered and reuse the registration. The hard part is knowing when the application frees or remaps that memory, because a stale registration still points at the old pages.</li>
+<li><b>Fast registration (FRWR).</b> Kernel users pre-allocate MR objects and register pages by posting a <code>REG_MR</code> work request on the QP itself, inline with the data traffic. Afterwards the registration is invalidated with a <code>LOCAL_INV</code> work request, or remotely by the peer with SEND with Invalidate. The Linux NFS/RDMA client uses FRWR by default.</li>
+</ul>
+<h3>An rkey is a capability</h3>
+<p>Anyone who knows <code>(address, rkey)</code> and can reach a QP in the right protection domain can read or write that memory, within the registered access rights. An rkey is a 32-bit value, and only part of it changes between registrations, so treat it as easy to guess rather than secret. Careful protocols register memory per I/O, expose it only for as long as the I/O lasts, then invalidate it. NFS over RDMA does exactly this, and in addition never gives the client an rkey for server memory at all (see below). Memory windows offer finer-grained, revocable remote access. Network isolation (InfiniBand partition keys, VLANs for RoCE) is the outer fence.</p>
+<h3>Receive buffers and credits</h3>
+<p>Every SEND consumes a RECV that the receiver posted in advance. Post too few and senders hit RNR; post too many and memory sits idle (a shared receive queue, SRQ, lets many QPs draw from one pool). Protocols solve this with <b>credits</b>: the receiver tells the sender how many receives it has posted, and the sender never has more SENDs outstanding than that. Credit-based flow control appears at every level of RDMA, from the InfiniBand link layer up to RPC-over-RDMA.</p>
+<h3>Polling or interrupts</h3>
+<p>Spinning on <code>ibv_poll_cq</code> gives the lowest latency and keeps one core at 100%. Event mode (<code>ibv_req_notify_cq</code> plus a completion channel) sleeps until an interrupt, which saves the core and adds microseconds. Real systems mix the two: poll for a while, then arm the interrupt and sleep.</p>
+<h3>Connection scaling</h3>
+<p>RC needs a QP per pair of communicating endpoints. An all-to-all job with thousands of processes needs millions of QPs, and every QP's state lives in NIC memory, with a cache on the NIC that starts missing as the count grows. XRC, DC and UD-based transports exist to reduce that count.</p>
+<h3>The fabric itself</h3>
+<p>Most RDMA trouble in practice is configuration: PFC and ECN settings that do not match across switches, MTU mismatches, the wrong GID index on RoCE, firmware versions. Useful first tools are <code>ibv_devinfo</code>, <code>rdma link</code>, <code>rdma statistic</code>, <code>ibstat</code> on InfiniBand, and the NIC's own counters in <code>ethtool -S</code>.</p>
+<aside class="pitfall"><span class="tag">Pitfall</span><p>Raw verbs are rarely the right level for an application. Most user-space software uses a library that hides registration, connection management and protocol choice: UCX, libfabric, MPI, or NCCL for GPUs. Kernel code uses the in-kernel verbs through subsystems like NFS, NVMe-oF and iSER. Learn verbs to understand those systems, not to replace them.</p></aside>
+</section>
+<section id="storage">
+<h2>Storage over RDMA</h2>
+<p>Nearly every storage protocol on RDMA follows one pattern. Small control messages (commands, RPC headers, replies) travel by SEND/RECV. Bulk data moves by RDMA READ or WRITE, which the <b>server or target</b> initiates against buffers the client described in its request.</p>
+<div class="table-wrap"><table>
+<thead><tr><th>Protocol</th><th>Level</th><th>Notes</th></tr></thead>
+<tbody>
+<tr><td>iSER</td><td>block</td><td>iSCSI Extensions for RDMA (RFC 7145): SCSI commands as messages, data by RDMA</td></tr>
+<tr><td>SRP</td><td>block</td><td>SCSI RDMA Protocol, an older InfiniBand-era block protocol</td></tr>
+<tr><td>NVMe-oF over RDMA</td><td>block</td><td>NVMe command capsules in SENDs; the target does RDMA READ for host writes and RDMA WRITE for host reads</td></tr>
+<tr><td>NFS over RDMA</td><td>file</td><td>RPC-over-RDMA under unchanged NFS, detailed below</td></tr>
+<tr><td>SMB Direct</td><td>file</td><td>SMB 3 over RDMA; Windows Server, the Linux SMB client and ksmbd</td></tr>
+<tr><td>Lustre LNet</td><td>file</td><td>Lustre's network layer; the o2ib driver (<code>ko2iblnd</code>) runs it over verbs (<a href="09-distributed.html">lesson 9</a>)</td></tr>
+<tr><td>IBM Storage Scale (GPFS)</td><td>file</td><td>verbs RDMA between clients and NSD servers</td></tr>
+<tr><td>BeeGFS</td><td>file</td><td>native RDMA transport between clients and its servers</td></tr>
+</tbody>
+</table></div>
+<p><b>GPUDirect Storage</b> takes this one step further. With supporting drivers and filesystems, the NIC places data directly into GPU memory instead of host memory, so a training job's input skips the CPU's RAM entirely. With NFS over RDMA, that means the server's RDMA WRITE lands in GPU memory. It depends on vendor-specific kernel components, so check what your stack supports.</p>
+</section>
+<section id="nfs-rdma">
+<h2>NFS over RDMA in depth</h2>
+<p>NFS itself does not change. The compound operations, state, delegations and caching from lessons <a href="06-nfs.html">6</a> and <a href="07-nfs-caching.html">7</a> are identical. What changes is the transport under SUNRPC. Linux has pluggable RPC transports: <code>xprtsock</code> for TCP and UDP, and <code>xprtrdma</code> (client) and <code>svcrdma</code> (server) for RDMA. Both RDMA halves live in the <code>rpcrdma</code> kernel module.</p>
+<p>The protocol is <b>RPC-over-RDMA version 1</b>, defined in RFC 8166. RFC 8267 says how NFS uses it, and assigns the service name <code>nfsrdma</code> on port <b>20049</b>, which NFSv4 servers must use for RDMA. RFC 8797 adds a way for the two peers to tell each other their real buffer sizes in the rdma_cm private data at connect time.</p>
+<h3 id="header">The transport header</h3>
+<p>Every RPC message travels in a SEND, prefixed by a small XDR header:</p>
+<pre><code>RPC-over-RDMA v1 header (on every SEND)
+  rdma_xid      copy of the RPC XID
+  rdma_vers     1
+  rdma_credit   credits requested (in a call) or granted (in a reply)
+  rdma_proc     RDMA_MSG (0)    the RPC message follows inline
+                RDMA_NOMSG (1)  the RPC message itself is in a chunk
+                RDMA_ERROR (4)
+  read list     0..n read segments  { position, handle, length, offset }
+  write list    0..n write chunks, each an array of { handle, length, offset }
+  reply chunk   0 or 1 array of { handle, length, offset }
+then, for RDMA_MSG: the RPC message, minus any data moved through chunks</code></pre>
+<p>A <b>segment</b> is the triple a remote NIC needs: <code>handle</code> is the rkey, <code>offset</code> is the address, <code>length</code> is the size. A <b>chunk</b> is one or more segments that together hold one XDR data item.</p>
+<h3 id="inline">Inline threshold and credits</h3>
+<p>The <b>inline threshold</b> is the largest message one SEND can carry, set by the size of the receive buffers the peer posted. RFC 8166 says both sides must assume 1024 bytes unless they learn otherwise. Linux uses larger buffers and advertises them through the RFC 8797 private data. Anything that fits goes inline in a single SEND. Anything that does not goes through a chunk.</p>
+<p><b>Credits</b> are the receive-buffer accounting from the previous section, built into the protocol. In <code>rdma_credit</code> the client asks for a number of credits and the server grants a number. The server keeps that many RECVs posted, and the client never has more calls outstanding than its grant. A grant of zero is forbidden, because it would deadlock the connection.</p>
+<h3 id="chunks">Three kinds of chunk</h3>
+<div class="table-wrap"><table>
+<thead><tr><th>Chunk</th><th>Carries</th><th>Client registers it for</th><th>Server moves it with</th><th>Typical use</th></tr></thead>
+<tbody>
+<tr><td><b>Read chunk</b></td><td>an argument the server must pull</td><td>remote read</td><td>RDMA READ</td><td>NFS WRITE data; a whole call too big to send inline (a "Position Zero Read chunk")</td></tr>
+<tr><td><b>Write chunk</b></td><td>a result the server must push</td><td>remote write</td><td>RDMA WRITE</td><td>NFS READ data</td></tr>
+<tr><td><b>Reply chunk</b></td><td>a whole reply that may not fit inline</td><td>remote write</td><td>RDMA WRITE</td><td>large READDIR or ACL replies</td></tr>
+</tbody>
+</table></div>
+<p>RFC 8267 lists which NFS data items may move through chunks (it calls them DDP-eligible). For NFSv4 they are the data of WRITE arguments, the data of READ results, and the link text of READLINK and of a symlink CREATE. Everything else, such as file handles, attributes and stateids, always travels inline.</p>
+<aside class="key"><span class="tag">Key idea</span><p>The client only ever exposes its own memory. The server performs every RDMA READ and RDMA WRITE. A client never holds an rkey for server memory, so a buggy or hostile client cannot scribble on the server, and the server decides how much RDMA traffic it has in flight.</p></aside>
+<h3 id="read-flow">An NFS READ over RDMA</h3>
+<figure class="diagram">
+<svg viewBox="0 0 680 340" width="680" role="img" aria-label="Message flow of an NFS READ over RDMA: call by SEND with a write chunk, data by server RDMA WRITEs, reply by SEND with invalidate">
+<defs><marker id="ah-8-4" viewBox="0 0 10 10" refX="9" refY="5" markerWidth="7" markerHeight="7" orient="auto-start-reverse"><path class="ah" d="M0,0 L10,5 L0,10 z"/></marker></defs>
+<text class="th" x="200" y="22" text-anchor="middle">client (xprtrdma)</text>
+<text class="th" x="480" y="22" text-anchor="middle">server (svcrdma, nfsd)</text>
+<line class="lnd" x1="200" y1="34" x2="200" y2="330"/>
+<line class="lnd" x1="480" y1="34" x2="480" y2="330"/>
+<text class="ts" x="190" y="58" text-anchor="end">register page-cache</text>
+<text class="ts" x="190" y="72" text-anchor="end">pages (FRWR): rkey</text>
+<text class="t" x="340" y="98" text-anchor="middle">SEND: call, inline</text>
+<text class="ts" x="340" y="112" text-anchor="middle">+ write chunk {addr, rkey, 1 MiB}</text>
+<line class="ln" x1="202" y1="120" x2="476" y2="120" marker-end="url(#ah-8-4)"/>
+<text class="ts" x="490" y="150">RECV completes;</text>
+<text class="ts" x="490" y="164">nfsd reads the file</text>
+<text class="t" x="340" y="186" text-anchor="middle">RDMA WRITE × n: the data</text>
+<line class="ln" x1="478" y1="196" x2="204" y2="196" marker-end="url(#ah-8-4)"/>
+<line class="ln" x1="478" y1="208" x2="204" y2="208" marker-end="url(#ah-8-4)"/>
+<line class="ln" x1="478" y1="220" x2="204" y2="220" marker-end="url(#ah-8-4)"/>
+<text class="t" x="340" y="252" text-anchor="middle">SEND with Invalidate: reply</text>
+<text class="ts" x="340" y="266" text-anchor="middle">(READ result header, no data inline)</text>
+<line class="ln" x1="478" y1="274" x2="204" y2="274" marker-end="url(#ah-8-4)"/>
+<text class="ts" x="190" y="300" text-anchor="end">RECV completes: data</text>
+<text class="ts" x="190" y="314" text-anchor="end">already in the pages</text>
+</svg>
+<figcaption>The client CPU never copies the file data. RC ordering guarantees the RDMA WRITEs land before the reply's SEND completes. SEND with Invalidate also revokes the client's rkey in the same message, so the client does not need a separate invalidation step.</figcaption>
+</figure>
+<h3 id="write-flow">An NFS WRITE over RDMA</h3>
+<figure class="diagram">
+<svg viewBox="0 0 680 340" width="680" role="img" aria-label="Message flow of an NFS WRITE over RDMA: call by SEND with a read chunk, server pulls the data with RDMA READ, reply by SEND with invalidate">
+<defs><marker id="ah-8-5" viewBox="0 0 10 10" refX="9" refY="5" markerWidth="7" markerHeight="7" orient="auto-start-reverse"><path class="ah" d="M0,0 L10,5 L0,10 z"/></marker></defs>
+<text class="th" x="200" y="22" text-anchor="middle">client (xprtrdma)</text>
+<text class="th" x="480" y="22" text-anchor="middle">server (svcrdma, nfsd)</text>
+<line class="lnd" x1="200" y1="34" x2="200" y2="330"/>
+<line class="lnd" x1="480" y1="34" x2="480" y2="330"/>
+<text class="ts" x="190" y="58" text-anchor="end">register dirty pages</text>
+<text class="ts" x="190" y="72" text-anchor="end">for remote read: rkey</text>
+<text class="t" x="340" y="98" text-anchor="middle">SEND: call, inline</text>
+<text class="ts" x="340" y="112" text-anchor="middle">+ read chunk {position, addr, rkey, len}</text>
+<line class="ln" x1="202" y1="120" x2="476" y2="120" marker-end="url(#ah-8-5)"/>
+<text class="ts" x="490" y="146">svcrdma sees the</text>
+<text class="ts" x="490" y="160">read list</text>
+<text class="t" x="340" y="180" text-anchor="middle">RDMA READ request</text>
+<line class="ln" x1="478" y1="188" x2="204" y2="188" marker-end="url(#ah-8-5)"/>
+<text class="ts" x="340" y="214" text-anchor="middle">data, served by the client NIC</text>
+<line class="ln" x1="202" y1="222" x2="476" y2="222" marker-end="url(#ah-8-5)"/>
+<text class="ts" x="490" y="244">nfsd writes the file</text>
+<text class="t" x="340" y="266" text-anchor="middle">SEND with Invalidate: reply</text>
+<line class="ln" x1="478" y1="274" x2="204" y2="274" marker-end="url(#ah-8-5)"/>
+<text class="ts" x="190" y="300" text-anchor="end">RECV: WRITE done,</text>
+<text class="ts" x="190" y="314" text-anchor="end">pages unregistered</text>
+</svg>
+<figcaption>The server pulls the payload when it is ready for it. The <code>position</code> field says where in the XDR stream the pulled data belongs, so the server can rebuild the full RPC call before handing it to nfsd.</figcaption>
+</figure>
+<p>Small requests such as GETATTR or LOOKUP fit inline both ways and use only SEND/RECV. RDMA reads and writes appear only when there is bulk data, which is where the copies used to hurt.</p>
+<h3 id="v2">Version 2</h3>
+<p>Work on RPC-over-RDMA version 2 aimed to make the protocol extensible and to fix version 1's pain points, such as small default inline sizes forcing RDMA operations for modest payloads. It exists only as an IETF Internet-Draft whose last revision (-07, June 2022) has expired. Everything deployed today speaks version 1.</p>
+<h3 id="setup">Turning it on</h3>
+<p>On the server, load the transport, add an RDMA listener, and export with <code>insecure</code> (an RDMA connection has no privileged source port for the server to check):</p>
+<pre><code><span class="p">#</span> modprobe rpcrdma
+<span class="p">#</span> echo 'rdma 20049' &gt; /proc/fs/nfsd/portlist     <span class="c"># at runtime</span>
+<span class="c"># or permanently, in /etc/nfs.conf:</span>
+<span class="c">#   [nfsd]</span>
+<span class="c">#   rdma=y              (rdma-port=20049 is the default)</span>
+<span class="p">#</span> cat /etc/exports
+<span class="o">/srv/data  *(rw,sync,no_subtree_check,insecure)</span></code></pre>
+<p>On the client, ask for the RDMA transport and the RDMA port:</p>
+<pre><code><span class="p">#</span> modprobe rpcrdma
+<span class="p">#</span> mount -t nfs -o vers=4.2,proto=rdma,port=20049 server:/srv/data /mnt/data
+<span class="p">$</span> nfsstat -m        <span class="c"># the options line shows proto=rdma,port=20049</span></code></pre>
+<p>The per-mount statistics in <code>/proc/self/mountstats</code> (lesson 7) gain a transport line that starts with <code>xprt: rdma</code>. After the generic counters (connects, sends, receives) come RDMA-specific ones, in this order: read chunks, write chunks, reply chunks, total bytes moved by RDMA for requests and replies, pull-up and fix-up copies, registrations done the slow way (<code>hardway_registers</code>), marshalling failures, bad replies, no-message calls, then memory-registration counts (recycled, orphaned, allocated), local invalidations needed, and empty send-context events. A large sequential write raises the read-chunk counter; a large read raises the write-chunk counter. The lab has an <code>awk</code> line that labels every field.</p>
+</section>
+<section class="lab" id="lab">
+<p class="tag">Lab 07</p>
+<h2>Soft-RoCE, a verbs program, and NFS over RDMA</h2>
+<p class="where">~/storage-course/labs/07-rdma/</p>
+<p>This WSL kernel is built without InfiniBand or soft-RoCE support (<code>CONFIG_INFINIBAND</code> and <code>CONFIG_RDMA_RXE</code> are not set), so this lab runs in a Linux VM. Ubuntu 24.04 under any hypervisor is fine; two VMs on one virtual network are best. <b>The steps are untested on this machine.</b> <code>rc_hello.c</code> was compiled and linked here against the Ubuntu 24.04 rdma-core headers with no warnings, but it has not been run.</p>
+<ol>
+<li>Create an RDMA device on top of the VM's Ethernet interface:
+<pre><code><span class="p">$</span> sudo apt install rdma-core ibverbs-utils rdmacm-utils perftest \
+       libibverbs-dev librdmacm-dev linux-modules-extra-$(uname -r)
+<span class="p">$</span> sudo modprobe rdma_rxe
+<span class="p">$</span> sudo rdma link add rxe0 type rxe netdev enp0s3   <span class="c"># your interface name</span>
+<span class="p">$</span> ibv_devinfo -d rxe0 -v | less                    <span class="c"># limits, ports, GID table</span></code></pre>
+Find the GID index that holds your IPv4 address (often 1). The tools call it <code>-g</code> or <code>-x</code>.
+</li>
+<li>Move real RDMA traffic. <code>ibv_rc_pingpong</code> swaps QP numbers and GIDs over TCP, walks both QPs to RTS, then ping-pongs SENDs:
+<pre><code><span class="p">$</span> ibv_rc_pingpong -d rxe0 -g 1                <span class="c"># server</span>
+<span class="p">$</span> ibv_rc_pingpong -d rxe0 -g 1 &lt;server-ip&gt;    <span class="c"># client</span>
+<span class="p">$</span> ib_write_bw -d rxe0 -x 1   /   ib_write_bw -d rxe0 -x 1 &lt;server-ip&gt;
+<span class="p">$</span> ib_read_lat -d rxe0 -x 1   /   ib_read_lat -d rxe0 -x 1 &lt;server-ip&gt;</code></pre>
+With soft-RoCE the absolute numbers are meaningless. Compare WRITE with SEND and READ latency with SEND latency on the same setup.
+</li>
+<li>Build and run the verbs program. Read its comments top to bottom first: they follow the order of this lesson.
+<pre><code><span class="p">$</span> gcc -Wall -Wextra -O2 -o rc_hello rc_hello.c -lrdmacm -libverbs
+<span class="p">$</span> ./rc_hello server 7471
+<span class="p">$</span> ./rc_hello client &lt;server-ip&gt; 7471</code></pre>
+The server prints <code>(empty)</code>, then after the client's SEND arrives it prints the message the client placed by RDMA WRITE. The server never gets a completion for the WRITE itself. Then break it on purpose: drop <code>IBV_ACCESS_REMOTE_WRITE</code> from the server's registration (remote access error), or remove the pre-posted RECV (receiver-not-ready retries).
+</li>
+<li>Mount NFS over the rxe device, following the server and client commands in the section above (the README has them in full). Then:
+<pre><code><span class="p">$</span> dd if=/dev/zero of=/mnt/nfsrdma/big bs=1M count=256 oflag=direct
+<span class="p">$</span> dd if=/mnt/nfsrdma/big of=/dev/null bs=1M iflag=direct
+<span class="p">$</span> grep -E 'xprt:[[:space:]]+rdma' /proc/self/mountstats</code></pre>
+The write raises the read-chunk counter (the server pulled the data); the read raises the write-chunk counter (the server pushed it). <code>mrs_allocated</code> stays small while <code>mrs_recycled</code> climbs, because registrations are reused.
+</li>
+</ol>
+<p class="small muted">Advanced alternative: build your own WSL kernel with <code>CONFIG_INFINIBAND</code>, <code>CONFIG_INFINIBAND_USER_ACCESS</code>, <code>CONFIG_RDMA_RXE</code> and <code>CONFIG_SUNRPC_XPRT_RDMA</code>, and point <code>kernel=</code> in <code>.wslconfig</code> at it. That changes the kernel for every WSL distribution on the machine; the VM is simpler.</p>
+</section>
+<section class="check" id="check">
+<h2>Check yourself</h2>
+<details><summary>At 400 Gb/s, what limits a TCP receiver that RDMA does not?</summary><p>The CPU. It must run TCP/IP for millions of packets per second and copy every byte at least once (skb to page cache) and often twice (page cache to user buffer). Each copy reads and writes memory, so one receive copy at 50 GB/s costs about 100 GB/s of memory traffic. RDMA runs the transport on the NIC and DMAs data straight to its final address.</p></details>
+<details><summary>What do the lkey and the rkey of a memory region each authorise?</summary><p>The lkey goes in your own work requests and lets your NIC access the buffer for local operations. The rkey is given to a peer and lets the peer's operations (RDMA READ, WRITE, atomics) access the region remotely, within the access flags chosen at registration.</p></details>
+<details><summary>The target of an RDMA WRITE gets no completion. How does it learn the data has arrived?</summary><p>Either the initiator uses RDMA WRITE with immediate, which consumes a posted RECV and creates a completion on the target, or it follows the WRITE with a SEND. On an RC queue pair operations are delivered in order, so when the SEND's RECV completes, the WRITE's data is already in memory.</p></details>
+<details><summary>Why must a receiver post RECVs in advance, and how do credits help?</summary><p>A SEND is placed into the buffer of the next posted RECV. If none is posted, the receiving NIC answers receiver-not-ready and the sender retries, which wastes time. With credits the receiver tells the sender how many RECVs it has posted, and the sender never has more SENDs in flight than that. RPC-over-RDMA carries credits in the <code>rdma_credit</code> header field.</p></details>
+<details><summary>Why does RoCE v2 usually run on Ethernet configured with PFC and ECN?</summary><p>The InfiniBand transport it carries was designed for a fabric that does not drop packets, and its go-back-N retransmission performs badly under loss. PFC pauses traffic per priority instead of dropping it; ECN marking with DCQCN slows senders before buffers fill. Newer NICs tolerate loss better, so the exact configuration depends on hardware.</p></details>
+<details><summary>In an NFS WRITE over RDMA, who performs the RDMA operation, in which direction, and through which kind of chunk?</summary><p>The server. The client registers the data pages for remote read and describes them in a read chunk. The server pulls the data with RDMA READ, rebuilds the call, and nfsd writes the file. For an NFS READ it is the reverse: a write chunk, and the server pushes the data with RDMA WRITE.</p></details>
+<details><summary>Why is it a good design that only the server initiates RDMA in RPC-over-RDMA v1?</summary><p>The client never learns an rkey for server memory, so a faulty or malicious client cannot read or corrupt the server. The server also controls how many RDMA operations it has in flight, so clients cannot overload it with RDMA traffic.</p></details>
+<details><summary>What changes in NFS semantics when you mount with <code>proto=rdma</code>?</summary><p>Nothing. Compounds, state, delegations, close-to-open and the attribute cache behave exactly as over TCP. Only the SUNRPC transport underneath changes, along with the port (20049).</p></details>
+</section>
+<section class="further" id="further">
+<h2>Go deeper</h2>
+<ul>
+<li><a href="https://www.rfc-editor.org/rfc/rfc8166">RFC 8166</a>: RPC-over-RDMA version 1. Sections 3.4 and 3.5 explain chunks and long messages.</li>
+<li><a href="https://www.rfc-editor.org/rfc/rfc8267">RFC 8267</a>: the NFS binding. Which NFS data items may use chunks, and port 20049.</li>
+<li><a href="https://www.rfc-editor.org/rfc/rfc8797">RFC 8797</a>: RDMA-CM private data for RPC-over-RDMA, the inline-size advertisement.</li>
+<li><a href="https://docs.kernel.org/admin-guide/nfs/nfs-rdma.html">Setting up NFS/RDMA</a>: the kernel's own (old but still useful) setup notes.</li>
+<li><a href="https://man7.org/linux/man-pages/man3/ibv_post_send.3.html">ibv_post_send(3)</a>: every opcode and flag, including fences and inline sends.</li>
+<li><a href="https://www.rdmamojo.com/">RDMAmojo</a>: a long-running blog that explains every verb and its parameters with examples.</li>
+<li><a href="https://github.com/linux-rdma/rdma-core">rdma-core</a>: libibverbs, librdmacm and the example programs such as <code>ibv_rc_pingpong</code>.</li>
+<li><a href="https://www.microsoft.com/en-us/research/publication/congestion-control-for-large-scale-rdma-deployments/">Congestion Control for Large-Scale RDMA Deployments</a> (SIGCOMM 2015): the DCQCN paper and why RoCE needs congestion control.</li>
+</ul>
+</section>
+<nav class="pager-foot" aria-label="Next and previous lesson">
+<a class="prev" href="07-nfs-caching.html"><small>Previous</small>Caching across the network</a>
+<a class="next" href="09-distributed.html"><small>Next</small>Distributed filesystems</a>
+</nav>
+</main>
+</div>
+<script src="course.js"></script>
+</body>
+</html>

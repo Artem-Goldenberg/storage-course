@@ -1,0 +1,6 @@
+services:
+  - type: web
+    name: storage-course
+    runtime: static
+    buildCommand: echo "static site, nothing to build"
+    staticPublishPath: ./site

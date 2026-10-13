@@ -1,0 +1,1204 @@
+<!doctype html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover">
+<title>B-trees, Really</title>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=IBM+Plex+Mono:wght@400;600&family=IBM+Plex+Sans+Condensed:wght@500;600;700&family=Source+Serif+4:ital,opsz,wght@0,8..60,400;0,8..60,600;1,8..60,400&display=swap">
+<link rel="stylesheet" href="course.css?v=7">
+<style>
+  /* B+tree demo and fanout calculator (lesson 04 only); tokens from course.css */
+  .bp-controls, .fan-grid { display: flex; flex-wrap: wrap; gap: 0.5rem; align-items: center; font-family: var(--display); }
+  .bp-controls label, .fan-grid label { display: inline-flex; gap: 0.4rem; align-items: center; color: var(--ink-2); }
+  .bp-controls button, .bp-controls select, .bp-controls input,
+  .fan-grid select, .fan-grid input {
+    font: inherit; font-size: 0.95rem; color: var(--ink); background: var(--panel);
+    border: 1px solid var(--rule); border-radius: 3px; padding: 0.3rem 0.6rem; min-height: 2.2rem;
+  }
+  .bp-controls input { width: 5.5rem; font-family: var(--mono); }
+  .bp-controls button { cursor: pointer; }
+  .bp-controls button:hover { border-color: var(--layer); }
+  .bp-controls button.primary { background: color-mix(in srgb, var(--layer) 14%, var(--panel)); border-color: var(--layer); }
+  .bp-stage { overflow-x: auto; min-width: 0; padding: 0.25rem 0; }
+  .bp-stage svg { max-width: none; margin: 0 auto; }
+  .bp-stats { font-family: var(--mono); font-size: 0.82rem; color: var(--ink-2); margin: 0; }
+  .bp-log {
+    list-style: none; margin: 0; padding: 0.5rem 0.75rem; max-height: 9.5rem; overflow-y: auto;
+    font-family: var(--mono); font-size: 0.8rem; line-height: 1.45; white-space: pre-wrap;
+    background: var(--code-bg); border-radius: 3px; color: var(--ink-2);
+  }
+  .bp-log li { margin: 0 0 0.3rem; }
+  .bp-log span { display: block; }
+  .bp-log .bp-sub { padding-left: 1.5em; }
+  .bp-log li:first-child { color: var(--ink); }
+  svg .bp-cell  { fill: var(--panel); stroke: var(--rule); stroke-width: 1; }
+  svg .bp-empty { fill: var(--code-bg); stroke: var(--rule); stroke-width: 1; }
+  svg .bp-hit   { fill: color-mix(in srgb, var(--accent) 32%, var(--panel)); }
+  svg .bp-new   { fill: color-mix(in srgb, var(--l-user) 32%, var(--panel)); }
+  svg .bp-node  { fill: none; stroke: var(--ink-2); stroke-width: 1.2; }
+  svg .bp-leaf  { stroke: var(--layer); }
+  svg .bp-split { stroke: var(--l-block); stroke-width: 2.2; stroke-dasharray: 5 3; }
+  svg .bp-path  { stroke: var(--accent); stroke-width: 2.6; }
+  svg .bp-edge-hit { stroke: var(--accent); stroke-width: 2.2; }
+  svg .bp-ptr   { fill: var(--ink-2); }
+  svg .bp-ptr-hit { fill: var(--accent); }
+  .bp-fig { grid-template-columns: minmax(0, 1fr); }
+  .fan-grid label { display: grid; grid-template-columns: minmax(0, 1fr); gap: 0.2rem; font-size: 0.85rem; min-width: 0; max-width: 100%; }
+  .fan-grid select { width: 100%; }
+  .fan-grid input { width: 8.5rem; font-family: var(--mono); }
+  .fan-out {
+    margin: 0; padding: 0.6rem 0.8rem; white-space: pre-wrap; font-family: var(--mono);
+    font-size: 0.82rem; line-height: 1.5; background: var(--code-bg); border-radius: 3px;
+  }
+</style>
+</head>
+<body data-layer="fs">
+<header class="topbar">
+<a class="brand" href="index.html">From open() to RDMA <span>· a storage course</span></a>
+<nav class="pager" aria-label="Lesson pager">
+<a href="03-ondisk.html" rel="prev">← Prev</a>
+<details class="route"><summary>Lesson 4 of 9</summary></details>
+<a href="05-vfs-cache.html" rel="next">Next →</a>
+<details class="sections"><summary>Sections</summary></details>
+</nav>
+</header>
+<div class="layout">
+<nav class="rail" aria-label="Lessons">
+<div class="rail-title">The route</div>
+<ol>
+<li class="user"><a href="01-syscalls.html"><span class="n">01</span><span>Syscalls &amp; file descriptors</span></a></li>
+<li class="block"><a href="02-blocks.html"><span class="n">02</span><span>Block devices &amp; addressing</span></a></li>
+<li class="fs"><a href="03-ondisk.html"><span class="n">03</span><span>Inside an ext4 image</span></a></li>
+<li class="fs"><a href="04-btrees.html" aria-current="page"><span class="n">04</span><span>B-trees, really</span></a></li>
+<li class="kernel"><a href="05-vfs-cache.html"><span class="n">05</span><span>The VFS and the caches</span></a></li>
+<li class="net"><a href="06-nfs.html"><span class="n">06</span><span>NFS from v3 to 4.2</span></a></li>
+<li class="net"><a href="07-nfs-caching.html"><span class="n">07</span><span>Caching across the network</span></a></li>
+<li class="net"><a href="08-rdma.html"><span class="n">08</span><span>RDMA and NFS over RDMA</span></a></li>
+<li class="net"><a href="09-distributed.html"><span class="n">09</span><span>Distributed filesystems</span></a></li>
+<li class="extra"><a href="glossary.html"><span class="n">··</span><span>Glossary</span></a></li>
+</ol>
+<div class="rail-legend">
+<span style="--c: var(--l-user)">user space</span>
+<span style="--c: var(--l-kernel)">kernel</span>
+<span style="--c: var(--l-fs)">filesystem</span>
+<span style="--c: var(--l-block)">block</span>
+<span style="--c: var(--l-net)">network</span>
+</div>
+</nav>
+<main class="lesson">
+<header class="lesson-head">
+<p class="eyebrow">Lesson 4 · Filesystem layer</p>
+<h1>B-trees, really</h1>
+<p class="lede">Every filesystem and database you will meet keeps its indexes in some kind of B-tree. This lesson explains why the shape wins on disks, how the tree stays balanced, and then opens the real ones: ext4's extent tree and htree, XFS, btrfs, and three databases.</p>
+<div class="outcomes">
+<b>After this lesson you can</b>
+<ul>
+<li>estimate a B-tree's height from its node size, entry size and key count, and say what a lookup costs;</li>
+<li>insert into a B+tree by hand, including a split that reaches the root;</li>
+<li>read <code>debugfs</code> output for an ext4 extent tree and an htree, and explain each number;</li>
+<li>name the B-trees inside XFS and btrfs and the question each one answers;</li>
+<li>say when a log-structured merge tree beats a B-tree, and what it costs.</li>
+</ul>
+</div>
+<nav class="toc" aria-label="Lesson contents">
+<b>In this lesson</b>
+<ol>
+<li><a href="#cost-model">Why disks want short, fat trees</a></li>
+<li><a href="#btree">The rules of a B-tree</a></li>
+<li><a href="#bplus">B+trees: the variant everyone uses</a></li>
+<li><a href="#demo">Try it: grow a B+tree</a></li>
+<li><a href="#ext4-extents">ext4's extent tree</a></li>
+<li><a href="#htree">The htree: a B-tree over name hashes</a></li>
+<li><a href="#xfs">XFS: a forest of B+trees</a></li>
+<li><a href="#btrfs">btrfs: copy-on-write B-trees</a></li>
+<li><a href="#databases">Databases: the same tree with a different page</a></li>
+<li><a href="#lsm">When a B-tree is the wrong answer: LSM trees</a></li>
+<li><a href="#concurrency">Many threads, one tree</a></li>
+<li><a href="#in-memory">B-trees in RAM, too</a></li>
+<li><a href="#lab">Lab 04: Watch ext4's B-trees grow</a></li>
+<li><a href="#check">Check yourself</a></li>
+<li><a href="#further">Go deeper</a></li>
+</ol>
+</nav>
+</header>
+<section id="cost-model">
+<h2>Why disks want short, fat trees</h2>
+<p>Every index answers the same question: given a key, where is the thing? In lesson 03 the keys were file block numbers (where is block 700 of this file?) and names (which inode is <code>hello.txt</code>?). The answer has to come back fast even when there are millions of keys, and the index itself lives on the same slow device as the data.</p>
+<p>The cost model from <a href="02-blocks.html">lesson 02</a> decides the design. The device reads whole blocks, and one random read costs about 5–10 ms on a hard disk and 10–100 µs on an NVMe SSD. Reading 12 bytes costs the same as reading 4096. What matters is how many separate blocks a lookup has to touch. Comparisons inside a block are almost free: a CPU can binary-search 340 keys in the time it takes an NVMe drive to notice a request.</p>
+<p>A <b>binary search tree</b>, the structure from a first algorithms course, holds one key per node and has two children. Holding a million keys takes about 20 levels (2<sup>20</sup> ≈ 1,000,000). If each node is a separate disk block, a lookup is 20 random reads: around 160 ms on a hard disk. A sorted array searched by binary search has the same problem, and inserting into it means shifting everything after the insertion point.</p>
+<p>A <b>B-tree</b> makes each node exactly one block and packs as many keys into it as will fit. The number of children per node is the <b>fanout</b>. ext4's extent entries are 12 bytes and its tree nodes have a 12-byte header, so one 4 KiB node holds (4096 − 12) / 12 = 340 entries. With fanout <var>F</var>, a tree over <var>N</var> keys has height ⌈log<sub>F</sub> <var>N</var>⌉:</p>
+<ul>
+<li>1,000,000 keys at fanout 340: 3 levels (340<sup>2</sup> = 115,600 is too few, 340<sup>3</sup> ≈ 39 million is enough);</li>
+<li>1,000,000,000 keys at fanout 340: 4 levels.</li>
+</ul>
+<figure class="diagram">
+<svg viewBox="0 0 720 290" width="720" role="img" aria-label="A binary search tree over a million keys needs 20 levels, so 20 random reads; a B+tree with 340 entries per 4 KiB node needs 3 levels with 1, 9 and 2,942 nodes, and its top two levels fit in 40 KiB of RAM">
+<text class="th" x="20" y="24">binary search tree</text>
+<text class="ts" x="20" y="42">1,000,000 keys, 1 key per node</text>
+<polyline class="ln" points="40,60 62,70.5 40,81 62,91.5 40,102 62,112.5 40,123 62,133.5 40,144 62,154.5 40,165 62,175.5 40,186 62,196.5 40,207 62,217.5 40,228 62,238.5 40,249 62,259.5"/>
+<circle class="k-fs" cx="40" cy="60" r="4"/><circle class="k-fs" cx="62" cy="70.5" r="4"/><circle class="k-fs" cx="40" cy="81" r="4"/><circle class="k-fs" cx="62" cy="91.5" r="4"/><circle class="k-fs" cx="40" cy="102" r="4"/>
+<circle class="k-fs" cx="62" cy="112.5" r="4"/><circle class="k-fs" cx="40" cy="123" r="4"/><circle class="k-fs" cx="62" cy="133.5" r="4"/><circle class="k-fs" cx="40" cy="144" r="4"/><circle class="k-fs" cx="62" cy="154.5" r="4"/>
+<circle class="k-fs" cx="40" cy="165" r="4"/><circle class="k-fs" cx="62" cy="175.5" r="4"/><circle class="k-fs" cx="40" cy="186" r="4"/><circle class="k-fs" cx="62" cy="196.5" r="4"/><circle class="k-fs" cx="40" cy="207" r="4"/>
+<circle class="k-fs" cx="62" cy="217.5" r="4"/><circle class="k-fs" cx="40" cy="228" r="4"/><circle class="k-fs" cx="62" cy="238.5" r="4"/><circle class="k-fs" cx="40" cy="249" r="4"/><circle class="k-fs" cx="62" cy="259.5" r="4"/>
+<text class="t" x="90" y="110">20 levels</text>
+<text class="ts" x="90" y="130">each node is a separate block,</text>
+<text class="ts" x="90" y="146">so a lookup is 20 random reads:</text>
+<text class="ts" x="90" y="170">HDD   20 × 8 ms  = 160 ms</text>
+<text class="ts" x="90" y="186">NVMe  20 × 80 µs = 1.6 ms</text>
+<line class="lnd" x1="322" y1="14" x2="322" y2="276"/>
+<text class="th" x="345" y="24">B+tree, 4 KiB nodes</text>
+<text class="ts" x="345" y="42">1,000,000 keys, 340 entries per node</text>
+<text class="ts" x="345" y="74">1 node</text>
+<text class="ts" x="345" y="130">9 nodes</text>
+<text class="ts" x="345" y="190">2,942 leaves</text>
+<line class="ln" x1="572" y1="82" x2="452" y2="116"/><line class="ln" x1="572" y1="82" x2="482" y2="116"/><line class="ln" x1="572" y1="82" x2="512" y2="116"/>
+<line class="ln" x1="572" y1="82" x2="572" y2="116"/><line class="ln" x1="572" y1="82" x2="602" y2="116"/><line class="ln" x1="572" y1="82" x2="632" y2="116"/>
+<line class="ln" x1="572" y1="82" x2="662" y2="116"/><line class="ln" x1="572" y1="82" x2="692" y2="116"/>
+<line class="hl" x1="572" y1="82" x2="542" y2="116"/>
+<line class="hl" x1="542" y1="136" x2="561" y2="176"/>
+<rect class="k-fs" x="537" y="58" width="70" height="24" rx="2"/>
+<text class="ts" x="572" y="74" text-anchor="middle">root</text>
+<rect class="k-fs" x="440" y="116" width="24" height="20"/><rect class="k-fs" x="470" y="116" width="24" height="20"/><rect class="k-fs" x="500" y="116" width="24" height="20"/>
+<rect class="k-fs" x="530" y="116" width="24" height="20"/><rect class="k-fs" x="560" y="116" width="24" height="20"/><rect class="k-fs" x="590" y="116" width="24" height="20"/>
+<rect class="k-fs" x="620" y="116" width="24" height="20"/><rect class="k-fs" x="650" y="116" width="24" height="20"/><rect class="k-fs" x="680" y="116" width="24" height="20"/>
+<rect class="box" x="440" y="176" width="18" height="20"/><rect class="box" x="462" y="176" width="18" height="20"/><rect class="box" x="484" y="176" width="18" height="20"/>
+<rect class="box" x="506" y="176" width="18" height="20"/><rect class="box" x="528" y="176" width="18" height="20"/><rect class="box" x="550" y="176" width="18" height="20"/>
+<rect class="box" x="572" y="176" width="18" height="20"/><rect class="box" x="594" y="176" width="18" height="20"/><rect class="box" x="616" y="176" width="18" height="20"/>
+<rect class="box" x="638" y="176" width="18" height="20"/>
+<text class="t" x="664" y="191">…</text>
+<rect class="hl" x="537" y="58" width="70" height="24" rx="2"/>
+<rect class="hl" x="530" y="116" width="24" height="20"/>
+<rect class="hl" x="550" y="176" width="18" height="20"/>
+<text class="t" x="345" y="226">3 levels</text>
+<text class="ts" x="345" y="246">HDD 24 ms, NVMe 0.24 ms uncached. The top two</text>
+<text class="ts" x="345" y="262">levels are 10 nodes = 40 KiB: keep them in RAM</text>
+<text class="ts" x="345" y="278">and a lookup costs one read.</text>
+</svg>
+<figcaption>Same keys, two shapes. The highlighted path is one lookup. The node counts come from <code>fanout.py</code> in Lab 04.</figcaption>
+</figure>
+<p>The second advantage is just as important. The upper levels are tiny. In the million-key tree, the root and the nine nodes below it are 40 KiB, which the kernel keeps in its cache because every lookup touches them. In practice a lookup in a warm tree reads one block from the device, the leaf.</p>
+<aside class="key"><span class="tag">Key idea</span><p>A B-tree's height is the logarithm of the key count, base fanout. Fanout is the knob: bigger nodes or smaller entries give a shorter tree. Every design in this lesson is a different answer to "what goes in an entry, and how many fit in a node?"</p></aside>
+</section>
+<section id="btree">
+<h2>The rules of a B-tree</h2>
+<p>Rudolf Bayer and Edward McCreight described the B-tree in 1970, while working at Boeing's research labs, as a way to index files on disk. By 1979 Douglas Comer could title a survey <i>The Ubiquitous B-Tree</i>. The rules are few:</p>
+<ol>
+<li>Each node is one block. A node holds up to <var>m</var> − 1 keys, in sorted order, and an internal node with <var>k</var> keys has <var>k</var> + 1 children. <var>m</var> is the <b>order</b> of the tree.</li>
+<li>The keys of a node divide the key space. Every key in the subtree left of key <var>i</var> is smaller than it, and every key to its right is greater or equal.</li>
+<li>Every node except the root is at least half full.</li>
+<li><b>All leaves are at the same depth.</b> That is the "balanced" in balanced tree, and it guarantees every lookup reads the same number of nodes.</li>
+</ol>
+<aside class="note"><span class="tag">Terminology</span><p>"Order" is used inconsistently. Knuth's order, used here and in the demo, is the maximum number of children. Bayer and McCreight's order <var>d</var> was the minimum number of keys, so their nodes hold between <var>d</var> and 2<var>d</var> keys. Check which one a text means before comparing numbers.</p></aside>
+<h3>Search</h3>
+<p>Read the root. Binary-search its keys to find the child whose range contains the key, read that child, and repeat until a leaf. The cost is one block read per level, and the comparisons inside each block are free by comparison. ext4 does exactly this in <code>ext4_ext_binsearch_idx()</code> and <code>ext4_ext_binsearch()</code>.</p>
+<h3>Insert</h3>
+<p>Search for the leaf where the key belongs and put it there in sorted position. If the leaf now has too many keys, <b>split</b> it: keep the lower half, move the upper half to a newly allocated node, and insert a separator key plus a pointer to the new node into the parent. The parent may now be too full too, so the split can repeat one level up, and so on.</p>
+<p>If the split reaches the root, the root splits into two nodes and a <b>new root</b> is created above them with one separator and two children. This is the only way the tree gets taller. A B-tree grows at the top, so every leaf moves one level down at the same moment, and rule 4 can never be broken.</p>
+<h3>Delete</h3>
+<p>Remove the key from its leaf. If the leaf falls below half full, either <b>borrow</b> a key from a sibling (moving the separator in the parent to match) or <b>merge</b> with a sibling and remove their separator from the parent. A merge can make the parent underfull, so this can cascade too. If the root is left with a single child, that child becomes the root and the tree gets one level shorter.</p>
+<p>Real systems often skip most of this. Merging is complex, needs locks on several nodes, and rarely pays off because deleted space tends to be refilled. PostgreSQL's B-tree, for example, only removes a page once it is completely empty, and its documentation says plainly that merging partly full pages is impractical under concurrent scans.</p>
+<h3>How full are the nodes?</h3>
+<p>With random insertions, nodes end up about 69% full on average (ln 2, a result due to Andrew Yao in 1978). With ascending insertions, such as auto-increment IDs or timestamps, a 50/50 split leaves every node half full, because the left half of each split never receives another key. PostgreSQL detects this case: when it splits the rightmost leaf, it leaves the left page 90% full (its default fillfactor) instead of half full. ext4 does something similar for append-only files, as you will see below.</p>
+</section>
+<section id="bplus">
+<h2>B+trees: the variant everyone uses</h2>
+<p>The original B-tree stores each key, with its value, exactly once, in whichever node it lands in. Almost every real system uses a variant called the <b>B+tree</b>:</p>
+<ul>
+<li>All records live in the <b>leaves</b>.</li>
+<li><b>Internal nodes</b> hold only separator keys and child pointers. A separator only has to sort between its neighbours, so it can be a copy of a key or a shortened version of one.</li>
+<li>Leaves are often linked left to right, so a range scan ("all keys from 30 to 70") finds the first leaf and then follows links without going back up the tree.</li>
+</ul>
+<p>Internal nodes with no values in them have the highest possible fanout, which keeps the tree short. The cost is that every lookup goes all the way to a leaf, but it would have done that in most cases anyway.</p>
+<p>The split rule changes slightly. When a <b>leaf</b> splits, the first key of the new right leaf is <b>copied</b> up as the separator, because the key must stay in a leaf where its record is. When an <b>internal node</b> splits, its middle separator <b>moves</b> up and is removed from both halves, because separators are only signposts.</p>
+<figure class="diagram">
+<svg viewBox="0 0 700 432" width="700" role="img" aria-label="Two B+tree insertions. (a) Inserting 30 into the full leaf 20 27 33 splits it into 20 27 and 30 33 and copies 30 into the parent. (b) Inserting 56 and 60 splits a leaf, the parent overflows, and the root splits so 41 becomes a new root and the tree grows to height 3.">
+<defs><marker id="ah-04-2" viewBox="0 0 10 10" refX="9" refY="5" markerWidth="7" markerHeight="7" orient="auto-start-reverse"><path class="ah" d="M0,0 L10,5 L0,10 z"/></marker></defs>
+<text class="th" x="20" y="22">(a) insert 30 into a full leaf</text>
+<text class="ts" x="20" y="40">order 4: a node holds at most 3 keys</text>
+<line class="ln" x1="108" y1="80" x2="59" y2="114"/>
+<line class="ln" x1="134" y1="80" x2="147" y2="114"/>
+<line class="ln" x1="160" y1="80" x2="235" y2="114"/>
+<rect class="box" x="108" y="56" width="26" height="24"/>
+<text class="t" x="121" y="72.5" text-anchor="middle">20</text>
+<rect class="box" x="134" y="56" width="26" height="24"/>
+<text class="t" x="147" y="72.5" text-anchor="middle">41</text>
+<rect class="box" x="160" y="56" width="26" height="24"/>
+<rect class="ln" x="108" y="56" width="78" height="24"/>
+<rect class="box" x="20" y="114" width="26" height="24"/>
+<text class="t" x="33" y="130.5" text-anchor="middle">5</text>
+<rect class="box" x="46" y="114" width="26" height="24"/>
+<text class="t" x="59" y="130.5" text-anchor="middle">12</text>
+<rect class="box" x="72" y="114" width="26" height="24"/>
+<rect class="ln" x="20" y="114" width="78" height="24"/>
+<rect class="box" x="108" y="114" width="26" height="24"/>
+<text class="t" x="121" y="130.5" text-anchor="middle">20</text>
+<rect class="box" x="134" y="114" width="26" height="24"/>
+<text class="t" x="147" y="130.5" text-anchor="middle">27</text>
+<rect class="box" x="160" y="114" width="26" height="24"/>
+<text class="t" x="173" y="130.5" text-anchor="middle">33</text>
+<rect class="ln" x="108" y="114" width="78" height="24"/>
+<rect class="box" x="196" y="114" width="26" height="24"/>
+<text class="t" x="209" y="130.5" text-anchor="middle">41</text>
+<rect class="box" x="222" y="114" width="26" height="24"/>
+<text class="t" x="235" y="130.5" text-anchor="middle">48</text>
+<rect class="box" x="248" y="114" width="26" height="24"/>
+<rect class="ln" x="196" y="114" width="78" height="24"/>
+<line class="ln" x1="292" y1="80" x2="326" y2="80" marker-end="url(#ah-04-2)"/>
+<text class="ts" x="309" y="72" text-anchor="middle">+30</text>
+<line class="ln" x1="476" y1="80" x2="383" y2="114"/>
+<line class="ln" x1="502" y1="80" x2="471" y2="114"/>
+<line class="ln" x1="528" y1="80" x2="559" y2="114"/>
+<line class="ln" x1="554" y1="80" x2="647" y2="114"/>
+<rect class="box" x="476" y="56" width="26" height="24"/>
+<text class="t" x="489" y="72.5" text-anchor="middle">20</text>
+<rect class="k-fs" x="502" y="56" width="26" height="24"/>
+<text class="t" x="515" y="72.5" text-anchor="middle">30</text>
+<rect class="box" x="528" y="56" width="26" height="24"/>
+<text class="t" x="541" y="72.5" text-anchor="middle">41</text>
+<rect class="ln" x="476" y="56" width="78" height="24"/>
+<rect class="box" x="344" y="114" width="26" height="24"/>
+<text class="t" x="357" y="130.5" text-anchor="middle">5</text>
+<rect class="box" x="370" y="114" width="26" height="24"/>
+<text class="t" x="383" y="130.5" text-anchor="middle">12</text>
+<rect class="box" x="396" y="114" width="26" height="24"/>
+<rect class="ln" x="344" y="114" width="78" height="24"/>
+<rect class="box" x="432" y="114" width="26" height="24"/>
+<text class="t" x="445" y="130.5" text-anchor="middle">20</text>
+<rect class="box" x="458" y="114" width="26" height="24"/>
+<text class="t" x="471" y="130.5" text-anchor="middle">27</text>
+<rect class="box" x="484" y="114" width="26" height="24"/>
+<rect class="ln" x="432" y="114" width="78" height="24"/>
+<rect class="k-user" x="520" y="114" width="26" height="24"/>
+<text class="t" x="533" y="130.5" text-anchor="middle">30</text>
+<rect class="box" x="546" y="114" width="26" height="24"/>
+<text class="t" x="559" y="130.5" text-anchor="middle">33</text>
+<rect class="box" x="572" y="114" width="26" height="24"/>
+<rect class="bp-node bp-split" x="520" y="114" width="78" height="24"/>
+<rect class="box" x="608" y="114" width="26" height="24"/>
+<text class="t" x="621" y="130.5" text-anchor="middle">41</text>
+<rect class="box" x="634" y="114" width="26" height="24"/>
+<text class="t" x="647" y="130.5" text-anchor="middle">48</text>
+<rect class="box" x="660" y="114" width="26" height="24"/>
+<rect class="ln" x="608" y="114" width="78" height="24"/>
+<text class="ts" x="20" y="160">[20 27 30 33] overflowed: split into [20 27] and [30 33];</text>
+<text class="ts" x="20" y="176">30, the first key of the new leaf, is copied up</text>
+<text class="th" x="20" y="214">(b) then insert 56 and 60: the split reaches the root</text>
+<line class="ln" x1="108" y1="318" x2="59" y2="352"/>
+<line class="ln" x1="134" y1="318" x2="147" y2="352"/>
+<line class="ln" x1="160" y1="318" x2="235" y2="352"/>
+<line class="ln" x1="328" y1="318" x2="323" y2="352"/>
+<line class="ln" x1="354" y1="318" x2="411" y2="352"/>
+<line class="ln" x1="218" y1="260" x2="147" y2="294"/>
+<line class="ln" x1="244" y1="260" x2="367" y2="294"/>
+<rect class="k-fs" x="218" y="236" width="26" height="24"/>
+<text class="t" x="231" y="252.5" text-anchor="middle">41</text>
+<rect class="box" x="244" y="236" width="26" height="24"/>
+<rect class="box" x="270" y="236" width="26" height="24"/>
+<rect class="bp-node bp-split" x="218" y="236" width="78" height="24"/>
+<rect class="box" x="108" y="294" width="26" height="24"/>
+<text class="t" x="121" y="310.5" text-anchor="middle">20</text>
+<rect class="box" x="134" y="294" width="26" height="24"/>
+<text class="t" x="147" y="310.5" text-anchor="middle">30</text>
+<rect class="box" x="160" y="294" width="26" height="24"/>
+<rect class="ln" x="108" y="294" width="78" height="24"/>
+<rect class="k-fs" x="328" y="294" width="26" height="24"/>
+<text class="t" x="341" y="310.5" text-anchor="middle">56</text>
+<rect class="box" x="354" y="294" width="26" height="24"/>
+<rect class="box" x="380" y="294" width="26" height="24"/>
+<rect class="bp-node bp-split" x="328" y="294" width="78" height="24"/>
+<rect class="box" x="20" y="352" width="26" height="24"/>
+<text class="t" x="33" y="368.5" text-anchor="middle">5</text>
+<rect class="box" x="46" y="352" width="26" height="24"/>
+<text class="t" x="59" y="368.5" text-anchor="middle">12</text>
+<rect class="box" x="72" y="352" width="26" height="24"/>
+<rect class="ln" x="20" y="352" width="78" height="24"/>
+<rect class="box" x="108" y="352" width="26" height="24"/>
+<text class="t" x="121" y="368.5" text-anchor="middle">20</text>
+<rect class="box" x="134" y="352" width="26" height="24"/>
+<text class="t" x="147" y="368.5" text-anchor="middle">27</text>
+<rect class="box" x="160" y="352" width="26" height="24"/>
+<rect class="ln" x="108" y="352" width="78" height="24"/>
+<rect class="box" x="196" y="352" width="26" height="24"/>
+<text class="t" x="209" y="368.5" text-anchor="middle">30</text>
+<rect class="box" x="222" y="352" width="26" height="24"/>
+<text class="t" x="235" y="368.5" text-anchor="middle">33</text>
+<rect class="box" x="248" y="352" width="26" height="24"/>
+<rect class="ln" x="196" y="352" width="78" height="24"/>
+<rect class="box" x="284" y="352" width="26" height="24"/>
+<text class="t" x="297" y="368.5" text-anchor="middle">41</text>
+<rect class="box" x="310" y="352" width="26" height="24"/>
+<text class="t" x="323" y="368.5" text-anchor="middle">48</text>
+<rect class="box" x="336" y="352" width="26" height="24"/>
+<rect class="ln" x="284" y="352" width="78" height="24"/>
+<rect class="k-user" x="372" y="352" width="26" height="24"/>
+<text class="t" x="385" y="368.5" text-anchor="middle">56</text>
+<rect class="k-user" x="398" y="352" width="26" height="24"/>
+<text class="t" x="411" y="368.5" text-anchor="middle">60</text>
+<rect class="box" x="424" y="352" width="26" height="24"/>
+<rect class="bp-node bp-split" x="372" y="352" width="78" height="24"/>
+<text class="ts" x="474" y="254">[41 48 56 60] splits; 56 is</text>
+<text class="ts" x="474" y="271">copied up into the root,</text>
+<text class="ts" x="474" y="288">which now has 4 keys: too many.</text>
+<text class="ts" x="474" y="305">The root splits around its</text>
+<text class="ts" x="474" y="322">middle key: 41 moves up into</text>
+<text class="ts" x="474" y="339">a new root. Height 2 → 3.</text>
+<text class="ts" x="474" y="356">Every leaf is still at the</text>
+<text class="ts" x="474" y="373">same depth.</text>
+<rect class="k-user" x="20" y="406" width="14" height="14"/>
+<text class="ts" x="40" y="417">inserted key</text>
+<rect class="k-fs" x="140" y="406" width="14" height="14"/>
+<text class="ts" x="160" y="417">separator pushed up by a split</text>
+<rect class="bp-node bp-split" x="390" y="406" width="14" height="14"/>
+<text class="ts" x="410" y="417">node created by a split</text>
+</svg>
+<figcaption>Order 4 (at most 3 keys per node). These are the exact states the demo below produces for the same inserts: 5, 12, 20, 27, 41, 48, 33, then 30, 56 and 60.</figcaption>
+</figure>
+<p>When filesystem documentation says "B-tree", it nearly always means a B+tree: the ext4 extent tree, the XFS trees and the btrfs trees all keep their records in the leaves. They differ in whether leaves are linked. XFS links every level in both directions. ext4's extent tree and btrfs have no sibling links. ext4 finds the next leaf by going back up through the path it has already read, and btrfs cannot have them at all, for a reason we will see in the btrfs section.</p>
+</section>
+<section id="demo">
+<h2>Try it: grow a B+tree</h2>
+<p>The tree below starts with twelve keys. Insert values and watch where splits happen. Leaves have a coloured outline, a dashed outline marks nodes that a split created or cut in half, the highlighted path is the nodes the last operation read, and a filled cell is the key just inserted or found.</p>
+<p>Things to try:</p>
+<ul>
+<li>Insert 30, then 31 and 32, and find the moment a leaf split copies a key up.</li>
+<li>Press <i>Reset</i>, then <i>+10 ascending</i> a few times, and look at the leaves. Only the rightmost one ever receives a key, so at order 4 every other leaf keeps the 2 keys its split left it and never reaches 3. Then reset and press <i>+10 random</i> a few times instead.</li>
+<li>Keep inserting until the root splits, and check that every leaf moved down together.</li>
+<li>Switch the order between 3, 4 and 5. The same keys are reinserted, and a higher order gives a shorter tree.</li>
+</ul>
+<figure class="diagram bp-fig">
+<div class="bp-controls" role="group" aria-label="B+tree controls">
+<label>order <select id="bp-order"><option value="3">3</option><option value="4" selected>4</option><option value="5">5</option></select></label>
+<input id="bp-key" type="number" min="1" max="999" step="1" inputmode="numeric" placeholder="1–999" aria-label="key to insert or search for">
+<button type="button" id="bp-insert" class="primary">Insert</button>
+<button type="button" id="bp-search">Search</button>
+<button type="button" id="bp-random">Random</button>
+<button type="button" id="bp-random10">+10 random</button>
+<button type="button" id="bp-ascending">+10 ascending</button>
+<button type="button" id="bp-example">Example</button>
+<button type="button" id="bp-reset">Reset</button>
+</div>
+<div class="bp-stage" id="bp-stage"><p class="small muted">This demo needs JavaScript.</p></div>
+<p class="bp-stats" id="bp-stats" aria-live="polite"></p>
+<ol class="bp-log" id="bp-log" aria-live="polite" aria-label="What happened, newest first"></ol>
+<figcaption>Keys are whole numbers from 1 to 999, up to 100 of them. Wide trees scroll sideways. The log lists what each operation did, newest first. The code follows the textbook rules above: leaf splits keep the larger half on the left when the count is odd, and keys equal to a separator go right.</figcaption>
+</figure>
+<h3>Fanout calculator</h3>
+<p>The same arithmetic as <code>fanout.py</code> in the lab. Pick a preset or type your own node and entry sizes. The fill percentage models nodes that are not full, such as 69% after random inserts.</p>
+<figure class="diagram bp-fig">
+<div class="fan-grid">
+<label>preset
+<select id="fan-preset">
+<option value="4096,12,12,1000000,100" selected>ext4 extent tree, 1 million extents</option>
+<option value="4096,12,12,1000000000,100">same node shape, a billion keys</option>
+<option value="4096,16,0,10000000,100">4 KiB node, 16-byte entries, 10 million keys</option>
+<option value="16384,24,0,500000000,69">16 KiB database page, 24-byte entries, 69% full</option>
+<option value="">custom</option>
+</select>
+</label>
+<label>node size
+<select id="fan-node">
+<option value="512">512 B</option><option value="1024">1 KiB</option><option value="4096" selected>4 KiB</option>
+<option value="8192">8 KiB</option><option value="16384">16 KiB</option><option value="65536">64 KiB</option>
+</select>
+</label>
+<label>entry bytes <input id="fan-entry" type="number" min="1" value="12"></label>
+<label>header bytes <input id="fan-header" type="number" min="0" value="12"></label>
+<label>keys <input id="fan-keys" type="text" value="1,000,000" inputmode="numeric"></label>
+<label>fill % <input id="fan-fill" type="number" min="10" max="100" value="100"></label>
+</div>
+<pre class="fan-out" id="fan-out" aria-live="polite">This calculator needs JavaScript.</pre>
+<figcaption>Lookup times assume every level is a random read at 8 ms (hard disk) or 80 µs (NVMe), with nothing cached. Keys accept <code>1e9</code> or <code>1,000,000</code>.</figcaption>
+</figure>
+</section>
+<section id="ext4-extents">
+<h2>ext4's extent tree</h2>
+<p>Lesson 03 showed that an ext4 inode's 60-byte <code>i_block</code> holds a 12-byte <code>ext4_extent_header</code> and room for four 12-byte entries. That space is the <b>root node</b> of a B+tree. Every node of the tree, in the inode or in a block, starts with the same header:</p>
+<div class="table-wrap"><table>
+<thead><tr><th>Field</th><th>Meaning</th></tr></thead>
+<tbody>
+<tr><td><code>eh_magic</code></td><td><code>0xF30A</code>, so a stray block is not mistaken for a tree node</td></tr>
+<tr><td><code>eh_entries</code></td><td>entries in use</td></tr>
+<tr><td><code>eh_max</code></td><td>capacity: 4 in the inode, 340 in a 4 KiB block</td></tr>
+<tr><td><code>eh_depth</code></td><td>0 means the entries are <code>ext4_extent</code> leaves; above 0 they are <code>ext4_extent_idx</code> index entries</td></tr>
+</tbody>
+</table></div>
+<p>An index entry, <code>ext4_extent_idx</code>, is <code>(ei_block, ei_leaf)</code>: "file blocks from <code>ei_block</code> onwards are described by the node in disk block <code>ei_leaf</code>". A block holds (4096 − 12) / 12 = 340 entries, and the last 4 bytes hold an <code>ext4_extent_tail</code> checksum when <code>metadata_csum</code> is on.</p>
+<p>Lab 04 builds three files whose blocks are each followed by a hole, so no two extents can merge. <code>debugfs</code>'s <code>ex</code> command prints the tree, one line per entry, with <code>Level a/b</code> meaning "a node at depth <var>a</var> of a tree whose leaves are at depth <var>b</var>":</p>
+<pre><code><span class="p">$</span> debugfs -R 'ex /extents/four' btree.img
+<span class="o">Level Entries       Logical      Physical Length Flags
+ 0/ 0   1/  4     0 -     0  3587 -  3587      1
+ 0/ 0   2/  4     2 -     2  3588 -  3588      1
+ 0/ 0   3/  4     4 -     4  3589 -  3589      1
+ 0/ 0   4/  4     6 -     6  3590 -  3590      1</span>
+<span class="p">$</span> debugfs -R 'ex /extents/deep' btree.img | awk '$1 ~ /^[01]\//'
+<span class="o"> 0/ 2   1/  1     0 -  2998  3443           2999
+ 1/ 2   1/  5     0 -   677  2086            678
+ 1/ 2   2/  5   678 -  1355  2423            678
+ 1/ 2   3/  5  1356 -  2033  2763            678
+ 1/ 2   4/  5  2034 -  2711  3103            678
+ 1/ 2   5/  5  2712 -  2998  3444            287</span></code></pre>
+<p>Example output from this machine. <code>four</code> has four extents, which fit in the inode: depth 0, no extra blocks. <code>twenty</code> (not shown) has depth 1: the inode holds one index entry pointing at one leaf block with 20 extents. <code>deep</code> has 1,500 extents, more than the 4 × 340 = 1,360 that depth 1 can hold, so it has depth 2:</p>
+<figure class="diagram">
+<svg viewBox="0 0 720 300" width="720" role="img" aria-label="Extent tree of the lab file /extents/deep: the inode's i_block holds a depth-2 header and one index entry pointing to block 3443; block 3443 is an index node with 5 entries pointing to leaf blocks 2086, 2423, 2763, 3103 and 3444, holding 339, 339, 339, 339 and 144 extents">
+<defs><marker id="ah-04-3" viewBox="0 0 10 10" refX="9" refY="5" markerWidth="7" markerHeight="7" orient="auto-start-reverse"><path class="ah" d="M0,0 L10,5 L0,10 z"/></marker></defs>
+<rect class="k-fs" x="200" y="16" width="320" height="60" rx="3"/>
+<text class="th" x="360" y="36" text-anchor="middle">inode i_block (60 bytes)</text>
+<text class="ts" x="360" y="54" text-anchor="middle">header: depth 2, entries 1 of 4</text>
+<text class="ts" x="360" y="69" text-anchor="middle">index: file block 0 → block 3443</text>
+<line class="ln" x1="360" y1="76" x2="360" y2="110" marker-end="url(#ah-04-3)"/>
+<rect class="k-fs" x="100" y="112" width="520" height="78" rx="3"/>
+<text class="th" x="360" y="131" text-anchor="middle">block 3443: index node</text>
+<text class="ts" x="360" y="148" text-anchor="middle">header: depth 1, entries 5 of 340</text>
+<rect class="box" x="110" y="156" width="100" height="26"/><text class="ts" x="160" y="173" text-anchor="middle">0 → 2086</text>
+<rect class="box" x="210" y="156" width="100" height="26"/><text class="ts" x="260" y="173" text-anchor="middle">678 → 2423</text>
+<rect class="box" x="310" y="156" width="100" height="26"/><text class="ts" x="360" y="173" text-anchor="middle">1356 → 2763</text>
+<rect class="box" x="410" y="156" width="100" height="26"/><text class="ts" x="460" y="173" text-anchor="middle">2034 → 3103</text>
+<rect class="box" x="510" y="156" width="100" height="26"/><text class="ts" x="560" y="173" text-anchor="middle">2712 → 3444</text>
+<line class="ln" x1="160" y1="182" x2="76" y2="230" marker-end="url(#ah-04-3)"/>
+<line class="ln" x1="260" y1="182" x2="218" y2="230" marker-end="url(#ah-04-3)"/>
+<line class="ln" x1="360" y1="182" x2="360" y2="230" marker-end="url(#ah-04-3)"/>
+<line class="ln" x1="460" y1="182" x2="502" y2="230" marker-end="url(#ah-04-3)"/>
+<line class="ln" x1="560" y1="182" x2="644" y2="230" marker-end="url(#ah-04-3)"/>
+<rect class="box" x="8" y="232" width="136" height="58" rx="3"/>
+<text class="t" x="76" y="251" text-anchor="middle">block 2086</text>
+<text class="ts" x="76" y="267" text-anchor="middle">339 extents</text>
+<text class="ts" x="76" y="282" text-anchor="middle">file blk 0–676</text>
+<rect class="box" x="150" y="232" width="136" height="58" rx="3"/>
+<text class="t" x="218" y="251" text-anchor="middle">block 2423</text>
+<text class="ts" x="218" y="267" text-anchor="middle">339 extents</text>
+<text class="ts" x="218" y="282" text-anchor="middle">file blk 678–1354</text>
+<rect class="box" x="292" y="232" width="136" height="58" rx="3"/>
+<text class="t" x="360" y="251" text-anchor="middle">block 2763</text>
+<text class="ts" x="360" y="267" text-anchor="middle">339 extents</text>
+<text class="ts" x="360" y="282" text-anchor="middle">file blk 1356–2032</text>
+<rect class="box" x="434" y="232" width="136" height="58" rx="3"/>
+<text class="t" x="502" y="251" text-anchor="middle">block 3103</text>
+<text class="ts" x="502" y="267" text-anchor="middle">339 extents</text>
+<text class="ts" x="502" y="282" text-anchor="middle">file blk 2034–2710</text>
+<rect class="box" x="576" y="232" width="136" height="58" rx="3"/>
+<text class="t" x="644" y="251" text-anchor="middle">block 3444</text>
+<text class="ts" x="644" y="267" text-anchor="middle">144 extents</text>
+<text class="ts" x="644" y="282" text-anchor="middle">file blk 2712–2998</text>
+</svg>
+<figcaption>The extent tree of <code>/extents/deep</code> in Lab 04: two index levels and five leaves. Each leaf extent maps one block, because every other file block is a hole. Finding file block 1500 reads the inode, block 3443 and block 2763. Each leaf's range runs from its first to its last mapped block. debugfs prints an index entry's range up to the start of the next entry, so its ends are one block higher.</figcaption>
+</figure>
+<p>The tree grows in a way worth noticing. When a leaf is full, ext4 first looks up the path for an index node with a free slot and splits below it (<code>ext4_ext_split()</code>). When every node on the path is full, it grows the tree in depth (<code>ext4_ext_grow_indepth()</code>). It does not split the root in two. It copies the entire root out of the inode into a newly allocated block and leaves the inode with a single index entry pointing at that block. That is why both <code>twenty</code> and <code>deep</code> have exactly one entry in the inode.</p>
+<p>The kernel also chooses its split point for the common case of appending. If the new extent goes after the last entry in a full leaf, ext4 does not split the leaf in half. It starts a new, nearly empty leaf and leaves the full one alone, so a file written front to back ends up with full leaves. (The lab image was built by <code>mkfs.ext4 -d</code>, whose library splits differently, which is why its leaves hold 339 entries instead of 340.)</p>
+<p>The depth is capped at 5 (<code>EXT4_MAX_EXTENT_DEPTH</code>). Depth 4 already allows 4 × 340<sup>4</sup> ≈ 53 billion extents, more than the 2<sup>32</sup> blocks a file can have, so no valid file reaches the cap; the kernel uses it to reject corrupted headers. Real files almost never need more than depth 2, and most files have depth 0. The kernel also keeps an in-memory cache of extents it has looked up, the <b>extent status tree</b>, so a warm read often never touches the on-disk tree at all.</p>
+</section>
+<section id="htree">
+<h2>The htree: a B-tree over name hashes</h2>
+<p>Lesson 03 ended with a problem. A directory is a list of entries, and finding a name means scanning it. ext3 and ext4 solve this with the <b>htree</b>, designed by Daniel Phillips around 2001. It is a B+tree keyed by a 32-bit <b>hash</b> of each name.</p>
+<p>Hashing gives fixed-size keys, so an index entry is just 8 bytes, <code>(hash, block)</code>, and a 4 KiB index block holds about 500 of them. Hashes also spread names evenly, so leaves fill evenly whatever the names look like. The cost is that the tree can only answer "where is exactly this name?". It cannot list names in alphabetical order or find a prefix.</p>
+<h3>Hiding an index in plain sight</h3>
+<p>The htree was added to an existing format, and it is designed so that code that has never heard of it still sees a valid directory. Directory block 0 becomes the <code>dx_root</code>:</p>
+<div class="table-wrap"><table>
+<thead><tr><th>Offset</th><th>Contents</th><th>What old code sees</th></tr></thead>
+<tbody>
+<tr><td><code>0x00</code></td><td><code>.</code> entry, <code>rec_len</code> 12</td><td>the usual <code>.</code></td></tr>
+<tr><td><code>0x0C</code></td><td><code>..</code> entry, <code>rec_len</code> = block size − 12</td><td><code>..</code> followed by a lot of slack space</td></tr>
+<tr><td><code>0x18</code></td><td><code>dx_root_info</code>: <code>reserved_zero</code>, <code>hash_version</code> (byte 0x1C), <code>info_length</code> = 8, <code>indirect_levels</code> (byte 0x1E)</td><td>slack</td></tr>
+<tr><td><code>0x20</code></td><td><code>limit</code> and <code>count</code> (2 bytes each), then <code>block</code>: entry 0, which has no hash</td><td>slack</td></tr>
+<tr><td><code>0x28</code></td><td><code>dx_entry</code> array: <code>(hash, block)</code>, 8 bytes each, sorted by hash</td><td>slack</td></tr>
+</tbody>
+</table></div>
+<p>Interior index blocks (<code>dx_node</code>) start with a fake entry whose inode is 0 and whose <code>rec_len</code> covers the whole block, so old code sees an empty block. The leaves are ordinary directory blocks in the lesson 03 format. An old driver can still read the directory linearly, which is why <code>dir_index</code> is a <i>compat</i> feature.</p>
+<h3>A lookup, step by step</h3>
+<p>Lab 04's <code>/bigdir</code> holds 3,000 files in 20 directory blocks. <code>debugfs</code> shows its root:</p>
+<pre><code><span class="p">$</span> debugfs -R 'htree /bigdir' btree.img | head -14
+<span class="o">Root node dump:
+	 Reserved zero: 0
+	 Hash Version: 1
+	 Info length: 8
+	 Indirect levels: 0
+	 Flags: 0
+Number of entries (count): 19
+Number of entries (limit): 507
+Checksum: 0x5c3d509b
+Entry #0: Hash 0x00000000, block 1
+Entry #1: Hash 0x10515a64, block 2
+Entry #2: Hash 0x1c9e3934, block 3
+Entry #3: Hash 0x2a8d5884, block 4
+Entry #4: Hash 0x39f6a802, block 5</span></code></pre>
+<p>Hash version 1 is half-MD4, a cut-down MD4 seeded with the superblock's random <code>s_hash_seed</code>. The seed differs per filesystem, so nobody can precompute thousands of names that collide and turn the directory back into a linear list. <code>limit</code> is 507: (4096 − 32 bytes of header − 8 bytes of checksum tail) / 8. Looking up <code>file-0007</code>:</p>
+<figure class="diagram">
+<svg viewBox="0 0 720 290" width="720" role="img" aria-label="htree lookup in /bigdir: the dx_root block has a fake dot and dot-dot entry, dx_root_info, limit 507 and count 19, then 19 entries; the hash of file-0007, 0x2bcb081c, falls in entry 3 which points to directory block 4, so only the root and block 4 are read">
+<defs><marker id="ah-04-4" viewBox="0 0 10 10" refX="9" refY="5" markerWidth="7" markerHeight="7" orient="auto-start-reverse"><path class="ah" d="M0,0 L10,5 L0,10 z"/></marker></defs>
+<text class="ts" x="20" y="16">directory block 0 = dx_root</text>
+<rect class="box" x="20" y="24" width="90" height="30"/><text class="ts" x="65" y="43" text-anchor="middle">. rec_len 12</text>
+<rect class="box" x="110" y="24" width="150" height="30"/><text class="ts" x="185" y="43" text-anchor="middle">.. rec_len 4084</text>
+<rect class="k-fs" x="260" y="24" width="270" height="30"/><text class="ts" x="395" y="43" text-anchor="middle">hash_version 1, indirect_levels 0</text>
+<rect class="k-fs" x="530" y="24" width="170" height="30"/><text class="ts" x="615" y="43" text-anchor="middle">limit 507, count 19</text>
+<rect class="box" x="20" y="54" width="113" height="40"/><text class="ts" x="76" y="70" text-anchor="middle">#0 (no hash)</text><text class="ts" x="76" y="86" text-anchor="middle">→ block 1</text>
+<rect class="box" x="133" y="54" width="113" height="40"/><text class="ts" x="189" y="70" text-anchor="middle">#1 0x10515a64</text><text class="ts" x="189" y="86" text-anchor="middle">→ block 2</text>
+<rect class="box" x="246" y="54" width="113" height="40"/><text class="ts" x="302" y="70" text-anchor="middle">#2 0x1c9e3934</text><text class="ts" x="302" y="86" text-anchor="middle">→ block 3</text>
+<rect class="k-fs" x="359" y="54" width="114" height="40"/><text class="ts" x="416" y="70" text-anchor="middle">#3 0x2a8d5884</text><text class="ts" x="416" y="86" text-anchor="middle">→ block 4</text>
+<rect class="box" x="473" y="54" width="113" height="40"/><text class="ts" x="529" y="70" text-anchor="middle">#4 0x39f6a802</text><text class="ts" x="529" y="86" text-anchor="middle">→ block 5</text>
+<rect class="box" x="586" y="54" width="114" height="40"/><text class="ts" x="643" y="70" text-anchor="middle">… #18</text><text class="ts" x="643" y="86" text-anchor="middle">→ block 19</text>
+<rect class="hl" x="359" y="54" width="114" height="40"/>
+<line class="ln" x1="76.5" y1="94" x2="76.5" y2="148" marker-end="url(#ah-04-4)"/>
+<line class="ln" x1="189.5" y1="94" x2="189.5" y2="148" marker-end="url(#ah-04-4)"/>
+<line class="ln" x1="302.5" y1="94" x2="302.5" y2="148" marker-end="url(#ah-04-4)"/>
+<line class="hl" x1="416" y1="94" x2="416" y2="148" marker-end="url(#ah-04-4)"/>
+<line class="ln" x1="529.5" y1="94" x2="529.5" y2="148" marker-end="url(#ah-04-4)"/>
+<line class="ln" x1="643" y1="94" x2="643" y2="148" marker-end="url(#ah-04-4)"/>
+<rect class="box" x="26.5" y="150" width="100" height="64" rx="3"/><text class="t" x="76.5" y="170" text-anchor="middle">block 1</text><text class="ts" x="76.5" y="188" text-anchor="middle">dirents,</text><text class="ts" x="76.5" y="204" text-anchor="middle">unsorted</text>
+<rect class="box" x="139.5" y="150" width="100" height="64" rx="3"/><text class="t" x="189.5" y="170" text-anchor="middle">block 2</text><text class="ts" x="189.5" y="188" text-anchor="middle">dirents,</text><text class="ts" x="189.5" y="204" text-anchor="middle">unsorted</text>
+<rect class="box" x="252.5" y="150" width="100" height="64" rx="3"/><text class="t" x="302.5" y="170" text-anchor="middle">block 3</text><text class="ts" x="302.5" y="188" text-anchor="middle">dirents,</text><text class="ts" x="302.5" y="204" text-anchor="middle">unsorted</text>
+<rect class="k-fs" x="366" y="150" width="100" height="64" rx="3"/><text class="t" x="416" y="170" text-anchor="middle">block 4</text><text class="ts" x="416" y="188" text-anchor="middle">file-1700 …</text><text class="ts" x="416" y="204" text-anchor="middle">file-0007 …</text>
+<rect class="hl" x="366" y="150" width="100" height="64" rx="3"/>
+<rect class="box" x="479.5" y="150" width="100" height="64" rx="3"/><text class="t" x="529.5" y="170" text-anchor="middle">block 5</text><text class="ts" x="529.5" y="188" text-anchor="middle">dirents,</text><text class="ts" x="529.5" y="204" text-anchor="middle">unsorted</text>
+<rect class="box" x="593" y="150" width="100" height="64" rx="3"/><text class="t" x="643" y="170" text-anchor="middle">… 19</text><text class="ts" x="643" y="188" text-anchor="middle">dirents,</text><text class="ts" x="643" y="204" text-anchor="middle">unsorted</text>
+<text class="ts" x="20" y="240">hash("file-0007") = 0x2bcb081c. Binary search over the 19 entries picks #3,</text>
+<text class="ts" x="20" y="256">the last entry whose hash is at most 0x2bcb081c. Then block 4 is scanned.</text>
+<text class="ts" x="20" y="272">2 blocks read. A linear scan read 5 of the 20 blocks for this name.</text>
+</svg>
+<figcaption>One htree level in Lab 04's <code>/bigdir</code>. Inside a leaf, entries are in no particular order, so the leaf is scanned linearly. Block numbers here are logical blocks of the directory file; the extent tree maps them to disk blocks.</figcaption>
+</figure>
+<p><code>ext4walk</code> from lab 03 does the same lookup and counts reads. For a name that does not exist, the difference is largest: the htree still reads 2 blocks, and a linear scan reads all 20.</p>
+<pre><code><span class="p">$</span> ../03-ondisk/ext4walk btree.img /bigdir/file-0007 | grep -E 'hash\(|entries used|picks|lookup read'
+<span class="o">    hash("file-0007") = 0x2bcb081c
+    dx_root: 19 of 507 entries used; binary search (4 probes)
+      picks entry #3 (hashes &gt;= 0x2a8d5884) -&gt; dir block 4
+    htree lookup read 2 of 20 directory blocks</span></code></pre>
+<h3>Collisions, depth and order</h3>
+<ul>
+<li><b>Collisions.</b> Two names can share a hash. Real hashes always have the low bit cleared, and ext4 uses that bit in a <code>dx_entry</code> to mean "this leaf continues the previous hash". When the bit is set, a lookup that misses in one leaf also checks the next.</li>
+<li><b>Depth.</b> With <code>indirect_levels</code> 0 the root points straight at leaves, enough for 507 leaf blocks. Beyond that a level of <code>dx_node</code> blocks appears, each holding 510 entries, for 507 × 510 = 258,570 leaf blocks. Without the <code>largedir</code> feature that is the limit. With it a third index level is allowed. In a separate test with 40,000 long names (873 directory blocks), the tree had <code>indirect_levels</code> 1 and every lookup read exactly 3 blocks.</li>
+<li><b>Order.</b> <code>readdir()</code> on an indexed directory returns names in hash order, which is why <code>ls -f</code> output looks shuffled. The position a program gets back from <code>telldir()</code> is the hash itself, so a listing can resume correctly even if entries were added in between. NFS servers pass the same positions to clients as READDIR cookies.</li>
+</ul>
+<aside class="pitfall"><span class="tag">Pitfall</span><p>Building the 40,000-name directory with <code>mkfs.ext4 -d</code> took almost three minutes, because the library inserted each name into a still-linear directory and scanned it first. The cost is quadratic. Software that creates huge directories without an index, or on filesystems without one, hits the same wall.</p></aside>
+</section>
+<section id="xfs">
+<h2>XFS: a forest of B+trees</h2>
+<p>Lesson 03 introduced XFS's allocation groups (AGs). Inside each AG almost every question is answered by its own B+tree. Each tree block starts with a 4-byte magic number, so you can tell them apart in a hex dump:</p>
+<div class="table-wrap"><table>
+<thead><tr><th>Tree</th><th>Magic</th><th>Keyed by</th><th>Answers</th></tr></thead>
+<tbody>
+<tr><td>bnobt</td><td><code>AB3B</code></td><td>start block of each free extent</td><td>"Is there free space next to block <var>B</var>?" Used to merge freed space with its neighbours and to allocate near related data.</td></tr>
+<tr><td>cntbt</td><td><code>AB3C</code></td><td>length of each free extent</td><td>"Where is a free extent of at least <var>N</var> blocks?"</td></tr>
+<tr><td>inobt</td><td><code>IAB3</code></td><td>first inode of each 64-inode chunk</td><td>"Where is inode <var>I</var>, and which inodes in its chunk are free?"</td></tr>
+<tr><td>finobt</td><td><code>FIB3</code></td><td>same, only chunks with a free inode</td><td>"Give me a free inode" without walking a full inobt.</td></tr>
+<tr><td>rmapbt</td><td><code>RMB3</code></td><td>physical block</td><td>"Who owns block <var>B</var>?" Needed by online repair and reflink.</td></tr>
+<tr><td>refcountbt</td><td><code>R3FC</code></td><td>physical block</td><td>"How many files share this extent?" (reflink copies)</td></tr>
+<tr><td>bmbt (per file)</td><td><code>BMA3</code></td><td>file offset</td><td>the file's extent map, once it no longer fits in the inode</td></tr>
+<tr><td>dabtree (per directory or xattr set)</td><td>several</td><td>hash of the name</td><td>large directories and attribute sets, like ext4's htree</td></tr>
+</tbody>
+</table></div>
+<p>Keeping free space in two trees with the same records sorted two ways is a classic trick. The allocator usually wants "a free run of 2,000 blocks, near block 1,000,000", which needs both orders. A bitmap answers neither question without scanning.</p>
+<p>XFS packs an extent into 16 bytes: 1 bit for "unwritten", 54 bits of file offset, 52 bits of start block and 21 bits of length. Per-AG trees use 32-bit block pointers relative to the start of the AG, which gives them more entries per block than trees that need full 64-bit pointers. Every tree block on a modern (v5) XFS also carries a CRC, its own block number, the owner's identity and the UUID of the filesystem, so a block written to the wrong place or belonging to another file is detected when it is read. Blocks at every level have left and right sibling pointers.</p>
+</section>
+<section id="btrfs">
+<h2>btrfs: copy-on-write B-trees</h2>
+<p>btrfs builds the whole filesystem from one kind of B+tree, after a design by Ohad Rodeh (<i>B-trees, Shadowing, and Clones</i>, 2008). Every piece of metadata is an <b>item</b> with a 17-byte key:</p>
+<pre><code>struct btrfs_disk_key {
+        __le64 objectid;
+        __u8   type;
+        __le64 offset;
+} __attribute__ ((__packed__));        <span class="c">/* 8 + 1 + 8 = 17 bytes */</span></code></pre>
+<p>Keys sort by objectid, then type, then offset. Everything about one file has the file's inode number as its objectid, so it all sorts together:</p>
+<div class="table-wrap"><table>
+<thead><tr><th>Key</th><th>Item</th></tr></thead>
+<tbody>
+<tr><td><code>(257, INODE_ITEM 1, 0)</code></td><td>the inode: size, mode, times</td></tr>
+<tr><td><code>(257, INODE_REF 12, 256)</code></td><td>its name in parent directory 256 (the back pointer)</td></tr>
+<tr><td><code>(257, XATTR_ITEM 24, hash)</code></td><td>an extended attribute</td></tr>
+<tr><td><code>(257, EXTENT_DATA 108, 0)</code></td><td>file offset 0 lives in this disk extent</td></tr>
+<tr><td><code>(256, DIR_ITEM 84, hash(name))</code></td><td>directory 256 has this name: used for lookup</td></tr>
+<tr><td><code>(256, DIR_INDEX 96, seq)</code></td><td>the same name by creation sequence: used for <code>readdir</code></td></tr>
+</tbody>
+</table></div>
+<p>btrfs stores each directory entry twice, keyed two ways, for the same reason XFS keeps two free-space trees. There are separate trees for different jobs: the root tree (which lists the others), the extent tree (who uses which disk space), the chunk and device trees (how logical addresses map to devices), the checksum tree, the free space tree, and one filesystem tree per subvolume. A leaf holds an array of 25-byte item headers growing from the front and the item bodies growing from the back. An internal node holds 33-byte key pointers <code>(key, block, generation)</code>. With the default 16 KiB nodes and a 101-byte node header, that is (16384 − 101) / 33 = 493 children per node.</p>
+<h3>Never overwrite</h3>
+<p>btrfs never modifies a tree block in place. To change one item, it writes a modified copy of the leaf somewhere free. The leaf's parent must now point at the new address, so the parent is copied too, and so on up to the root. Finally the superblock is updated to point at the new root. Until that write, the old tree is complete and intact on disk, and after it the new tree is. This is the <b>atomic root switch</b> from the end of lesson 03.</p>
+<figure class="diagram">
+<svg viewBox="0 0 720 330" width="720" role="img" aria-label="Copy-on-write update in btrfs: changing an item in leaf L3 writes new copies L3', B' and R'; R' points to the unchanged A and the new B', B' points to L3' and the unchanged L4; the superblock switches from R to R' in one write">
+<defs><marker id="ah-04-5" viewBox="0 0 10 10" refX="9" refY="5" markerWidth="7" markerHeight="7" orient="auto-start-reverse"><path class="ah" d="M0,0 L10,5 L0,10 z"/></marker></defs>
+<rect class="k-block" x="290" y="8" width="150" height="28" rx="3"/>
+<text class="t" x="365" y="27" text-anchor="middle">superblock</text>
+<line class="lnd" x1="320" y1="36" x2="222" y2="62" marker-end="url(#ah-04-5)"/>
+<text class="ts" x="200" y="44" text-anchor="end">before</text>
+<line class="hl" x1="410" y1="36" x2="496" y2="62" marker-end="url(#ah-04-5)"/>
+<text class="ts" x="512" y="44">after commit</text>
+<line class="ln" x1="212" y1="94" x2="102" y2="140"/>
+<line class="ln" x1="212" y1="94" x2="322" y2="140"/>
+<line class="ln" x1="102" y1="174" x2="62" y2="220"/>
+<line class="ln" x1="102" y1="174" x2="142" y2="220"/>
+<line class="ln" x1="322" y1="174" x2="282" y2="220"/>
+<line class="ln" x1="322" y1="174" x2="362" y2="220"/>
+<line class="hl" x1="502" y1="94" x2="102" y2="140"/>
+<line class="hl" x1="502" y1="94" x2="552" y2="140"/>
+<line class="hl" x1="552" y1="174" x2="362" y2="220"/>
+<line class="hl" x1="552" y1="174" x2="622" y2="220"/>
+<rect class="box" x="180" y="62" width="64" height="32" rx="3"/><rect class="lnd" x="180" y="62" width="64" height="32" rx="3"/>
+<text class="t" x="212" y="83" text-anchor="middle">R</text>
+<rect class="k-fs" x="70" y="140" width="64" height="34" rx="3"/>
+<text class="t" x="102" y="162" text-anchor="middle">A</text>
+<rect class="box" x="290" y="140" width="64" height="34" rx="3"/><rect class="lnd" x="290" y="140" width="64" height="34" rx="3"/>
+<text class="t" x="322" y="162" text-anchor="middle">B</text>
+<rect class="k-fs" x="30" y="220" width="64" height="34" rx="3"/>
+<text class="t" x="62" y="242" text-anchor="middle">L1</text>
+<rect class="k-fs" x="110" y="220" width="64" height="34" rx="3"/>
+<text class="t" x="142" y="242" text-anchor="middle">L2</text>
+<rect class="box" x="250" y="220" width="64" height="34" rx="3"/><rect class="lnd" x="250" y="220" width="64" height="34" rx="3"/>
+<text class="t" x="282" y="242" text-anchor="middle">L3</text>
+<rect class="k-fs" x="330" y="220" width="64" height="34" rx="3"/>
+<text class="t" x="362" y="242" text-anchor="middle">L4</text>
+<rect class="k-user" x="470" y="62" width="64" height="32" rx="3"/><rect class="hl" x="470" y="62" width="64" height="32" rx="3"/>
+<text class="t" x="502" y="83" text-anchor="middle">R′</text>
+<rect class="k-user" x="520" y="140" width="64" height="34" rx="3"/><rect class="hl" x="520" y="140" width="64" height="34" rx="3"/>
+<text class="t" x="552" y="162" text-anchor="middle">B′</text>
+<rect class="k-user" x="590" y="220" width="64" height="34" rx="3"/><rect class="hl" x="590" y="220" width="64" height="34" rx="3"/>
+<text class="t" x="622" y="242" text-anchor="middle">L3′</text>
+<text class="ts" x="20" y="282">Change one item in L3: write L3′, then B′ (points at L3′ and the old L4),</text>
+<text class="ts" x="20" y="298">then R′ (points at the old A and at B′). One superblock write switches trees.</text>
+<rect class="k-fs" x="20" y="310" width="14" height="14"/><text class="ts" x="40" y="321">unchanged, shared</text>
+<rect class="k-user" x="180" y="310" width="14" height="14"/><rect class="hl" x="180" y="310" width="14" height="14"/><text class="ts" x="200" y="321">new copy</text>
+<rect class="box" x="290" y="310" width="14" height="14"/><rect class="lnd" x="290" y="310" width="14" height="14"/><text class="ts" x="310" y="321">old version: freed after commit unless a snapshot uses it</text>
+</svg>
+<figcaption>A copy-on-write update rewrites the path from the changed leaf to the root, here 3 blocks, and shares everything else with the old tree.</figcaption>
+</figure>
+<p>Several consequences follow directly from the picture:</p>
+<ul>
+<li><b>Snapshots are cheap.</b> A snapshot is a new root that points at the same nodes. Nothing is copied until one side changes something. The extent tree keeps reference counts so a block is freed only when no tree points at it. Rodeh's paper is about doing that counting lazily, so that taking a snapshot does not mean touching every block.</li>
+<li><b>No sibling pointers.</b> If leaves were linked, rewriting L3 at a new address would mean rewriting L2 (which points at it) and L4 (which it points at), whose neighbours would then need rewriting too. COW trees therefore have no leaf links. A range scan goes back up through the parent to find the next leaf.</li>
+<li><b>Self-checking pointers.</b> Each key pointer records the generation (transaction number) of the child it expects, and each block carries a checksum. A lost write or a block written to the wrong place shows up as a mismatch on the next read.</li>
+<li><b>Write amplification.</b> Changing one byte rewrites a whole path of 16 KiB nodes. btrfs amortises this by batching changes into transactions, committed every 30 seconds by default, and handles <code>fsync()</code> with a separate per-subvolume log tree so it does not have to commit everything.</li>
+</ul>
+</section>
+<section id="databases">
+<h2>Databases: the same tree with a different page</h2>
+<p>Databases call their nodes <b>pages</b>, but the structure is the one you have just seen. Three popular engines make three different choices:</p>
+<div class="table-wrap"><table>
+<thead><tr><th>Engine</th><th>Page</th><th>Where the rows live</th><th>Notable</th></tr></thead>
+<tbody>
+<tr><td>MySQL InnoDB</td><td>16 KiB</td><td>In the leaves of the primary-key B+tree (a <b>clustered index</b>). The table <em>is</em> the tree.</td><td>Secondary indexes store the primary key in place of a disk address, so a lookup through one walks two trees.</td></tr>
+<tr><td>PostgreSQL</td><td>8 KiB</td><td>In an unordered <b>heap</b> file. Index leaves hold <code>(key, block, offset)</code> tuple IDs.</td><td>Its B-tree implements Lehman and Yao's B-link tree (see the concurrency section).</td></tr>
+<tr><td>SQLite</td><td>4 KiB by default</td><td>In the leaves of a B+tree keyed by a 64-bit rowid ("table b-tree").</td><td>Each index is a separate B-tree whose keys are the indexed columns plus the rowid ("index b-tree").</td></tr>
+</tbody>
+</table></div>
+<p>SQLite lets you measure this directly. Its <code>dbstat</code> virtual table lists every page with its path from the root. <code>sqlite-btree.py</code> in Lab 04 inserts a million rows with a text column and an index on it, then counts the levels. Example output from this machine:</p>
+<pre><code><span class="p">$</span> python3 -I sqlite-btree.py
+<span class="o">1,000,000 rows, page size 4096 bytes, file 43.1 MiB
+t: 5,165 pages, height 3
+  level 1:       1 internal pages,   12.0 cells per page on average
+  level 2:      13 internal pages,  395.2 cells per page on average
+  level 3:   5,151 leaf     pages,  194.1 cells per page on average
+t_name: 5,880 pages, height 3
+  level 1:       1 internal pages,   40.0 cells per page on average
+  level 2:      41 internal pages,  141.4 cells per page on average
+  level 3:   5,838 leaf     pages,  170.3 cells per page on average</span></code></pre>
+<p>A million rows, three levels, as the arithmetic predicted. The fanout lesson shows up too. The table's internal pages hold about 395 entries, because their keys are small integers. The index's internal pages hold about 141, because each of its keys is a 12-character string plus a rowid. Bigger keys mean lower fanout, which is why database people care about short index keys, and why PostgreSQL truncates separator keys to the shortest prefix that still separates (suffix truncation).</p>
+</section>
+<section id="lsm">
+<h2>When a B-tree is the wrong answer: LSM trees</h2>
+<p>A B-tree updates in place. Every insert eventually rewrites a leaf somewhere random on the device, and a database also writes the change to its log first. For workloads that are mostly small writes, such as metrics, message queues or object metadata, that random write is the bottleneck.</p>
+<p>The <b>log-structured merge tree</b> (LSM tree; O'Neil, Cheng, Gawlick and O'Neil, 1996) never updates in place:</p>
+<figure class="diagram">
+<pre>put(k, v) ──► WAL (sequential append, for crash recovery)
+          └─► memtable: sorted, in RAM
+                   │ full (e.g. 64 MiB): write it out once, sequentially
+                   ▼
+  L0   [sst] [sst] [sst]                       files may overlap in key range
+  L1   [ sst ][ sst ][ sst ][ sst ]            no overlap between files
+  L2   [sst][sst][sst][sst][sst][sst][sst]...  about 10x L1, no overlap
+         ▲ compaction: merge-sort files from Ln into Ln+1 in the background,
+           dropping overwritten and deleted keys
+
+get(k): memtable → each L0 file → at most one file per level,
+        skipping files whose Bloom filter says "k is not here"</pre>
+<figcaption>A leveled LSM tree, as in RocksDB. An SST (sorted string table) is an immutable file of sorted key-value pairs with a small index and a Bloom filter.</figcaption>
+</figure>
+<p>Writes become sequential and batched, which suits both hard disks and the flash translation layer of SSDs. The price is paid elsewhere:</p>
+<div class="table-wrap"><table>
+<thead><tr><th></th><th>B+tree</th><th>LSM tree</th></tr></thead>
+<tbody>
+<tr><td>Point read</td><td>one root-to-leaf path</td><td>memtable, then several files; Bloom filters make most misses cheap</td></tr>
+<tr><td>Write</td><td>in place: one random page write, plus the log</td><td>append to log and memtable; the data is rewritten once per level by compaction (write amplification)</td></tr>
+<tr><td>Space</td><td>pages partly empty (about 69% full)</td><td>old versions linger until compaction</td></tr>
+<tr><td>Range scan</td><td>walk the leaves</td><td>merge iterators over all levels</td></tr>
+<tr><td>Used in</td><td>ext4, XFS, btrfs, InnoDB, PostgreSQL, SQLite</td><td>RocksDB, LevelDB, Cassandra, Ceph BlueStore metadata</td></tr>
+</tbody>
+</table></div>
+<p>The last row matters for <a href="09-distributed.html">lesson 09</a>. Ceph's BlueStore writes object data directly to a raw block device and keeps all of its metadata (which object lives in which extents, checksums, object attributes) in RocksDB, an LSM tree, running on a small internal filesystem called BlueFS.</p>
+</section>
+<section id="concurrency">
+<h2>Many threads, one tree</h2>
+<p>A split changes a node and its parent, and possibly the parent's parent, while other threads may be descending through those very nodes. Three techniques cover most real systems.</p>
+<ul>
+<li><b>Latch coupling</b> (also called crabbing). A short-term lock on an in-memory node is called a <b>latch</b>. A thread latches the child before releasing the parent, like a crab moving hand over hand. An inserter keeps the ancestors latched until it reaches a node with room to spare, which cannot split, and then releases everything above it.</li>
+<li><b>Optimistic descent.</b> Most inserts do not split anything: with 340 entries per node, roughly one insert in 170 splits a leaf. So a thread descends with shared latches, takes an exclusive latch only on the leaf, and starts over the slow, careful way only in the rare case where the leaf must split.</li>
+<li><b>B-link trees</b> (Lehman and Yao, 1981). Every node gets a link to its right sibling and a <b>high key</b>, the upper bound of its key range. A reader that arrives at a node just after it split sees that its key is above the high key and follows the right link to the new sibling. Readers then need no latch coupling at all. PostgreSQL's B-tree is built this way, and its README walks through the details.</li>
+</ul>
+<p>The filesystems use coarser locks. ext4 protects each file's extent tree with a per-inode read/write semaphore, <code>i_data_sem</code>. XFS locks the per-AG header blocks while it changes that AG's trees, so allocations in different AGs proceed in parallel; that is a large part of why XFS scales on big machines. btrfs takes read/write locks on individual tree blocks, and copy-on-write helps it further: the committed tree never changes, so it is always safe to read.</p>
+</section>
+<section id="in-memory">
+<h2>B-trees in RAM, too</h2>
+<p>The cost model has a second, smaller version inside the computer. A CPU reads memory in 64-byte cache lines, and a cache miss to RAM costs around 100 ns, during which a modern core could have executed hundreds of instructions. A binary tree with one key per node takes one cache miss per level. So the kernel is moving toward wide trees in memory as well:</p>
+<ul>
+<li>The <b>maple tree</b>, merged in Linux 6.1, stores each process's memory mappings. Its nodes are 256 bytes (four cache lines) and hold up to 16 ranges each on 64-bit machines, and it supports lookups under RCU without locks. It replaced a red-black tree plus a linked list.</li>
+<li>The <b>XArray</b> that indexes the page cache (<a href="05-vfs-cache.html#page-cache">lesson 05</a>) is a radix tree with 64 slots per node, keyed by page index within the file.</li>
+<li>ext4's <b>extent status tree</b>, the cache of extents mentioned above, is a red-black tree per inode. Small, frequently changing sets still suit binary trees.</li>
+</ul>
+</section>
+<section class="lab" id="lab">
+<p class="tag">Lab 04</p>
+<h2>Watch ext4's B-trees grow</h2>
+<p class="where">~/storage-course/labs/04-btrees/</p>
+<p>You build a 64 MiB ext4 image containing files with 4, 20 and 1,500 extents and a directory with 3,000 names, then read both trees with <code>debugfs</code> and with <code>ext4walk</code> from lab 03. No root is needed: <code>mkimg.sh</code> uses <code>mkfs.ext4 -d</code> and then <code>e2fsck -fD</code> to build the directory index.</p>
+<ol>
+<li>Build the image and the walker:
+<pre><code><span class="p">$</span> cd ~/storage-course/labs/04-btrees
+<span class="p">$</span> ./mkimg.sh
+<span class="p">$</span> (cd ../03-ondisk &amp;&amp; gcc -Wall -Wextra -O2 -o ext4walk ext4walk.c)</code></pre>
+</li>
+<li>Print the three extent trees and compare their depths with the figure above:
+<pre><code><span class="p">$</span> debugfs -R 'ex /extents/four'   btree.img
+<span class="p">$</span> debugfs -R 'ex /extents/twenty' btree.img | head -5
+<span class="p">$</span> debugfs -R 'ex /extents/deep'   btree.img | awk '$1 ~ /^[01]\//'</code></pre>
+</li>
+<li>Follow the index nodes with <code>ext4walk</code>. Example output from this machine:
+<pre><code><span class="p">$</span> ../03-ondisk/ext4walk -n 0 btree.img /extents/deep | sed -n '/own block map/,/more extents/p'
+<span class="o">  -- the target's own block map:
+    block map: extent tree rooted in i_block (inode bytes 0x28..0x63)
+    extent node: eh_magic 0xF30A, eh_entries 1, eh_max 4, eh_depth 2 (index node)
+      index: file blocks &gt;= 0 -&gt; child node in disk block 3443
+      extent node: eh_magic 0xF30A, eh_entries 5, eh_max 340, eh_depth 1 (index node)
+        index: file blocks &gt;= 0 -&gt; child node in disk block 2086
+        extent node: eh_magic 0xF30A, eh_entries 339, eh_max 340, eh_depth 0 (leaf)
+          extent: file blocks 0..0 -&gt; disk blocks 2081..2081 (1 block)
+          extent: file blocks 2..2 -&gt; disk blocks 2082..2082 (1 block)
+          extent: file blocks 4..4 -&gt; disk blocks 2083..2083 (1 block)
+          ... 333 more extents ...</span></code></pre>
+</li>
+<li>Dump the htree, then look a name up with and without it (<code>-L</code> forces a linear scan):
+<pre><code><span class="p">$</span> debugfs -R 'htree /bigdir' btree.img | head -14
+<span class="p">$</span> ../03-ondisk/ext4walk    btree.img /bigdir/no-such-file 2&gt;&amp;1 | grep -E 'read|ENOENT'
+<span class="o">    linear scan read 1 of 1 directory block
+    htree lookup read 2 of 20 directory blocks
+ext4walk: "no-such-file" not found in directory inode 12 (ENOENT)</span>
+<span class="p">$</span> ../03-ondisk/ext4walk -L btree.img /bigdir/no-such-file 2&gt;&amp;1 | grep -E 'read|ENOENT'
+<span class="o">    linear scan read 1 of 1 directory block
+    linear scan read 20 of 20 directory blocks
+ext4walk: "no-such-file" not found in directory inode 12 (ENOENT)</span></code></pre>
+The first "1 of 1" line is the root directory, which is small and has no index.
+</li>
+<li>Check the hash against <code>debugfs</code>'s own implementation:
+<pre><code><span class="p">$</span> seed=$(dumpe2fs -h btree.img 2&gt;/dev/null | awk -F': *' '/Directory Hash Seed/{print $2}')
+<span class="p">$</span> debugfs -R "dx_hash -h half_md4 -s $seed file-2233" btree.img
+<span class="p">$</span> ../03-ondisk/ext4walk btree.img /bigdir/file-2233 | grep 'hash('</code></pre>
+</li>
+<li>Ask the kernel for the extents of a real file on your root filesystem with <code>filefrag -v</code> (step 7 in the README builds a sparse test file for it), then run the arithmetic: <code>python3 -I fanout.py</code> and <code>python3 -I sqlite-btree.py</code>.</li>
+</ol>
+<p class="small muted">Tested on this machine (WSL2, Ubuntu 24.04, e2fsprogs 1.47.0, Python 3 with SQLite 3.45.1). Block numbers and hash values on yours will differ, because the hash seed is random per filesystem.</p>
+</section>
+<section class="check" id="check">
+<h2>Check yourself</h2>
+<details><summary>A tree has 4 KiB nodes with no header and 16-byte entries. How tall is it for 100 million keys?</summary><p>Fanout 4096 / 16 = 256. 256<sup>3</sup> ≈ 16.8 million is too few and 256<sup>4</sup> ≈ 4.3 billion is enough, so height 4. Level by level from the leaves: 390,625 leaves, 1,526 nodes, 6 nodes, 1 root.</p></details>
+<details><summary>Why does a B-tree grow by adding a new root instead of adding a level of leaves?</summary><p>Splitting the root and putting a new root above it moves every leaf down by one level at the same moment, so all leaves stay at the same depth. Growing at the bottom would put some leaves deeper than others.</p></details>
+<details><summary>In a B+tree, why is a separator copied up when a leaf splits, but moved up when an internal node splits?</summary><p>Every key must remain in a leaf, where its record is, so the leaf keeps its copy and the parent gets another. Separators in internal nodes are only signposts, so the middle one can leave its node entirely.</p></details>
+<details><summary>A file on ext4 has four extents and gains a fifth. What happens to its <code>i_block</code>?</summary><p>The in-inode root (capacity 4) is full, so ext4 grows the tree in depth. It copies the four extents into a new block, which becomes a leaf with room for 340, and rewrites <code>i_block</code> as an index node with depth 1 and a single entry pointing at that block. The fifth extent then goes into the leaf.</p></details>
+<details><summary>What does the htree gain by indexing hashes of names instead of the names, and what does it give up?</summary><p>It gains fixed 8-byte index entries (about 500 per block), even distribution regardless of naming patterns, and protection against crafted collisions through the per-filesystem seed. It gives up any ordering by name: no prefix searches, and <code>readdir</code> returns entries in hash order. It also has to handle hash collisions with the continuation bit.</p></details>
+<details><summary>Why can't btrfs link its leaves left to right?</summary><p>Copy-on-write gives a modified leaf a new address. Its neighbours' links would then point at the old copy, so they would have to be rewritten too, and their neighbours after them, rewriting the whole level. Instead, btrfs goes back up through the parent to find the next leaf.</p></details>
+<details><summary>In Lab 04, a missing name costs 2 block reads with the htree and 20 without. Why does the htree still read 2?</summary><p>It must read the root to learn which leaf could hold that hash, then scan that leaf to be sure the name is not there. Only a scan of that leaf can prove absence.</p></details>
+<details><summary>You are designing a store that ingests millions of small writes per second and is rarely read. B+tree or LSM tree, and what do you pay?</summary><p>An LSM tree: writes become sequential appends and batched flushes. You pay in reads, which may have to check several files, in write amplification from compaction, and in space held by old versions until compaction removes them.</p></details>
+</section>
+<section class="further" id="further">
+<h2>Go deeper</h2>
+<ul>
+<li><a href="https://doi.org/10.1145/356770.356776">Comer, <i>The Ubiquitous B-Tree</i> (ACM Computing Surveys, 1979)</a>: still the best short introduction, with B+trees and variants.</li>
+<li><a href="https://www.kernel.org/doc/html/latest/filesystems/ext4/index.html">ext4 Data Structures and Algorithms</a>: see "The Contents of inode.i_block" for extent trees and "Directory Entries" for the htree.</li>
+<li><a href="https://mirrors.edge.kernel.org/pub/linux/utils/fs/xfs/docs/xfs_filesystem_structure.pdf">XFS Algorithms &amp; Data Structures</a>: every XFS B+tree, byte by byte, with <code>xfs_db</code> examples.</li>
+<li><a href="https://btrfs.readthedocs.io/en/latest/dev/On-disk-format.html">btrfs on-disk format</a>: keys, items and the list of trees.</li>
+<li><a href="https://doi.org/10.1145/1326542.1326544">Rodeh, <i>B-trees, Shadowing, and Clones</i> (ACM TOS, 2008)</a>: the copy-on-write B-tree design btrfs is built on.</li>
+<li><a href="https://github.com/postgres/postgres/blob/master/src/backend/access/nbtree/README">PostgreSQL nbtree README</a>: Lehman and Yao in a production system, including page deletion and split choices.</li>
+<li><a href="https://doi.org/10.1145/319628.319663">Lehman and Yao, <i>Efficient Locking for Concurrent Operations on B-Trees</i> (ACM TODS, 1981)</a>: the B-link tree.</li>
+<li><a href="https://www.cs.umb.edu/~poneil/lsmtree.pdf">O'Neil et al., <i>The Log-Structured Merge-Tree</i> (1996)</a>: the original LSM paper.</li>
+</ul>
+</section>
+<nav class="pager-foot" aria-label="Next and previous lesson">
+<a class="prev" href="03-ondisk.html"><small>Previous</small>Inside an ext4 image</a>
+<a class="next" href="05-vfs-cache.html"><small>Next</small>The VFS and the caches</a>
+</nav>
+</main>
+</div>
+<script>
+// ---- B+tree core: no DOM, testable in node ----
+var BP_SEQ = 0;
+function BPTree(order) {
+  this.order = order;            // max children of an index node
+  this.maxKeys = order - 1;      // max keys in any node
+  this.root = this.newLeaf([]);
+}
+BPTree.prototype.newLeaf = function (keys) {
+  return { leaf: true, keys: keys, next: null, id: ++BP_SEQ };
+};
+BPTree.prototype.newIndex = function (keys, children) {
+  return { leaf: false, keys: keys, children: children, id: ++BP_SEQ };
+};
+BPTree.prototype.height = function () {
+  var h = 1, n = this.root;
+  while (!n.leaf) { n = n.children[0]; h++; }
+  return h;
+};
+// child to follow: keys >= separator i go right of it
+BPTree.prototype.childIndex = function (node, key) {
+  var i = 0;
+  while (i < node.keys.length && key >= node.keys[i]) i++;
+  return i;
+};
+BPTree.prototype.search = function (key) {
+  var path = [], n = this.root;
+  for (;;) {
+    path.push(n);
+    if (n.leaf) break;
+    n = n.children[this.childIndex(n, key)];
+  }
+  return { path: path, leaf: n, found: n.keys.indexOf(key) >= 0 };
+};
+BPTree.prototype.insert = function (key) {
+  var s = this.search(key), events = [], touched = {}, split = {};
+  if (s.found) return { inserted: false, events: [key + " is already in the tree"], path: s.path, touched: touched, split: split };
+  var leaf = s.leaf, pos = 0;
+  while (pos < leaf.keys.length && leaf.keys[pos] < key) pos++;
+  leaf.keys.splice(pos, 0, key);
+  touched[leaf.id] = true;
+  events.push("insert " + key + " into leaf [" + leaf.keys.join(" ") + "]");
+  var node = leaf, level = s.path.length - 1;
+  while (node.keys.length > this.maxKeys) {
+    var sep, right, mid;
+    if (node.leaf) {
+      mid = Math.ceil(node.keys.length / 2);
+      right = this.newLeaf(node.keys.slice(mid));
+      node.keys = node.keys.slice(0, mid);
+      right.next = node.next;
+      node.next = right;
+      sep = right.keys[0];
+      events.push("leaf overflow: split into [" + node.keys.join(" ") + "] and [" + right.keys.join(" ") + "]; " + sep + " is copied up");
+    } else {
+      mid = Math.floor(node.keys.length / 2);
+      sep = node.keys[mid];
+      right = this.newIndex(node.keys.slice(mid + 1), node.children.slice(mid + 1));
+      node.keys = node.keys.slice(0, mid);
+      node.children = node.children.slice(0, mid + 1);
+      events.push("index node overflow: split into [" + node.keys.join(" ") + "] and [" + right.keys.join(" ") + "]; " + sep + " moves up");
+    }
+    split[node.id] = true; split[right.id] = true;
+    touched[right.id] = true;
+    if (level === 0) {
+      this.root = this.newIndex([sep], [node, right]);
+      touched[this.root.id] = true;
+      events.push("the root split, so the tree grew a new root: height is now " + this.height());
+      break;
+    }
+    var parent = s.path[level - 1], ci = parent.children.indexOf(node);
+    parent.keys.splice(ci, 0, sep);
+    parent.children.splice(ci + 1, 0, right);
+    touched[parent.id] = true;
+    node = parent;
+    level--;
+  }
+  return { inserted: true, events: events, path: s.path, touched: touched, split: split };
+};
+BPTree.prototype.leaves = function () {
+  var n = this.root;
+  while (!n.leaf) n = n.children[0];
+  var out = [];
+  for (; n; n = n.next) out.push(n);
+  return out;
+};
+BPTree.prototype.levels = function () {
+  var out = [], cur = [this.root];
+  while (cur.length) {
+    out.push(cur);
+    var nxt = [];
+    cur.forEach(function (n) { if (!n.leaf) nxt = nxt.concat(n.children); });
+    cur = nxt;
+  }
+  return out;
+};
+
+// ---- fanout calculator core ----
+function treeShape(keys, fanout) {
+  var levels = [], n = Math.max(1, Math.ceil(keys / fanout));
+  levels.push(n);
+  while (n > 1) { n = Math.ceil(n / fanout); levels.push(n); }
+  return levels;   // leaves first, root last
+}
+
+// ---- SVG renderer: returns markup, no DOM, testable in node ----
+// hl = { path: {id:true}, split: {id:true}, hitKey: number|null, newKey: number|null }
+function renderTree(tree, hl) {
+  hl = hl || {};
+  var path = hl.path || {}, split = hl.split || {};
+  var CELL = 30, H = 26, GAP = 16, LEVEL = 64, PAD = 14;
+  var levels = tree.levels(), depth = levels.length;
+  var leaves = levels[depth - 1];
+  var nodeW = tree.maxKeys * CELL;
+  var pos = {}, out = [];
+  leaves.forEach(function (n, i) {
+    pos[n.id] = { x: PAD + i * (nodeW + GAP), y: PAD + (depth - 1) * LEVEL };
+  });
+  for (var d = depth - 2; d >= 0; d--) {
+    levels[d].forEach(function (n) {
+      var first = pos[n.children[0].id], last = pos[n.children[n.children.length - 1].id];
+      pos[n.id] = { x: (first.x + last.x) / 2, y: PAD + d * LEVEL };
+    });
+  }
+  var width = 2 * PAD + leaves.length * nodeW + (leaves.length - 1) * GAP;
+  var height = 2 * PAD + (depth - 1) * LEVEL + H;
+  out.push('<svg viewBox="0 0 ' + width + ' ' + height + '" width="' + width + '" height="' + height +
+    '" role="img" aria-label="B+tree of height ' + depth + ' holding ' + leaves.reduce(function (s, l) { return s + l.keys.length; }, 0) +
+    ' keys in ' + leaves.length + ' leaves">');
+  out.push('<defs><marker id="ah-04-9" viewBox="0 0 10 10" refX="9" refY="5" markerWidth="6" markerHeight="6" orient="auto"><path class="ah" d="M0,0 L10,5 L0,10 z"/></marker></defs>');
+  // edges first, so nodes paint over their ends
+  levels.slice(0, depth - 1).forEach(function (lv) {
+    lv.forEach(function (n) {
+      var p = pos[n.id];
+      n.children.forEach(function (c, i) {
+        var q = pos[c.id], on = path[n.id] && path[c.id];
+        out.push('<line class="' + (on ? 'bp-edge-hit' : 'ln') + '" x1="' + (p.x + i * CELL) + '" y1="' + (p.y + H) +
+          '" x2="' + (q.x + nodeW / 2) + '" y2="' + q.y + '"/>');
+        out.push('<circle class="' + (on ? 'bp-ptr-hit' : 'bp-ptr') + '" cx="' + (p.x + i * CELL) + '" cy="' + (p.y + H) + '" r="2.5"/>');
+      });
+    });
+  });
+  // the leaf chain
+  for (var i = 0; i + 1 < leaves.length; i++) {
+    var a = pos[leaves[i].id], b = pos[leaves[i + 1].id];
+    out.push('<line class="lnd" x1="' + (a.x + nodeW + 1) + '" y1="' + (a.y + H / 2) + '" x2="' + (b.x - 1) + '" y2="' + (b.y + H / 2) +
+      '" marker-end="url(#ah-04-9)"/>');
+  }
+  // nodes
+  levels.forEach(function (lv) {
+    lv.forEach(function (n) {
+      var p = pos[n.id];
+      for (var j = 0; j < tree.maxKeys; j++) {
+        var k = n.keys[j], cls = 'bp-cell';
+        if (j >= n.keys.length) cls = 'bp-empty';
+        else if (n.leaf && k === hl.newKey) cls = 'bp-cell bp-new';
+        else if (n.leaf && k === hl.hitKey) cls = 'bp-cell bp-hit';
+        out.push('<rect class="' + cls + '" x="' + (p.x + j * CELL) + '" y="' + p.y + '" width="' + CELL + '" height="' + H + '"/>');
+        if (j < n.keys.length) {
+          out.push('<text class="t" x="' + (p.x + j * CELL + CELL / 2) + '" y="' + (p.y + 17.5) + '" text-anchor="middle">' + k + '</text>');
+        }
+      }
+      var ncls = 'bp-node' + (n.leaf ? ' bp-leaf' : '') + (split[n.id] ? ' bp-split' : '') + (path[n.id] ? ' bp-path' : '');
+      out.push('<rect class="' + ncls + '" x="' + p.x + '" y="' + p.y + '" width="' + nodeW + '" height="' + H + '"/>');
+    });
+  });
+  out.push('</svg>');
+  return out.join('');
+}
+
+// ---- fanout calculator core ----
+function parseCount(s) {
+  var v = Number(String(s).replace(/[,_\s]/g, ''));
+  return isFinite(v) && v >= 1 ? Math.floor(v) : NaN;
+}
+function fanoutReport(node, entry, header, keys, fillPct) {
+  var maxFan = Math.floor((node - header) / entry);
+  if (!(maxFan >= 2)) return null;
+  var fan = Math.max(2, Math.floor(maxFan * fillPct / 100));
+  var shape = treeShape(keys, fan).slice().reverse();     // root first
+  var total = shape.reduce(function (s, n) { return s + n; }, 0);
+  var upper = total - shape[shape.length - 1];
+  return {
+    maxFanout: maxFan, fanout: fan, height: shape.length, levels: shape,
+    totalBytes: total * node, upperBytes: upper * node,
+    binaryHeight: Math.ceil(Math.log2(keys + 1))
+  };
+}
+
+// ---- page wiring (needs the DOM) ----
+(function () {
+  var $ = function (id) { return document.getElementById(id); };
+  var stage = $('bp-stage'), stats = $('bp-stats'), log = $('bp-log');
+  var orderSel = $('bp-order'), keyIn = $('bp-key');
+  if (!stage) return;
+  var MAX_KEYS = 100, EXAMPLE = [5, 12, 20, 27, 33, 41, 48, 56, 63, 70, 78, 85];
+  var tree, history = [];
+
+  function ids(nodes) { var o = {}; nodes.forEach(function (n) { o[n.id] = true; }); return o; }
+  function show(n) { return '[' + n.keys.join(' ') + ']'; }
+  function plural(n, one, many) { return n + ' ' + (n === 1 ? one : many); }
+  function exampleNote() {
+    return ['example: ' + EXAMPLE.join(' ') + ', inserted in ascending order',
+      'only the rightmost leaf ever receives a key, so every other leaf keeps the ' +
+      Math.ceil(tree.order / 2) + ' keys its split left it'];
+  }
+
+  function draw(hl) {
+    stage.innerHTML = renderTree(tree, hl);
+    var lv = tree.levels(), nodes = 0, h = lv.length;
+    lv.forEach(function (l) { nodes += l.length; });
+    var leaves = lv[h - 1].length;
+    stats.textContent = 'order ' + tree.order + ': up to ' + tree.maxKeys + ' keys and ' + tree.order +
+      ' children per node · ' + plural(history.length, 'key', 'keys') + ' · ' + plural(nodes, 'node', 'nodes') +
+      ' (' + (nodes - leaves) + ' index, ' + plural(leaves, 'leaf', 'leaves') + ') · height ' + h +
+      ', so a lookup reads ' + plural(h, 'node', 'nodes');
+    var focus = stage.querySelector('.bp-leaf.bp-path') || stage.querySelector('.bp-split');
+    if (focus) stage.scrollLeft = Number(focus.getAttribute('x')) + tree.maxKeys * 15 - stage.clientWidth / 2;
+  }
+  function say(lines) {
+    var li = document.createElement('li');
+    lines.forEach(function (text, i) {
+      var line = document.createElement('span');
+      line.textContent = text;
+      if (i) line.className = 'bp-sub';
+      li.appendChild(line);
+    });
+    log.insertBefore(li, log.firstChild);
+    while (log.children.length > 30) log.removeChild(log.lastChild);
+  }
+  function readKey() {
+    var k = Number(keyIn.value);
+    if (!Number.isInteger(k) || k < 1 || k > 999) {
+      say(['type a whole number from 1 to 999 first']);
+      keyIn.focus();
+      return null;
+    }
+    return k;
+  }
+  function add(k) {
+    if (history.length >= MAX_KEYS) return null;
+    var r = tree.insert(k);
+    if (r.inserted) history.push(k);
+    return r;
+  }
+  function full() { say(['the demo stops at ' + MAX_KEYS + ' keys; press Reset to start again']); }
+  function insertOne(k) {
+    var r = add(k);
+    if (!r) return full();
+    draw({ path: ids(tree.search(k).path), split: r.split, newKey: r.inserted ? k : null, hitKey: r.inserted ? null : k });
+    say(r.events);
+  }
+  function insertMany(keys, label) {
+    var leafSplits = 0, indexSplits = 0, grew = 0, added = 0, split = {}, last = null;
+    for (var i = 0; i < keys.length; i++) {
+      var r = add(keys[i]);
+      if (!r) break;
+      if (!r.inserted) continue;
+      added++; last = keys[i];
+      r.events.forEach(function (e) {
+        if (e.indexOf('leaf overflow') === 0) leafSplits++;
+        else if (e.indexOf('index node overflow') === 0) indexSplits++;
+        else if (e.indexOf('the root split') === 0) grew++;
+      });
+      for (var id in r.split) split[id] = true;
+    }
+    if (!added) return full();
+    draw({ path: ids(tree.search(last).path), split: split, newKey: last });
+    say([label + ': inserted ' + added + ' keys (' + keys.slice(0, added).join(' ') + ')',
+      plural(leafSplits, 'leaf split', 'leaf splits') + ', ' + plural(indexSplits, 'index split', 'index splits') +
+      (grew ? ', and the root split ' + plural(grew, 'time', 'times') + ': height is now ' + tree.height() : '')]);
+  }
+  function randomKeys(n) {
+    var have = {}, out = [];
+    tree.leaves().forEach(function (l) { l.keys.forEach(function (k) { have[k] = true; }); });
+    for (var tries = 0; out.length < n && tries < 5000; tries++) {
+      var k = 1 + Math.floor(Math.random() * 999);
+      if (!have[k]) { have[k] = true; out.push(k); }
+    }
+    return out;
+  }
+  function rebuild(order, keys) {
+    tree = new BPTree(order);
+    history = [];
+    keys.forEach(add);
+  }
+
+  $('bp-insert').addEventListener('click', function () { var k = readKey(); if (k !== null) insertOne(k); });
+  keyIn.addEventListener('keydown', function (e) {
+    if (e.key === 'Enter') { e.preventDefault(); var k = readKey(); if (k !== null) insertOne(k); }
+  });
+  $('bp-search').addEventListener('click', function () {
+    var k = readKey();
+    if (k === null) return;
+    var s = tree.search(k);
+    draw({ path: ids(s.path), hitKey: s.found ? k : null });
+    say(['search ' + k + ': ' + s.path.map(show).join(' → '),
+      s.found ? 'found in the leaf after reading ' + plural(s.path.length, 'node', 'nodes')
+              : 'not found: if it existed it would be in this leaf (' + plural(s.path.length, 'node', 'nodes') + ' read)']);
+  });
+  $('bp-random').addEventListener('click', function () {
+    var ks = randomKeys(1);
+    if (ks.length) insertOne(ks[0]);
+  });
+  $('bp-random10').addEventListener('click', function () { insertMany(randomKeys(10), '10 random'); });
+  $('bp-ascending').addEventListener('click', function () {
+    var top = 0, ks = [];
+    tree.leaves().forEach(function (l) { l.keys.forEach(function (k) { if (k > top) top = k; }); });
+    for (var k = top + 1; k <= 999 && ks.length < 10; k++) ks.push(k);
+    if (ks.length) insertMany(ks, '10 ascending');
+  });
+  $('bp-example').addEventListener('click', function () {
+    rebuild(Number(orderSel.value), EXAMPLE);
+    draw({});
+    say(exampleNote());
+  });
+  $('bp-reset').addEventListener('click', function () {
+    rebuild(Number(orderSel.value), []);
+    draw({});
+    say(['empty tree: a single leaf, which is also the root']);
+  });
+  orderSel.addEventListener('change', function () {
+    var keys = history.slice();
+    rebuild(Number(orderSel.value), keys);
+    draw({});
+    say(['rebuilt the same ' + keys.length + ' keys with order ' + tree.order + ': height ' + tree.height()]);
+  });
+
+  rebuild(Number(orderSel.value), EXAMPLE);
+  draw({});
+  say(exampleNote());
+
+  // ---- fanout calculator ----
+  var fan = { preset: $('fan-preset'), node: $('fan-node'), entry: $('fan-entry'), header: $('fan-header'),
+    keys: $('fan-keys'), fill: $('fan-fill'), out: $('fan-out') };
+  function num(n) { return n.toLocaleString('en-US'); }
+  function bytes(b) {
+    var u = ['B', 'KiB', 'MiB', 'GiB', 'TiB', 'PiB'], i = 0;
+    while (b >= 1024 && i < u.length - 1) { b /= 1024; i++; }
+    return (i ? b.toFixed(1) : String(b)) + ' ' + u[i];
+  }
+  function ms(s) { return (s * 1e3).toFixed(2) + ' ms'; }
+  function calc() {
+    var node = Number(fan.node.value), entry = Number(fan.entry.value), header = Number(fan.header.value);
+    var keys = parseCount(fan.keys.value), fill = Number(fan.fill.value);
+    if (!(entry >= 1) || !(header >= 0) || !(keys >= 1) || keys > 1e15 || !(fill >= 10 && fill <= 100)) {
+      fan.out.textContent = 'entry ≥ 1 byte, header ≥ 0, keys from 1 to 10^15, fill between 10 and 100 %';
+      return;
+    }
+    var r = fanoutReport(node, entry, header, keys, fill);
+    if (!r) { fan.out.textContent = 'a node this size holds fewer than 2 entries: make the node bigger or the entries smaller'; return; }
+    fan.out.textContent = [
+      'up to ' + num(r.maxFanout) + ' entries per node; at ' + fill + '% full, ' + num(r.fanout),
+      num(keys) + ' keys → height ' + r.height + ' (a binary search tree needs ' + r.binaryHeight + ' levels)',
+      'nodes per level, root first: ' + r.levels.map(num).join(' → '),
+      r.height > 1 ? 'whole tree ' + bytes(r.totalBytes) + '; the levels above the leaves ' + bytes(r.upperBytes)
+                   : 'whole tree ' + bytes(r.totalBytes) + ' (a single node)',
+      'uncached lookup: HDD ' + r.height + ' × 8 ms = ' + ms(r.height * 8e-3) +
+        ', NVMe ' + r.height + ' × 80 µs = ' + ms(r.height * 80e-6),
+      r.height > 1 ? 'keep the ' + bytes(r.upperBytes) + ' above the leaves in RAM and a lookup costs 1 read'
+                   : 'the whole tree is one node: 1 read'
+    ].join('\n');
+  }
+  fan.preset.addEventListener('change', function () {
+    var v = fan.preset.value.split(',');
+    if (v.length !== 5) return;
+    fan.node.value = v[0]; fan.entry.value = v[1]; fan.header.value = v[2];
+    fan.keys.value = num(Number(v[3])); fan.fill.value = v[4];
+    calc();
+  });
+  [fan.node, fan.entry, fan.header, fan.keys, fan.fill].forEach(function (el) {
+    el.addEventListener('input', function () { fan.preset.value = ''; calc(); });
+  });
+  calc();
+})();
+</script>
+<script src="course.js"></script>
+</body>
+</html>

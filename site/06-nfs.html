@@ -1,0 +1,620 @@
+<!doctype html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover">
+<title>NFS from v3 to 4.2</title>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=IBM+Plex+Mono:wght@400;600&family=IBM+Plex+Sans+Condensed:wght@500;600;700&family=Source+Serif+4:ital,opsz,wght@0,8..60,400;0,8..60,600;1,8..60,400&display=swap">
+<link rel="stylesheet" href="course.css?v=7">
+</head>
+<body data-layer="net">
+<header class="topbar">
+<a class="brand" href="index.html">From open() to RDMA <span>· a storage course</span></a>
+<nav class="pager" aria-label="Lesson pager">
+<a href="05-vfs-cache.html" rel="prev">← Prev</a>
+<details class="route"><summary>Lesson 6 of 9</summary></details>
+<a href="07-nfs-caching.html" rel="next">Next →</a>
+<details class="sections"><summary>Sections</summary></details>
+</nav>
+</header>
+<div class="layout">
+<nav class="rail" aria-label="Lessons">
+<div class="rail-title">The route</div>
+<ol>
+<li class="user"><a href="01-syscalls.html"><span class="n">01</span><span>Syscalls &amp; file descriptors</span></a></li>
+<li class="block"><a href="02-blocks.html"><span class="n">02</span><span>Block devices &amp; addressing</span></a></li>
+<li class="fs"><a href="03-ondisk.html"><span class="n">03</span><span>Inside an ext4 image</span></a></li>
+<li class="fs"><a href="04-btrees.html"><span class="n">04</span><span>B-trees, really</span></a></li>
+<li class="kernel"><a href="05-vfs-cache.html"><span class="n">05</span><span>The VFS and the caches</span></a></li>
+<li class="net"><a href="06-nfs.html" aria-current="page"><span class="n">06</span><span>NFS from v3 to 4.2</span></a></li>
+<li class="net"><a href="07-nfs-caching.html"><span class="n">07</span><span>Caching across the network</span></a></li>
+<li class="net"><a href="08-rdma.html"><span class="n">08</span><span>RDMA and NFS over RDMA</span></a></li>
+<li class="net"><a href="09-distributed.html"><span class="n">09</span><span>Distributed filesystems</span></a></li>
+<li class="extra"><a href="glossary.html"><span class="n">··</span><span>Glossary</span></a></li>
+</ol>
+<div class="rail-legend">
+<span style="--c: var(--l-user)">user space</span>
+<span style="--c: var(--l-kernel)">kernel</span>
+<span style="--c: var(--l-fs)">filesystem</span>
+<span style="--c: var(--l-block)">block</span>
+<span style="--c: var(--l-net)">network</span>
+</div>
+</nav>
+<main class="lesson">
+<header class="lesson-head">
+<p class="eyebrow">Lesson 6 · Network</p>
+<h1>NFS from v3 to 4.2</h1>
+<p class="lede">What actually crosses the wire when a program calls <code>read()</code> on a file that lives on another machine, and how thirty years of NFS versions changed the answer.</p>
+<div class="outcomes">
+<b>After this lesson you can</b>
+<ul>
+<li>trace a <code>read()</code> from an application through the Linux NFS client, SUNRPC and the wire into <code>nfsd</code> and the server's filesystem;</li>
+<li>read an RPC call the way the server does: program, version, procedure, credentials, XDR-encoded arguments;</li>
+<li>explain why NFSv3 could be stateless and what NFSv4 gained by giving that up;</li>
+<li>name the NFSv4.1 and 4.2 operations behind sessions, pNFS, server-side copy, clones, sparse files and xattrs, and the Linux syscall that triggers each;</li>
+<li>choose mount and export options deliberately, and measure a mount with <code>/proc/self/mountstats</code>.</li>
+</ul>
+</div>
+<nav class="toc" aria-label="Lesson contents">
+<b>In this lesson</b>
+<ol>
+<li><a href="#why">Why a network filesystem</a></li>
+<li><a href="#history">Versions and their RFCs</a></li>
+<li><a href="#stack">The Linux NFS stack</a></li>
+<li><a href="#rpc">ONC RPC and XDR</a></li>
+<li><a href="#filehandles">File handles</a></li>
+<li><a href="#v3">NFSv3: a stateless server</a></li>
+<li><a href="#v4">NFSv4.0: state, compounds, one port</a></li>
+<li><a href="#v41">NFSv4.1: sessions, trunking and pNFS</a></li>
+<li><a href="#v42">NFSv4.2, feature by feature</a></li>
+<li><a href="#knobs">Linux knobs</a></li>
+<li><a href="#observe">Observing NFS</a></li>
+<li><a href="#lab">Lab 06 · Part A: An NFS server and client on one machine</a></li>
+<li><a href="#check">Check yourself</a></li>
+<li><a href="#further">Go deeper</a></li>
+</ol>
+</nav>
+</header>
+<section id="why">
+<h2>Why a network filesystem</h2>
+<p>Lessons 1 to 5 kept the disk inside the machine. A file was an inode on a local block device, every process went through one kernel, and that kernel's page cache was the only copy of the data in RAM. A network filesystem keeps the files on a <b>server</b> and lets many <b>clients</b> use them through the ordinary file API. The application still calls <code>open</code>, <code>read</code> and <code>write</code>. The client kernel turns those calls into messages to the server.</p>
+<p>Three things change when the disk moves away:</p>
+<ul>
+<li><b>Latency.</b> A page-cache hit costs well under a microsecond. A round trip to a server in the same rack costs tens to hundreds of microseconds over TCP, before the server touches its own disk. Every design decision in NFS is about avoiding round trips.</li>
+<li><b>Partial failure.</b> A local disk and the kernel fail together. A server can reboot while the client keeps running, and the network can drop or duplicate messages. The protocol has to say what happens to half-finished writes and to locks.</li>
+<li><b>More than one cache.</b> Each client caches data and attributes in its own RAM. The server has its own page cache too. Keeping them consistent is <a href="07-nfs-caching.html">lesson 7</a>.</li>
+</ul>
+<p>NFS shares <em>files</em>. Remote block protocols such as iSCSI and NVMe over Fabrics share a <em>disk</em>: the client runs its own filesystem on top, so only one client can mount it read-write unless a cluster filesystem coordinates them (<a href="09-distributed.html">lesson 9</a>). NAS (network-attached storage) usually means file protocols like NFS and SMB. SAN (storage area network) usually means block protocols.</p>
+</section>
+<section id="history">
+<h2>Versions and their RFCs</h2>
+<p>Sun Microsystems built NFS in 1984 and published the protocol so that anyone could implement it. Every version since has been specified in IETF RFCs. Later RFCs often replace earlier ones for the same version, which is why NFSv4.0 and NFSv4.1 each have two numbers.</p>
+<div class="table-wrap"><table>
+<thead><tr><th>Version</th><th>RFC</th><th>Year</th><th>What it introduced</th></tr></thead>
+<tbody>
+<tr><td>NFSv2</td><td>1094</td><td>1989</td><td>Stateless server, UDP, 32-bit file sizes, 8 KiB transfers, every write synchronous.</td></tr>
+<tr><td>NFSv3</td><td>1813</td><td>1995</td><td>64-bit sizes, large transfers, unstable WRITE plus COMMIT, READDIRPLUS, ACCESS. Still stateless; locking and mounting in side protocols.</td></tr>
+<tr><td>NFSv4.0</td><td>3010 → 3530 → 7530</td><td>2000 / 2003 / 2015</td><td>Stateful: OPEN, CLOSE, leases. COMPOUND requests. One port (2049). Locking in the protocol. Delegations. ACLs. Strong security mandatory to implement.</td></tr>
+<tr><td>NFSv4.1</td><td>5661 → 8881</td><td>2010 / 2020</td><td>Sessions and exactly-once semantics. Callbacks over the client's own connection. Trunking. pNFS (parallel NFS). Directory delegations.</td></tr>
+<tr><td>NFSv4.2</td><td>7862</td><td>2016</td><td>Server-side COPY, CLONE, sparse-file support (SEEK, READ_PLUS), ALLOCATE and DEALLOCATE, IO_ADVISE, Labeled NFS, layout statistics.</td></tr>
+<tr><td>4.2 extension</td><td>8276</td><td>2017</td><td>User extended attributes (GETXATTR, SETXATTR, LISTXATTRS, REMOVEXATTR).</td></tr>
+<tr><td>pNFS layout</td><td>8435</td><td>2018</td><td>The flexible-files layout: data servers can be plain NFSv3 or NFSv4 servers, with client-side mirroring.</td></tr>
+<tr><td>4.2 extension</td><td>9754</td><td>2025</td><td>Extensions for opening and delegating files: delegated timestamps, an OPEN that returns only a delegation, discovery of supported OPEN flags, offline-file detection.</td></tr>
+</tbody>
+</table></div>
+<p>A <b>minor version</b> of NFSv4 (4.0, 4.1, 4.2) is negotiated per connection. 4.2 is 4.1 plus a set of mostly optional operations, so a 4.2 server may still answer some 4.2 operations with <code>NFS4ERR_NOTSUPP</code>. The Linux client tries 4.2 first and negotiates down until the server agrees, so on a modern pair of machines a plain <code>mount server:/export /mnt</code> gives you 4.2.</p>
+</section>
+<section id="stack">
+<h2>The Linux NFS stack</h2>
+<p>Here is the path of one <code>read()</code> on a client whose page cache does not have the data. Every box is kernel code except the application.</p>
+<figure class="diagram">
+<svg viewBox="0 0 720 290" width="720" role="img" aria-label="A read request flows on the client from the application through the VFS, the NFS client, SUNRPC and the transport, crosses the network, then on the server through the transport, SUNRPC, nfsd, the server VFS and the local filesystem down to disk.">
+<defs><marker id="ah-06-1" viewBox="0 0 10 10" refX="9" refY="5" markerWidth="7" markerHeight="7" orient="auto-start-reverse"><path class="ah" d="M0,0 L10,5 L0,10 z"/></marker></defs>
+<text class="th" x="10" y="28">Client machine</text>
+<rect class="k-user" x="10" y="40" width="105" height="60" rx="3"/>
+<text class="t" x="62" y="66" text-anchor="middle">application</text>
+<text class="ts" x="62" y="84" text-anchor="middle">read()</text>
+<rect class="k-kernel" x="130" y="40" width="105" height="60" rx="3"/>
+<text class="t" x="182" y="66" text-anchor="middle">VFS</text>
+<text class="ts" x="182" y="84" text-anchor="middle">page cache</text>
+<rect class="k-net" x="250" y="40" width="105" height="60" rx="3"/>
+<text class="t" x="302" y="66" text-anchor="middle">NFS client</text>
+<text class="ts" x="302" y="84" text-anchor="middle">fs/nfs</text>
+<rect class="k-net" x="370" y="40" width="105" height="60" rx="3"/>
+<text class="t" x="422" y="66" text-anchor="middle">SUNRPC</text>
+<text class="ts" x="422" y="84" text-anchor="middle">XDR + RPC</text>
+<rect class="k-net" x="490" y="40" width="105" height="60" rx="3"/>
+<text class="t" x="542" y="66" text-anchor="middle">transport</text>
+<text class="ts" x="542" y="84" text-anchor="middle">TCP or RDMA</text>
+<line class="ln" x1="115" y1="70" x2="128" y2="70" marker-end="url(#ah-06-1)"/>
+<line class="ln" x1="235" y1="70" x2="248" y2="70" marker-end="url(#ah-06-1)"/>
+<line class="ln" x1="355" y1="70" x2="368" y2="70" marker-end="url(#ah-06-1)"/>
+<line class="ln" x1="475" y1="70" x2="488" y2="70" marker-end="url(#ah-06-1)"/>
+<line class="ln" x1="595" y1="70" x2="613" y2="70" marker-end="url(#ah-06-1)"/>
+<rect class="box" x="615" y="40" width="95" height="200" rx="3"/>
+<text class="t" x="662" y="120" text-anchor="middle">network</text>
+<text class="ts" x="662" y="140" text-anchor="middle">Ethernet</text>
+<text class="ts" x="662" y="156" text-anchor="middle">or</text>
+<text class="ts" x="662" y="172" text-anchor="middle">InfiniBand</text>
+<line class="ln" x1="615" y1="210" x2="597" y2="210" marker-end="url(#ah-06-1)"/>
+<rect class="k-net" x="490" y="180" width="105" height="60" rx="3"/>
+<text class="t" x="542" y="206" text-anchor="middle">transport</text>
+<text class="ts" x="542" y="224" text-anchor="middle">TCP or RDMA</text>
+<rect class="k-net" x="370" y="180" width="105" height="60" rx="3"/>
+<text class="t" x="422" y="206" text-anchor="middle">SUNRPC svc</text>
+<text class="ts" x="422" y="224" text-anchor="middle">net/sunrpc</text>
+<rect class="k-net" x="250" y="180" width="105" height="60" rx="3"/>
+<text class="t" x="302" y="206" text-anchor="middle">nfsd threads</text>
+<text class="ts" x="302" y="224" text-anchor="middle">fs/nfsd</text>
+<rect class="k-kernel" x="130" y="180" width="105" height="60" rx="3"/>
+<text class="t" x="182" y="206" text-anchor="middle">server VFS</text>
+<text class="ts" x="182" y="224" text-anchor="middle">page cache</text>
+<rect class="k-fs" x="10" y="180" width="105" height="60" rx="3"/>
+<text class="t" x="62" y="206" text-anchor="middle">ext4 / XFS</text>
+<text class="ts" x="62" y="224" text-anchor="middle">block → disk</text>
+<line class="ln" x1="490" y1="210" x2="477" y2="210" marker-end="url(#ah-06-1)"/>
+<line class="ln" x1="370" y1="210" x2="357" y2="210" marker-end="url(#ah-06-1)"/>
+<line class="ln" x1="250" y1="210" x2="237" y2="210" marker-end="url(#ah-06-1)"/>
+<line class="ln" x1="130" y1="210" x2="117" y2="210" marker-end="url(#ah-06-1)"/>
+<text class="th" x="10" y="270">Server machine</text>
+</svg>
+<figcaption>The request travels right along the top row, crosses the network, and travels left along the bottom row. The reply retraces the path. Colours follow the course: violet user space, blue core kernel, red network code, green the on-disk filesystem.</figcaption>
+</figure>
+<ul>
+<li><b>VFS and page cache.</b> The client VFS is the same one from <a href="05-vfs-cache.html">lesson 5</a>. NFS registers its own <code>file_operations</code> and <code>address_space_operations</code>, so a cache hit never reaches NFS code.</li>
+<li><b>NFS client</b> (<code>fs/nfs</code>). Decides when to revalidate caches, batches dirty pages into WRITE calls, tracks NFSv4 state (client ID, opens, locks, delegations), and maps each VFS operation to NFS procedures.</li>
+<li><b>SUNRPC</b> (<code>net/sunrpc</code>). The generic ONC RPC layer: assigns transaction IDs, encodes and decodes arguments in XDR, retransmits on timeout, and multiplexes many outstanding calls over a connection. Both the client and the server side live here.</li>
+<li><b>Transport.</b> TCP (<code>xprtsock</code>) almost everywhere today. RDMA (<code>xprtrdma</code> on the client, <code>svcrdma</code> on the server) moves the bulk data with RDMA reads and writes; that is <a href="08-rdma.html">lesson 8</a>. UDP is legacy, and many kernels are built without NFS-over-UDP support.</li>
+<li><b>nfsd</b> (<code>fs/nfsd</code>). The in-kernel server. A pool of kernel threads, each handling one RPC at a time, calls into the server's VFS exactly as a local process would. Its replies come from the server's page cache when they can.</li>
+<li><b>User-space helpers.</b> <code>rpc.mountd</code> answers the MOUNT protocol and feeds export information to the kernel; <code>rpcbind</code> maps RPC program numbers to ports; <code>rpc.statd</code> handles NFSv3 lock recovery; <code>nfsdcld</code> records which NFSv4 clients may reclaim state after a server reboot; <code>rpc.gssd</code> and <code>nfsidmap</code> handle Kerberos and user-name mapping.</li>
+</ul>
+<aside class="note"><span class="tag">Aside</span><p>Not every NFS server is <code>nfsd</code>. NFS-Ganesha is a widely used user-space server that can export Ceph, GlusterFS and other backends, and many storage appliances run their own implementations. The protocol is the contract; the Linux client talks to all of them.</p></aside>
+</section>
+<section id="rpc">
+<h2>ONC RPC and XDR</h2>
+<p>NFS is a set of remote procedures. The framework underneath is <b>ONC RPC</b> (Open Network Computing Remote Procedure Call, RFC 5531), and the encoding is <b>XDR</b> (External Data Representation, RFC 4506). Every NFS message is an RPC call or reply.</p>
+<h3>The call header</h3>
+<pre><code>xid         0x5a3c91e2      <span class="c">transaction id; the reply carries the same xid</span>
+msg_type    0 (CALL)         <span class="c">1 = REPLY</span>
+rpcvers     2
+prog        100003           <span class="c">NFS</span>
+vers        3                <span class="c">or 4</span>
+proc        6                <span class="c">NFSv3 READ; NFSv4 has only NULL (0) and COMPOUND (1)</span>
+cred        AUTH_SYS { uid 1000, gid 1000, gids [27, 100] }
+verf        AUTH_NONE
+<span class="c">... then the procedure's arguments, XDR-encoded</span></code></pre>
+<p>The server finds the program and version, decodes the arguments, runs the procedure, and sends a reply with the same <b>xid</b>. The client matches replies to calls by xid, which is how many calls can be in flight on one connection. Over TCP each message is preceded by a 4-byte record mark that holds its length.</p>
+<h3>XDR in one minute</h3>
+<p>XDR encodes everything in big-endian 4-byte units. Integers are 4 or 8 bytes. Variable-length data (strings, opaque blobs such as file handles) is a 4-byte length followed by the bytes, padded with zeros to a multiple of 4. The name <code>"hello"</code> becomes 12 bytes:</p>
+<pre><code>00 00 00 05   68 65 6c 6c   6f 00 00 00
+<span class="c">length = 5    h  e  l  l    o  padding</span></code></pre>
+<p>There are no field names or tags on the wire. Both sides know the layout from the protocol specification, which is written in XDR's own definition language. That keeps messages compact and parsing cheap, and it is why Wireshark needs an NFS dissector to show anything useful.</p>
+<h3>RPC programs you will meet</h3>
+<div class="table-wrap"><table>
+<thead><tr><th>Program</th><th>Number</th><th>Port</th><th>Used by</th></tr></thead>
+<tbody>
+<tr><td>rpcbind (portmapper)</td><td>100000</td><td>111</td><td>NFSv3: finds the ports of the other programs</td></tr>
+<tr><td>nfs</td><td>100003</td><td>2049</td><td>all versions</td></tr>
+<tr><td>mountd</td><td>100005</td><td>dynamic</td><td>NFSv3: get the root file handle of an export</td></tr>
+<tr><td>nlockmgr (NLM)</td><td>100021</td><td>dynamic</td><td>NFSv3 byte-range locks (<code>lockd</code>)</td></tr>
+<tr><td>status (NSM)</td><td>100024</td><td>dynamic</td><td>NFSv3 reboot notification for lock recovery (<code>rpc.statd</code>)</td></tr>
+<tr><td>nfs_acl</td><td>100227</td><td>2049</td><td>NFSv3 POSIX ACLs (Linux and Solaris side protocol)</td></tr>
+</tbody>
+</table></div>
+<p>NFSv4 needs only the first-class <code>nfs</code> program on port 2049. That one change made NFS usable through firewalls.</p>
+<h3>Who is calling: credentials</h3>
+<p><b>AUTH_SYS</b> (once called AUTH_UNIX) sends numeric uid, gid and up to 16 supplementary group ids in every call. The server believes them. Security therefore depends on trusting the client machine and the network. The export option <code>root_squash</code> maps uid 0 to an anonymous user so that root on a client is not root on the server, but any user who is root on a trusted client can still claim to be any other uid. The 16-group limit is real: users in more groups lose access unless the server looks groups up itself (<code>rpc.mountd --manage-gids</code>).</p>
+<p><b>RPCSEC_GSS</b> uses Kerberos instead. The mount option <code>sec=</code> picks the level:</p>
+<ul>
+<li><code>sec=krb5</code>: the user is authenticated with a Kerberos ticket. Data is not protected.</li>
+<li><code>sec=krb5i</code>: adds an integrity checksum to every message.</li>
+<li><code>sec=krb5p</code>: adds encryption ("privacy"). This costs CPU on both ends.</li>
+</ul>
+<p>A newer option encrypts the transport rather than each message: RPC-with-TLS (RFC 9289), enabled on recent Linux kernels with the <code>xprtsec=tls</code> or <code>xprtsec=mtls</code> mount option and the <code>tlshd</code> user-space handshake daemon. It protects the connection; it does not by itself authenticate individual users.</p>
+<p><b>Identities in NFSv4.</b> NFSv4 attributes name owners as strings, <code>user@domain</code>, rather than numbers. Client and server translate with <code>nfsidmap</code>, and a mismatched domain shows up as files owned by <code>nobody</code>. With <code>sec=sys</code> Linux sends the numeric id as a string by default, which avoids that failure as long as uids match across machines.</p>
+</section>
+<section id="filehandles">
+<h2>File handles</h2>
+<p>A local process names an open file with an fd, which only makes sense inside one kernel. An NFS client names a file with a <b>file handle</b>: an opaque blob the server created and the client stores without interpreting. NFSv3 handles are at most 64 bytes; NFSv4 handles at most 128. The client gets one from LOOKUP (or the MOUNT protocol, or NFSv4's PUTROOTFH), and every later operation on that file carries it.</p>
+<p>"Opaque" is a promise about the client. On the server the handle has a structure. Linux <code>nfsd</code> builds it roughly like this:</p>
+<figure class="diagram">
+<pre>+---------+---------------------------+-----------------------------+
+| version | filesystem id             | file id                     |
+| + types | (UUID, device number, or  | inode number + generation   |
+|         |  the export's fsid=)      | (+ parent's, for some types)|
++---------+---------------------------+-----------------------------+</pre>
+<figcaption>A Linux nfsd file handle. Given only these bytes, the server can find the export and the inode without any per-client table.</figcaption>
+</figure>
+<p>Two consequences matter in practice.</p>
+<ul>
+<li><b>Handles survive server reboots.</b> The server needs no memory of having issued them. It decodes the filesystem id and the inode number and looks the inode up. That is what made a stateless server possible.</li>
+<li><b>Handles go stale.</b> If the file is deleted and its inode number reused, the <b>generation number</b> stored in the inode no longer matches the one in the handle, and the server answers <code>ESTALE</code> ("Stale file handle"). The same happens if an export is moved to a filesystem with a different id. Filesystems without a stable UUID need an explicit <code>fsid=</code> export option for the same reason.</li>
+</ul>
+</section>
+<section id="v3">
+<h2>NFSv3: a stateless server</h2>
+<p>An NFSv3 server keeps no record of which clients exist or which files they have open. Every request is self-contained: file handle, offset, count, credentials. There is no OPEN or CLOSE in the protocol. When a server crashes and comes back, clients just retransmit, and to them the crash looks like a slow server. That simplicity is why NFSv3 is still everywhere.</p>
+<h3>The procedures</h3>
+<div class="table-wrap"><table>
+<thead><tr><th>Procedure</th><th>What it does</th><th>Typical trigger</th></tr></thead>
+<tbody>
+<tr><td><code>LOOKUP</code></td><td>name in directory handle → file handle + attributes</td><td>path resolution, one per component not in the dcache</td></tr>
+<tr><td><code>GETATTR</code> / <code>SETATTR</code></td><td>read / change attributes (size, mode, owner, times)</td><td>cache revalidation, <code>chmod</code>, <code>truncate</code>, <code>utimensat</code></td></tr>
+<tr><td><code>ACCESS</code></td><td>"may this credential read / write / execute this?"</td><td><code>open()</code>, <code>access()</code>; lets the server apply ACLs and id mapping</td></tr>
+<tr><td><code>READ</code> / <code>WRITE</code></td><td>bytes at an offset</td><td>page-cache misses, writeback</td></tr>
+<tr><td><code>COMMIT</code></td><td>make earlier unstable writes durable</td><td><code>fsync()</code>, <code>close()</code></td></tr>
+<tr><td><code>CREATE</code>, <code>MKDIR</code>, <code>SYMLINK</code>, <code>MKNOD</code></td><td>make a name</td><td><code>open(O_CREAT)</code>, <code>mkdir</code>, …</td></tr>
+<tr><td><code>REMOVE</code>, <code>RMDIR</code>, <code>RENAME</code>, <code>LINK</code></td><td>change names</td><td><code>unlink</code>, <code>rmdir</code>, <code>rename</code>, <code>link</code></td></tr>
+<tr><td><code>READDIR</code> / <code>READDIRPLUS</code></td><td>list a directory; PLUS also returns each entry's handle and attributes</td><td><code>ls</code>; <code>ls -l</code> benefits from PLUS</td></tr>
+<tr><td><code>READLINK</code></td><td>read a symlink's target</td><td>path resolution through symlinks</td></tr>
+<tr><td><code>FSSTAT</code>, <code>FSINFO</code>, <code>PATHCONF</code></td><td>space totals, transfer limits, name limits</td><td><code>df</code>, mount time</td></tr>
+<tr><td><code>NULL</code></td><td>does nothing</td><td>"is the server alive?" pings</td></tr>
+</tbody>
+</table></div>
+<p>READDIRPLUS exists because <code>ls -l</code> on a 10,000-entry directory would otherwise cost one READDIR plus 10,000 GETATTRs. ACCESS exists because the client cannot evaluate permissions correctly by itself when the server uses ACLs or maps ids.</p>
+<h3>Unstable writes, COMMIT and the write verifier</h3>
+<p>NFSv2 required the server to put every WRITE on stable storage before replying, which made writes painfully slow. NFSv3 added a <code>stable</code> field to WRITE:</p>
+<ul>
+<li><code>UNSTABLE</code>: the server may reply as soon as the data is in its page cache.</li>
+<li><code>DATA_SYNC</code>: data on stable storage, metadata may lag.</li>
+<li><code>FILE_SYNC</code>: data and metadata on stable storage.</li>
+</ul>
+<p>The client sends a stream of UNSTABLE writes and later one <b>COMMIT</b> for the range, which makes the server flush it (an <code>fsync</code> on the server side). Until the COMMIT succeeds, the client keeps its copy of the data, because the server might crash and lose it.</p>
+<p>How does the client know the server crashed? Every WRITE and COMMIT reply carries an 8-byte <b>write verifier</b>, a value the server picks at boot. If the verifier in the COMMIT reply differs from the one in the WRITE replies, the server restarted in between, and the client resends every write it has not seen committed.</p>
+<figure class="diagram">
+<pre>client                                   server
+  WRITE off=0   1 MiB  UNSTABLE   ──▶     page cache       reply: verf=A
+  WRITE off=1M  1 MiB  UNSTABLE   ──▶     page cache       reply: verf=A
+                                          *** crash, reboot: new verf=B ***
+  COMMIT 0..2M                    ──▶     fsync (nothing)  reply: verf=B
+  verf B ≠ A: data may be lost
+  WRITE off=0   ... resend ...    ──▶
+  WRITE off=1M  ... resend ...    ──▶
+  COMMIT 0..2M                    ──▶     fsync            reply: verf=B  ✓ free the pages</pre>
+<figcaption>The client holds dirty data until a COMMIT returns with the verifier it saw on the WRITEs. <a href="07-nfs-caching.html">Lesson 7</a> follows this path in detail.</figcaption>
+</figure>
+<h3>Side protocols and the duplicate request cache</h3>
+<p>NFSv3 left three jobs to other RPC programs. <b>MOUNT</b> (<code>rpc.mountd</code>) checks the export list and hands out the export's root file handle. <b>NLM</b> (<code>lockd</code>) implements <code>fcntl</code> byte-range locks, which need state the NFS protocol refuses to keep. <b>NSM</b> (<code>rpc.statd</code>) tells lock holders when a peer reboots, so clients can reclaim locks and servers can drop locks of dead clients. All of them sit behind <b>rpcbind</b> on port 111 with dynamic ports, which is why NFSv3 through a firewall means pinning ports in configuration.</p>
+<p>Retransmission exposes a weakness of statelessness. A client sends REMOVE, the server removes the file, the reply is lost, the client retransmits. The second REMOVE fails with "no such file", although the operation succeeded. Servers paper over this with a <b>duplicate request cache</b> (DRC): recent replies to non-idempotent requests, keyed by xid and client address, are replayed on retransmission. The DRC is a heuristic of limited size, and NFSv4.1 sessions replace it with a guarantee.</p>
+</section>
+<section id="v4">
+<h2>NFSv4.0: state, compounds, one port</h2>
+<p>NFSv4 gave up statelessness on purpose. Opens, locks and caching promises need state, and keeping that state inside the NFS protocol, with clear recovery rules, is simpler than three side protocols that each half-recover.</p>
+<aside class="key"><span class="tag">Key idea</span><p>Every piece of NFSv4 state (a client ID, an open, a lock, a delegation, a layout) is covered by the client's lease. The client keeps it alive by talking to the server, the server may drop it when the client goes silent, and after a server reboot the client reclaims it during the grace period.</p></aside>
+<h3>COMPOUND: many operations, one round trip</h3>
+<p>NFSv4 has exactly two RPC procedures: NULL and <b>COMPOUND</b>. A COMPOUND carries a list of operations that the server executes in order. The server keeps a <b>current file handle</b> while it works through the list: PUTFH or PUTROOTFH sets it, LOOKUP moves it to a child, and most operations act on it. SAVEFH and RESTOREFH keep a second handle for two-file operations such as RENAME, LINK, COPY and CLONE. Execution stops at the first operation that fails, and the reply holds the results up to and including that one.</p>
+<figure class="diagram">
+<svg viewBox="0 0 720 360" width="720" role="img" aria-label="On the left, NFSv3 needs four round trips to look up three path components and check access. On the right, NFSv4.1 sends one COMPOUND with seven operations and gets one reply.">
+<defs><marker id="ah-06-2" viewBox="0 0 10 10" refX="9" refY="5" markerWidth="7" markerHeight="7" orient="auto-start-reverse"><path class="ah" d="M0,0 L10,5 L0,10 z"/></marker></defs>
+<text class="th" x="20" y="24">NFSv3: one RPC per step</text>
+<text class="ts" x="50" y="48" text-anchor="middle">client</text>
+<text class="ts" x="300" y="48" text-anchor="middle">server</text>
+<line class="lnd" x1="50" y1="56" x2="50" y2="345"/>
+<line class="lnd" x1="300" y1="56" x2="300" y2="345"/>
+<line class="ln" x1="50" y1="70" x2="298" y2="88" marker-end="url(#ah-06-2)"/>
+<text class="ts" x="175" y="72" text-anchor="middle">LOOKUP "export"</text>
+<line class="ln" x1="300" y1="96" x2="52" y2="114" marker-end="url(#ah-06-2)"/>
+<line class="ln" x1="50" y1="134" x2="298" y2="152" marker-end="url(#ah-06-2)"/>
+<text class="ts" x="175" y="136" text-anchor="middle">LOOKUP "docs"</text>
+<line class="ln" x1="300" y1="160" x2="52" y2="178" marker-end="url(#ah-06-2)"/>
+<line class="ln" x1="50" y1="198" x2="298" y2="216" marker-end="url(#ah-06-2)"/>
+<text class="ts" x="175" y="200" text-anchor="middle">LOOKUP "a.txt"</text>
+<line class="ln" x1="300" y1="224" x2="52" y2="242" marker-end="url(#ah-06-2)"/>
+<line class="ln" x1="50" y1="262" x2="298" y2="280" marker-end="url(#ah-06-2)"/>
+<text class="ts" x="175" y="264" text-anchor="middle">ACCESS</text>
+<line class="ln" x1="300" y1="288" x2="52" y2="306" marker-end="url(#ah-06-2)"/>
+<text class="t" x="175" y="336" text-anchor="middle">4 round trips</text>
+<text class="th" x="380" y="24">NFSv4.1: one COMPOUND</text>
+<text class="ts" x="400" y="48" text-anchor="middle">client</text>
+<text class="ts" x="690" y="48" text-anchor="middle">server</text>
+<line class="lnd" x1="400" y1="56" x2="400" y2="345"/>
+<line class="lnd" x1="690" y1="56" x2="690" y2="345"/>
+<line class="ln" x1="400" y1="70" x2="688" y2="96" marker-end="url(#ah-06-2)"/>
+<rect class="k-net" x="470" y="104" width="160" height="140" rx="3"/>
+<text class="t" x="482" y="124">SEQUENCE</text>
+<text class="t" x="482" y="142">PUTROOTFH</text>
+<text class="t" x="482" y="160">LOOKUP "export"</text>
+<text class="t" x="482" y="178">LOOKUP "docs"</text>
+<text class="t" x="482" y="196">OPEN "a.txt"</text>
+<text class="t" x="482" y="214">GETFH</text>
+<text class="t" x="482" y="232">GETATTR</text>
+<line class="ln" x1="690" y1="256" x2="402" y2="282" marker-end="url(#ah-06-2)"/>
+<text class="ts" x="545" y="300" text-anchor="middle">7 results: handle, stateid,</text>
+<text class="ts" x="545" y="316" text-anchor="middle">attributes (incl. change)</text>
+<text class="t" x="545" y="336" text-anchor="middle">1 round trip</text>
+</svg>
+<figcaption>Opening <code>/export/docs/a.txt</code> on a cold client. The NFSv4 COMPOUND also performs the OPEN, returns the new file handle with GETFH and the attributes with GETATTR; NFSv3 would still need more calls to fetch attributes. Real clients cache prefixes, so warm lookups are cheaper in both versions.</figcaption>
+</figure>
+<h3>Client ID, opens and stateids</h3>
+<p>Before doing anything stateful, a client introduces itself. In 4.0 that is SETCLIENTID and SETCLIENTID_CONFIRM; in 4.1 it is EXCHANGE_ID. The client presents a long-lived name (Linux builds it from the hostname, or from <code>nfs4_unique_id</code>) and a boot verifier; the server returns a short <b>client ID</b>. A changed boot verifier tells the server the client rebooted, so its old state can be thrown away.</p>
+<p><b>OPEN</b> is a real operation. It names the file in the current directory, says whether to create it, and asks for <b>share access</b> (read, write, both) and optionally a <b>share deny</b> mode (Windows-style "nobody else may write"). The reply carries a <b>stateid</b>: 16 bytes, a 4-byte sequence number plus 12 bytes that identify the state. READ, WRITE, SETATTR of the size, LOCK and CLOSE all present a stateid, so the server always knows which open a request belongs to. CLOSE releases it.</p>
+<p>Byte-range locks are part of the protocol: LOCK, LOCKT (test) and LOCKU (unlock), each with its own lock stateid. No <code>lockd</code>, no <code>statd</code>.</p>
+<h3>Leases and the grace period</h3>
+<p>State on a server is dangerous if the client that owns it disappears. NFSv4 solves this with a <b>lease</b>: the client's state is valid for a lease period, and any successful stateful operation renews it. An idle 4.0 client sends RENEW; a 4.1 client's SEQUENCE operation renews implicitly. The Linux server's lease time is 90 seconds by default (<code>/proc/fs/nfsd/nfsv4leasetime</code>, or <code>lease-time</code> in <code>nfs.conf</code>).</p>
+<p>When a client's lease expires, the server may release its opens and locks so others can proceed. Since Linux 5.19, <code>nfsd</code> is a "courteous server": it keeps an expired client's state until another client actually needs a conflicting lock or open, for up to a day, so a client that was cut off by a network partition can often resume without losing anything.</p>
+<p>The reverse case is the server rebooting. Its in-memory state is gone, but clients still believe they hold opens and locks. For a <b>grace period</b> after boot (by default as long as the lease), the server refuses new opens and locks with <code>NFS4ERR_GRACE</code> and lets clients <b>reclaim</b> what they held. To know who is allowed to reclaim, it records clients on stable storage (<code>nfsdcld</code> on Linux). A 4.1 client sends RECLAIM_COMPLETE when it is done, so a server whose known clients have all finished can end grace early. Applications see the grace period as a pause of up to a minute and a half after a server restart.</p>
+<h3>Delegations and callbacks</h3>
+<p>A <b>delegation</b> is a promise from the server: "until I call you back, no other client will write this file" (a read delegation) or "no other client will open it at all" (a write delegation). While it holds one, the client can serve opens, reads and attribute queries from its cache without asking the server. When another client wants conflicting access, the server sends a <b>CB_RECALL</b> callback, the holder flushes and answers with DELEGRETURN, and the newcomer proceeds. <a href="07-nfs-caching.html">Lesson 7</a> works through the timeline.</p>
+<p>Callbacks reverse the usual direction: the server calls the client. In NFSv4.0 the server opens a new TCP connection to an address the client advertised in SETCLIENTID. Behind NAT or a client firewall that connection fails, and a 4.0 server then quietly stops granting delegations. Nothing breaks, but caching gets worse. NFSv4.1 fixed this by sending callbacks over the client's own connection.</p>
+<h3>The pseudo-filesystem and ACLs</h3>
+<p>An NFSv4 server presents all its exports as one tree, the <b>pseudo-filesystem</b>. A client can mount <code>server:/</code> and walk down into any export it is allowed to see; the directories that only join exports together are synthetic. Old Linux setups marked the root with <code>fsid=0</code>; current <code>nfs-utils</code> builds the pseudo-root automatically, so the NFSv4 path to an export is its real path on the server.</p>
+<p>NFSv4 also defined its own <b>ACL</b> model: ordered lists of ALLOW and DENY entries with inheritance flags, much closer to Windows ACLs than to POSIX mode bits. <code>nfs4_getfacl</code> and <code>nfs4_setfacl</code> from <code>nfs4-acl-tools</code> manipulate them. The Linux server stores them by translating to POSIX ACLs, which cannot express everything, so some NFSv4 ACLs are rejected or approximated.</p>
+</section>
+<section id="v41">
+<h2>NFSv4.1: sessions, trunking and pNFS</h2>
+<h3>Sessions and exactly-once semantics</h3>
+<p>After EXCHANGE_ID, a 4.1 client calls CREATE_SESSION. The two sides negotiate channel attributes: largest request and reply, most operations per COMPOUND, and the number of <b>slots</b>, which is the number of requests the client may have outstanding at once. Every COMPOUND then starts with a SEQUENCE operation:</p>
+<pre><code>SEQUENCE { sessionid, slotid = 3, sequenceid = 118, highest_slotid = 15, cachethis = true }</code></pre>
+<figure class="diagram">
+<pre>          client side                         server side: one reply cached per slot
+slot 0    seq 41  (idle)                      slot 0   seq 41  reply for seq 41
+slot 1    seq 97  in flight  ───────────▶     slot 1   seq 96  reply for seq 96
+slot 2    seq 12  (idle)                      slot 2   seq 12  reply for seq 12
+slot 3    seq 118 in flight ───────────▶      slot 3   seq 117 reply for seq 117
+  ...
+retransmit slot 3 / seq 118 after the reply was lost:
+          server sees seq 118 == its seq for slot 3, returns the cached reply,
+          does NOT execute the request again.</pre>
+<figcaption>The slot table. A new request on a slot must carry the slot's sequence number plus one; a retransmission carries the same number and gets the cached reply.</figcaption>
+</figure>
+<p>The server keeps the last reply for each slot. A retransmission with the same slot and sequence id gets that reply back instead of being executed twice. That is <b>exactly-once semantics</b> (EOS), and it replaces the DRC heuristic with a guarantee whose memory cost the server chose at CREATE_SESSION. The slot count doubles as flow control: a busy server can shrink <code>highest_slotid</code> to slow a client down. On Linux the client's upper bound is the <code>nfs.max_session_slots</code> module parameter.</p>
+<h3>The backchannel and trunking</h3>
+<p>A session has a fore channel (client to server) and a <b>backchannel</b> (server to client). The backchannel normally rides on the same TCP connection the client opened, so callbacks work through NAT and firewalls. That is a large practical reason to prefer 4.1 or 4.2 over 4.0.</p>
+<p><b>Trunking</b> means using several connections for one client. <i>Session trunking</i> binds several connections to one session (BIND_CONN_TO_SESSION), for example one per network interface. <i>Client ID trunking</i> uses several sessions under one client ID. On Linux, <code>nconnect=N</code> (up to 16) opens N TCP connections to the same server address and spreads RPCs over them; it also works with NFSv3. It helps when one TCP connection, and the single CPU that tends to process it, is the bottleneck.</p>
+<h3>pNFS: separate the data path from the metadata path</h3>
+<p>A single NFS server is a bottleneck for bandwidth: every byte passes through one machine. <b>pNFS</b> (parallel NFS) splits the server into a <b>metadata server</b> (MDS), which handles the namespace, opens and locks, and one or more <b>data servers</b> (DS), which hold the file contents. The MDS gives the client a <b>layout</b>: a map saying which data servers hold which byte ranges and how the file is striped. The client then reads and writes directly to the data servers, in parallel.</p>
+<figure class="diagram">
+<svg viewBox="0 0 720 300" width="720" role="img" aria-label="A pNFS client talks to the metadata server for opens and layouts, and directly to three data servers for reads and writes. The metadata server controls the data servers through a protocol NFS does not specify.">
+<defs><marker id="ah-06-3" viewBox="0 0 10 10" refX="9" refY="5" markerWidth="7" markerHeight="7" orient="auto-start-reverse"><path class="ah" d="M0,0 L10,5 L0,10 z"/></marker></defs>
+<rect class="k-user" x="20" y="120" width="140" height="64" rx="3"/>
+<text class="t" x="90" y="148" text-anchor="middle">pNFS client</text>
+<text class="ts" x="90" y="166" text-anchor="middle">has the layout</text>
+<rect class="k-net" x="330" y="20" width="230" height="60" rx="3"/>
+<text class="t" x="445" y="45" text-anchor="middle">metadata server (MDS)</text>
+<text class="ts" x="445" y="64" text-anchor="middle">names, opens, locks, layouts</text>
+<rect class="k-fs" x="250" y="215" width="120" height="56" rx="3"/>
+<text class="t" x="310" y="240" text-anchor="middle">data server 1</text>
+<text class="ts" x="310" y="258" text-anchor="middle">stripes 0, 3, 6</text>
+<rect class="k-fs" x="400" y="215" width="120" height="56" rx="3"/>
+<text class="t" x="460" y="240" text-anchor="middle">data server 2</text>
+<text class="ts" x="460" y="258" text-anchor="middle">stripes 1, 4, 7</text>
+<rect class="k-fs" x="550" y="215" width="120" height="56" rx="3"/>
+<text class="t" x="610" y="240" text-anchor="middle">data server 3</text>
+<text class="ts" x="610" y="258" text-anchor="middle">stripes 2, 5, 8</text>
+<line class="ln" x1="160" y1="135" x2="328" y2="55" marker-end="url(#ah-06-3)"/>
+<text class="ts" x="20" y="78">OPEN, LAYOUTGET,</text>
+<text class="ts" x="20" y="94">GETDEVICEINFO,</text>
+<text class="ts" x="20" y="110">LAYOUTCOMMIT, LAYOUTRETURN</text>
+<line class="hl" x1="160" y1="165" x2="300" y2="213" marker-end="url(#ah-06-3)"/>
+<line class="hl" x1="160" y1="172" x2="450" y2="213" marker-end="url(#ah-06-3)"/>
+<line class="hl" x1="160" y1="179" x2="600" y2="213" marker-end="url(#ah-06-3)"/>
+<text class="ts" x="210" y="292">READ / WRITE straight to the data servers, in parallel</text>
+<line class="lnd" x1="400" y1="80" x2="320" y2="215"/>
+<line class="lnd" x1="445" y1="80" x2="460" y2="215"/>
+<line class="lnd" x1="490" y1="80" x2="600" y2="215"/>
+<text class="ts" x="575" y="120">control protocol</text>
+<text class="ts" x="575" y="136">(outside NFS)</text>
+</svg>
+<figcaption>Control path to the MDS, data path to the data servers. Losing a layout never loses data: the client can always fall back to doing I/O through the MDS.</figcaption>
+</figure>
+<ul>
+<li><b>LAYOUTGET</b> asks for a layout for a byte range and access mode. Layouts are state, with their own stateid, and the MDS can recall them with <b>CB_LAYOUTRECALL</b>.</li>
+<li><b>GETDEVICEINFO</b> turns the device ids in a layout into addresses (IP addresses for file layouts, SCSI identifiers for block layouts).</li>
+<li><b>LAYOUTCOMMIT</b> tells the MDS about writes done through the data servers, so it can update the file size and modification time.</li>
+<li><b>LAYOUTRETURN</b> gives the layout back.</li>
+</ul>
+<div class="table-wrap"><table>
+<thead><tr><th>Layout type</th><th>Defined in</th><th>Data servers speak</th></tr></thead>
+<tbody>
+<tr><td>Files</td><td>RFC 8881 (originally 5661)</td><td>NFSv4.1 READ and WRITE</td></tr>
+<tr><td>Block volume</td><td>RFC 5663</td><td>block I/O (iSCSI, Fibre Channel) against extents the MDS hands out</td></tr>
+<tr><td>SCSI</td><td>RFC 8154</td><td>SCSI block I/O with persistent reservations for fencing</td></tr>
+<tr><td>Objects (OSD)</td><td>RFC 5664</td><td>T10 object storage; little used now</td></tr>
+<tr><td>Flexible files</td><td>RFC 8435</td><td>NFSv3 or NFSv4 to ordinary servers; the client mirrors writes; LAYOUTSTATS and LAYOUTERROR report back</td></tr>
+</tbody>
+</table></div>
+<p>The Linux client supports the files, block, SCSI and flexible-files layouts. Linux <code>nfsd</code> can act as an MDS for block and SCSI layouts (clients and server share the storage, typically with XFS on the server), and has a flexible-files mode whose Kconfig help warns that it implements the bare minimum and is meant for testing clients. Large pNFS deployments mostly run on commercial or purpose-built servers. <a href="09-distributed.html">Lesson 9</a> compares pNFS with Lustre and Ceph, which separate metadata and data in similar ways.</p>
+<h3>Directory delegations</h3>
+<p>4.1 also defined <b>directory delegations</b> (GET_DIR_DELEGATION, with CB_NOTIFY for changes), so a client could cache a directory's listing and its negative lookups safely. For years almost nobody implemented them. The Linux client gained initial support in 6.19, used for ACCESS, CREATE, UNLINK and RENAME, with a module option to turn it off.</p>
+</section>
+<section id="v42">
+<h2>NFSv4.2, feature by feature</h2>
+<p>RFC 7862 adds operations that let the client hand work to the server instead of moving data, plus a few attributes. Each one corresponds to a Linux system call you already know, which makes it easy to test (Lab 06, Part A).</p>
+<div class="table-wrap"><table>
+<thead><tr><th>Feature</th><th>Operations (number)</th><th>Linux trigger</th><th>What changes</th></tr></thead>
+<tbody>
+<tr><td>Server-side copy</td><td><code>COPY</code> (60), <code>COPY_NOTIFY</code> (61), <code>OFFLOAD_STATUS</code> (67), <code>OFFLOAD_CANCEL</code> (66), callback <code>CB_OFFLOAD</code></td><td><code>copy_file_range(2)</code>; <code>cp</code> in coreutils 9 uses it</td><td>the data never travels to the client</td></tr>
+<tr><td>Clone (reflink)</td><td><code>CLONE</code> (71)</td><td><code>ioctl(FICLONE)</code>, <code>FICLONERANGE</code>; <code>cp --reflink</code></td><td>the copy shares blocks and takes milliseconds</td></tr>
+<tr><td>Sparse files</td><td><code>SEEK</code> (69), <code>READ_PLUS</code> (68)</td><td><code>lseek(SEEK_DATA / SEEK_HOLE)</code>; ordinary <code>read()</code></td><td>holes are found, and sent as "N zero bytes" instead of the zeros</td></tr>
+<tr><td>Space reservation</td><td><code>ALLOCATE</code> (59), <code>DEALLOCATE</code> (62)</td><td><code>fallocate(2)</code>; <code>FALLOC_FL_PUNCH_HOLE</code></td><td>reserve or free blocks on the server</td></tr>
+<tr><td>I/O hints</td><td><code>IO_ADVISE</code> (63)</td><td>(<code>posix_fadvise</code> semantics)</td><td>tell the server about access patterns</td></tr>
+<tr><td>Application data blocks</td><td><code>WRITE_SAME</code> (70)</td><td>none</td><td>initialise a file with a repeated pattern</td></tr>
+<tr><td>Labeled NFS</td><td><code>sec_label</code> attribute</td><td>SELinux labels via the <code>security.</code> xattrs</td><td>MAC labels stored and enforced across the wire</td></tr>
+<tr><td>Layout feedback</td><td><code>LAYOUTERROR</code> (64), <code>LAYOUTSTATS</code> (65)</td><td>automatic with pNFS flexible files</td><td>the MDS learns which data servers are slow or failing</td></tr>
+<tr><td>User xattrs (RFC 8276)</td><td><code>GETXATTR</code> (72), <code>SETXATTR</code> (73), <code>LISTXATTRS</code> (74), <code>REMOVEXATTR</code> (75)</td><td><code>getxattr</code>, <code>setxattr</code>, … on <code>user.*</code> names</td><td>extended attributes survive the trip to the server</td></tr>
+</tbody>
+</table></div>
+<p>The operation numbers are the ones Wireshark prints next to each opcode, which helps when you read a capture.</p>
+<h3>Server-side copy</h3>
+<p>Copying a 10 GiB file with <code>read()</code> and <code>write()</code> over NFSv3 moves 20 GiB over the network: down to the client and back up. With 4.2 the client sends one COPY with the source and destination stateids, offsets and a length. The source file handle goes in with SAVEFH, the destination with PUTFH, and the server copies locally, usually through its own <code>copy_file_range</code>.</p>
+<ul>
+<li><b>Synchronous or asynchronous.</b> The client may let the server run a long copy in the background. The COPY reply then carries a stateid, the client can poll with OFFLOAD_STATUS or stop it with OFFLOAD_CANCEL, and the server reports the result with a <b>CB_OFFLOAD</b> callback.</li>
+<li><b>Intra-server or inter-server.</b> If source and destination are on different servers, the client first sends <b>COPY_NOTIFY</b> to the source server, which authorises the destination server to read the file. The client then sends COPY to the destination server with the source server's address, and the destination server reads the data directly from the source as an NFSv4.2 client itself. Linux supports this, but it is off by default on the server: the destination needs <code>nfsd.inter_copy_offload_enable=1</code> and a kernel built with <code>CONFIG_NFSD_V4_2_INTER_SSC</code>.</li>
+</ul>
+<h3>CLONE</h3>
+<p>CLONE asks the server to make a range of the destination file share the source's blocks, like <code>cp --reflink</code> locally. It only works if the exported filesystem supports reflinks: XFS (created with reflink, the default in recent <code>xfsprogs</code>), btrfs, and a few others. ext4 does not, so CLONE on an ext4 export fails with <code>EOPNOTSUPP</code>. The Linux client remembers a NOTSUPP answer for the rest of the mount and stops sending the operation.</p>
+<h3>Sparse files: SEEK and READ_PLUS</h3>
+<p>A sparse file has holes: ranges never written, which read as zeros and take no disk space (<a href="03-ondisk.html">lesson 3</a>). Before 4.2 a client could not tell holes from real zeros, so <code>cp</code> had to read every zero over the network and a sparse VM image became fully allocated on copy. <b>SEEK</b> implements <code>lseek</code> with <code>SEEK_DATA</code> and <code>SEEK_HOLE</code> on the server. <b>READ_PLUS</b> is a READ whose reply is a list of segments, each either data or "a hole of N bytes". The Linux client uses READ_PLUS when it is built with <code>CONFIG_NFS_V4_2_READ_PLUS</code>, which has defaulted to on since 6.6 after an earlier attempt was reverted. The WSL kernel this course was tested on turns the option off, so it always sends READ.</p>
+<h3>ALLOCATE and DEALLOCATE</h3>
+<p><code>fallocate(fd, 0, off, len)</code> becomes ALLOCATE: the server reserves real blocks, so a later write cannot fail with <code>ENOSPC</code>. <code>fallocate(fd, FALLOC_FL_PUNCH_HOLE | FALLOC_FL_KEEP_SIZE, off, len)</code> becomes DEALLOCATE: the server frees the blocks and the range reads as zeros. Before 4.2, glibc's <code>posix_fallocate</code> emulated reservation by writing to every block, over the network.</p>
+<h3>IO_ADVISE, WRITE_SAME, Labeled NFS</h3>
+<p><b>IO_ADVISE</b> carries hints like "I will read this sequentially" or "I will not need this again", so the server can read ahead or drop pages. <b>WRITE_SAME</b> fills ranges with a repeated block pattern, aimed at databases that initialise files with a fixed header in each block; it is rarely implemented. As far as current kernels go, the Linux client sends neither. <b>Labeled NFS</b> adds the <code>sec_label</code> attribute so that SELinux labels on the server's files are visible to and enforced on clients; Linux enables it per export with the <code>security_label</code> option.</p>
+<h3>Extended attributes (RFC 8276)</h3>
+<p>Before RFC 8276, <code>setfattr -n user.color</code> on an NFS file failed. The four xattr operations carry <code>user.*</code> attributes only; the <code>security.</code> and <code>trusted.</code> namespaces do not cross the wire this way. Linux added client and server support in 5.9. The client caches xattrs, so repeated <code>getxattr</code> calls may not reach the server.</p>
+<h3>RFC 9754: opening and delegating files</h3>
+<p>RFC 9754 (March 2025) extends 4.2 opens and delegations:</p>
+<ul>
+<li><b>Delegated timestamps.</b> The holder of a write delegation becomes the authority for the file's access and modify times. It no longer has to send SETATTR or force GETATTRs just to keep times right, and the server asks it with CB_GETATTR when another client needs them. The Linux client added support in 6.11. On the server side, the 6.18 kernel used for this course has it behind <code>CONFIG_NFSD_V4_DELEG_TIMESTAMPS</code>, which is off.</li>
+<li><b>Only a delegation.</b> An OPEN flag asks the server to return either an open stateid or a delegation stateid, not both, which reduces state on both sides.</li>
+<li><b>Discovering OPEN flags.</b> A new attribute lists which OPEN flags the server supports.</li>
+<li><b>Offline files.</b> A client can learn that a file's data is not immediately available (for example, archived to tape), so it can avoid hanging on it.</li>
+</ul>
+</section>
+<section id="knobs">
+<h2>Linux knobs</h2>
+<h3>Client mount options</h3>
+<div class="table-wrap"><table>
+<thead><tr><th>Option</th><th>Default</th><th>Meaning</th></tr></thead>
+<tbody>
+<tr><td><code>vers=</code></td><td>tries 4.2, then lower</td><td>protocol version: <code>3</code>, <code>4.0</code>, <code>4.1</code>, <code>4.2</code></td></tr>
+<tr><td><code>proto=</code>, <code>port=</code></td><td><code>tcp</code>, 2049</td><td><code>proto=rdma,port=20049</code> for NFS over RDMA (<a href="08-rdma.html">lesson 8</a>)</td></tr>
+<tr><td><code>rsize=</code>, <code>wsize=</code></td><td>negotiated, up to 1 MiB</td><td>largest READ / WRITE payload. The Linux client's maximum is 1,048,576 bytes.</td></tr>
+<tr><td><code>hard</code> / <code>soft</code> / <code>softerr</code></td><td><code>hard</code></td><td>retry forever, or give up after <code>retrans</code> retries with <code>EIO</code> (<code>softerr</code>: <code>ETIMEDOUT</code>). <a href="07-nfs-caching.html">Lesson 7</a> explains why <code>soft</code> can corrupt data.</td></tr>
+<tr><td><code>timeo=</code>, <code>retrans=</code></td><td>600 (60 s), 2</td><td>RPC timeout in tenths of a second, and retries before a "server not responding" message (or a soft failure)</td></tr>
+<tr><td><code>nconnect=</code></td><td>1</td><td>TCP connections to the server, up to 16</td></tr>
+<tr><td><code>sec=</code></td><td><code>sys</code></td><td><code>sys</code>, <code>krb5</code>, <code>krb5i</code>, <code>krb5p</code></td></tr>
+<tr><td><code>xprtsec=</code></td><td><code>none</code></td><td><code>tls</code> or <code>mtls</code>: RPC-with-TLS</td></tr>
+<tr><td><code>actimeo</code>, <code>ac*</code>, <code>noac</code>, <code>cto</code>, <code>lookupcache</code>, <code>fsc</code></td><td>see <a href="07-nfs-caching.html">lesson 7</a></td><td>caching behaviour</td></tr>
+<tr><td><code>nosharecache</code></td><td>off</td><td>give this mount its own caches even if the same export is mounted elsewhere</td></tr>
+<tr><td><code>local_lock=</code></td><td><code>none</code></td><td>make <code>flock</code> and/or <code>fcntl</code> locks local to the client</td></tr>
+</tbody>
+</table></div>
+<p>When the same export is mounted twice without <code>nosharecache</code>, both mount points share one superblock and the options of the first mount win silently. <code>nfsstat -m</code> or the <code>opts:</code> line of <code>/proc/self/mountstats</code> shows what is really in force.</p>
+<h3>Export options</h3>
+<p><code>/etc/exports</code> (and files in <code>/etc/exports.d/</code> ending in <code>.exports</code>) lists what the server shares and with whom:</p>
+<pre><code>/srv/data   10.0.0.0/24(rw,sync,no_subtree_check)   build01(ro)</code></pre>
+<div class="table-wrap"><table>
+<thead><tr><th>Option</th><th>Meaning</th></tr></thead>
+<tbody>
+<tr><td><code>rw</code> / <code>ro</code></td><td>read-write or read-only (default <code>ro</code>)</td></tr>
+<tr><td><code>sync</code> / <code>async</code></td><td><code>sync</code> (the default) replies to WRITE and COMMIT only after the data is on stable storage. <code>async</code> replies first. The exports man page says it plainly: async lets the server violate the protocol, and a crash can lose or corrupt data that clients were told was safe. The verifier cannot save you, because the client already dropped its copy.</td></tr>
+<tr><td><code>root_squash</code> / <code>no_root_squash</code> / <code>all_squash</code></td><td>map uid 0 (or every uid) to the anonymous user. <code>root_squash</code> is the default.</td></tr>
+<tr><td><code>no_subtree_check</code></td><td>do not check that every file handle lies inside the exported subtree. Default since nfs-utils 1.1.0; subtree checking breaks when files are renamed while open.</td></tr>
+<tr><td><code>fsid=</code></td><td>give the export a fixed filesystem id, needed when the filesystem has no stable UUID; <code>fsid=0</code> or <code>fsid=root</code> marks the NFSv4 pseudo-root (legacy)</td></tr>
+<tr><td><code>secure</code> / <code>insecure</code></td><td>require (default) or not require that sec=sys requests come from a source port below 1024</td></tr>
+<tr><td><code>sec=</code></td><td>security flavours allowed, in order of preference</td></tr>
+<tr><td><code>crossmnt</code>, <code>nohide</code></td><td>let clients see filesystems mounted below the export</td></tr>
+<tr><td><code>pnfs</code>, <code>security_label</code></td><td>offer pNFS layouts; carry SELinux labels</td></tr>
+</tbody>
+</table></div>
+<p>Apply changes with <code>exportfs -ra</code>; list the active exports with <code>exportfs -v</code>.</p>
+<h3>Server settings</h3>
+<p><code>/etc/nfs.conf</code> configures the user-space tools and the server. The <code>[nfsd]</code> section takes <code>threads</code>, <code>lease-time</code>, <code>grace-time</code>, <code>vers3</code>, <code>vers4.0</code>, <code>vers4.1</code>, <code>vers4.2</code> and <code>rdma</code>, among others. The live values are in <code>/proc/fs/nfsd/</code>:</p>
+<pre><code><span class="p">$</span> cat /proc/fs/nfsd/versions /proc/fs/nfsd/threads /proc/fs/nfsd/nfsv4leasetime /proc/fs/nfsd/portlist
+<span class="o">+3 +4 +4.1 +4.2
+8
+90
+tcp 2049</span></code></pre>
+<p>(Illustrative values: <code>rpc.nfsd</code> starts eight threads unless told otherwise.) Each <code>nfsd</code> thread handles one RPC at a time, including any wait for the disk. Eight threads cannot keep a fast server busy under hundreds of clients; production servers run dozens to hundreds. Too few threads shows up on the clients as RPCs that wait in a queue.</p>
+<h3>LOCALIO</h3>
+<p>Since Linux 6.12, when an NFS client and <code>nfsd</code> run on the same host (containers using a local NFS server, for example), the <b>LOCALIO</b> extension lets the client detect this and do READ, WRITE and COMMIT by calling into the local filesystem directly, skipping XDR and the network stack. It needs <code>CONFIG_NFS_LOCALIO</code>, which the WSL kernel does not enable, so the loopback lab below exercises the real RPC path.</p>
+</section>
+<section id="observe">
+<h2>Observing NFS</h2>
+<p>Most NFS problems are visible from the client, without root, in one file.</p>
+<h3><code>/proc/self/mountstats</code></h3>
+<p>Each NFS mount has a block: the options in force, NFSv4 details such as <code>lease_time</code>, event counters, byte counters, transport statistics, and then one line per RPC type:</p>
+<pre><code>device 127.0.0.1:/srv/nfslab mounted on /mnt/nfs42 with fstype nfs4 statvers=1.1
+	opts:	rw,vers=4.2,rsize=1048576,wsize=1048576,...,hard,proto=tcp,timeo=600,retrans=2,sec=sys,...
+	nfsv4:	bm0=0xfdffbfff,...,sessions,pnfs=not configured,lease_time=90,lease_expired=0
+	...
+	per-op statistics
+	        READ: 6 6 0 1176 4196712 0 9 10 0
+<span class="c">#             ops  transmissions  major timeouts  bytes sent  bytes received
+#             queue ms  RTT ms  execute ms  errors     (the last three are cumulative)</span></code></pre>
+<p>Divide the cumulative RTT by the op count to get the average round-trip time; divide execute time the same way for the time the application waited. A large gap between execute and RTT means requests queued on the client (too few slots or connections). A large RTT means a slow network or a slow server. Transmissions above ops means retransmissions. For NFSv4, remember that each row counts COMPOUNDs of one kind: the OPEN row counts OPEN compounds.</p>
+<h3>Tools</h3>
+<ul>
+<li><code>nfsstat -c</code> / <code>-s</code>: client or server operation counts since boot. <code>nfsstat -m</code>: each mount with its options.</li>
+<li><code>mountstats /mnt/x</code> (nfs-utils): formats one mount's mountstats block with per-op averages.</li>
+<li><code>nfsiostat 5</code>: per-mount operations per second, throughput, RTT and execute time, like <code>iostat</code>.</li>
+<li><code>/proc/fs/nfsd/clients/</code> (server, Linux 5.3 and later): one directory per NFSv4 client, with <code>info</code> (name, address, minor version) and <code>states</code> (its opens, locks, delegations and layouts). <code>nfsdclnts</code> prints them as a table.</li>
+<li><code>rpcdebug -m nfs -s all</code>: turns on the kernel's old debug messages (very noisy). Tracepoints are the modern alternative: <code>trace-cmd record -e nfs -e nfs4 -e sunrpc</code> on the client, <code>-e nfsd</code> on the server.</li>
+<li><code>tcpdump -s 0 -w f.pcap port 2049</code> and Wireshark or <code>tshark</code>: the operations inside every COMPOUND.</li>
+</ul>
+</section>
+<section class="lab" id="lab">
+<p class="tag">Lab 06 · Part A</p>
+<h2>An NFS server and client on one machine</h2>
+<p class="where">~/storage-course/labs/06-nfs/   (README.md, Part A)</p>
+<aside class="pitfall"><span class="tag">Untested here</span><p>Setting up the server needs root, and the machine this course was written on had none. <code>setup.sh</code> and every experiment that touches a mount were not run. The helpers that need no root were tested: <code>opcount.sh</code> against hand-made samples of the mountstats format, and <code>nfs42ops.py</code> on a local ext4 file. Expected NFS results come from the protocol and the client's documented behaviour.</p></aside>
+<ol>
+<li>Try the counter before you have a server. It diffs two copies of mountstats for one mount:
+<pre><code><span class="p">$</span> cd ~/storage-course/labs/06-nfs
+<span class="p">$</span> ./opcount.sh --diff sample-mountstats.txt sample-mountstats-after.txt /mnt/nfs42
+<span class="o">
+RPC                    calls   bytes sent   bytes recv   avg RTT   avg exe
+                                                            (ms)      (ms)
+CLOSE                      2          384          224      0.00      0.50
+OPEN                       2          640          832      0.50      0.50
+ACCESS                     1          168          136      0.00      0.00
+COPY                       1          316          196    238.00    238.00
+GETATTR                    1          176          232      0.00      0.00
+LOOKUP                     1          196          112      0.00      0.00
+total                      8</span></code></pre>
+This output was produced on this machine, but from the hand-made sample, which pretends a 200 MiB <code>copy_file_range</code> happened. Note what is missing: no READ, no WRITE.</li>
+<li>Set up the server and three mounts (root):
+<pre><code><span class="p">$</span> sudo ./setup.sh            <span class="c"># add --with-xfs for a reflink-capable export</span>
+<span class="p">$</span> nfsstat -m</code></pre>
+Check that <code>/mnt/nfs42</code> really says <code>vers=4.2</code> and <code>rsize=1048576</code>.</li>
+<li>See what <code>ls -l</code> costs in each version, twice:
+<pre><code><span class="p">$</span> ./opcount.sh /mnt/nfs3  ls -l /mnt/nfs3/tree  &gt; /dev/null
+<span class="p">$</span> ./opcount.sh /mnt/nfs42 ls -l /mnt/nfs42/tree &gt; /dev/null</code></pre>
+Expect READDIRPLUS on v3 and READDIR on v4, and almost nothing on the second run.</li>
+<li>Server-side copy versus a copy through the client:
+<pre><code><span class="p">$</span> dd if=/dev/urandom of=/srv/nfslab/big bs=1M count=200
+<span class="p">$</span> ./opcount.sh /mnt/nfs42 python3 -I nfs42ops.py copy /mnt/nfs42/big /mnt/nfs42/big.v42
+<span class="p">$</span> ./opcount.sh /mnt/nfs3  python3 -I nfs42ops.py copy /mnt/nfs3/big  /mnt/nfs3/big.v3</code></pre>
+Expect COPY with almost no bytes on 4.2, and about 200 MiB of READ plus 200 MiB of WRITE on v3.</li>
+<li>Sparse files. Here are the same system calls on a local ext4 file in this WSL (tested):
+<pre><code><span class="p">$</span> python3 -I nfs42ops.py sparse sp &amp;&amp; python3 -I nfs42ops.py seek sp
+<span class="o">wrote 3 x 4 KiB into a 8392704-byte file; the rest is holes
+data           0 ..       4096
+hole        4096 ..    1048576
+data     1048576 ..    1052672
+hole     1052672 ..    8388608
+data     8388608 ..    8392704</span></code></pre>
+Run them on <code>/mnt/nfs42</code> under <code>opcount.sh</code>: each <code>lseek</code> should become a SEEK. On <code>/mnt/nfs3</code> the whole file is reported as one data segment.</li>
+<li>Then <code>allocate</code>, <code>punch</code>, <code>xattr</code> and <code>clone</code> as in the README. On ext4, <code>clone</code> prints <code>Operation not supported</code> (tested locally; over NFS the server returns NFS4ERR_NOTSUPP for the same reason).</li>
+<li>Look at the server's side of the conversation:
+<pre><code><span class="p">$</span> sudo cat /proc/fs/nfsd/clients/*/info
+<span class="p">$</span> exec 3&lt; /mnt/nfs42/hello.txt; sudo cat /proc/fs/nfsd/clients/*/states; exec 3&lt;&amp;-</code></pre>
+</li>
+</ol>
+<p>Part B of the same lab belongs to <a href="07-nfs-caching.html">lesson 7</a>. Clean up with <code>sudo ./teardown.sh</code> when you are done with both.</p>
+</section>
+<section class="check" id="check">
+<h2>Check yourself</h2>
+<details><summary>Why could an NFSv3 server be stateless, and what did that cost?</summary><p>File handles let the server find any file from the request alone: they encode the filesystem id, the inode number and a generation number, so no per-client table is needed and a reboot looks like a slow server. The cost: no opens, so no share modes and no way to know who caches what; locking had to live in separate stateful protocols (NLM and NSM); and non-idempotent retransmissions needed the duplicate request cache heuristic.</p></details>
+<details><summary>A client wrote 2 MiB as UNSTABLE writes. The COMMIT reply carries a different verifier from the WRITE replies. What happened and what does the client do?</summary><p>The server restarted between the writes and the commit, so data that was only in its page cache may be gone. The client still has the pages, so it resends every uncommitted WRITE and commits again.</p></details>
+<details><summary>What does the current file handle do in a COMPOUND, and why do RENAME and COPY need SAVEFH?</summary><p>Each operation acts on the current file handle, which PUTFH, PUTROOTFH and LOOKUP set. Two-file operations need a second handle: SAVEFH stores the source (the old directory, or the source file), PUTFH sets the target, and the operation uses both.</p></details>
+<details><summary>Your NFSv4.0 clients sit behind NAT. Nothing fails, but caching seems poor. Why, and what fixes it?</summary><p>4.0 callbacks require the server to connect back to the client. Through NAT that fails, so the server stops granting delegations and clients must revalidate on every open. NFSv4.1 and later send callbacks over the client's own connection, so mounting with <code>vers=4.1</code> or <code>4.2</code> fixes it.</p></details>
+<details><summary>How do NFSv4.1 sessions give exactly-once semantics?</summary><p>Each request carries a slot id and a sequence id. The server caches the last reply per slot. A retransmission arrives with the same slot and sequence id and gets the cached reply instead of running again, so a lost reply never causes a second REMOVE or a second lock.</p></details>
+<details><summary>Which system calls produce COPY, CLONE, SEEK, ALLOCATE and DEALLOCATE, and which need special support from the exported filesystem?</summary><p><code>copy_file_range</code> → COPY; <code>ioctl(FICLONE)</code> → CLONE; <code>lseek(SEEK_DATA/SEEK_HOLE)</code> → SEEK; <code>fallocate</code> → ALLOCATE; <code>fallocate(PUNCH_HOLE)</code> → DEALLOCATE. CLONE needs reflink support (XFS with reflink, btrfs; not ext4). Hole punching and allocation need <code>fallocate</code> support, which ext4 and XFS have.</p></details>
+<details><summary>A mount's mountstats shows WRITE with an average RTT of 2 ms but an average execute time of 40 ms. Where is the time going?</summary><p>Mostly on the client: requests wait in a queue before they are sent, because all session slots or the connection are busy. Look at more connections (<code>nconnect</code>), the session slot limit, or the application's I/O pattern. The server and network answer in 2 ms.</p></details>
+<details><summary>Why is the <code>async</code> export option dangerous even though NFS has write verifiers?</summary><p>With <code>async</code> the server acknowledges WRITE and COMMIT before the data is stable. After a COMMIT succeeds the client frees its copy. If the server then crashes, the verifier changes, but the client no longer has the data to resend. The loss is silent.</p></details>
+</section>
+<section class="further" id="further">
+<h2>Go deeper</h2>
+<ul>
+<li><a href="https://www.rfc-editor.org/rfc/rfc7862">RFC 7862, NFSv4.2</a>: short and readable; sections 4 to 6 cover copy, sparse files and space reservation.</li>
+<li><a href="https://www.rfc-editor.org/rfc/rfc8881">RFC 8881, NFSv4.1</a>: the big one. Read the sections on sessions, state and pNFS.</li>
+<li><a href="https://www.rfc-editor.org/rfc/rfc7530">RFC 7530, NFSv4.0</a>: COMPOUND, state, leases and delegations as first designed.</li>
+<li><a href="https://www.rfc-editor.org/rfc/rfc1813">RFC 1813, NFSv3</a>: worth reading for the WRITE, COMMIT and weak cache consistency sections.</li>
+<li><a href="https://www.rfc-editor.org/rfc/rfc9754">RFC 9754</a>: delegated timestamps and the other open/delegation extensions.</li>
+<li><a href="https://man7.org/linux/man-pages/man5/nfs.5.html">nfs(5)</a> and <a href="https://man7.org/linux/man-pages/man5/exports.5.html">exports(5)</a>: every mount and export option, with defaults.</li>
+<li><a href="https://docs.kernel.org/filesystems/nfs/index.html">Linux kernel NFS documentation</a>: client and server notes, including LOCALIO and pNFS.</li>
+<li><a href="https://wiki.linux-nfs.org/wiki/index.php/Main_Page">linux-nfs.org wiki</a>: the Linux NFS developers' notes on features and testing.</li>
+</ul>
+</section>
+<nav class="pager-foot" aria-label="Next and previous lesson">
+<a class="prev" href="05-vfs-cache.html"><small>Previous</small>The VFS and the caches</a>
+<a class="next" href="07-nfs-caching.html"><small>Next</small>Caching across the network</a>
+</nav>
+</main>
+</div>
+<script src="course.js"></script>
+</body>
+</html>
