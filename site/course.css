@@ -264,7 +264,13 @@ pre .o { color: var(--ink-2); }            /* program output */
 html { scroll-padding-top: 4.5rem; }
 /* on narrow screens the bar stays pinned but tucks away while you read down;
    any scroll up brings it back (course.js), so anchors only need a little room */
-@media (max-width: 860px) { html { scroll-padding-top: 0.75rem; } }
+@media (max-width: 860px) {
+  html { scroll-padding-top: 0.75rem; }
+  /* nothing may widen the page past the screen: a stray overflow would let a phone
+     pan sideways or zoom out to a desktop-sized page. clip, unlike hidden, keeps
+     the sticky bar working */
+  html { overflow-x: clip; }
+}
 .route > summary, .sections > summary {
   list-style: none;
   cursor: pointer;
