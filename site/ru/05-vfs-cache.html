@@ -600,6 +600,16 @@ close(dfd);</code></pre>
 </section>
 <section class="further" id="further">
 <h2>Что почитать дальше</h2>
+<h3 id="further-ru">На русском</h3>
+<ul>
+<li><a href="https://manpages.debian.org/trixie/manpages-ru-dev/open.2.ru.html">open(2)</a>: разделы об <code>O_DIRECT</code>, <code>O_SYNC</code> и <code>O_DSYNC</code>. А также <a href="https://man.archlinux.org/man/fsync.2.ru">fsync(2)</a>.</li>
+<li><a href="https://habr.com/ru/companies/smart_soft/articles/228937/">Page-кэш, или как связаны между собой оперативная память и файлы</a> (перевод статьи Густаво Дуарте, Хабр, 2014): короткое классическое объяснение того, что <code>read()</code> копирует данные из страничного кэша, а <code>mmap()</code> отображает те же страницы.</li>
+<li><a href="https://habr.com/ru/companies/ruvds/articles/736538/">Расследуем фантомные чтения с диска в Linux</a> (перевод статьи Андрея Печкурова, Хабр, 2023): как упреждающее чтение для отображённых файлов при нехватке памяти даёт чтения там, где нагрузка только пишет, и как это найти и убрать вызовом <code>madvise(MADV_RANDOM)</code>.</li>
+<li><a href="https://habr.com/ru/articles/820591/">Почему MMAP не лучший выход</a> (перевод статьи Crotty, Leis и Pavlo, CIDR 2022): отказы страниц, упреждающее чтение и вытеснение при работе с отображённым файлом и почему СУБД не доверяют mmap ни сохранность данных, ни производительность.</li>
+<li><a href="https://habr.com/ru/articles/803347/">А в чем проблема работать с файлами?</a> (Хабр, 2024): путь записи от буфера приложения через страничный кэш до накопителя: <code>fsync</code> и <code>fdatasync</code>, ошибки <code>fsync</code>, <code>O_DIRECT</code>, синхронизация каталогов и атомарная замена через <code>rename</code>.</li>
+<li><a href="https://habr.com/ru/articles/472684/">Сюрприз fsync() PostgreSQL</a> (перевод статьи LWN, Хабр, 2019): история fsyncgate — почему после ошибки обратной записи повторный <code>fsync</code> мог вернуть успех, хотя данные так и не попали на диск.</li>
+</ul>
+<h3 id="further-en">На английском</h3>
 <ul>
 <li><a href="https://docs.kernel.org/filesystems/vfs.html">Overview of the Linux Virtual File System</a>: справочник самого ядра по объектам VFS и всем таблицам операций.</li>
 <li><a href="https://docs.kernel.org/filesystems/path-lookup.html">Pathname lookup</a>: подробно о том, как работают dcache, RCU-обход и переход через точки монтирования.</li>
@@ -607,15 +617,7 @@ close(dfd);</code></pre>
 <li><a href="https://docs.kernel.org/core-api/xarray.html">XArray</a>: структура данных, на которой построен индекс страничного кэша.</li>
 <li><a href="https://lwn.net/Articles/752063/">PostgreSQL's fsync() surprise</a> (LWN, 2018): история fsyncgate.</li>
 <li><a href="https://lwn.net/Articles/849538/">Clarifying memory management with page folios</a> (LWN, 2021): почему страничный кэш перешёл со страниц на фолио.</li>
-<li><a href="https://manpages.debian.org/trixie/manpages-ru-dev/open.2.ru.html">open(2)</a>: разделы об <code>O_DIRECT</code>, <code>O_SYNC</code> и <code>O_DSYNC</code>. А также <a href="https://man.archlinux.org/man/fsync.2.ru">fsync(2)</a>.</li>
 <li><a href="https://kernel.dk/io_uring.pdf">Efficient IO with io_uring</a>: статья Йенса Аксбо (Jens Axboe) о том, как устроен io_uring.</li>
-</ul>
-<h3 id="further-ru">На русском</h3>
-<ul>
-<li><a href="https://habr.com/ru/companies/smart_soft/articles/228937/">Page-кэш, или как связаны между собой оперативная память и файлы</a> (перевод статьи Густаво Дуарте, Хабр, 2014): короткое классическое объяснение того, что <code>read()</code> копирует данные из страничного кэша, а <code>mmap()</code> отображает те же страницы.</li>
-<li><a href="https://habr.com/ru/companies/ruvds/articles/736538/">Расследуем фантомные чтения с диска в Linux</a> (перевод статьи Андрея Печкурова, Хабр, 2023): как упреждающее чтение для отображённых файлов при нехватке памяти даёт чтения там, где нагрузка только пишет, и как это найти и убрать вызовом <code>madvise(MADV_RANDOM)</code>.</li>
-<li><a href="https://habr.com/ru/articles/820591/">Почему MMAP не лучший выход</a> (перевод статьи Crotty, Leis и Pavlo, CIDR 2022): отказы страниц, упреждающее чтение и вытеснение при работе с отображённым файлом и почему СУБД не доверяют mmap ни сохранность данных, ни производительность.</li>
-<li><a href="https://habr.com/ru/articles/803347/">А в чем проблема работать с файлами?</a> (Хабр, 2024): путь записи от буфера приложения через страничный кэш до накопителя: <code>fsync</code> и <code>fdatasync</code>, ошибки <code>fsync</code>, <code>O_DIRECT</code>, синхронизация каталогов и атомарная замена через <code>rename</code>.</li>
 </ul>
 </section>
 <nav class="pager-foot" aria-label="Следующий и предыдущий урок">

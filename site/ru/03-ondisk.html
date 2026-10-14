@@ -558,6 +558,14 @@ ext4: i_block = заголовок экстентов + до 4 экстенто�
 </section>
 <section class="further" id="further">
 <h2>Что почитать дальше</h2>
+<h3 id="further-ru">На русском</h3>
+<ul>
+<li><a href="https://habr.com/ru/companies/ruvds/articles/750370/">Диск — это просто куча битов</a> (перевод статьи Дмитрия Мазина, Хабр, 2023): inode файла на разделе ext4 находят через <code>debugfs imap</code> и <code>dd</code>, разбирают его поля по <code>struct ext4_inode</code> и доходят до блока с данными: короткая версия практики этого урока.</li>
+<li><a href="https://habr.com/ru/companies/flant/articles/354802/">Понимая, как используется дисковое пространство в Linux</a> (перевод, Флант, Хабр, 2018): от косвенных блоков ext2 к экстентам ext4, журнал, разреженные файлы и общие экстенты при копировании при записи.</li>
+<li><a href="https://habr.com/ru/articles/573706/">Работа с файлами — это сложно</a> (перевод статьи Дэна Луу, Хабр, 2021): что режимы <code>data=journal</code>, <code>data=ordered</code> и <code>data=writeback</code> значат для приложения и что исследования нашли в поведении файловых систем после сбоя.</li>
+<li><a href="https://www.youtube.com/watch?v=VPNAFKBkh-Q">Файловая система в Unix</a> (лекция И. В. Машечкина, ВМК МГУ, 2019): индексные дескрипторы, адресация блоков через прямые и косвенные ссылки, каталоги как файлы и учёт свободных блоков на примере классической файловой системы Unix.</li>
+</ul>
+<h3 id="further-en">На английском</h3>
 <ul>
 <li><a href="https://www.kernel.org/doc/html/latest/filesystems/ext4/index.html">ext4 Data Structures and Algorithms</a>: описание каждой структуры из этого урока от самого ядра, с точностью до байта.</li>
 <li><a href="https://git.kernel.org/pub/scm/linux/kernel/git/torvalds/linux.git/tree/fs/ext4/ext4.h">fs/ext4/ext4.h</a>: структуры на C (<code>ext4_super_block</code>, <code>ext4_group_desc</code>, <code>ext4_inode</code>).</li>
@@ -565,14 +573,7 @@ ext4: i_block = заголовок экстентов + до 4 экстенто�
 <li><a href="https://pages.cs.wisc.edu/~remzi/OSTEP/file-ffs.pdf">OSTEP, Locality and the Fast File System</a>: откуда взялись группы блоков (группы цилиндров).</li>
 <li><a href="https://pages.cs.wisc.edu/~remzi/OSTEP/file-journaling.pdf">OSTEP, Crash Consistency: FSCK and Journaling</a>: сценарии сбоев в подробностях, включая сравнение режима ordered с журналированием только метаданных.</li>
 <li><a href="https://www.kernel.org/doc/html/latest/admin-guide/ext4.html">ext4 admin guide</a>: опции монтирования, такие как <code>data=</code>, <code>commit=</code> и <code>auto_da_alloc</code>.</li>
-<li><a href="https://man7.org/linux/man-pages/man8/debugfs.8.html">debugfs(8)</a> (только на английском): отладчик ext2/3/4, который используется в практике; <code>stat</code>, <code>ex</code>, <code>ls -l</code>, <code>htree</code>, <code>icheck</code>, <code>ncheck</code>.</li>
-</ul>
-<h3 id="further-ru">На русском</h3>
-<ul>
-<li><a href="https://habr.com/ru/companies/ruvds/articles/750370/">Диск — это просто куча битов</a> (перевод статьи Дмитрия Мазина, Хабр, 2023): inode файла на разделе ext4 находят через <code>debugfs imap</code> и <code>dd</code>, разбирают его поля по <code>struct ext4_inode</code> и доходят до блока с данными: короткая версия практики этого урока.</li>
-<li><a href="https://habr.com/ru/companies/flant/articles/354802/">Понимая, как используется дисковое пространство в Linux</a> (перевод, Флант, Хабр, 2018): от косвенных блоков ext2 к экстентам ext4, журнал, разреженные файлы и общие экстенты при копировании при записи.</li>
-<li><a href="https://habr.com/ru/articles/573706/">Работа с файлами — это сложно</a> (перевод статьи Дэна Луу, Хабр, 2021): что режимы <code>data=journal</code>, <code>data=ordered</code> и <code>data=writeback</code> значат для приложения и что исследования нашли в поведении файловых систем после сбоя.</li>
-<li><a href="https://www.youtube.com/watch?v=VPNAFKBkh-Q">Файловая система в Unix</a> (лекция И. В. Машечкина, ВМК МГУ, 2019): индексные дескрипторы, адресация блоков через прямые и косвенные ссылки, каталоги как файлы и учёт свободных блоков на примере классической файловой системы Unix.</li>
+<li><a href="https://man7.org/linux/man-pages/man8/debugfs.8.html">debugfs(8)</a>: отладчик ext2/3/4, который используется в практике; <code>stat</code>, <code>ex</code>, <code>ls -l</code>, <code>htree</code>, <code>icheck</code>, <code>ncheck</code>.</li>
 </ul>
 </section>
 <nav class="pager-foot" aria-label="Следующий и предыдущий урок">

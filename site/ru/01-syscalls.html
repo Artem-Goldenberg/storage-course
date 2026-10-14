@@ -448,19 +448,20 @@ libc write() on a closed fd returned -1, errno=9 (Bad file descriptor)</span></c
 </section>
 <section class="further" id="further">
 <h2>Что почитать дальше</h2>
-<ul>
-<li><a href="https://manpages.debian.org/trixie/manpages-ru-dev/open.2.ru.html">open(2)</a>: все флаги и мелкий шрифт про <code>O_DIRECT</code>, <code>O_TMPFILE</code> и <code>O_PATH</code>.</li>
-<li><a href="https://man7.org/linux/man-pages/man2/syscall.2.html">syscall(2)</a> (только на английском): соглашения о регистрах для всех архитектур в одной таблице.</li>
-<li><a href="https://lwn.net/Articles/604287/">Anatomy of a system call, part 1</a> (LWN): что происходит внутри ядра при входе в системный вызов и выходе из него.</li>
-<li><a href="https://man.archlinux.org/man/proc_pid_fdinfo.5.ru">proc_pid_fdinfo(5)</a>: все поля <code>/proc/PID/fdinfo</code>.</li>
-<li><a href="https://man.archlinux.org/man/vdso.7.ru">vdso(7)</a>: какие вызовы вообще обходятся без ядра.</li>
-<li><a href="https://pages.cs.wisc.edu/~remzi/OSTEP/file-intro.pdf">OSTEP, «Files and Directories»</a>: бесплатная глава учебника, которая разбирает тот же API со стороны операционной системы.</li>
-<li><a href="https://man7.org/tlpi/">The Linux Programming Interface</a> (Керриск), главы 4, 5 и 13: исчерпывающая книга о файловом вводе-выводе, буферизации и дескрипторах.</li>
-</ul>
 <h3 id="further-ru">На русском</h3>
 <ul>
+<li><a href="https://manpages.debian.org/trixie/manpages-ru-dev/open.2.ru.html">open(2)</a>: все флаги и мелкий шрифт про <code>O_DIRECT</code>, <code>O_TMPFILE</code> и <code>O_PATH</code>.</li>
+<li><a href="https://man.archlinux.org/man/proc_pid_fdinfo.5.ru">proc_pid_fdinfo(5)</a>: все поля <code>/proc/PID/fdinfo</code>.</li>
+<li><a href="https://man.archlinux.org/man/vdso.7.ru">vdso(7)</a>: какие вызовы вообще обходятся без ядра.</li>
 <li><a href="https://habr.com/ru/articles/347596/">Эволюция системных вызовов архитектуры x86</a> (Хабр, 2018): как вход в ядро прошёл путь от <code>int 0x80</code> через <code>sysenter</code> к <code>syscall</code>, зачем появились vsyscall и vDSO и сколько стоит каждый способ.</li>
-<li><a href="https://habr.com/ru/companies/piter/articles/436986/">Linux API. Управление буферизацией файлового ввода-вывода, осуществляемой в ядре</a> (Керриск, Питер, Хабр, 2019): раздел 13.3 русского издания The Linux Programming Interface, выложенный целиком: <code>fsync</code>, <code>fdatasync</code>, <code>O_SYNC</code>, <code>posix_fadvise</code> и <code>O_DIRECT</code>, с замерами того, во что обходится синхронная запись.</li>
+<li><a href="https://habr.com/ru/companies/piter/articles/436986/">Linux API. Управление буферизацией файлового ввода-вывода, осуществляемой в ядре</a> (Керриск, Питер, Хабр, 2019): разделы 13.3–13.6 русского издания The Linux Programming Interface: <code>fsync</code>, <code>fdatasync</code> и <code>O_SYNC</code> с замерами того, во что обходится синхронная запись, общая картина буферизации, <code>posix_fadvise</code> и <code>O_DIRECT</code>.</li>
+</ul>
+<h3 id="further-en">На английском</h3>
+<ul>
+<li><a href="https://man7.org/linux/man-pages/man2/syscall.2.html">syscall(2)</a>: соглашения о регистрах для всех архитектур в одной таблице.</li>
+<li><a href="https://lwn.net/Articles/604287/">Anatomy of a system call, part 1</a> (LWN): что происходит внутри ядра при входе в системный вызов и выходе из него.</li>
+<li><a href="https://pages.cs.wisc.edu/~remzi/OSTEP/file-intro.pdf">OSTEP, «Files and Directories»</a>: бесплатная глава учебника, которая разбирает тот же API со стороны операционной системы.</li>
+<li><a href="https://man7.org/tlpi/">The Linux Programming Interface</a> (Керриск), главы 4, 5 и 13: исчерпывающая книга о файловом вводе-выводе, буферизации и дескрипторах.</li>
 </ul>
 </section>
 <nav class="pager-foot" aria-label="Следующий и предыдущий урок">

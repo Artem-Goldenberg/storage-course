@@ -808,6 +808,13 @@ ext4walk: "no-such-file" not found in directory inode 12 (ENOENT)</span></code><
 </section>
 <section class="further" id="further">
 <h2>Что почитать дальше</h2>
+<h3 id="further-ru">На русском</h3>
+<ul>
+<li><a href="https://postgrespro.ru/education/books/internals">PostgreSQL 18 изнутри</a> (Рогов, Postgres Professional, 2026): глава 25 «B-дерево»: поиск и вставка в nbtree, устройство его страниц и компактное хранение дубликатов; книга бесплатна в PDF.</li>
+<li><a href="https://www.opennet.ru/soft/fs/xfs_arch.pdf">Масштабируемость в файловой системе XFS</a> (перевод статьи Sweeney и др., USENIX 1996): почему XFS заменила битовые карты и линейные списки B+-деревьями: для свободного места, экстентов, inode и каталогов.</li>
+<li><a href="https://habr.com/ru/companies/vk/articles/358210/">Хранение данных на Виниле</a> (Осипов, Хабр, 2018): автор LSM-движка Tarantool сравнивает усиление записи и чтения у B-дерева и LSM-дерева и разбирает дамп, слияние уровней, удаления и фильтры Блума.</li>
+</ul>
+<h3 id="further-en">На английском</h3>
 <ul>
 <li><a href="https://doi.org/10.1145/356770.356776">Comer, <i>The Ubiquitous B-Tree</i> (ACM Computing Surveys, 1979)</a>: по-прежнему лучшее короткое введение, включая B+-деревья и другие варианты.</li>
 <li><a href="https://www.kernel.org/doc/html/latest/filesystems/ext4/index.html">ext4 Data Structures and Algorithms</a>: деревья экстентов описаны в разделе «The Contents of inode.i_block», а htree — в разделе «Directory Entries».</li>
@@ -817,12 +824,6 @@ ext4walk: "no-such-file" not found in directory inode 12 (ENOENT)</span></code><
 <li><a href="https://github.com/postgres/postgres/blob/master/src/backend/access/nbtree/README">PostgreSQL nbtree README</a>: Леман и Яо в промышленной системе, включая удаление страниц и выбор точки расщепления.</li>
 <li><a href="https://doi.org/10.1145/319628.319663">Lehman and Yao, <i>Efficient Locking for Concurrent Operations on B-Trees</i> (ACM TODS, 1981)</a>: B-link-дерево.</li>
 <li><a href="https://www.cs.umb.edu/~poneil/lsmtree.pdf">O'Neil et al., <i>The Log-Structured Merge-Tree</i> (1996)</a>: исходная статья об LSM-дереве.</li>
-</ul>
-<h3 id="further-ru">На русском</h3>
-<ul>
-<li><a href="https://postgrespro.ru/education/books/internals">PostgreSQL 18 изнутри</a> (Рогов, Postgres Professional, 2026): глава 25 «B-дерево»: поиск и вставка в nbtree, устройство его страниц и компактное хранение дубликатов; книга бесплатна в PDF.</li>
-<li><a href="https://www.opennet.ru/soft/fs/xfs_arch.pdf">Масштабируемость в файловой системе XFS</a> (перевод статьи Sweeney и др., USENIX 1996): почему XFS заменила битовые карты и линейные списки B+-деревьями: для свободного места, экстентов, inode и каталогов.</li>
-<li><a href="https://habr.com/ru/companies/vk/articles/358210/">Хранение данных на Виниле</a> (Осипов, Хабр, 2018): автор LSM-движка Tarantool сравнивает усиление записи и чтения у B-дерева и LSM-дерева и разбирает дамп, слияние уровней, удаления и фильтры Блума.</li>
 </ul>
 </section>
 <nav class="pager-foot" aria-label="Следующий и предыдущий урок">

@@ -476,6 +476,15 @@ rack-blind             483       12,181               73,635             8,012 .
 </section>
 <section class="further" id="further">
 <h2>Что почитать дальше</h2>
+<h3 id="further-ru">На русском</h3>
+<ul>
+<li><a href="https://habr.com/ru/companies/skbkontur/articles/858526/">Контур + GFS = Kanso. История развития файловой системы</a> (Контур, Хабр, 2024): хранилище по образцу GFS: мастер с журналом операций и консенсусом поверх ZooKeeper, чанк-серверы с тремя репликами в трёх дата-центрах и шардирование мастеров.</li>
+<li><a href="https://habr.com/ru/articles/313644/">Знакомство с хранилищем Ceph в картинках</a> (Хабр, 2016): пулы, группы размещения, мониторы и OSD на схемах и то, как CRUSH по хешу имени объекта выбирает группу и набор OSD с учётом доменов отказа; хранилище OSD с тех пор сменилось, размещение нет.</li>
+<li><a href="https://habr.com/ru/companies/mygames/articles/669390/">Consistent против Rendezvous</a> (MY.GAMES, Хабр, 2022): согласованное хеширование и хеширование по наибольшему весу, включая варианты с весами узлов.</li>
+<li><a href="https://habr.com/ru/companies/yandex/articles/510050/">Коды избыточности: простыми словами о том, как надёжно и дёшево хранить данные</a> (Яндекс, Хабр, 2020): коды Рида–Соломона и LRC, сколько блоков приходится читать при восстановлении и какую избыточность дают разные схемы.</li>
+<li><a href="https://habr.com/ru/articles/494264/">Кластер из двух узлов – дьявол в деталях</a> (перевод статьи Эндрю Бикхофа, Хабр, 2020): зачем нужны fencing и кворум и почему кластер из двух узлов не может отличить отказ соседа от разрыва сети.</li>
+</ul>
+<h3 id="further-en">На английском</h3>
 <ul>
 <li><a href="https://doc.lustre.org/lustre_manual.xhtml">Lustre Operations Manual</a>: чередование, PFL, DNE, FLR и LNet, с указанием версий, в которых появилась каждая возможность.</li>
 <li><a href="https://docs.ceph.com/en/latest/architecture/">Ceph Architecture</a>: RADOS, CRUSH, пулы, PG и CephFS из документации самого проекта.</li>
@@ -484,14 +493,6 @@ rack-blind             483       12,181               73,635             8,012 .
 <li><a href="https://research.google/pubs/the-google-file-system/">The Google File System</a> (SOSP 2003) и <a href="https://cloud.google.com/blog/products/storage-data-transfer/a-peek-behind-colossus-googles-file-system">A peek behind Colossus, Google’s file system</a>: единственный мастер и то, что пришло ему на смену.</li>
 <li><a href="https://www.rfc-editor.org/rfc/rfc8435">RFC 8435</a>: раскладка pNFS flexible file, путь NFS к параллельному вводу-выводу.</li>
 <li><a href="https://github.com/hpc/ior">IOR и mdtest</a>: стандартные бенчмарки параллельной пропускной способности и метаданных.</li>
-</ul>
-<h3 id="further-ru">На русском</h3>
-<ul>
-<li><a href="https://habr.com/ru/companies/skbkontur/articles/858526/">Контур + GFS = Kanso. История развития файловой системы</a> (Контур, Хабр, 2024): хранилище по образцу GFS: мастер с журналом операций и консенсусом поверх ZooKeeper, чанк-серверы с тремя репликами в трёх дата-центрах и шардирование мастеров.</li>
-<li><a href="https://habr.com/ru/articles/313644/">Знакомство с хранилищем Ceph в картинках</a> (Хабр, 2016): пулы, группы размещения, мониторы и OSD на схемах и то, как CRUSH по хешу имени объекта выбирает группу и набор OSD с учётом доменов отказа; хранилище OSD с тех пор сменилось, размещение нет.</li>
-<li><a href="https://habr.com/ru/companies/mygames/articles/669390/">Consistent против Rendezvous</a> (MY.GAMES, Хабр, 2022): согласованное хеширование и хеширование по наибольшему весу, включая варианты с весами узлов.</li>
-<li><a href="https://habr.com/ru/companies/yandex/articles/510050/">Коды избыточности: простыми словами о том, как надёжно и дёшево хранить данные</a> (Яндекс, Хабр, 2020): коды Рида–Соломона и LRC, сколько блоков приходится читать при восстановлении и какую избыточность дают разные схемы.</li>
-<li><a href="https://habr.com/ru/articles/494264/">Кластер из двух узлов – дьявол в деталях</a> (перевод статьи Эндрю Бикхофа, Хабр, 2020): зачем нужны fencing и кворум и почему кластер из двух узлов не может отличить отказ соседа от разрыва сети.</li>
 </ul>
 </section>
 <nav class="pager-foot" aria-label="Следующий и предыдущий урок">
