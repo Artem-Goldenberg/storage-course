@@ -260,8 +260,9 @@ pre .o { color: var(--ink-2); }            /* program output */
    On wide screens the bar stays on screen, so anchors land below it. */
 .topbar { position: sticky; top: 0; z-index: 40; }
 html { scroll-padding-top: 4.5rem; }
-/* on phones the bar wraps to three lines; pinned it would eat a fifth of the screen */
-@media (max-width: 860px) { .topbar { position: relative; } html { scroll-padding-top: 0.5rem; } }
+/* on narrow screens the bar stays pinned but tucks away while you read down;
+   any scroll up brings it back (course.js), so anchors only need a little room */
+@media (max-width: 860px) { html { scroll-padding-top: 0.75rem; } }
 .route > summary, .sections > summary {
   list-style: none;
   cursor: pointer;
@@ -554,4 +555,116 @@ html[lang="ru"] { --display: "PT Sans Narrow", "Arial Narrow", "Helvetica Neue",
   .route > summary { pointer-events: none; padding-inline: 0; border-color: transparent; color: var(--ink-2); }
   .route > summary::after { content: none; }
   .route > .rail { display: none; }
+}
+
+/* ---------- phones and narrow tablets ----------
+   The top bar tucks away while you read and returns on a scroll up; the menus
+   open full width with rows a finger can hit. */
+@media (max-width: 860px) {
+  .topbar { padding: 0.5rem 1rem; gap: 0.35rem 1rem; transition: transform 0.2s ease; }
+  .topbar.is-tucked { transform: translateY(-100%); }
+  .pager { gap: 0.4rem 0.6rem; }
+  .pager > a { padding-block: 0.45rem; }
+  .route > summary, .sections > summary { padding: 0.45rem 0.65rem; }
+  .route > .rail, .sections > .toc {
+    left: 0.75rem;
+    right: 0.75rem;
+    width: auto;
+    max-height: calc(100vh - 100% - 1.5rem);
+    max-height: calc(100dvh - 100% - 1.5rem);
+  }
+  .toc a { padding: 0.5rem; }
+  .route .rail a { padding: 0.55rem 0.6rem; }
+}
+
+/* Phones: prose keeps a 1rem gutter, but code, tables and diagrams run edge to
+   edge, since every pixel of width is worth more to them than the frame. */
+@media (max-width: 600px) {
+  .brand span { display: none; }
+  /* the pager gets a row of its own: prev at the left edge, next at the right */
+  .pager { flex: 1 1 100%; justify-content: space-between; font-size: 0.875rem; }
+  .pager > .sections { order: 1; }
+  .pager > [rel="next"] { order: 2; }
+  /* in a lesson, prev and next shrink to arrow buttons so the row fits a 360px phone;
+     the link text stays for screen readers */
+  .pager:has(> .sections) > a[rel] {
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    width: 2.5rem;
+    height: 2.4rem;
+    padding: 0;
+    font-size: 0;
+    border: 1px solid var(--rule);
+    border-radius: 3px;
+  }
+  .pager:has(> .sections) > a[rel="prev"]::before { content: "←"; content: "←" / ""; font-size: 1.1rem; }
+  .pager:has(> .sections) > a[rel="next"]::after { content: "→"; content: "→" / ""; font-size: 1.1rem; }
+  .pager:has(> .sections) > a[rel]:hover { background: var(--code-bg); }
+
+  .layout { padding-inline: 1rem; }
+  .lesson { row-gap: 2.25rem; }
+  h1 { font-size: 2rem; }
+  h2 { font-size: 1.45rem; }
+  .lede { font-size: 1.08rem; }
+  .lesson-head .toc ol { columns: auto; }
+
+  .lesson > section > :is(pre, .table-wrap, .diagram) {
+    width: auto;
+    min-width: 0;
+    max-width: none;
+    margin-inline: -1rem;
+    border-radius: 0;
+    border-inline: 0;
+  }
+  pre { font-size: 0.78rem; padding: 0.8rem 1rem; }
+  .lab { padding: 1rem 1rem 1.1rem; }
+  .lab ol { padding-left: 1.25em; }
+
+  /* a diagram keeps at least 80% of its drawn size, so its labels stay
+     readable, and scrolls sideways inside the figure (course.js sets --w) */
+  .diagram-scroll { margin-inline: -1rem; padding-inline: 1rem; overflow-x: auto; }
+  .diagram-scroll > svg { min-width: calc(var(--w, 0) * 0.8px); }
+  /* shadows at an edge that has more to scroll to */
+  pre, .diagram-scroll {
+    --bg: var(--code-bg);
+    --shade: color-mix(in srgb, var(--ink) 24%, transparent);
+    background:
+      linear-gradient(to right, var(--bg) 40%, transparent) left / 1.5rem 100% no-repeat local,
+      linear-gradient(to left, var(--bg) 40%, transparent) right / 1.5rem 100% no-repeat local,
+      radial-gradient(farthest-side at 0 50%, var(--shade), transparent) left / 0.6rem 100% no-repeat scroll,
+      radial-gradient(farthest-side at 100% 50%, var(--shade), transparent) right / 0.6rem 100% no-repeat scroll,
+      var(--bg);
+  }
+  .diagram-scroll, .diagram pre { --bg: var(--panel); }
+
+  th, td { padding: 0.45rem 0.6rem; }
+  /* a table of three or more columns becomes one card per row; course.js
+     copies each column heading onto its cells as data-label */
+  table.stack, table.stack tbody, table.stack tr { display: block; }
+  table.stack thead { position: absolute; width: 1px; height: 1px; overflow: hidden; clip-path: inset(50%); }
+  table.stack tr { padding: 0.7rem 1rem 0.8rem; border-bottom: 1px solid var(--rule); }
+  table.stack tr:last-child { border-bottom: 0; }
+  table.stack td {
+    display: grid;
+    grid-template-columns: minmax(0, 6.5rem) minmax(0, 1fr);
+    gap: 0.75rem;
+    padding: 0.2rem 0;
+    border: 0;
+  }
+  table.stack td::before {
+    content: attr(data-label);
+    font-family: var(--display);
+    font-size: 0.72rem;
+    font-weight: 600;
+    text-transform: uppercase;
+    letter-spacing: 0.06em;
+    line-height: 1.3;
+    padding-top: 0.25em;
+    color: var(--ink-2);
+  }
+  table.stack td:first-child { display: block; padding-bottom: 0.35rem; font-family: var(--display); font-size: 1.02rem; font-weight: 600; }
+  table.stack td:first-child::before { content: none; }
+  table.stack td[data-label="#"]:first-child::before { content: "#"; font: inherit; letter-spacing: 0; padding: 0; }
+  table.stack td:empty { display: none; }
 }

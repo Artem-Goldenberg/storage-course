@@ -82,6 +82,59 @@
   }, { passive: true });
   update();
 })();
+/* narrow screens: the pinned top bar tucks away while reading down and comes back on a scroll up */
+(function () {
+  var bar = document.querySelector(".topbar");
+  if (!bar) return;
+  var narrow = window.matchMedia("(max-width: 860px)");
+  var lastY = window.scrollY, holdUntil = 0, queued = false;
+  function tuck(on) { bar.classList.toggle("is-tucked", on); }
+  function update() {
+    queued = false;
+    var y = window.scrollY, dy = y - lastY;
+    if (!narrow.matches || y <= bar.offsetHeight || bar.querySelector("details[open]")) { tuck(false); lastY = y; return; }
+    if (Date.now() < holdUntil) { tuck(true); lastY = y; return; }
+    if (Math.abs(dy) < 8) return; // small moves add up until they count
+    tuck(dy > 0);
+    lastY = y;
+  }
+  // a jump to a section lands with the bar out of the way, even when the jump goes up
+  function hold() { holdUntil = Date.now() + 500; }
+  document.addEventListener("click", function (e) { if (e.target.closest('a[href^="#"]')) hold(); });
+  window.addEventListener("hashchange", hold);
+  if (location.hash) holdUntil = Date.now() + 1500;
+  // the hold is for the jump only: a finger or wheel on the page ends it
+  function release() { holdUntil = 0; }
+  window.addEventListener("touchstart", release, { passive: true });
+  window.addEventListener("wheel", release, { passive: true });
+  window.addEventListener("scroll", function () {
+    if (!queued) { queued = true; requestAnimationFrame(update); }
+  }, { passive: true });
+  window.addEventListener("load", update);
+  bar.addEventListener("focusin", function () { tuck(false); });
+  update();
+})();
+/* phones: label table cells for the card layout, and give each diagram its own sideways scroller */
+(function () {
+  document.querySelectorAll(".table-wrap > table").forEach(function (t) {
+    var heads = t.querySelectorAll("thead th");
+    if (heads.length < 3) return;
+    t.classList.add("stack");
+    t.querySelectorAll("tbody tr").forEach(function (tr) {
+      Array.prototype.forEach.call(tr.cells, function (td, i) {
+        if (heads[i]) td.setAttribute("data-label", heads[i].textContent.trim());
+      });
+    });
+  });
+  document.querySelectorAll(".diagram > svg").forEach(function (svg) {
+    var box = document.createElement("div");
+    box.className = "diagram-scroll";
+    svg.parentNode.insertBefore(box, svg);
+    box.appendChild(svg);
+    var w = parseFloat(svg.getAttribute("width"));
+    if (w) box.style.setProperty("--w", w);
+  });
+})();
 /* colour C code in <code class="language-c">; comments reuse the .c class */
 (function () {
   var KEYWORDS = /^(?:asm|auto|break|case|const|continue|default|do|else|enum|extern|for|goto|if|inline|register|restrict|return|sizeof|static|struct|switch|typedef|union|volatile|while|__attribute__)$/;
