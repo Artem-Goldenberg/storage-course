@@ -447,6 +447,13 @@ backup superblocks (sparse_super: groups 0, 1, and powers of 3, 5, 7):
 <li><a href="https://lwn.net/Articles/974578/">Atomic writes without tears</a> (LWN): рваные записи и работа над <code>RWF_ATOMIC</code>.</li>
 <li><a href="https://nvmexpress.org/specifications/">NVM Express specifications</a>: базовая спецификация определяет очереди, doorbell-регистры и команды.</li>
 </ul>
+<h3 id="further-ru">На русском</h3>
+<ul>
+<li><a href="https://habr.com/ru/companies/vdsina/articles/564470/">Что нужно знать об SSD каждому программисту</a> (перевод статьи Виктора Лайса, Хабр, 2021): страницы и блоки стирания, FTL, сборка мусора, усиление записи и почему SSD раскрывается только при сотнях параллельных запросов.</li>
+<li><a href="https://habr.com/ru/articles/245085/">Диски, контроллеры, ОС и Advanced Format</a> (Хабр, 2014): логический и физический сектор в 512n, 512e и 4Kn, откуда берётся read-modify-write и зачем разделы выравнивают по 1 МиБ; списки поддержки устарели, сами понятия нет.</li>
+<li><a href="https://habr.com/ru/companies/selectel/articles/346844/">blk-mq и планировщики ввода-вывода</a> (Selectel, Хабр, 2018): чем одноочередной блочный уровень отличается от blk-mq с программными и аппаратными очередями, и замеры планировщиков none, mq-deadline, bfq и kyber на HDD, SATA SSD и NVMe.</li>
+<li><a href="https://habr.com/ru/companies/ruvds/articles/524172/">Устойчивое хранение данных и файловые API Linux</a> (перевод статьи Эвана Джонса, Хабр, 2020): что на самом деле гарантируют <code>fsync</code>, <code>fdatasync</code>, <code>O_DSYNC</code> и <code>O_DIRECT</code> и как blktrace показывает, что журнал пишется с FUA.</li>
+</ul>
 </section>
 <nav class="pager-foot" aria-label="Следующий и предыдущий урок">
 <a class="prev" href="01-syscalls.html"><small>Назад</small>Системные вызовы и файловые дескрипторы</a>

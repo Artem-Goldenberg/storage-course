@@ -452,10 +452,15 @@ libc write() on a closed fd returned -1, errno=9 (Bad file descriptor)</span></c
 <li><a href="https://man7.org/linux/man-pages/man2/open.2.html">open(2)</a>: все флаги и мелкий шрифт про <code>O_DIRECT</code>, <code>O_TMPFILE</code> и <code>O_PATH</code>.</li>
 <li><a href="https://man7.org/linux/man-pages/man2/syscall.2.html">syscall(2)</a>: соглашения о регистрах для всех архитектур в одной таблице.</li>
 <li><a href="https://lwn.net/Articles/604287/">Anatomy of a system call, part 1</a> (LWN): что происходит внутри ядра при входе в системный вызов и выходе из него.</li>
-<li><a href="https://man7.org/linux/man-pages/man5/proc_pid_fdinfo.5.html">proc_pid_fdinfo(5)</a>: все поля <code>/proc/PID/fdinfo</code>.</li>
-<li><a href="https://man7.org/linux/man-pages/man7/vdso.7.html">vdso(7)</a>: какие вызовы вообще обходятся без ядра.</li>
+<li><a href="https://man.archlinux.org/man/proc_pid_fdinfo.5.ru">proc_pid_fdinfo(5)</a>: все поля <code>/proc/PID/fdinfo</code>.</li>
+<li><a href="https://man.archlinux.org/man/vdso.7.ru">vdso(7)</a>: какие вызовы вообще обходятся без ядра.</li>
 <li><a href="https://pages.cs.wisc.edu/~remzi/OSTEP/file-intro.pdf">OSTEP, «Files and Directories»</a>: бесплатная глава учебника, которая разбирает тот же API со стороны операционной системы.</li>
 <li><a href="https://man7.org/tlpi/">The Linux Programming Interface</a> (Керриск), главы 4, 5 и 13: исчерпывающая книга о файловом вводе-выводе, буферизации и дескрипторах.</li>
+</ul>
+<h3 id="further-ru">На русском</h3>
+<ul>
+<li><a href="https://habr.com/ru/articles/347596/">Эволюция системных вызовов архитектуры x86</a> (Хабр, 2018): как вход в ядро прошёл путь от <code>int 0x80</code> через <code>sysenter</code> к <code>syscall</code>, зачем появились vsyscall и vDSO и сколько стоит каждый способ.</li>
+<li><a href="https://www.piter.com/product/linux-api-ischerpyvayuschee-rukovodstvo">Linux API. Исчерпывающее руководство</a> (Керриск, Питер, 2018): русское издание The Linux Programming Interface; те же главы 4, 5 и 13 о файловом вводе-выводе, дескрипторах и буферизации.</li>
 </ul>
 </section>
 <nav class="pager-foot" aria-label="Следующий и предыдущий урок">

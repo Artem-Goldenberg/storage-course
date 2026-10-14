@@ -527,6 +527,13 @@
 <li><a href="https://github.com/linux-rdma/rdma-core">rdma-core</a>: libibverbs, librdmacm и примеры программ, например <code>ibv_rc_pingpong</code>.</li>
 <li><a href="https://www.microsoft.com/en-us/research/publication/congestion-control-for-large-scale-rdma-deployments/">Congestion Control for Large-Scale RDMA Deployments</a> (SIGCOMM 2015): статья о DCQCN и о том, зачем RoCE нужно управление перегрузкой.</li>
 </ul>
+<h3 id="further-ru">На русском</h3>
+<ul>
+<li><a href="https://habr.com/ru/articles/1087134/">Производительность сетевых бэкендов в Linux</a> (Хабр, 2026): путь пакета от сетевой карты до приложения через прерывания, NAPI и копирования и замеры io_uring, AF_XDP и DPDK против обычных сокетов: та цена, которую RDMA убирает.</li>
+<li><a href="https://habr.com/ru/companies/yandex/articles/1047072/">Нейро сети для самых маленьких. Часть первая</a> (Яндекс, Хабр, 2026): чем дорог путь через ядро, что дают DMA, kernel bypass и zero copy и чем InfiniBand отличается от RoCE, которому нужны PFC, ECN и настроенные буферы коммутаторов.</li>
+<li><a href="https://habr.com/ru/companies/yadro/articles/1087474/">Lossless Ethernet или жизнь без потерь: PFC, буферы и тонкая настройка</a> (YADRO, Хабр, 2026): почему RoCE плохо переносит потери, как PFC останавливает отдельные классы трафика и как считать запас буфера и пороги XOFF/XON на портах 25G и 100G.</li>
+<li><a href="https://habr.com/ru/companies/beeline_tech/articles/890278/">NVME over RoCE. Примеряем на себя</a> (билайн, Хабр, 2025): подключение СХД по NVMe поверх RoCE v2 на картах mlx5 с multipath, замеры скорости и отличия от NVMe/TCP.</li>
+</ul>
 </section>
 <nav class="pager-foot" aria-label="Следующий и предыдущий урок">
 <a class="prev" href="07-nfs-caching.html"><small>Назад</small>Кэширование по сети</a>

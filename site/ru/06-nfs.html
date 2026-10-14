@@ -609,6 +609,12 @@ data     8388608 ..    8392704</span></code></pre>
 <li><a href="https://docs.kernel.org/filesystems/nfs/index.html">Документация ядра Linux по NFS</a>: заметки о клиенте и сервере, включая LOCALIO и pNFS.</li>
 <li><a href="https://wiki.linux-nfs.org/wiki/index.php/Main_Page">Вики linux-nfs.org</a>: заметки разработчиков Linux NFS о возможностях и тестировании.</li>
 </ul>
+<h3 id="further-ru">На русском</h3>
+<ul>
+<li><a href="https://habr.com/ru/companies/cloud_ru/articles/759550/">Как мы производительность блочного pNFS измеряли</a> (Cloud.ru, Хабр, 2023): блочная раскладка pNFS на сервере nfsd, LAYOUTGET и LAYOUTCOMMIT в Wireshark и mountstats и почему без ALLOCATE из NFSv4.2 запись в разреженный файл резко замедляется.</li>
+<li><a href="https://habr.com/ru/companies/flant/articles/897130/">Шифрование NFS: RPC-with-TLS как альтернатива VPN</a> (Флант, Хабр, 2025): RPC-with-TLS (RFC 9289) с демоном tlshd и опциями экспорта <code>xprtsec=tls</code> и <code>xprtsec=mtls</code>, с проверкой в tshark.</li>
+<li><a href="https://www.piter.com/product/sovremennye-operatsionnye-sistemy-4-e-izd-2">Современные операционные системы</a> (Таненбаум, Бос, Питер, 4-е изд.): раздел 10.6.4: учебное описание NFS — дескрипторы файлов, сервер без состояния и место клиента под VFS.</li>
+</ul>
 </section>
 <nav class="pager-foot" aria-label="Следующий и предыдущий урок">
 <a class="prev" href="05-vfs-cache.html"><small>Назад</small>VFS и кэши</a>

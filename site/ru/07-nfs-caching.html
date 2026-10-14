@@ -472,6 +472,11 @@ sillyrenames                1</span></code></pre>
 <li><a href="https://docs.ceph.com/en/latest/cephfs/capabilities/">CephFS capabilities</a>: буквы caps и то, как MDS их выдаёт и отзывает.</li>
 <li><a href="https://nfs.sourceforge.net/">Linux NFS FAQ</a>: старый, но по-прежнему точный текст о close-to-open и кэшировании атрибутов.</li>
 </ul>
+<h3 id="further-ru">На русском</h3>
+<ul>
+<li><a href="https://habr.com/ru/companies/slurm/articles/432922/">Как мы две недели охотились на баг NFS в ядре Linux</a> (перевод поста GitLab, Слёрм, Хабр, 2018): клиент NFSv4 после <code>rename()</code> на другой машине получал устаревший файл; расследование через tcpdump и Wireshark проходит через делегирования и кэш dentry и заканчивается исправлением в ядре.</li>
+<li><a href="https://habr.com/ru/companies/cloud_ru/articles/856268/">Как мы работу блочного pNFS исправляли</a> (Cloud.ru, Хабр, 2024): рабочий набор для отладки клиента NFS в Linux: <code>/proc/sys/sunrpc/nfs_debug</code>, запись трафика tshark с разбором в Wireshark и трассировка функций <code>nfs_*</code> через trace-cmd.</li>
+</ul>
 </section>
 <nav class="pager-foot" aria-label="Следующий и предыдущий урок">
 <a class="prev" href="06-nfs.html"><small>Назад</small>NFS от v3 до 4.2</a>
