@@ -79,6 +79,7 @@ body {
   font-size: var(--step-0);
   line-height: 1.62;
   font-optical-sizing: auto;
+  overflow-wrap: break-word; /* a long URL or name wraps instead of widening the page */
 }
 img, svg { max-width: 100%; }
 [hidden] { display: none !important; }
@@ -110,6 +111,7 @@ code, kbd, samp {
   background: var(--code-bg);
   padding: 0.08em 0.32em;
   border-radius: 3px;
+  overflow-wrap: break-word; /* for browsers without "anywhere" (iOS before 15.4) */
   overflow-wrap: anywhere;
 }
 pre {
@@ -618,6 +620,17 @@ html[lang="ru"] { --display: "PT Sans Narrow", "Arial Narrow", "Helvetica Neue",
     border-inline: 0;
   }
   pre { font-size: 0.78rem; padding: 0.8rem 1rem; }
+  /* long code lines wrap instead of scrolling sideways; course.js puts each line
+     in a span.ln with --i set to its indent, and a wrapped line hangs 2 columns
+     in from where its line starts */
+  pre.lines { white-space: pre-wrap; }
+  pre.lines .ln {
+    --hang: min(calc(var(--i, 0) * 1ch + 2ch), 16ch); /* capped for deeply indented output */
+    display: block;
+    padding-left: var(--hang);
+    text-indent: calc(-1 * var(--hang));
+    overflow-wrap: anywhere;
+  }
   .lab { padding: 1rem 1rem 1.1rem; }
   .lab ol { padding-left: 1.25em; }
 
@@ -626,8 +639,8 @@ html[lang="ru"] { --display: "PT Sans Narrow", "Arial Narrow", "Helvetica Neue",
   .diagram-scroll { margin-inline: -1rem; padding-inline: 1rem; overflow-x: auto; }
   .diagram-scroll > svg { min-width: calc(var(--w, 0) * 0.8px); }
   /* shadows at an edge that has more to scroll to */
-  pre, .diagram-scroll {
-    --bg: var(--code-bg);
+  .diagram-scroll, .diagram pre {
+    --bg: var(--panel);
     --shade: color-mix(in srgb, var(--ink) 24%, transparent);
     background:
       linear-gradient(to right, var(--bg) 40%, transparent) left / 1.5rem 100% no-repeat local,
@@ -636,9 +649,9 @@ html[lang="ru"] { --display: "PT Sans Narrow", "Arial Narrow", "Helvetica Neue",
       radial-gradient(farthest-side at 100% 50%, var(--shade), transparent) right / 0.6rem 100% no-repeat scroll,
       var(--bg);
   }
-  .diagram-scroll, .diagram pre { --bg: var(--panel); }
 
   th, td { padding: 0.45rem 0.6rem; }
+  td code { white-space: normal; overflow-wrap: break-word; } /* a long call wraps at its spaces */
   /* a table of three or more columns becomes one card per row; course.js
      copies each column heading onto its cells as data-label */
   table.stack, table.stack tbody, table.stack tr { display: block; }

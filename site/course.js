@@ -164,3 +164,49 @@
     code.innerHTML = out + esc(src.slice(last));
   });
 })();
+/* split code blocks into one span per line, so phones can wrap long lines with a
+   hanging indent instead of scrolling sideways; on wider screens nothing changes.
+   Runs after the C colouring, and keeps any colour span that crosses a line. */
+(function () {
+  function split(node) {
+    if (node.nodeType === 3) return node.data.split("\n").map(function (s) { return s ? [document.createTextNode(s)] : []; });
+    if (node.nodeType !== 1) return [[]];
+    var parts = [[]];
+    Array.prototype.forEach.call(node.childNodes, function (c) {
+      var sub = split(c);
+      parts[parts.length - 1] = parts[parts.length - 1].concat(sub[0]);
+      for (var i = 1; i < sub.length; i++) parts.push(sub[i]);
+    });
+    return parts.map(function (nodes) {
+      if (!nodes.length) return [];
+      var shell = node.cloneNode(false);
+      nodes.forEach(function (n) { shell.appendChild(n); });
+      return [shell];
+    });
+  }
+  document.querySelectorAll("pre:not([id])").forEach(function (pre) {
+    if (pre.closest(".diagram")) return; // drawings must keep their columns
+    var root = pre.querySelector(":scope > code") || pre, lines = [[]];
+    Array.prototype.forEach.call(root.childNodes, function (c) {
+      var sub = split(c);
+      lines[lines.length - 1] = lines[lines.length - 1].concat(sub[0]);
+      for (var i = 1; i < sub.length; i++) lines.push(sub[i]);
+    });
+    if (lines.length > 1 && !lines[lines.length - 1].length) lines.pop();
+    var out = document.createDocumentFragment();
+    lines.forEach(function (nodes, i) {
+      var ln = document.createElement("span");
+      ln.className = "ln";
+      nodes.forEach(function (n) { ln.appendChild(n); });
+      // the indent, in columns, that a wrapped line continues from (tabs are 4 wide)
+      var text = ln.textContent, col = 0;
+      for (var j = 0; j < text.length && (text[j] === " " || text[j] === "\t"); j++) col = text[j] === "\t" ? (Math.floor(col / 4) + 1) * 4 : col + 1;
+      if (col) ln.style.setProperty("--i", col);
+      if (i < lines.length - 1) ln.appendChild(document.createTextNode("\n"));
+      out.appendChild(ln);
+    });
+    root.textContent = "";
+    root.appendChild(out);
+    pre.classList.add("lines");
+  });
+})();
