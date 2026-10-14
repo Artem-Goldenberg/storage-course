@@ -57,12 +57,12 @@
 (function () {
   var head = document.querySelector(".lesson-head");
   if (!head) return;
-  var h1 = head.querySelector("h1");
+  var h1 = head.querySelector("h1"), ru = document.documentElement.lang === "ru";
   var btn = document.createElement("button");
   btn.type = "button";
   btn.className = "to-top";
-  btn.title = "Back to the top";
-  btn.setAttribute("aria-label", "Back to the top of the lesson");
+  btn.title = ru ? "Наверх" : "Back to the top";
+  btn.setAttribute("aria-label", ru ? "Вернуться к началу урока" : "Back to the top of the lesson");
   btn.innerHTML = '<svg viewBox="0 0 16 16" width="16" height="16" aria-hidden="true"><path d="M8 13V3M3.5 7.5 8 3l4.5 4.5" fill="none" stroke="currentColor" stroke-width="1.6" stroke-linecap="round" stroke-linejoin="round"/></svg>';
   document.body.appendChild(btn);
   btn.addEventListener("click", function () {

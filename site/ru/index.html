@@ -1,0 +1,311 @@
+<!doctype html><html lang="ru"><head><meta charset=utf8><meta name=viewport content="width=device-width,initial-scale=1,viewport-fit=cover"><style>:root{color-scheme:light;box-sizing:border-box;padding-top:env(safe-area-inset-top,0px);padding-bottom:env(safe-area-inset-bottom,0px)}html{scroll-padding-top:env(safe-area-inset-top,0px)}body{margin:0;padding:0;font:14px -apple-system,BlinkMacSystemFont,sans-serif;background:#fff;color:#000}img{max-width:100%}[hidden]:not([hidden=until-found i]){display:none!important}</style></head><body>
+<title>От open() до RDMA</title>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=IBM+Plex+Mono:wght@400;600&family=IBM+Plex+Sans+Condensed:wght@500;600;700&family=PT+Sans+Narrow:wght@400;700&family=Source+Serif+4:ital,opsz,wght@0,8..60,400;0,8..60,600;1,8..60,400&display=swap">
+<link rel="stylesheet" href="../course.css?v=10">
+<style>
+  .home { max-width: 74rem; margin: 0 auto; padding-block: 2.5rem 4rem; padding-inline: 1.25rem; display: grid; gap: 3.5rem; }
+  .home > * { min-width: 0; }
+  .hero { display: grid; gap: 1rem; max-width: 48rem; }
+  .hero h1 { font-size: clamp(2.3rem, 6vw, 3.6rem); letter-spacing: -0.015em; }
+  .hero h1 code { font-size: 0.9em; background: none; padding: 0; color: var(--l-kernel); }
+  .hero .lede { font-size: 1.22rem; }
+
+  /* ---- course search (search.js) ---- */
+  .sx { display: grid; gap: 0.45rem; margin-top: 0.5rem; max-width: 42rem; }
+  .sx-label { font-family: var(--display); font-size: 0.85rem; color: var(--ink-2); text-transform: uppercase; letter-spacing: 0.08em; }
+  .sx-field { position: relative; }
+  .sx-field input {
+    width: 100%; font: inherit; font-size: 1.05rem; color: var(--ink); background: var(--panel);
+    border: 1px solid var(--rule); border-radius: 3px; padding: 0.6rem 2.6rem 0.6rem 0.8rem;
+  }
+  .sx-field input:focus { border-color: var(--accent); outline: none; box-shadow: 0 0 0 2px color-mix(in srgb, var(--accent) 30%, transparent); }
+  .sx-key {
+    position: absolute; right: 0.7rem; top: 50%; transform: translateY(-50%); pointer-events: none;
+    font-size: 0.78rem; color: var(--ink-2); background: var(--paper); border: 1px solid var(--rule); padding: 0.05rem 0.45rem;
+  }
+  .sx-field input:focus ~ .sx-key, .sx-field input:not(:placeholder-shown) ~ .sx-key { display: none; }
+  .sx-hint { font-size: 0.9rem; color: var(--ink-2); }
+  .sx-panel {
+    position: absolute; top: calc(100% + 4px); left: 0; right: 0; z-index: 30;
+    max-height: min(70vh, 36rem); overflow-y: auto; padding: 0.35rem;
+    background: var(--panel); border: 1px solid var(--rule); border-radius: 4px;
+    box-shadow: 0 10px 28px color-mix(in srgb, var(--ink) 22%, transparent);
+  }
+  .sx-status:empty { display: none; }
+  .sx-status { font-family: var(--display); font-size: 0.9rem; color: var(--ink-2); padding: 0.4rem 0.55rem; }
+  .sx-group { font-family: var(--display); text-transform: uppercase; letter-spacing: 0.08em; font-size: 0.72rem; font-weight: 700; color: var(--ink-2); padding: 0.55rem 0.55rem 0.2rem; }
+  .sx-item {
+    display: grid; grid-template-columns: 2.1rem minmax(0, 1fr); gap: 0 0.6rem;
+    padding: 0.45rem 0.55rem; border-radius: 3px; color: var(--ink); text-decoration: none;
+  }
+  .sx-item[aria-selected="true"] { background: color-mix(in srgb, var(--c) 12%, var(--panel)); box-shadow: inset 3px 0 0 var(--c); }
+  .sx-item .layer-chip { align-self: start; margin-top: 0.2rem; text-align: center; font-family: var(--mono); font-variant-numeric: tabular-nums; }
+  .sx-main { display: grid; gap: 0.1rem; min-width: 0; }
+  .sx-where { font-family: var(--display); font-size: 0.78rem; color: var(--ink-2); overflow: hidden; text-overflow: ellipsis; white-space: nowrap; }
+  .sx-title { font-family: var(--display); font-weight: 600; font-size: 1.02rem; line-height: 1.3; }
+  .sx-text {
+    font-size: 0.9rem; line-height: 1.45; color: var(--ink-2);
+    display: -webkit-box; -webkit-line-clamp: 2; -webkit-box-orient: vertical; overflow: hidden;
+  }
+  .sx mark { background: color-mix(in srgb, var(--c) 24%, transparent); color: var(--ink); border-radius: 2px; }
+
+  /* ---- the stack map ---- */
+  .map-wrap { display: grid; gap: 0.9rem; }
+  .map-head { display: flex; flex-wrap: wrap; justify-content: space-between; align-items: baseline; gap: 0.5rem 2rem; }
+  .map-head h2 { font-size: var(--step-2); }
+  .map {
+    display: grid;
+    grid-template-columns: minmax(0, 1fr) minmax(0, 1fr) 2.75rem minmax(0, 1fr);
+    grid-template-areas:
+      "colA  colA  .    colC"
+      "app   app   .    srv1"
+      "sys   sys   .    srv2"
+      "vfs   vfs   .    srv3"
+      "cache cache .    srv4"
+      "subA  subB  .    ."
+      "fs    nfs   .    ."
+      "bt    rpc   .    ."
+      "blk   xprt  .    ."
+      "dev   nic   wire snic"
+      ".     scale scale scale";
+    gap: 6px 10px;
+    background: var(--panel);
+    border: 1px solid var(--rule);
+    border-radius: 4px;
+    padding: 1.1rem;
+  }
+  .col-title {
+    font-family: var(--display);
+    text-transform: uppercase;
+    letter-spacing: 0.09em;
+    font-size: 0.78rem;
+    font-weight: 700;
+    color: var(--ink-2);
+    padding: 0.1rem 0 0.35rem;
+  }
+  .sub-title { font-family: var(--display); font-size: 0.82rem; color: var(--ink-2); padding-top: 0.6rem; }
+  .lyr {
+    --c: var(--l-kernel);
+    display: grid;
+    grid-template-columns: minmax(0, 1fr) auto;
+    gap: 0.05rem 0.75rem;
+    padding: 0.5rem 0.7rem 0.55rem;
+    background: color-mix(in srgb, var(--c) 12%, var(--panel));
+    border: 1px solid color-mix(in srgb, var(--c) 55%, var(--rule));
+    border-radius: 2px;
+    color: var(--ink);
+    text-decoration: none;
+    min-width: 0;
+  }
+  a.lyr:hover { background: color-mix(in srgb, var(--c) 22%, var(--panel)); }
+  .lyr b { font-family: var(--display); font-weight: 600; font-size: 1rem; line-height: 1.25; }
+  .lyr small { grid-column: 1; color: var(--ink-2); font-size: 0.84rem; line-height: 1.35; }
+  .lyr .no { grid-row: 1 / span 2; grid-column: 2; align-self: center; font-family: var(--mono); font-weight: 600; font-size: 0.85rem; color: var(--c); font-variant-numeric: tabular-nums; }
+  .lyr.user   { --c: var(--l-user); }
+  .lyr.kernel { --c: var(--l-kernel); }
+  .lyr.fs     { --c: var(--l-fs); }
+  .lyr.block  { --c: var(--l-block); }
+  .lyr.net    { --c: var(--l-net); }
+  .lyr.ghost  { background: transparent; border-style: dashed; }
+  .boundary {
+    grid-area: sys;
+    display: flex; align-items: center; gap: 0.6rem;
+    font-family: var(--mono); font-size: 0.78rem; color: var(--ink-2);
+    padding: 0.2rem 0;
+  }
+  .boundary::before, .boundary::after { content: ""; flex: 1; border-top: 1.5px dashed var(--ink-2); opacity: 0.6; }
+  .wire {
+    grid-area: wire;
+    align-self: center;
+    border-top: 2px dashed var(--l-net);
+    position: relative;
+  }
+  .wire span {
+    position: absolute; left: 50%; top: -1.25rem; transform: translateX(-50%);
+    font-family: var(--mono); font-size: 0.7rem; color: var(--l-net); white-space: nowrap;
+  }
+  .a-colA { grid-area: colA; } .a-colC { grid-area: colC; }
+  .a-app { grid-area: app; } .a-vfs { grid-area: vfs; } .a-cache { grid-area: cache; }
+  .a-subA { grid-area: subA; } .a-subB { grid-area: subB; }
+  .a-fs { grid-area: fs; } .a-bt { grid-area: bt; } .a-blk { grid-area: blk; } .a-dev { grid-area: dev; }
+  .a-nfs { grid-area: nfs; } .a-rpc { grid-area: rpc; } .a-xprt { grid-area: xprt; } .a-nic { grid-area: nic; }
+  .a-srv1 { grid-area: srv1; } .a-srv2 { grid-area: srv2; } .a-srv3 { grid-area: srv3; } .a-srv4 { grid-area: srv4; } .a-snic { grid-area: snic; }
+  .a-scale { grid-area: scale; margin-top: 0.6rem; }
+  .map-note { font-size: 0.92rem; color: var(--ink-2); max-width: 46rem; }
+
+  @media (max-width: 860px) {
+    .map {
+      grid-template-columns: minmax(0, 1fr);
+      grid-template-areas:
+        "colA" "app" "sys" "vfs" "cache"
+        "subA" "fs" "bt" "blk" "dev"
+        "subB" "nfs" "rpc" "xprt" "nic" "wire"
+        "colC" "snic" "srv1" "srv2" "srv3" "srv4" "scale";
+    }
+    .wire { height: 2.2rem; border-top: 0; border-left: 2px dashed var(--l-net); justify-self: center; width: 0; }
+    .wire span { left: 0.6rem; top: 50%; transform: translateY(-50%); }
+    .a-colC { padding-top: 0.2rem; }
+  }
+
+  /* ---- route ---- */
+  .route { display: grid; gap: 1rem; }
+  .route ol { list-style: none; padding: 0; display: grid; grid-template-columns: repeat(auto-fill, minmax(min(100%, 21rem), 1fr)); gap: 0.75rem; }
+  .route li { margin: 0; }
+  .route a {
+    --c: var(--l-kernel);
+    display: grid; gap: 0.35rem; height: 100%;
+    padding: 0.9rem 1rem 1rem;
+    background: var(--panel);
+    border: 1px solid var(--rule);
+    border-top: 3px solid var(--c);
+    border-radius: 2px;
+    color: var(--ink); text-decoration: none;
+  }
+  .route a:hover { border-color: var(--c); }
+  .route .meta { display: flex; align-items: baseline; justify-content: space-between; gap: 0.5rem; font-family: var(--display); font-size: 0.78rem; text-transform: uppercase; letter-spacing: 0.08em; color: var(--c); font-weight: 700; }
+  .route .meta span:last-child { font-family: var(--mono); text-transform: none; letter-spacing: 0; font-weight: 400; color: var(--ink-2); }
+  .route h3 { font-size: 1.2rem; }
+  .route p { font-size: 0.95rem; color: var(--ink-2); line-height: 1.5; }
+  .route .user { --c: var(--l-user); } .route .kernel { --c: var(--l-kernel); } .route .fs { --c: var(--l-fs); }
+  .route .block { --c: var(--l-block); } .route .net { --c: var(--l-net); }
+
+  .two { display: grid; grid-template-columns: minmax(0, 1fr) minmax(0, 1fr); gap: 2.5rem; }
+  @media (max-width: 860px) { .two { grid-template-columns: minmax(0, 1fr); } }
+  .two > section { display: grid; gap: 0.9rem; align-content: start; min-width: 0; }
+  .reading dt { font-family: var(--display); font-weight: 600; margin-top: 0.7rem; }
+  .reading dd { margin: 0.15rem 0 0; color: var(--ink-2); font-size: 0.95rem; }
+  .reading dd + dd { margin-top: 0.3rem; }
+  .needs { display: grid; gap: 0.5rem; }
+  .needs div { display: grid; grid-template-columns: 6.5rem minmax(0, 1fr); gap: 0.75rem; font-size: 0.95rem; align-items: baseline; }
+  .needs .layer-chip { justify-self: start; }
+  footer.foot { border-top: 1px solid var(--rule); padding-top: 1.25rem; color: var(--ink-2); font-size: 0.9rem; }
+</style>
+<header class="topbar">
+<a class="brand" href="index.html">От open() до RDMA <span>· курс о хранении данных</span></a>
+<nav class="pager" aria-label="Курс">
+<a href="01-syscalls.html">Начать с урока 01 →</a>
+<a href="glossary.html">Глоссарий</a>
+<span class="lang-switch" aria-label="Язык"><a href="../index.html" hreflang="en" lang="en">EN</a><b>RU</b></span>
+</nav>
+</header>
+<main class="home">
+<header class="hero">
+<p class="eyebrow" style="color: var(--l-net)">Курс о хранении данных в девяти уроках</p>
+<h1>От <code>open()</code> до RDMA</h1>
+<p class="lede">Как на самом деле устроен файл: от вызова на C, который его открывает, вниз через
+ядро к блокам на диске, а затем по сети к NFS-серверам, RDMA-фабрикам
+и кластерам машин. Каждый урок заканчивается практикой, которую вы выполняете сами.</p>
+<div class="sx" role="search">
+<label class="sx-label" for="sx-input">Поиск по курсу</label>
+<div class="sx-field">
+<input id="sx-input" type="search" placeholder="fsync, делегирование, дерево экстентов, rkey…" autocomplete="off" spellcheck="false" role="combobox" aria-autocomplete="list" aria-expanded="false" aria-controls="sx-list">
+<kbd class="sx-key" aria-hidden="true">/</kbd>
+<div class="sx-panel" id="sx-panel" hidden>
+<p class="sx-status" id="sx-status" role="status"></p>
+<div id="sx-list" role="listbox" aria-label="Результаты поиска"></div>
+</div>
+</div>
+<p class="sx-hint">Термины глоссария и все разделы всех уроков. Результат открывает урок там, где встречается слово.</p>
+</div>
+</header>
+<section class="map-wrap" aria-labelledby="map-h">
+<div class="map-head">
+<h2 id="map-h">Стек</h2>
+<div class="rail-legend" style="margin-top:0">
+<span style="--c: var(--l-user)">пространство пользователя</span>
+<span style="--c: var(--l-kernel)">ядро</span>
+<span style="--c: var(--l-fs)">файловая система</span>
+<span style="--c: var(--l-block)">блочный уровень и устройство</span>
+<span style="--c: var(--l-net)">сеть</span>
+</div>
+</div>
+<div class="map">
+<div class="col-title a-colA">Ваша машина</div>
+<div class="col-title a-colC">Сервер</div>
+<a class="lyr user a-app" href="01-syscalls.html"><b>Ваша программа</b><small><code>open()</code>, <code>read()</code>, <code>write()</code>, <code>fsync()</code> над файловым дескриптором</small><span class="no">01</span></a>
+<div class="boundary">syscall: режим пользователя ↑ режим ядра ↓</div>
+<a class="lyr kernel a-vfs" href="05-vfs-cache.html"><b>VFS</b><small>один API для всех файловых систем; выбирает ext4 или NFS по точке монтирования</small><span class="no">05</span></a>
+<a class="lyr kernel a-cache" href="05-vfs-cache.html"><b>Страничный кэш · dcache · кэш inode</b><small>данные файлов и имена хранятся в RAM; грязные страницы записываются позже</small><span class="no">05</span></a>
+<div class="sub-title a-subA">…если файл на локальном диске</div>
+<div class="sub-title a-subB">…если файл на NFS-монтировании</div>
+<a class="lyr fs a-fs" href="03-ondisk.html"><b>ext4 / XFS</b><small>суперблок, inode, каталоги, экстенты, журнал</small><span class="no">03</span></a>
+<a class="lyr fs a-bt" href="04-btrees.html"><b>B-деревья внутри ФС</b><small>деревья экстентов, хешированные каталоги, деревья свободного места</small><span class="no">04</span></a>
+<a class="lyr block a-blk" href="02-blocks.html"><b>Блочный уровень</b><small>bio, очереди blk-mq, планировщики, FLUSH/FUA</small><span class="no">02</span></a>
+<a class="lyr block a-dev" href="02-blocks.html"><b>NVMe / SSD / HDD</b><small>секторы и LBA, очереди отправки и завершения</small><span class="no">02</span></a>
+<a class="lyr net a-nfs" href="07-nfs-caching.html"><b>NFS-клиент</b><small>кэш атрибутов, close-to-open, делегирования</small><span class="no">07</span></a>
+<a class="lyr net a-rpc" href="06-nfs.html"><b>NFSv4.2 поверх SUNRPC</b><small>COMPOUND, сессии, состояние, раскладки pNFS</small><span class="no">06</span></a>
+<a class="lyr net a-xprt" href="08-rdma.html"><b>TCP или RPC-over-RDMA</b><small>сокеты и копирование, или пары очередей и чанки</small><span class="no">08</span></a>
+<a class="lyr net a-nic" href="08-rdma.html"><b>Сетевая карта</b><small>Ethernet, RoCE или InfiniBand</small><span class="no">08</span></a>
+<div class="wire" aria-hidden="true"><span>провод</span></div>
+<a class="lyr net a-snic" href="08-rdma.html"><b>Сетевая карта сервера</b><small>RDMA-чтение и RDMA-запись прямо в память клиента</small><span class="no">08</span></a>
+<a class="lyr net a-srv1" href="06-nfs.html"><b>nfsd</b><small>NFS-сервер в ядре: разбирает вызов, хранит состояние клиентов</small><span class="no">06</span></a>
+<a class="lyr kernel ghost a-srv2" href="05-vfs-cache.html"><b>VFS и страничный кэш сервера</b><small>те же уровни ядра, только на сервере</small><span class="no">05</span></a>
+<a class="lyr fs ghost a-srv3" href="03-ondisk.html"><b>Файловая система сервера</b><small>обычная ext4 или XFS</small><span class="no">03</span></a>
+<a class="lyr block ghost a-srv4" href="02-blocks.html"><b>Диски сервера</b><small>где байты в итоге и хранятся</small><span class="no">02</span></a>
+<a class="lyr net a-scale" href="09-distributed.html"><b>Много серверов, одно пространство имён</b><small>pNFS, Lustre, Ceph, GPFS, HDFS: серверы метаданных, чередование, размещение, репликация, блокировки</small><span class="no">09</span></a>
+</div>
+<p class="map-note">Читайте сверху вниз. Вызов <code>read()</code> начинается в вашей программе, переходит
+в ядро и заканчивается на диске: вашем собственном или на сервере по ту сторону провода. Уровни
+ниже VFS взаимозаменяемы, поэтому NFS-монтирование ведёт себя как локальный каталог.
+Каждый блок ведёт на урок, который его разбирает.</p>
+</section>
+<section class="route" aria-labelledby="route-h">
+<h2 id="route-h">Маршрут</h2>
+<p class="muted" style="max-width:46rem">Сначала верх стека, потом самый низ, потом ядро, которое их соединяет, и затем выход
+в сеть. Уроки 06–09 опираются на всё, что было до них, поэтому проходите их по порядку.</p>
+<ol>
+<li><a class="user" href="01-syscalls.html"><div class="meta"><span>01 · пространство пользователя</span><span>практика 01-fds</span></div><h3>Системные вызовы и файловые дескрипторы</h3><p>Что такое системный вызов, файловый API на C и три таблицы за каждым fd: таблица дескрипторов, описание открытого файла, inode.</p></a></li>
+<li><a class="block" href="02-blocks.html"><div class="meta"><span>02 · блочный уровень</span><span>практика 02-blocks</span></div><h3>Блочные устройства и адресация</h3><p>Секторы, LBA и блоки; HDD, SSD и очереди NVMe; блочный уровень ядра; кэши записи, FLUSH и FUA.</p></a></li>
+<li><a class="fs" href="03-ondisk.html"><div class="meta"><span>03 · файловая система</span><span>практика 03-ondisk</span></div><h3>Внутри образа ext4</h3><p>Суперблок, группы блоков, inode, экстенты, каталоги и журнал, прочитанные байт за байтом программой, которую вы сами скомпилируете.</p></a></li>
+<li><a class="fs" href="04-btrees.html"><div class="meta"><span>04 · файловая система</span><span>практика 04-btrees</span></div><h3>B-деревья на практике</h3><p>Почему дискам нужны широкие и низкие деревья и где они живут: экстенты и htree в ext4, XFS, btrfs, базы данных. С живым B+-деревом.</p></a></li>
+<li><a class="kernel" href="05-vfs-cache.html"><div class="meta"><span>05 · ядро</span><span>практика 05-cache</span></div><h3>VFS и кэши</h3><p>Как диспетчеризуется <code>read()</code>, dcache и страничный кэш, обратная запись, <code>fsync</code>, <code>O_DIRECT</code> и что значит «надёжно записано».</p></a></li>
+<li><a class="net" href="06-nfs.html"><div class="meta"><span>06 · сеть</span><span>практика 06-nfs (A)</span></div><h3>NFS от v3 до 4.2</h3><p>RPC и хэндлы файлов, v3 без состояния, v4 с состоянием, сессии и pNFS в 4.1 и каждая возможность 4.2, привязанная к системному вызову, который её использует.</p></a></li>
+<li><a class="net" href="07-nfs-caching.html"><div class="meta"><span>07 · сеть</span><span>практика 06-nfs (B)</span></div><h3>Кэширование по сети</h3><p>Тайм-ауты атрибутов, close-to-open, нестабильные записи и COMMIT, делегирования и их отзыв, FS-Cache и то, как другие системы поддерживают согласованность кэшей.</p></a></li>
+<li><a class="net" href="08-rdma.html"><div class="meta"><span>08 · сеть</span><span>практика 07-rdma</span></div><h3>RDMA и NFS поверх RDMA</h3><p>Verbs, пары очередей и регистрация памяти; InfiniBand, RoCE и iWARP; как RPC-over-RDMA перемещает данные NFS с помощью чанков чтения и записи.</p></a></li>
+<li><a class="net" href="09-distributed.html"><div class="meta"><span>09 · сеть</span><span>практика 08-distributed</span></div><h3>Распределённые файловые системы</h3><p>Серверы метаданных и чередование, CRUSH и согласованное хеширование, репликация и помехоустойчивое кодирование, блокировки и аренды, отказы и восстановление.</p></a></li>
+</ol>
+</section>
+<div class="two">
+<section aria-labelledby="labs-h">
+<h2 id="labs-h">Как выполнять практику</h2>
+<p>Практические задания лежат в <code>~/storage-course/labs/</code> в вашем домашнем каталоге WSL, по папке
+на задание, в каждой есть <code>README.md</code> (на английском). Большинству нужны только компилятор и уже
+установленные инструменты, и они работают без root: задания по файловым системам собирают
+образы ext4 внутри обычных файлов.</p>
+<div class="needs">
+<div><span class="layer-chip user">без root</span><span>01 дескрипторы, 02 суперблок, 03 обходчик ext4, 04 деревья экстентов и каталогов, 05 страничный кэш, 08 размещение данных.</span></div>
+<div><span class="layer-chip net">sudo</span><span>06 NFS: устанавливает NFS-сервер и монтирует его через loopback внутри WSL.</span></div>
+<div><span class="layer-chip block">Linux VM</span><span>07 RDMA: в ядре WSL нет поддержки RDMA, поэтому soft-RoCE запускается в виртуальной машине с Ubuntu.</span></div>
+</div>
+<p>Необязательные инструменты, с которыми практика станет полнее:</p>
+<pre><code><span class="p">$</span> sudo apt install strace tcpdump tshark xfsprogs fio \
+      nfs-kernel-server nfs-common</code></pre>
+</section>
+<section aria-labelledby="read-h" class="reading">
+<h2 id="read-h">Что читать параллельно</h2>
+<dl>
+<dt>Основы</dt>
+<dd><a href="https://pages.cs.wisc.edu/~remzi/OSTEP/">Operating Systems: Three Easy Pieces</a>, бесплатно онлайн. Главы о постоянном хранении: файлы и каталоги, реализация файловой системы, FFS, журналирование, флеш-SSD, NFS и AFS.</dd>
+<dd><a href="https://docs.kernel.org/filesystems/vfs.html">Overview of the Linux VFS</a>: описание объектов из урока 05 от самих разработчиков ядра.</dd>
+<dt>NFS</dt>
+<dd><a href="https://www.rfc-editor.org/rfc/rfc7862">RFC 7862</a> (NFSv4.2), <a href="https://www.rfc-editor.org/rfc/rfc8881">RFC 8881</a> (NFSv4.1), <a href="https://www.rfc-editor.org/rfc/rfc7530">RFC 7530</a> (NFSv4.0), <a href="https://www.rfc-editor.org/rfc/rfc1813">RFC 1813</a> (NFSv3).</dd>
+<dd><a href="https://man7.org/linux/man-pages/man5/nfs.5.html">nfs(5)</a> и <a href="https://man7.org/linux/man-pages/man5/exports.5.html">exports(5)</a>: все опции монтирования и экспорта.</dd>
+<dt>RDMA</dt>
+<dd><a href="https://www.rfc-editor.org/rfc/rfc8166">RFC 8166</a> (RPC-over-RDMA v1) и <a href="https://www.rfc-editor.org/rfc/rfc8267">RFC 8267</a> (NFS поверх RPC-over-RDMA).</dd>
+<dd><a href="https://www.rdmamojo.com/">RDMAmojo</a>, справочник по каждому verb, и <a href="https://github.com/linux-rdma/rdma-core">rdma-core</a> с библиотеками и примерами.</dd>
+<dt>Распределённые системы</dt>
+<dd><a href="https://docs.ceph.com/en/latest/architecture/">Ceph architecture</a>, <a href="https://doc.lustre.org/lustre_manual.xhtml">Lustre manual</a> и <a href="https://dataintensive.net/">Designing Data-Intensive Applications</a> (на русском издана как «Высоконагруженные приложения») о репликации, консенсусе и согласованности в целом.</dd>
+</dl>
+</section>
+</div>
+<footer class="foot">
+Девять уроков, восемь практических заданий, один <a href="glossary.html">глоссарий</a>. Начните
+с <a href="01-syscalls.html">урока 01</a>.
+</footer>
+</main>
+<script src="../search.js?v=2"></script>
+<script src="../course.js?v=11"></script>
+
+</body></html>

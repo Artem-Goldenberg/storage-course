@@ -1,0 +1,1212 @@
+<!doctype html>
+<html lang="ru">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover">
+<title>B-деревья на практике</title>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=IBM+Plex+Mono:wght@400;600&family=IBM+Plex+Sans+Condensed:wght@500;600;700&family=PT+Sans+Narrow:wght@400;700&family=Source+Serif+4:ital,opsz,wght@0,8..60,400;0,8..60,600;1,8..60,400&display=swap">
+<link rel="stylesheet" href="../course.css?v=10">
+<style>
+  /* B+tree demo and fanout calculator (lesson 04 only); tokens from course.css */
+  .bp-controls, .fan-grid { display: flex; flex-wrap: wrap; gap: 0.5rem; align-items: center; font-family: var(--display); }
+  .bp-controls label, .fan-grid label { display: inline-flex; gap: 0.4rem; align-items: center; color: var(--ink-2); }
+  .bp-controls button, .bp-controls select, .bp-controls input,
+  .fan-grid select, .fan-grid input {
+    font: inherit; font-size: 0.95rem; color: var(--ink); background: var(--panel);
+    border: 1px solid var(--rule); border-radius: 3px; padding: 0.3rem 0.6rem; min-height: 2.2rem;
+  }
+  .bp-controls input { width: 5.5rem; font-family: var(--mono); }
+  .bp-controls button { cursor: pointer; }
+  .bp-controls button:hover { border-color: var(--layer); }
+  .bp-controls button.primary { background: color-mix(in srgb, var(--layer) 14%, var(--panel)); border-color: var(--layer); }
+  .bp-stage { overflow-x: auto; min-width: 0; padding: 0.25rem 0; }
+  .bp-stage svg { max-width: none; margin: 0 auto; }
+  .bp-stats { font-family: var(--mono); font-size: 0.82rem; color: var(--ink-2); margin: 0; }
+  .bp-log {
+    list-style: none; margin: 0; padding: 0.5rem 0.75rem; max-height: 9.5rem; overflow-y: auto;
+    font-family: var(--mono); font-size: 0.8rem; line-height: 1.45; white-space: pre-wrap;
+    background: var(--code-bg); border-radius: 3px; color: var(--ink-2);
+  }
+  .bp-log li { margin: 0 0 0.3rem; }
+  .bp-log span { display: block; }
+  .bp-log .bp-sub { padding-left: 1.5em; }
+  .bp-log li:first-child { color: var(--ink); }
+  svg .bp-cell  { fill: var(--panel); stroke: var(--rule); stroke-width: 1; }
+  svg .bp-empty { fill: var(--code-bg); stroke: var(--rule); stroke-width: 1; }
+  svg .bp-hit   { fill: color-mix(in srgb, var(--accent) 32%, var(--panel)); }
+  svg .bp-new   { fill: color-mix(in srgb, var(--l-user) 32%, var(--panel)); }
+  svg .bp-node  { fill: none; stroke: var(--ink-2); stroke-width: 1.2; }
+  svg .bp-leaf  { stroke: var(--layer); }
+  svg .bp-split { stroke: var(--l-block); stroke-width: 2.2; stroke-dasharray: 5 3; }
+  svg .bp-path  { stroke: var(--accent); stroke-width: 2.6; }
+  svg .bp-edge-hit { stroke: var(--accent); stroke-width: 2.2; }
+  svg .bp-ptr   { fill: var(--ink-2); }
+  svg .bp-ptr-hit { fill: var(--accent); }
+  .bp-fig { grid-template-columns: minmax(0, 1fr); }
+  .fan-grid label { display: grid; grid-template-columns: minmax(0, 1fr); gap: 0.2rem; font-size: 0.85rem; min-width: 0; max-width: 100%; }
+  .fan-grid select { width: 100%; }
+  .fan-grid input { width: 8.5rem; font-family: var(--mono); }
+  .fan-out {
+    margin: 0; padding: 0.6rem 0.8rem; white-space: pre-wrap; font-family: var(--mono);
+    font-size: 0.82rem; line-height: 1.5; background: var(--code-bg); border-radius: 3px;
+  }
+</style>
+</head>
+<body data-layer="fs">
+<header class="topbar">
+<a class="brand" href="index.html">От open() до RDMA <span>· курс о хранении данных</span></a>
+<nav class="pager" aria-label="Навигация по урокам">
+<a href="03-ondisk.html" rel="prev">← Назад</a>
+<details class="route"><summary>Урок 4 из 9</summary></details>
+<a href="05-vfs-cache.html" rel="next">Дальше →</a>
+<details class="sections"><summary>Разделы</summary></details>
+<span class="lang-switch" aria-label="Язык"><a href="../04-btrees.html" hreflang="en" lang="en">EN</a><b>RU</b></span>
+</nav>
+</header>
+<div class="layout">
+<nav class="rail" aria-label="Уроки">
+<div class="rail-title">Маршрут</div>
+<ol>
+<li class="user"><a href="01-syscalls.html"><span class="n">01</span><span>Системные вызовы и дескрипторы</span></a></li>
+<li class="block"><a href="02-blocks.html"><span class="n">02</span><span>Блочные устройства и адресация</span></a></li>
+<li class="fs"><a href="03-ondisk.html"><span class="n">03</span><span>Внутри образа ext4</span></a></li>
+<li class="fs"><a href="04-btrees.html" aria-current="page"><span class="n">04</span><span>B-деревья на практике</span></a></li>
+<li class="kernel"><a href="05-vfs-cache.html"><span class="n">05</span><span>VFS и кэши</span></a></li>
+<li class="net"><a href="06-nfs.html"><span class="n">06</span><span>NFS от v3 до 4.2</span></a></li>
+<li class="net"><a href="07-nfs-caching.html"><span class="n">07</span><span>Кэширование по сети</span></a></li>
+<li class="net"><a href="08-rdma.html"><span class="n">08</span><span>RDMA и NFS поверх RDMA</span></a></li>
+<li class="net"><a href="09-distributed.html"><span class="n">09</span><span>Распределённые файловые системы</span></a></li>
+<li class="extra"><a href="glossary.html"><span class="n">··</span><span>Глоссарий</span></a></li>
+</ol>
+<div class="rail-legend">
+<span style="--c: var(--l-user)">пространство пользователя</span>
+<span style="--c: var(--l-kernel)">ядро</span>
+<span style="--c: var(--l-fs)">файловая система</span>
+<span style="--c: var(--l-block)">блочный уровень</span>
+<span style="--c: var(--l-net)">сеть</span>
+</div>
+</nav>
+<main class="lesson">
+<header class="lesson-head">
+<p class="eyebrow">Урок 4 · Файловая система</p>
+<h1>B-деревья на практике</h1>
+<p class="lede">Любая файловая система и любая база данных, с которыми вы встретитесь, хранит индексы в том или ином B-дереве. Этот урок объясняет, почему на дисках выигрывает именно такая форма и как дерево остаётся сбалансированным, а затем открывает настоящие деревья: дерево экстентов и htree в ext4, XFS, btrfs и три базы данных.</p>
+<div class="outcomes">
+<b>После этого урока вы сможете</b>
+<ul>
+<li>оценить высоту B-дерева по размеру узла, размеру записи и числу ключей и сказать, во что обходится поиск;</li>
+<li>вставить ключ в B+-дерево вручную, включая расщепление, которое доходит до корня;</li>
+<li>читать вывод <code>debugfs</code> для дерева экстентов и htree в ext4 и объяснить каждое число;</li>
+<li>назвать B-деревья внутри XFS и btrfs и вопрос, на который отвечает каждое из них;</li>
+<li>сказать, когда LSM-дерево (log-structured merge tree) выигрывает у B-дерева и чем за это приходится платить.</li>
+</ul>
+</div>
+<nav class="toc" aria-label="Содержание урока">
+<b>В этом уроке</b>
+<ol>
+<li><a href="#cost-model">Почему дискам нужны низкие и широкие деревья</a></li>
+<li><a href="#btree">Правила B-дерева</a></li>
+<li><a href="#bplus">B+-деревья: вариант, который используют все</a></li>
+<li><a href="#demo">Попробуйте: вырастите B+-дерево</a></li>
+<li><a href="#ext4-extents">Дерево экстентов ext4</a></li>
+<li><a href="#htree">htree: B-дерево над хешами имён</a></li>
+<li><a href="#xfs">XFS: лес B+-деревьев</a></li>
+<li><a href="#btrfs">btrfs: B-деревья с копированием при записи</a></li>
+<li><a href="#databases">Базы данных: то же дерево, другая страница</a></li>
+<li><a href="#lsm">Когда B-дерево не подходит: LSM-деревья</a></li>
+<li><a href="#concurrency">Много потоков, одно дерево</a></li>
+<li><a href="#in-memory">B-деревья и в оперативной памяти</a></li>
+<li><a href="#lab">Практика 04: Как растут B-деревья ext4</a></li>
+<li><a href="#check">Проверьте себя</a></li>
+<li><a href="#further">Что почитать дальше</a></li>
+</ol>
+</nav>
+</header>
+<section id="cost-model">
+<h2>Почему дискам нужны низкие и широкие деревья</h2>
+<p>Любой индекс отвечает на один и тот же вопрос: где лежит то, что соответствует ключу? В уроке 03 ключами были номера блоков файла (где лежит блок 700 этого файла?) и имена (какой inode у <code>hello.txt</code>?). Ответ должен приходить быстро, даже когда ключей миллионы, а сам индекс лежит на том же медленном устройстве, что и данные.</p>
+<p>Конструкцию дерева определяет модель стоимости из <a href="02-blocks.html">урока 02</a>. Устройство читает блоки целиком, и одно случайное чтение стоит около 5–10 мс на жёстком диске и 10–100 мкс на NVMe SSD. Прочитать 12 байт стоит столько же, сколько прочитать 4096. Важно только, сколько отдельных блоков придётся затронуть при поиске. Сравнения внутри блока почти бесплатны: процессор успевает выполнить двоичный поиск по 340 ключам, пока NVMe-накопитель только замечает запрос.</p>
+<p><b>Двоичное дерево поиска</b> (binary search tree), структура из первого курса алгоритмов, хранит в узле один ключ и имеет двух потомков. Чтобы вместить миллион ключей, ему нужно около 20 уровней (2<sup>20</sup> ≈ 1 000 000). Если каждый узел — отдельный блок на диске, поиск превращается в 20 случайных чтений: около 160 мс на жёстком диске. У отсортированного массива с двоичным поиском та же проблема, а вставка в него требует сдвинуть всё, что стоит после места вставки.</p>
+<p><b>B-дерево</b> (B-tree) делает каждый узел ровно одним блоком и упаковывает в него столько ключей, сколько поместится. Число потомков у узла называется <b>коэффициентом ветвления</b> (fanout). Записи экстентов в ext4 занимают 12 байт, а у узлов дерева есть 12-байтный заголовок, поэтому один узел размером 4 КиБ вмещает (4096 − 12) / 12 = 340 записей. При коэффициенте ветвления <var>F</var> дерево над <var>N</var> ключами имеет высоту ⌈log<sub>F</sub> <var>N</var>⌉:</p>
+<ul>
+<li>1 000 000 ключей при ветвлении 340: 3 уровня (340<sup>2</sup> = 115 600 — мало, 340<sup>3</sup> ≈ 39 миллионов — достаточно);</li>
+<li>1 000 000 000 ключей при ветвлении 340: 4 уровня.</li>
+</ul>
+<figure class="diagram">
+<svg viewBox="0 0 720 290" width="720" role="img" aria-label="Двоичному дереву поиска над миллионом ключей нужно 20 уровней, то есть 20 случайных чтений; B+-дереву с 340 записями в узле размером 4 КиБ нужно 3 уровня из 1, 9 и 2 942 узлов, и два его верхних уровня помещаются в 40 КиБ оперативной памяти">
+<text class="th" x="20" y="24">двоичное дерево поиска</text>
+<text class="ts" x="20" y="42">1 000 000 ключей, 1 ключ в узле</text>
+<polyline class="ln" points="40,60 62,70.5 40,81 62,91.5 40,102 62,112.5 40,123 62,133.5 40,144 62,154.5 40,165 62,175.5 40,186 62,196.5 40,207 62,217.5 40,228 62,238.5 40,249 62,259.5"/>
+<circle class="k-fs" cx="40" cy="60" r="4"/><circle class="k-fs" cx="62" cy="70.5" r="4"/><circle class="k-fs" cx="40" cy="81" r="4"/><circle class="k-fs" cx="62" cy="91.5" r="4"/><circle class="k-fs" cx="40" cy="102" r="4"/>
+<circle class="k-fs" cx="62" cy="112.5" r="4"/><circle class="k-fs" cx="40" cy="123" r="4"/><circle class="k-fs" cx="62" cy="133.5" r="4"/><circle class="k-fs" cx="40" cy="144" r="4"/><circle class="k-fs" cx="62" cy="154.5" r="4"/>
+<circle class="k-fs" cx="40" cy="165" r="4"/><circle class="k-fs" cx="62" cy="175.5" r="4"/><circle class="k-fs" cx="40" cy="186" r="4"/><circle class="k-fs" cx="62" cy="196.5" r="4"/><circle class="k-fs" cx="40" cy="207" r="4"/>
+<circle class="k-fs" cx="62" cy="217.5" r="4"/><circle class="k-fs" cx="40" cy="228" r="4"/><circle class="k-fs" cx="62" cy="238.5" r="4"/><circle class="k-fs" cx="40" cy="249" r="4"/><circle class="k-fs" cx="62" cy="259.5" r="4"/>
+<text class="t" x="90" y="110">20 уровней</text>
+<text class="ts" x="90" y="130">каждый узел — отдельный блок,</text>
+<text class="ts" x="90" y="146">и поиск — это 20 случайных чтений:</text>
+<text class="ts" x="90" y="170">HDD   20 × 8 мс  = 160 мс</text>
+<text class="ts" x="90" y="186">NVMe  20 × 80 мкс = 1,6 мс</text>
+<line class="lnd" x1="322" y1="14" x2="322" y2="276"/>
+<text class="th" x="345" y="24">B+-дерево, узлы по 4 КиБ</text>
+<text class="ts" x="345" y="42">1 000 000 ключей, 340 записей в узле</text>
+<text class="ts" x="345" y="74">1 узел</text>
+<text class="ts" x="345" y="130">9 узлов</text>
+<text class="ts" x="345" y="190">2 942 листа</text>
+<line class="ln" x1="572" y1="82" x2="452" y2="116"/><line class="ln" x1="572" y1="82" x2="482" y2="116"/><line class="ln" x1="572" y1="82" x2="512" y2="116"/>
+<line class="ln" x1="572" y1="82" x2="572" y2="116"/><line class="ln" x1="572" y1="82" x2="602" y2="116"/><line class="ln" x1="572" y1="82" x2="632" y2="116"/>
+<line class="ln" x1="572" y1="82" x2="662" y2="116"/><line class="ln" x1="572" y1="82" x2="692" y2="116"/>
+<line class="hl" x1="572" y1="82" x2="542" y2="116"/>
+<line class="hl" x1="542" y1="136" x2="561" y2="176"/>
+<rect class="k-fs" x="537" y="58" width="70" height="24" rx="2"/>
+<text class="ts" x="572" y="74" text-anchor="middle">корень</text>
+<rect class="k-fs" x="440" y="116" width="24" height="20"/><rect class="k-fs" x="470" y="116" width="24" height="20"/><rect class="k-fs" x="500" y="116" width="24" height="20"/>
+<rect class="k-fs" x="530" y="116" width="24" height="20"/><rect class="k-fs" x="560" y="116" width="24" height="20"/><rect class="k-fs" x="590" y="116" width="24" height="20"/>
+<rect class="k-fs" x="620" y="116" width="24" height="20"/><rect class="k-fs" x="650" y="116" width="24" height="20"/><rect class="k-fs" x="680" y="116" width="24" height="20"/>
+<rect class="box" x="440" y="176" width="18" height="20"/><rect class="box" x="462" y="176" width="18" height="20"/><rect class="box" x="484" y="176" width="18" height="20"/>
+<rect class="box" x="506" y="176" width="18" height="20"/><rect class="box" x="528" y="176" width="18" height="20"/><rect class="box" x="550" y="176" width="18" height="20"/>
+<rect class="box" x="572" y="176" width="18" height="20"/><rect class="box" x="594" y="176" width="18" height="20"/><rect class="box" x="616" y="176" width="18" height="20"/>
+<rect class="box" x="638" y="176" width="18" height="20"/>
+<text class="t" x="664" y="191">…</text>
+<rect class="hl" x="537" y="58" width="70" height="24" rx="2"/>
+<rect class="hl" x="530" y="116" width="24" height="20"/>
+<rect class="hl" x="550" y="176" width="18" height="20"/>
+<text class="t" x="345" y="226">3 уровня</text>
+<text class="ts" x="345" y="246">Без кэша: HDD 24 мс, NVMe 0,24 мс. Два верхних</text>
+<text class="ts" x="345" y="262">уровня — 10 узлов = 40 КиБ: держите их в ОЗУ,</text>
+<text class="ts" x="345" y="278">и поиск обойдётся одним чтением.</text>
+</svg>
+<figcaption>Одни и те же ключи, две формы. Выделенный путь — это один поиск. Число узлов посчитано программой <code>fanout.py</code> из практики 04.</figcaption>
+</figure>
+<p>Второе преимущество не менее важно: верхние уровни крошечные. В дереве на миллион ключей корень и девять узлов под ним занимают 40 КиБ, и ядро держит их в кэше, потому что их затрагивает каждый поиск. На практике поиск в «прогретом» дереве читает с устройства один блок — лист.</p>
+<aside class="key"><span class="tag">Главное</span><p>Высота B-дерева — это логарифм числа ключей по основанию, равному коэффициенту ветвления. Ветвление — главный рычаг: чем крупнее узлы или мельче записи, тем ниже дерево. Каждая конструкция в этом уроке по-своему отвечает на вопрос «что лежит в записи и сколько записей помещается в узел?».</p></aside>
+</section>
+<section id="btree">
+<h2>Правила B-дерева</h2>
+<p>Рудольф Байер и Эдвард Маккрейт описали B-дерево в 1970 году, когда работали в исследовательских лабораториях Boeing, как способ индексировать файлы на диске. Уже в 1979 году Дуглас Комер смог назвать свой обзор <i>The Ubiquitous B-Tree</i> («Вездесущее B-дерево»). Правил немного:</p>
+<ol>
+<li>Каждый узел — один блок. Узел хранит не больше <var>m</var> − 1 ключей в отсортированном порядке, а у внутреннего узла с <var>k</var> ключами <var>k</var> + 1 потомков. Число <var>m</var> называется <b>порядком</b> (order) дерева.</li>
+<li>Ключи узла делят пространство ключей. Все ключи в поддереве слева от ключа <var>i</var> меньше его, а все ключи справа — больше или равны ему.</li>
+<li>Каждый узел, кроме корня, заполнен хотя бы наполовину.</li>
+<li><b>Все листья находятся на одной глубине.</b> В этом и состоит сбалансированность дерева, и она гарантирует, что любой поиск читает одинаковое число узлов.</li>
+</ol>
+<aside class="note"><span class="tag">Терминология</span><p>Слово «порядок» понимают по-разному. Порядок по Кнуту, который используется здесь и в демонстрации, — это максимальное число потомков. У Байера и Маккрейта порядок <var>d</var> был минимальным числом ключей, так что их узлы хранят от <var>d</var> до 2<var>d</var> ключей. Прежде чем сравнивать числа, проверьте, какой порядок имеет в виду текст.</p></aside>
+<h3>Поиск</h3>
+<p>Прочитайте корень. Двоичным поиском по его ключам найдите потомка, диапазон которого содержит ключ, прочитайте этого потомка и повторяйте, пока не дойдёте до листа. Стоимость — одно чтение блока на уровень, а сравнения внутри каждого блока на этом фоне ничего не стоят. ext4 делает ровно это в <code>ext4_ext_binsearch_idx()</code> и <code>ext4_ext_binsearch()</code>.</p>
+<h3>Вставка</h3>
+<p>Найдите лист, в котором должен лежать ключ, и поставьте ключ туда на его место по порядку. Если ключей в листе стало слишком много, <b>расщепите</b> его: оставьте нижнюю половину, перенесите верхнюю в новый узел и вставьте в родителя разделительный ключ (separator) и указатель на новый узел. Теперь может переполниться и родитель, поэтому расщепление может повториться уровнем выше, и так далее.</p>
+<p>Если расщепление доходит до корня, корень делится на два узла, а над ними создаётся <b>новый корень</b> с одним разделителем и двумя потомками. Только так дерево и становится выше. B-дерево растёт сверху, поэтому все листья одновременно опускаются на один уровень, и правило 4 нарушить невозможно.</p>
+<h3>Удаление</h3>
+<p>Удалите ключ из его листа. Если лист оказался заполнен меньше чем наполовину, либо <b>займите</b> ключ у соседнего узла (соответственно передвинув разделитель в родителе), либо <b>слейте</b> лист с соседом и удалите их разделитель из родителя. После слияния недозаполненным может оказаться родитель, так что и здесь возможен каскад. Если у корня остался единственный потомок, этот потомок становится корнем, и дерево становится на уровень ниже.</p>
+<p>Реальные системы часто пропускают бо́льшую часть этого. Слияние сложно, требует блокировать несколько узлов и редко окупается, потому что освободившееся место обычно снова заполняется. Например, B-дерево PostgreSQL удаляет страницу, только когда она полностью опустела, а его документация прямо говорит, что сливать частично заполненные страницы при параллельных просмотрах непрактично.</p>
+<h3>Насколько заполнены узлы?</h3>
+<p>При вставке в случайном порядке узлы в среднем оказываются заполнены примерно на 69% (ln 2, результат Эндрю Яо 1978 года). При вставке по возрастанию, например автоинкрементных ID или временных меток, расщепление пополам оставляет каждый узел заполненным наполовину, потому что левая половина после расщепления больше не получает ни одного ключа. PostgreSQL распознаёт этот случай: расщепляя самый правый лист, он оставляет левую страницу заполненной на 90% (его fillfactor по умолчанию), а не наполовину. ext4 делает нечто похожее для файлов, в которые только дописывают, как вы увидите ниже.</p>
+</section>
+<section id="bplus">
+<h2>B+-деревья: вариант, который используют все</h2>
+<p>Исходное B-дерево хранит каждый ключ вместе со значением ровно один раз — в том узле, куда он попал. Почти все реальные системы используют вариант под названием <b>B+-дерево</b> (B+tree):</p>
+<ul>
+<li>Все записи лежат в <b>листьях</b>.</li>
+<li><b>Внутренние узлы</b> хранят только разделительные ключи и указатели на потомков. Разделитель должен лишь правильно сортироваться между соседями, поэтому он может быть копией ключа или его укороченной версией.</li>
+<li>Листья часто связаны слева направо, так что просмотр диапазона («все ключи от 30 до 70») находит первый лист, а дальше идёт по ссылкам, не поднимаясь обратно по дереву.</li>
+</ul>
+<p>У внутренних узлов без значений максимально возможный коэффициент ветвления, и дерево остаётся низким. Цена в том, что каждый поиск спускается до самого листа, но в большинстве случаев он и так дошёл бы до него.</p>
+<p>Правило расщепления немного меняется. Когда расщепляется <b>лист</b>, первый ключ нового правого листа <b>копируется</b> наверх как разделитель, потому что ключ должен остаться в листе, где лежит его запись. Когда расщепляется <b>внутренний узел</b>, его средний разделитель <b>перемещается</b> наверх и исчезает из обеих половин, потому что разделители — всего лишь указатели пути.</p>
+<figure class="diagram">
+<svg viewBox="0 0 700 432" width="700" role="img" aria-label="Две вставки в B+-дерево. (a) Вставка 30 в полный лист 20 27 33 расщепляет его на 20 27 и 30 33 и копирует 30 в родителя. (b) Вставка 56 и 60 расщепляет лист, родитель переполняется, корень расщепляется, 41 становится новым корнем, и высота дерева становится равной 3.">
+<defs><marker id="ah-04-2" viewBox="0 0 10 10" refX="9" refY="5" markerWidth="7" markerHeight="7" orient="auto-start-reverse"><path class="ah" d="M0,0 L10,5 L0,10 z"/></marker></defs>
+<text class="th" x="20" y="22">(a) вставка 30 в полный лист</text>
+<text class="ts" x="20" y="40">порядок 4: в узле не больше 3 ключей</text>
+<line class="ln" x1="108" y1="80" x2="59" y2="114"/>
+<line class="ln" x1="134" y1="80" x2="147" y2="114"/>
+<line class="ln" x1="160" y1="80" x2="235" y2="114"/>
+<rect class="box" x="108" y="56" width="26" height="24"/>
+<text class="t" x="121" y="72.5" text-anchor="middle">20</text>
+<rect class="box" x="134" y="56" width="26" height="24"/>
+<text class="t" x="147" y="72.5" text-anchor="middle">41</text>
+<rect class="box" x="160" y="56" width="26" height="24"/>
+<rect class="ln" x="108" y="56" width="78" height="24"/>
+<rect class="box" x="20" y="114" width="26" height="24"/>
+<text class="t" x="33" y="130.5" text-anchor="middle">5</text>
+<rect class="box" x="46" y="114" width="26" height="24"/>
+<text class="t" x="59" y="130.5" text-anchor="middle">12</text>
+<rect class="box" x="72" y="114" width="26" height="24"/>
+<rect class="ln" x="20" y="114" width="78" height="24"/>
+<rect class="box" x="108" y="114" width="26" height="24"/>
+<text class="t" x="121" y="130.5" text-anchor="middle">20</text>
+<rect class="box" x="134" y="114" width="26" height="24"/>
+<text class="t" x="147" y="130.5" text-anchor="middle">27</text>
+<rect class="box" x="160" y="114" width="26" height="24"/>
+<text class="t" x="173" y="130.5" text-anchor="middle">33</text>
+<rect class="ln" x="108" y="114" width="78" height="24"/>
+<rect class="box" x="196" y="114" width="26" height="24"/>
+<text class="t" x="209" y="130.5" text-anchor="middle">41</text>
+<rect class="box" x="222" y="114" width="26" height="24"/>
+<text class="t" x="235" y="130.5" text-anchor="middle">48</text>
+<rect class="box" x="248" y="114" width="26" height="24"/>
+<rect class="ln" x="196" y="114" width="78" height="24"/>
+<line class="ln" x1="292" y1="80" x2="326" y2="80" marker-end="url(#ah-04-2)"/>
+<text class="ts" x="309" y="72" text-anchor="middle">+30</text>
+<line class="ln" x1="476" y1="80" x2="383" y2="114"/>
+<line class="ln" x1="502" y1="80" x2="471" y2="114"/>
+<line class="ln" x1="528" y1="80" x2="559" y2="114"/>
+<line class="ln" x1="554" y1="80" x2="647" y2="114"/>
+<rect class="box" x="476" y="56" width="26" height="24"/>
+<text class="t" x="489" y="72.5" text-anchor="middle">20</text>
+<rect class="k-fs" x="502" y="56" width="26" height="24"/>
+<text class="t" x="515" y="72.5" text-anchor="middle">30</text>
+<rect class="box" x="528" y="56" width="26" height="24"/>
+<text class="t" x="541" y="72.5" text-anchor="middle">41</text>
+<rect class="ln" x="476" y="56" width="78" height="24"/>
+<rect class="box" x="344" y="114" width="26" height="24"/>
+<text class="t" x="357" y="130.5" text-anchor="middle">5</text>
+<rect class="box" x="370" y="114" width="26" height="24"/>
+<text class="t" x="383" y="130.5" text-anchor="middle">12</text>
+<rect class="box" x="396" y="114" width="26" height="24"/>
+<rect class="ln" x="344" y="114" width="78" height="24"/>
+<rect class="box" x="432" y="114" width="26" height="24"/>
+<text class="t" x="445" y="130.5" text-anchor="middle">20</text>
+<rect class="box" x="458" y="114" width="26" height="24"/>
+<text class="t" x="471" y="130.5" text-anchor="middle">27</text>
+<rect class="box" x="484" y="114" width="26" height="24"/>
+<rect class="ln" x="432" y="114" width="78" height="24"/>
+<rect class="k-user" x="520" y="114" width="26" height="24"/>
+<text class="t" x="533" y="130.5" text-anchor="middle">30</text>
+<rect class="box" x="546" y="114" width="26" height="24"/>
+<text class="t" x="559" y="130.5" text-anchor="middle">33</text>
+<rect class="box" x="572" y="114" width="26" height="24"/>
+<rect class="bp-node bp-split" x="520" y="114" width="78" height="24"/>
+<rect class="box" x="608" y="114" width="26" height="24"/>
+<text class="t" x="621" y="130.5" text-anchor="middle">41</text>
+<rect class="box" x="634" y="114" width="26" height="24"/>
+<text class="t" x="647" y="130.5" text-anchor="middle">48</text>
+<rect class="box" x="660" y="114" width="26" height="24"/>
+<rect class="ln" x="608" y="114" width="78" height="24"/>
+<text class="ts" x="20" y="160">[20 27 30 33] переполнен: делится на [20 27] и [30 33];</text>
+<text class="ts" x="20" y="176">30, первый ключ нового листа, копируется наверх</text>
+<text class="th" x="20" y="214">(b) затем вставка 56 и 60: расщепление доходит до корня</text>
+<line class="ln" x1="108" y1="318" x2="59" y2="352"/>
+<line class="ln" x1="134" y1="318" x2="147" y2="352"/>
+<line class="ln" x1="160" y1="318" x2="235" y2="352"/>
+<line class="ln" x1="328" y1="318" x2="323" y2="352"/>
+<line class="ln" x1="354" y1="318" x2="411" y2="352"/>
+<line class="ln" x1="218" y1="260" x2="147" y2="294"/>
+<line class="ln" x1="244" y1="260" x2="367" y2="294"/>
+<rect class="k-fs" x="218" y="236" width="26" height="24"/>
+<text class="t" x="231" y="252.5" text-anchor="middle">41</text>
+<rect class="box" x="244" y="236" width="26" height="24"/>
+<rect class="box" x="270" y="236" width="26" height="24"/>
+<rect class="bp-node bp-split" x="218" y="236" width="78" height="24"/>
+<rect class="box" x="108" y="294" width="26" height="24"/>
+<text class="t" x="121" y="310.5" text-anchor="middle">20</text>
+<rect class="box" x="134" y="294" width="26" height="24"/>
+<text class="t" x="147" y="310.5" text-anchor="middle">30</text>
+<rect class="box" x="160" y="294" width="26" height="24"/>
+<rect class="ln" x="108" y="294" width="78" height="24"/>
+<rect class="k-fs" x="328" y="294" width="26" height="24"/>
+<text class="t" x="341" y="310.5" text-anchor="middle">56</text>
+<rect class="box" x="354" y="294" width="26" height="24"/>
+<rect class="box" x="380" y="294" width="26" height="24"/>
+<rect class="bp-node bp-split" x="328" y="294" width="78" height="24"/>
+<rect class="box" x="20" y="352" width="26" height="24"/>
+<text class="t" x="33" y="368.5" text-anchor="middle">5</text>
+<rect class="box" x="46" y="352" width="26" height="24"/>
+<text class="t" x="59" y="368.5" text-anchor="middle">12</text>
+<rect class="box" x="72" y="352" width="26" height="24"/>
+<rect class="ln" x="20" y="352" width="78" height="24"/>
+<rect class="box" x="108" y="352" width="26" height="24"/>
+<text class="t" x="121" y="368.5" text-anchor="middle">20</text>
+<rect class="box" x="134" y="352" width="26" height="24"/>
+<text class="t" x="147" y="368.5" text-anchor="middle">27</text>
+<rect class="box" x="160" y="352" width="26" height="24"/>
+<rect class="ln" x="108" y="352" width="78" height="24"/>
+<rect class="box" x="196" y="352" width="26" height="24"/>
+<text class="t" x="209" y="368.5" text-anchor="middle">30</text>
+<rect class="box" x="222" y="352" width="26" height="24"/>
+<text class="t" x="235" y="368.5" text-anchor="middle">33</text>
+<rect class="box" x="248" y="352" width="26" height="24"/>
+<rect class="ln" x="196" y="352" width="78" height="24"/>
+<rect class="box" x="284" y="352" width="26" height="24"/>
+<text class="t" x="297" y="368.5" text-anchor="middle">41</text>
+<rect class="box" x="310" y="352" width="26" height="24"/>
+<text class="t" x="323" y="368.5" text-anchor="middle">48</text>
+<rect class="box" x="336" y="352" width="26" height="24"/>
+<rect class="ln" x="284" y="352" width="78" height="24"/>
+<rect class="k-user" x="372" y="352" width="26" height="24"/>
+<text class="t" x="385" y="368.5" text-anchor="middle">56</text>
+<rect class="k-user" x="398" y="352" width="26" height="24"/>
+<text class="t" x="411" y="368.5" text-anchor="middle">60</text>
+<rect class="box" x="424" y="352" width="26" height="24"/>
+<rect class="bp-node bp-split" x="372" y="352" width="78" height="24"/>
+<text class="ts" x="474" y="254">[41 48 56 60] делится;</text>
+<text class="ts" x="474" y="271">56 копируется в корень,</text>
+<text class="ts" x="474" y="288">а в нём уже 4 ключа: много.</text>
+<text class="ts" x="474" y="305">Корень делится по среднему</text>
+<text class="ts" x="474" y="322">ключу: 41 уходит наверх,</text>
+<text class="ts" x="474" y="339">в новый корень. Высота 2 → 3.</text>
+<text class="ts" x="474" y="356">Все листья по-прежнему</text>
+<text class="ts" x="474" y="373">на одной глубине.</text>
+<rect class="k-user" x="20" y="406" width="14" height="14"/>
+<text class="ts" x="40" y="417">новый ключ</text>
+<rect class="k-fs" x="140" y="406" width="14" height="14"/>
+<text class="ts" x="160" y="417">разделитель, поднятый наверх</text>
+<rect class="bp-node bp-split" x="390" y="406" width="14" height="14"/>
+<text class="ts" x="410" y="417">узел, созданный расщеплением</text>
+</svg>
+<figcaption>Порядок 4 (не больше 3 ключей в узле). Это ровно те состояния, которые демонстрация ниже даёт для тех же вставок: 5, 12, 20, 27, 41, 48, 33, затем 30, 56 и 60.</figcaption>
+</figure>
+<p>Когда документация файловой системы говорит «B-дерево», почти всегда имеется в виду B+-дерево: дерево экстентов ext4, деревья XFS и деревья btrfs хранят записи в листьях. Различаются они тем, связаны ли листья между собой. XFS связывает узлы каждого уровня в обе стороны. У дерева экстентов ext4 и у btrfs ссылок на соседей нет. ext4 находит следующий лист, поднимаясь обратно по уже прочитанному пути, а у btrfs таких ссылок не может быть вовсе — почему, мы увидим в разделе о btrfs.</p>
+</section>
+<section id="demo">
+<h2>Попробуйте: вырастите B+-дерево</h2>
+<p>Дерево ниже начинается с двенадцати ключей. Вставляйте значения и следите, где происходят расщепления. У листьев цветная рамка, пунктирная рамка отмечает узлы, которые расщепление создало или разрезало пополам, выделенный путь — это узлы, прочитанные последней операцией, а закрашенная ячейка — только что вставленный или найденный ключ.</p>
+<p>Что попробовать:</p>
+<ul>
+<li>Вставьте 30, затем 31 и 32 и поймайте момент, когда расщепление листа копирует ключ наверх.</li>
+<li>Нажмите <i>Сброс</i>, затем несколько раз <i>+10 по возрастанию</i> и посмотрите на листья. Ключи получает только самый правый лист, поэтому при порядке 4 все остальные листья сохраняют те 2 ключа, что оставило им расщепление, и так и не доходят до 3. Потом снова сбросьте дерево и несколько раз нажмите <i>+10 случайных</i>.</li>
+<li>Вставляйте ключи, пока не расщепится корень, и проверьте, что все листья опустились одновременно.</li>
+<li>Переключайте порядок между 3, 4 и 5. Те же ключи вставляются заново, и чем выше порядок, тем ниже дерево.</li>
+</ul>
+<figure class="diagram bp-fig">
+<div class="bp-controls" role="group" aria-label="Управление B+-деревом">
+<label>порядок <select id="bp-order"><option value="3">3</option><option value="4" selected>4</option><option value="5">5</option></select></label>
+<input id="bp-key" type="number" min="1" max="999" step="1" inputmode="numeric" placeholder="1–999" aria-label="ключ для вставки или поиска">
+<button type="button" id="bp-insert" class="primary">Вставить</button>
+<button type="button" id="bp-search">Найти</button>
+<button type="button" id="bp-random">Случайный</button>
+<button type="button" id="bp-random10">+10 случайных</button>
+<button type="button" id="bp-ascending">+10 по возрастанию</button>
+<button type="button" id="bp-example">Пример</button>
+<button type="button" id="bp-reset">Сброс</button>
+</div>
+<div class="bp-stage" id="bp-stage"><p class="small muted">Для этой демонстрации нужен JavaScript.</p></div>
+<p class="bp-stats" id="bp-stats" aria-live="polite"></p>
+<ol class="bp-log" id="bp-log" aria-live="polite" aria-label="Что произошло, сначала новое"></ol>
+<figcaption>Ключи — целые числа от 1 до 999, всего не больше 100. Широкие деревья прокручиваются вбок. Журнал показывает, что сделала каждая операция, сначала новые. Код следует правилам из учебника, приведённым выше: при расщеплении листа с нечётным числом ключей бо́льшая половина остаётся слева, а ключи, равные разделителю, уходят вправо.</figcaption>
+</figure>
+<h3>Калькулятор ветвления</h3>
+<p>Та же арифметика, что в <code>fanout.py</code> из практики. Выберите готовый вариант или введите свои размеры узла и записи. Процент заполнения моделирует неполные узлы, например 69% после случайных вставок.</p>
+<figure class="diagram bp-fig">
+<div class="fan-grid">
+<label>вариант
+<select id="fan-preset">
+<option value="4096,12,12,1000000,100" selected>дерево экстентов ext4, 1 миллион экстентов</option>
+<option value="4096,12,12,1000000000,100">те же узлы, миллиард ключей</option>
+<option value="4096,16,0,10000000,100">узел 4 КиБ, записи по 16 байт, 10 миллионов ключей</option>
+<option value="16384,24,0,500000000,69">страница БД 16 КиБ, записи по 24 байта, заполнение 69%</option>
+<option value="">свой вариант</option>
+</select>
+</label>
+<label>размер узла
+<select id="fan-node">
+<option value="512">512 Б</option><option value="1024">1 КиБ</option><option value="4096" selected>4 КиБ</option>
+<option value="8192">8 КиБ</option><option value="16384">16 КиБ</option><option value="65536">64 КиБ</option>
+</select>
+</label>
+<label>байт на запись <input id="fan-entry" type="number" min="1" value="12"></label>
+<label>байт заголовка <input id="fan-header" type="number" min="0" value="12"></label>
+<label>ключей <input id="fan-keys" type="text" value="1 000 000" inputmode="numeric"></label>
+<label>заполнение, % <input id="fan-fill" type="number" min="10" max="100" value="100"></label>
+</div>
+<pre class="fan-out" id="fan-out" aria-live="polite">Для этого калькулятора нужен JavaScript.</pre>
+<figcaption>Время поиска рассчитано так, будто каждый уровень — это случайное чтение за 8 мс (жёсткий диск) или 80 мкс (NVMe) и ничего не закэшировано. Число ключей можно вводить как <code>1e9</code> или <code>1 000 000</code>.</figcaption>
+</figure>
+</section>
+<section id="ext4-extents">
+<h2>Дерево экстентов ext4</h2>
+<p>Урок 03 показал, что 60-байтное поле <code>i_block</code> в inode ext4 содержит 12-байтный <code>ext4_extent_header</code> и место для четырёх 12-байтных записей. Это место — <b>корневой узел</b> B+-дерева. Каждый узел дерева, в inode или в блоке, начинается с одного и того же заголовка:</p>
+<div class="table-wrap"><table>
+<thead><tr><th>Поле</th><th>Значение</th></tr></thead>
+<tbody>
+<tr><td><code>eh_magic</code></td><td><code>0xF30A</code>, чтобы случайный блок не приняли за узел дерева</td></tr>
+<tr><td><code>eh_entries</code></td><td>число занятых записей</td></tr>
+<tr><td><code>eh_max</code></td><td>ёмкость: 4 в inode, 340 в блоке 4 КиБ</td></tr>
+<tr><td><code>eh_depth</code></td><td>0 означает, что записи — листовые <code>ext4_extent</code>; больше 0 — индексные записи <code>ext4_extent_idx</code></td></tr>
+</tbody>
+</table></div>
+<p>Индексная запись <code>ext4_extent_idx</code> — это пара <code>(ei_block, ei_leaf)</code>: «блоки файла начиная с <code>ei_block</code> описаны узлом в дисковом блоке <code>ei_leaf</code>». Блок вмещает (4096 − 12) / 12 = 340 записей, а в последних 4 байтах лежит контрольная сумма <code>ext4_extent_tail</code>, если включена <code>metadata_csum</code>.</p>
+<p>Практика 04 создаёт три файла, в которых за каждым блоком следует дыра, так что никакие два экстента не могут слиться. Команда <code>ex</code> в <code>debugfs</code> печатает дерево по строке на запись, и <code>Level a/b</code> означает «узел на глубине <var>a</var> в дереве, листья которого на глубине <var>b</var>»:</p>
+<pre><code><span class="p">$</span> debugfs -R 'ex /extents/four' btree.img
+<span class="o">Level Entries       Logical      Physical Length Flags
+ 0/ 0   1/  4     0 -     0  3587 -  3587      1
+ 0/ 0   2/  4     2 -     2  3588 -  3588      1
+ 0/ 0   3/  4     4 -     4  3589 -  3589      1
+ 0/ 0   4/  4     6 -     6  3590 -  3590      1</span>
+<span class="p">$</span> debugfs -R 'ex /extents/deep' btree.img | awk '$1 ~ /^[01]\//'
+<span class="o"> 0/ 2   1/  1     0 -  2998  3443           2999
+ 1/ 2   1/  5     0 -   677  2086            678
+ 1/ 2   2/  5   678 -  1355  2423            678
+ 1/ 2   3/  5  1356 -  2033  2763            678
+ 1/ 2   4/  5  2034 -  2711  3103            678
+ 1/ 2   5/  5  2712 -  2998  3444            287</span></code></pre>
+<p>Пример вывода на этой машине. У <code>four</code> четыре экстента, и они помещаются в inode: глубина 0, дополнительных блоков нет. У <code>twenty</code> (здесь не показан) глубина 1: inode хранит одну индексную запись, указывающую на один листовой блок с 20 экстентами. У <code>deep</code> 1 500 экстентов — больше, чем 4 × 340 = 1 360, которые вмещает глубина 1, поэтому его глубина 2:</p>
+<figure class="diagram">
+<svg viewBox="0 0 720 300" width="720" role="img" aria-label="Дерево экстентов файла /extents/deep из практики: поле i_block в inode содержит заголовок глубины 2 и одну индексную запись, указывающую на блок 3443; блок 3443 — индексный узел с 5 записями, указывающими на листовые блоки 2086, 2423, 2763, 3103 и 3444, в которых 339, 339, 339, 339 и 144 экстента">
+<defs><marker id="ah-04-3" viewBox="0 0 10 10" refX="9" refY="5" markerWidth="7" markerHeight="7" orient="auto-start-reverse"><path class="ah" d="M0,0 L10,5 L0,10 z"/></marker></defs>
+<rect class="k-fs" x="200" y="16" width="320" height="60" rx="3"/>
+<text class="th" x="360" y="36" text-anchor="middle">i_block в inode (60 байт)</text>
+<text class="ts" x="360" y="54" text-anchor="middle">заголовок: глубина 2, записей 1 из 4</text>
+<text class="ts" x="360" y="69" text-anchor="middle">индекс: блок файла 0 → блок 3443</text>
+<line class="ln" x1="360" y1="76" x2="360" y2="110" marker-end="url(#ah-04-3)"/>
+<rect class="k-fs" x="100" y="112" width="520" height="78" rx="3"/>
+<text class="th" x="360" y="131" text-anchor="middle">блок 3443: индексный узел</text>
+<text class="ts" x="360" y="148" text-anchor="middle">заголовок: глубина 1, записей 5 из 340</text>
+<rect class="box" x="110" y="156" width="100" height="26"/><text class="ts" x="160" y="173" text-anchor="middle">0 → 2086</text>
+<rect class="box" x="210" y="156" width="100" height="26"/><text class="ts" x="260" y="173" text-anchor="middle">678 → 2423</text>
+<rect class="box" x="310" y="156" width="100" height="26"/><text class="ts" x="360" y="173" text-anchor="middle">1356 → 2763</text>
+<rect class="box" x="410" y="156" width="100" height="26"/><text class="ts" x="460" y="173" text-anchor="middle">2034 → 3103</text>
+<rect class="box" x="510" y="156" width="100" height="26"/><text class="ts" x="560" y="173" text-anchor="middle">2712 → 3444</text>
+<line class="ln" x1="160" y1="182" x2="76" y2="230" marker-end="url(#ah-04-3)"/>
+<line class="ln" x1="260" y1="182" x2="218" y2="230" marker-end="url(#ah-04-3)"/>
+<line class="ln" x1="360" y1="182" x2="360" y2="230" marker-end="url(#ah-04-3)"/>
+<line class="ln" x1="460" y1="182" x2="502" y2="230" marker-end="url(#ah-04-3)"/>
+<line class="ln" x1="560" y1="182" x2="644" y2="230" marker-end="url(#ah-04-3)"/>
+<rect class="box" x="8" y="232" width="136" height="58" rx="3"/>
+<text class="t" x="76" y="251" text-anchor="middle">блок 2086</text>
+<text class="ts" x="76" y="267" text-anchor="middle">339 экстентов</text>
+<text class="ts" x="76" y="282" text-anchor="middle">в файле 0–676</text>
+<rect class="box" x="150" y="232" width="136" height="58" rx="3"/>
+<text class="t" x="218" y="251" text-anchor="middle">блок 2423</text>
+<text class="ts" x="218" y="267" text-anchor="middle">339 экстентов</text>
+<text class="ts" x="218" y="282" text-anchor="middle">в файле 678–1354</text>
+<rect class="box" x="292" y="232" width="136" height="58" rx="3"/>
+<text class="t" x="360" y="251" text-anchor="middle">блок 2763</text>
+<text class="ts" x="360" y="267" text-anchor="middle">339 экстентов</text>
+<text class="ts" x="360" y="282" text-anchor="middle">в файле 1356–2032</text>
+<rect class="box" x="434" y="232" width="136" height="58" rx="3"/>
+<text class="t" x="502" y="251" text-anchor="middle">блок 3103</text>
+<text class="ts" x="502" y="267" text-anchor="middle">339 экстентов</text>
+<text class="ts" x="502" y="282" text-anchor="middle">в файле 2034–2710</text>
+<rect class="box" x="576" y="232" width="136" height="58" rx="3"/>
+<text class="t" x="644" y="251" text-anchor="middle">блок 3444</text>
+<text class="ts" x="644" y="267" text-anchor="middle">144 экстента</text>
+<text class="ts" x="644" y="282" text-anchor="middle">в файле 2712–2998</text>
+</svg>
+<figcaption>Дерево экстентов <code>/extents/deep</code> из практики 04: два индексных уровня и пять листьев. Каждый листовой экстент отображает один блок, потому что каждый второй блок файла — дыра. Чтобы найти блок файла 1500, нужно прочитать inode, блок 3443 и блок 2763. Под каждым листом указан диапазон блоков файла от первого до последнего отображённого блока. debugfs печатает диапазон индексной записи до начала следующей записи, поэтому его концы на один блок больше.</figcaption>
+</figure>
+<p>Это дерево растёт так, что на это стоит обратить внимание. Когда лист полон, ext4 сначала ищет выше по пути индексный узел со свободным местом и расщепляет узлы под ним (<code>ext4_ext_split()</code>). Когда полон каждый узел на пути, дерево растёт в глубину (<code>ext4_ext_grow_indepth()</code>). Корень при этом не делится надвое: ext4 копирует весь корень из inode в новый блок и оставляет в inode одну индексную запись, указывающую на этот блок. Поэтому и у <code>twenty</code>, и у <code>deep</code> в inode ровно одна запись.</p>
+<p>Кроме того, ядро выбирает точку расщепления с расчётом на частый случай дозаписи. Если новый экстент идёт после последней записи полного листа, ext4 не делит лист пополам, а заводит новый, почти пустой лист и не трогает полный, так что у файла, записанного от начала до конца, листья получаются полными. (Образ для практики собран командой <code>mkfs.ext4 -d</code>, чья библиотека расщепляет иначе, поэтому в его листьях 339 записей, а не 340.)</p>
+<p>Глубина ограничена числом 5 (<code>EXT4_MAX_EXTENT_DEPTH</code>). Уже глубина 4 допускает 4 × 340<sup>4</sup> ≈ 53 миллиарда экстентов — больше, чем 2<sup>32</sup> блоков, которые может иметь файл, так что ни один корректный файл до этого предела не доходит; ядро использует его, чтобы отбраковывать повреждённые заголовки. Реальным файлам почти никогда не нужна глубина больше 2, а у большинства файлов глубина 0. Ядро также держит в памяти кэш уже найденных экстентов — <b>дерево состояний экстентов</b> (extent status tree), так что повторное чтение часто вообще не трогает дерево на диске.</p>
+</section>
+<section id="htree">
+<h2>htree: B-дерево над хешами имён</h2>
+<p>Урок 03 закончился проблемой. Каталог — это список записей, и чтобы найти имя, его приходится просматривать. ext3 и ext4 решают это с помощью <b>htree</b>, который Дэниел Филлипс спроектировал около 2001 года. Это B+-дерево, ключом в котором служит 32-битный <b>хеш</b> каждого имени.</p>
+<p>Хеширование даёт ключи фиксированного размера, поэтому индексная запись занимает всего 8 байт, <code>(hash, block)</code>, и индексный блок 4 КиБ вмещает около 500 таких записей. Кроме того, хеши распределяют имена равномерно, и листья заполняются равномерно, как бы ни выглядели имена. Цена в том, что дерево умеет отвечать только на вопрос «где лежит ровно это имя?». Оно не может перечислить имена по алфавиту или найти имена по префиксу.</p>
+<h3>Индекс, спрятанный на виду</h3>
+<p>htree добавили к уже существующему формату, и он устроен так, что код, который никогда о нём не слышал, по-прежнему видит корректный каталог. Блок 0 каталога становится корнем <code>dx_root</code>:</p>
+<div class="table-wrap"><table>
+<thead><tr><th>Смещение</th><th>Содержимое</th><th>Что видит старый код</th></tr></thead>
+<tbody>
+<tr><td><code>0x00</code></td><td>запись <code>.</code>, <code>rec_len</code> 12</td><td>обычную запись <code>.</code></td></tr>
+<tr><td><code>0x0C</code></td><td>запись <code>..</code>, <code>rec_len</code> = размер блока − 12</td><td><code>..</code>, за которой много свободного места</td></tr>
+<tr><td><code>0x18</code></td><td><code>dx_root_info</code>: <code>reserved_zero</code>, <code>hash_version</code> (байт 0x1C), <code>info_length</code> = 8, <code>indirect_levels</code> (байт 0x1E)</td><td>свободное место</td></tr>
+<tr><td><code>0x20</code></td><td><code>limit</code> и <code>count</code> (по 2 байта), затем <code>block</code>: запись 0, у которой нет хеша</td><td>свободное место</td></tr>
+<tr><td><code>0x28</code></td><td>массив <code>dx_entry</code>: <code>(hash, block)</code>, по 8 байт, отсортирован по хешу</td><td>свободное место</td></tr>
+</tbody>
+</table></div>
+<p>Внутренние индексные блоки (<code>dx_node</code>) начинаются с фиктивной записи с inode 0, чей <code>rec_len</code> покрывает весь блок, так что старый код видит пустой блок. Листья — обычные блоки каталога в формате из урока 03. Старый драйвер по-прежнему может читать каталог линейно, поэтому <code>dir_index</code> относится к совместимым (<i>compat</i>) возможностям.</p>
+<h3>Поиск по шагам</h3>
+<p>В каталоге <code>/bigdir</code> из практики 04 лежат 3 000 файлов в 20 блоках каталога. <code>debugfs</code> показывает его корень:</p>
+<pre><code><span class="p">$</span> debugfs -R 'htree /bigdir' btree.img | head -14
+<span class="o">Root node dump:
+	 Reserved zero: 0
+	 Hash Version: 1
+	 Info length: 8
+	 Indirect levels: 0
+	 Flags: 0
+Number of entries (count): 19
+Number of entries (limit): 507
+Checksum: 0x5c3d509b
+Entry #0: Hash 0x00000000, block 1
+Entry #1: Hash 0x10515a64, block 2
+Entry #2: Hash 0x1c9e3934, block 3
+Entry #3: Hash 0x2a8d5884, block 4
+Entry #4: Hash 0x39f6a802, block 5</span></code></pre>
+<p>Версия хеша 1 — это half-MD4, урезанный MD4 с затравкой (seed) из случайного поля суперблока <code>s_hash_seed</code>. Затравка у каждой файловой системы своя, поэтому никто не может заранее подобрать тысячи имён с одинаковым хешем и снова превратить каталог в линейный список. <code>limit</code> равен 507: (4096 − 32 байта заголовка − 8 байт хвоста с контрольной суммой) / 8. Ищем <code>file-0007</code>:</p>
+<figure class="diagram">
+<svg viewBox="0 0 720 290" width="720" role="img" aria-label="Поиск по htree в /bigdir: блок dx_root содержит фиктивные записи «точка» и «две точки», dx_root_info, limit 507 и count 19, затем 19 записей; хеш file-0007, 0x2bcb081c, попадает в запись 3, которая указывает на блок каталога 4, поэтому читаются только корень и блок 4">
+<defs><marker id="ah-04-4" viewBox="0 0 10 10" refX="9" refY="5" markerWidth="7" markerHeight="7" orient="auto-start-reverse"><path class="ah" d="M0,0 L10,5 L0,10 z"/></marker></defs>
+<text class="ts" x="20" y="16">блок каталога 0 = dx_root</text>
+<rect class="box" x="20" y="24" width="90" height="30"/><text class="ts" x="65" y="43" text-anchor="middle">. rec_len 12</text>
+<rect class="box" x="110" y="24" width="150" height="30"/><text class="ts" x="185" y="43" text-anchor="middle">.. rec_len 4084</text>
+<rect class="k-fs" x="260" y="24" width="270" height="30"/><text class="ts" x="395" y="43" text-anchor="middle">hash_version 1, indirect_levels 0</text>
+<rect class="k-fs" x="530" y="24" width="170" height="30"/><text class="ts" x="615" y="43" text-anchor="middle">limit 507, count 19</text>
+<rect class="box" x="20" y="54" width="113" height="40"/><text class="ts" x="76" y="70" text-anchor="middle">#0 (без хеша)</text><text class="ts" x="76" y="86" text-anchor="middle">→ блок 1</text>
+<rect class="box" x="133" y="54" width="113" height="40"/><text class="ts" x="189" y="70" text-anchor="middle">#1 0x10515a64</text><text class="ts" x="189" y="86" text-anchor="middle">→ блок 2</text>
+<rect class="box" x="246" y="54" width="113" height="40"/><text class="ts" x="302" y="70" text-anchor="middle">#2 0x1c9e3934</text><text class="ts" x="302" y="86" text-anchor="middle">→ блок 3</text>
+<rect class="k-fs" x="359" y="54" width="114" height="40"/><text class="ts" x="416" y="70" text-anchor="middle">#3 0x2a8d5884</text><text class="ts" x="416" y="86" text-anchor="middle">→ блок 4</text>
+<rect class="box" x="473" y="54" width="113" height="40"/><text class="ts" x="529" y="70" text-anchor="middle">#4 0x39f6a802</text><text class="ts" x="529" y="86" text-anchor="middle">→ блок 5</text>
+<rect class="box" x="586" y="54" width="114" height="40"/><text class="ts" x="643" y="70" text-anchor="middle">… #18</text><text class="ts" x="643" y="86" text-anchor="middle">→ блок 19</text>
+<rect class="hl" x="359" y="54" width="114" height="40"/>
+<line class="ln" x1="76.5" y1="94" x2="76.5" y2="148" marker-end="url(#ah-04-4)"/>
+<line class="ln" x1="189.5" y1="94" x2="189.5" y2="148" marker-end="url(#ah-04-4)"/>
+<line class="ln" x1="302.5" y1="94" x2="302.5" y2="148" marker-end="url(#ah-04-4)"/>
+<line class="hl" x1="416" y1="94" x2="416" y2="148" marker-end="url(#ah-04-4)"/>
+<line class="ln" x1="529.5" y1="94" x2="529.5" y2="148" marker-end="url(#ah-04-4)"/>
+<line class="ln" x1="643" y1="94" x2="643" y2="148" marker-end="url(#ah-04-4)"/>
+<rect class="box" x="26.5" y="150" width="100" height="64" rx="3"/><text class="t" x="76.5" y="170" text-anchor="middle">блок 1</text><text class="ts" x="76.5" y="188" text-anchor="middle">записи,</text><text class="ts" x="76.5" y="204" text-anchor="middle">вперемешку</text>
+<rect class="box" x="139.5" y="150" width="100" height="64" rx="3"/><text class="t" x="189.5" y="170" text-anchor="middle">блок 2</text><text class="ts" x="189.5" y="188" text-anchor="middle">записи,</text><text class="ts" x="189.5" y="204" text-anchor="middle">вперемешку</text>
+<rect class="box" x="252.5" y="150" width="100" height="64" rx="3"/><text class="t" x="302.5" y="170" text-anchor="middle">блок 3</text><text class="ts" x="302.5" y="188" text-anchor="middle">записи,</text><text class="ts" x="302.5" y="204" text-anchor="middle">вперемешку</text>
+<rect class="k-fs" x="366" y="150" width="100" height="64" rx="3"/><text class="t" x="416" y="170" text-anchor="middle">блок 4</text><text class="ts" x="416" y="188" text-anchor="middle">file-1700 …</text><text class="ts" x="416" y="204" text-anchor="middle">file-0007 …</text>
+<rect class="hl" x="366" y="150" width="100" height="64" rx="3"/>
+<rect class="box" x="479.5" y="150" width="100" height="64" rx="3"/><text class="t" x="529.5" y="170" text-anchor="middle">блок 5</text><text class="ts" x="529.5" y="188" text-anchor="middle">записи,</text><text class="ts" x="529.5" y="204" text-anchor="middle">вперемешку</text>
+<rect class="box" x="593" y="150" width="100" height="64" rx="3"/><text class="t" x="643" y="170" text-anchor="middle">… 19</text><text class="ts" x="643" y="188" text-anchor="middle">записи,</text><text class="ts" x="643" y="204" text-anchor="middle">вперемешку</text>
+<text class="ts" x="20" y="240">hash("file-0007") = 0x2bcb081c. Двоичный поиск по 19 записям выбирает #3 —</text>
+<text class="ts" x="20" y="256">последнюю запись с хешем не больше 0x2bcb081c. Затем просматривается блок 4.</text>
+<text class="ts" x="20" y="272">Прочитано 2 блока. Линейный просмотр прочитал для этого имени 5 блоков из 20.</text>
+</svg>
+<figcaption>Один уровень htree в <code>/bigdir</code> из практики 04. Внутри листа записи лежат в произвольном порядке, поэтому лист просматривается линейно. Номера блоков здесь — логические блоки файла каталога; в дисковые блоки их отображает дерево экстентов.</figcaption>
+</figure>
+<p><code>ext4walk</code> из практики 03 выполняет тот же поиск и считает чтения. Для несуществующего имени разница самая большая: htree по-прежнему читает 2 блока, а линейный просмотр — все 20.</p>
+<pre><code><span class="p">$</span> ../03-ondisk/ext4walk btree.img /bigdir/file-0007 | grep -E 'hash\(|entries used|picks|lookup read'
+<span class="o">    hash("file-0007") = 0x2bcb081c
+    dx_root: 19 of 507 entries used; binary search (4 probes)
+      picks entry #3 (hashes &gt;= 0x2a8d5884) -&gt; dir block 4
+    htree lookup read 2 of 20 directory blocks</span></code></pre>
+<h3>Коллизии, глубина и порядок</h3>
+<ul>
+<li><b>Коллизии.</b> У двух имён может оказаться один и тот же хеш. У настоящих хешей младший бит всегда сброшен, и ext4 использует этот бит в <code>dx_entry</code> как признак «этот лист продолжает предыдущий хеш». Если бит установлен, поиск, не нашедший имя в одном листе, проверяет и следующий.</li>
+<li><b>Глубина.</b> При <code>indirect_levels</code> 0 корень указывает прямо на листья, и этого хватает на 507 листовых блоков. Дальше появляется уровень блоков <code>dx_node</code> по 510 записей в каждом, что даёт 507 × 510 = 258 570 листовых блоков. Без возможности <code>largedir</code> это предел. С ней разрешён третий индексный уровень. В отдельном тесте с 40 000 длинных имён (873 блока каталога) у дерева было <code>indirect_levels</code> 1, и каждый поиск читал ровно 3 блока.</li>
+<li><b>Порядок.</b> <code>readdir()</code> для индексированного каталога возвращает имена в порядке хешей, поэтому вывод <code>ls -f</code> выглядит перемешанным. Позиция, которую программа получает от <code>telldir()</code>, — это сам хеш, так что чтение каталога можно корректно продолжить, даже если между вызовами добавились записи. NFS-серверы передают клиентам те же позиции в качестве cookie для READDIR.</li>
+</ul>
+<aside class="pitfall"><span class="tag">Ловушка</span><p>Сборка каталога на 40 000 имён командой <code>mkfs.ext4 -d</code> заняла почти три минуты, потому что библиотека вставляла каждое имя в ещё линейный каталог и перед этим просматривала его. Стоимость квадратичная. Программы, которые создают огромные каталоги без индекса или на файловых системах без него, упираются в ту же стену.</p></aside>
+</section>
+<section id="xfs">
+<h2>XFS: лес B+-деревьев</h2>
+<p>В уроке 03 вы познакомились с группами размещения XFS (allocation groups, AG). Внутри каждой AG почти на каждый вопрос отвечает своё B+-дерево. Каждый блок дерева начинается с 4-байтного магического числа, так что деревья можно различить в шестнадцатеричном дампе:</p>
+<div class="table-wrap"><table>
+<thead><tr><th>Дерево</th><th>Магическое число</th><th>Ключ</th><th>Отвечает на вопрос</th></tr></thead>
+<tbody>
+<tr><td>bnobt</td><td><code>AB3B</code></td><td>начальный блок каждого свободного экстента</td><td>«Есть ли свободное место рядом с блоком <var>B</var>?» Нужно, чтобы сливать освобождённое место с соседним и размещать данные рядом со связанными с ними.</td></tr>
+<tr><td>cntbt</td><td><code>AB3C</code></td><td>длина каждого свободного экстента</td><td>«Где есть свободный экстент хотя бы из <var>N</var> блоков?»</td></tr>
+<tr><td>inobt</td><td><code>IAB3</code></td><td>первый inode каждой порции из 64 inode</td><td>«Где inode <var>I</var> и какие inode в его порции свободны?»</td></tr>
+<tr><td>finobt</td><td><code>FIB3</code></td><td>то же, но только порции со свободным inode</td><td>«Дай мне свободный inode» без обхода всего inobt.</td></tr>
+<tr><td>rmapbt</td><td><code>RMB3</code></td><td>физический блок</td><td>«Кому принадлежит блок <var>B</var>?» Нужно для восстановления на лету (online repair) и для reflink.</td></tr>
+<tr><td>refcountbt</td><td><code>R3FC</code></td><td>физический блок</td><td>«Сколько файлов совместно используют этот экстент?» (копии reflink)</td></tr>
+<tr><td>bmbt (по одному на файл)</td><td><code>BMA3</code></td><td>смещение в файле</td><td>карта экстентов файла, когда она больше не помещается в inode</td></tr>
+<tr><td>dabtree (по одному на каталог или набор xattr)</td><td>несколько</td><td>хеш имени</td><td>большие каталоги и наборы атрибутов, как htree в ext4</td></tr>
+</tbody>
+</table></div>
+<p>Хранить свободное место в двух деревьях с одними и теми же записями, отсортированными двумя способами, — классический приём. Распределителю обычно нужен «свободный участок из 2 000 блоков рядом с блоком 1 000 000», а для этого нужны оба порядка. Битовая карта не ответит ни на один из этих вопросов без просмотра.</p>
+<p>XFS упаковывает экстент в 16 байт: 1 бит на признак unwritten («ещё не записан»), 54 бита смещения в файле, 52 бита начального блока и 21 бит длины. Деревья внутри AG используют 32-битные указатели на блоки относительно начала AG, поэтому в блок помещается больше записей, чем в деревьях, которым нужны полные 64-битные указатели. Каждый блок дерева в современной XFS (v5) также содержит CRC, собственный номер блока, идентификатор владельца и UUID файловой системы, так что блок, записанный не туда или принадлежащий другому файлу, обнаруживается при чтении. У блоков на каждом уровне есть указатели на левого и правого соседа.</p>
+</section>
+<section id="btrfs">
+<h2>btrfs: B-деревья с копированием при записи</h2>
+<p>btrfs строит всю файловую систему из B+-деревьев одного вида по проекту Охада Родеха (<i>B-trees, Shadowing, and Clones</i>, 2008). Каждый фрагмент метаданных — это <b>элемент</b> (item) с 17-байтным ключом:</p>
+<pre><code class="language-c">struct btrfs_disk_key {
+        __le64 objectid;
+        __u8   type;
+        __le64 offset;
+} __attribute__ ((__packed__));        <span class="c">/* 8 + 1 + 8 = 17 байт */</span></code></pre>
+<p>Ключи сортируются по objectid, затем по type, затем по offset. У всего, что относится к одному файлу, objectid — это номер inode файла, поэтому всё это оказывается рядом:</p>
+<div class="table-wrap"><table>
+<thead><tr><th>Ключ</th><th>Элемент</th></tr></thead>
+<tbody>
+<tr><td><code>(257, INODE_ITEM 1, 0)</code></td><td>сам inode: размер, режим, времена</td></tr>
+<tr><td><code>(257, INODE_REF 12, 256)</code></td><td>его имя в родительском каталоге 256 (обратный указатель)</td></tr>
+<tr><td><code>(257, XATTR_ITEM 24, hash)</code></td><td>расширенный атрибут</td></tr>
+<tr><td><code>(257, EXTENT_DATA 108, 0)</code></td><td>смещение 0 файла лежит в этом дисковом экстенте</td></tr>
+<tr><td><code>(256, DIR_ITEM 84, hash(name))</code></td><td>в каталоге 256 есть это имя: используется для поиска</td></tr>
+<tr><td><code>(256, DIR_INDEX 96, seq)</code></td><td>то же имя по порядку создания: используется для <code>readdir</code></td></tr>
+</tbody>
+</table></div>
+<p>btrfs хранит каждую запись каталога дважды, с двумя разными ключами, по той же причине, по которой XFS держит два дерева свободного места. Для разных задач есть отдельные деревья: корневое дерево (root tree, в нём перечислены остальные), дерево экстентов (кто какое место на диске использует), деревья чанков и устройств (как логические адреса отображаются на устройства), дерево контрольных сумм, дерево свободного места и по одному дереву файловой системы на каждый подтом (subvolume). Лист содержит массив 25-байтных заголовков элементов, растущий от начала блока, и тела элементов, растущие от конца. Внутренний узел содержит 33-байтные указатели <code>(key, block, generation)</code>. При узлах по умолчанию в 16 КиБ и 101-байтном заголовке узла это (16384 − 101) / 33 = 493 потомка на узел.</p>
+<h3>Никогда не перезаписывать</h3>
+<p>btrfs никогда не изменяет блок дерева на месте. Чтобы изменить один элемент, она записывает изменённую копию листа в свободное место. Теперь родитель листа должен указывать на новый адрес, поэтому копируется и родитель, и так далее до корня. В конце суперблок обновляется так, чтобы указывать на новый корень. До этой записи на диске целиком и в сохранности лежит старое дерево, а после неё — новое. Это <b>атомарное переключение корня</b> из конца урока 03.</p>
+<figure class="diagram">
+<svg viewBox="0 0 720 330" width="720" role="img" aria-label="Обновление с копированием при записи в btrfs: изменение элемента в листе L3 записывает новые копии L3', B' и R'; R' указывает на неизменённый A и новый B', B' указывает на L3' и неизменённый L4; суперблок переключается с R на R' одной записью">
+<defs><marker id="ah-04-5" viewBox="0 0 10 10" refX="9" refY="5" markerWidth="7" markerHeight="7" orient="auto-start-reverse"><path class="ah" d="M0,0 L10,5 L0,10 z"/></marker></defs>
+<rect class="k-block" x="290" y="8" width="150" height="28" rx="3"/>
+<text class="t" x="365" y="27" text-anchor="middle">суперблок</text>
+<line class="lnd" x1="320" y1="36" x2="222" y2="62" marker-end="url(#ah-04-5)"/>
+<text class="ts" x="200" y="44" text-anchor="end">до</text>
+<line class="hl" x1="410" y1="36" x2="496" y2="62" marker-end="url(#ah-04-5)"/>
+<text class="ts" x="512" y="44">после фиксации</text>
+<line class="ln" x1="212" y1="94" x2="102" y2="140"/>
+<line class="ln" x1="212" y1="94" x2="322" y2="140"/>
+<line class="ln" x1="102" y1="174" x2="62" y2="220"/>
+<line class="ln" x1="102" y1="174" x2="142" y2="220"/>
+<line class="ln" x1="322" y1="174" x2="282" y2="220"/>
+<line class="ln" x1="322" y1="174" x2="362" y2="220"/>
+<line class="hl" x1="502" y1="94" x2="102" y2="140"/>
+<line class="hl" x1="502" y1="94" x2="552" y2="140"/>
+<line class="hl" x1="552" y1="174" x2="362" y2="220"/>
+<line class="hl" x1="552" y1="174" x2="622" y2="220"/>
+<rect class="box" x="180" y="62" width="64" height="32" rx="3"/><rect class="lnd" x="180" y="62" width="64" height="32" rx="3"/>
+<text class="t" x="212" y="83" text-anchor="middle">R</text>
+<rect class="k-fs" x="70" y="140" width="64" height="34" rx="3"/>
+<text class="t" x="102" y="162" text-anchor="middle">A</text>
+<rect class="box" x="290" y="140" width="64" height="34" rx="3"/><rect class="lnd" x="290" y="140" width="64" height="34" rx="3"/>
+<text class="t" x="322" y="162" text-anchor="middle">B</text>
+<rect class="k-fs" x="30" y="220" width="64" height="34" rx="3"/>
+<text class="t" x="62" y="242" text-anchor="middle">L1</text>
+<rect class="k-fs" x="110" y="220" width="64" height="34" rx="3"/>
+<text class="t" x="142" y="242" text-anchor="middle">L2</text>
+<rect class="box" x="250" y="220" width="64" height="34" rx="3"/><rect class="lnd" x="250" y="220" width="64" height="34" rx="3"/>
+<text class="t" x="282" y="242" text-anchor="middle">L3</text>
+<rect class="k-fs" x="330" y="220" width="64" height="34" rx="3"/>
+<text class="t" x="362" y="242" text-anchor="middle">L4</text>
+<rect class="k-user" x="470" y="62" width="64" height="32" rx="3"/><rect class="hl" x="470" y="62" width="64" height="32" rx="3"/>
+<text class="t" x="502" y="83" text-anchor="middle">R′</text>
+<rect class="k-user" x="520" y="140" width="64" height="34" rx="3"/><rect class="hl" x="520" y="140" width="64" height="34" rx="3"/>
+<text class="t" x="552" y="162" text-anchor="middle">B′</text>
+<rect class="k-user" x="590" y="220" width="64" height="34" rx="3"/><rect class="hl" x="590" y="220" width="64" height="34" rx="3"/>
+<text class="t" x="622" y="242" text-anchor="middle">L3′</text>
+<text class="ts" x="20" y="282">Меняем элемент в L3: пишем L3′, затем B′ (указывает на L3′ и старый L4),</text>
+<text class="ts" x="20" y="298">затем R′ (указывает на старый A и на B′). Одна запись суперблока меняет дерево.</text>
+<rect class="k-fs" x="20" y="310" width="14" height="14"/><text class="ts" x="40" y="321">не изменён, общий</text>
+<rect class="k-user" x="180" y="310" width="14" height="14"/><rect class="hl" x="180" y="310" width="14" height="14"/><text class="ts" x="200" y="321">новая копия</text>
+<rect class="box" x="290" y="310" width="14" height="14"/><rect class="lnd" x="290" y="310" width="14" height="14"/><text class="ts" x="310" y="321">старая версия: освободится после фиксации, если не в снимке</text>
+</svg>
+<figcaption>Обновление с копированием при записи переписывает путь от изменённого листа до корня, здесь это 3 блока, а всё остальное остаётся общим со старым деревом.</figcaption>
+</figure>
+<p>Из этой картинки прямо следует несколько вещей:</p>
+<ul>
+<li><b>Снимки дешёвые.</b> Снимок (snapshot) — это новый корень, указывающий на те же узлы. Ничего не копируется, пока одна из сторон что-нибудь не изменит. Дерево экстентов хранит счётчики ссылок, чтобы блок освобождался, только когда на него не указывает ни одно дерево. Статья Родеха как раз о том, как вести этот подсчёт лениво, чтобы создание снимка не требовало трогать каждый блок.</li>
+<li><b>Нет ссылок на соседей.</b> Если бы листья были связаны, запись L3 по новому адресу потребовала бы переписать L2 (он указывает на L3) и L4 (на него указывает L3), а затем и их соседей. Поэтому у деревьев с COW нет ссылок между листьями. Просмотр диапазона находит следующий лист, поднимаясь через родителя.</li>
+<li><b>Самопроверяющиеся указатели.</b> Каждый указатель записывает поколение (generation, номер транзакции), которое он ожидает увидеть у потомка, а каждый блок несёт контрольную сумму. Потерянная запись или блок, записанный не туда, проявляется как несовпадение при следующем чтении.</li>
+<li><b>Усиление записи</b> (write amplification). Изменение одного байта переписывает целый путь из узлов по 16 КиБ. btrfs смягчает это, собирая изменения в транзакции, которые по умолчанию фиксируются каждые 30 секунд, а <code>fsync()</code> обслуживает с помощью отдельного журнального дерева (log tree) на каждый подтом, чтобы не фиксировать всё целиком.</li>
+</ul>
+</section>
+<section id="databases">
+<h2>Базы данных: то же дерево, другая страница</h2>
+<p>Базы данных называют свои узлы <b>страницами</b>, но устроено всё так, как вы только что видели. Три популярных движка делают три разных выбора:</p>
+<div class="table-wrap"><table>
+<thead><tr><th>Движок</th><th>Страница</th><th>Где лежат строки</th><th>Особенности</th></tr></thead>
+<tbody>
+<tr><td>MySQL InnoDB</td><td>16 КиБ</td><td>В листьях B+-дерева по первичному ключу (<b>кластерный индекс</b>). Таблица <em>и есть</em> дерево.</td><td>Вторичные индексы хранят первичный ключ вместо адреса на диске, поэтому поиск через такой индекс проходит два дерева.</td></tr>
+<tr><td>PostgreSQL</td><td>8 КиБ</td><td>В неупорядоченном файле-<b>куче</b> (heap). Листья индекса хранят идентификаторы кортежей <code>(key, block, offset)</code>.</td><td>Его B-дерево реализует B-link-дерево Лемана и Яо (см. раздел о параллельном доступе).</td></tr>
+<tr><td>SQLite</td><td>4 КиБ по умолчанию</td><td>В листьях B+-дерева, ключ которого — 64-битный rowid («table b-tree»).</td><td>Каждый индекс — отдельное B-дерево, ключи которого — индексируемые столбцы плюс rowid («index b-tree»).</td></tr>
+</tbody>
+</table></div>
+<p>SQLite позволяет измерить это напрямую. Её виртуальная таблица <code>dbstat</code> перечисляет все страницы вместе с путём от корня. <code>sqlite-btree.py</code> из практики 04 вставляет миллион строк с текстовым столбцом и индексом по нему, а затем считает уровни. Пример вывода на этой машине:</p>
+<pre><code><span class="p">$</span> python3 -I sqlite-btree.py
+<span class="o">1,000,000 rows, page size 4096 bytes, file 43.1 MiB
+t: 5,165 pages, height 3
+  level 1:       1 internal pages,   12.0 cells per page on average
+  level 2:      13 internal pages,  395.2 cells per page on average
+  level 3:   5,151 leaf     pages,  194.1 cells per page on average
+t_name: 5,880 pages, height 3
+  level 1:       1 internal pages,   40.0 cells per page on average
+  level 2:      41 internal pages,  141.4 cells per page on average
+  level 3:   5,838 leaf     pages,  170.3 cells per page on average</span></code></pre>
+<p>Миллион строк, три уровня — как и предсказывала арифметика. Виден и урок про ветвление. Внутренние страницы таблицы хранят около 395 записей, потому что их ключи — небольшие целые числа. Внутренние страницы индекса хранят около 141, потому что каждый их ключ — 12-символьная строка плюс rowid. Чем больше ключи, тем меньше ветвление. Поэтому разработчики баз данных так ценят короткие индексные ключи, а PostgreSQL обрезает разделители до кратчайшего префикса, который всё ещё разделяет (suffix truncation).</p>
+</section>
+<section id="lsm">
+<h2>Когда B-дерево не подходит: LSM-деревья</h2>
+<p>B-дерево обновляется на месте. Каждая вставка рано или поздно переписывает лист где-то в случайном месте устройства, а база данных к тому же сначала записывает изменение в свой журнал. Для нагрузок, состоящих в основном из мелких записей, — метрик, очередей сообщений, метаданных объектов — узким местом становится именно эта случайная запись.</p>
+<p><b>LSM-дерево</b> (log-structured merge tree; О’Нил, Ченг, Гаулик и О’Нил, 1996) никогда не обновляет данные на месте:</p>
+<figure class="diagram">
+<pre>put(k, v) ──► WAL (последовательная дозапись, для восстановления после сбоя)
+          └─► memtable: отсортирована, в ОЗУ
+                   │ заполнена (например, 64 МиБ): записать разом, последовательно
+                   ▼
+  L0   [sst] [sst] [sst]                       ключи файлов могут пересекаться
+  L1   [ sst ][ sst ][ sst ][ sst ]            файлы не пересекаются
+  L2   [sst][sst][sst][sst][sst][sst][sst]...  примерно 10x L1, без пересечений
+         ▲ уплотнение (compaction): фоновое слияние файлов из Ln в Ln+1
+           с отбрасыванием перезаписанных и удалённых ключей
+
+get(k): memtable → каждый файл L0 → не больше одного файла на уровень,
+        пропуская файлы, чей фильтр Блума говорит «k здесь нет»</pre>
+<figcaption>Уровневое (leveled) LSM-дерево, как в RocksDB. SST (sorted string table) — неизменяемый файл отсортированных пар «ключ — значение» с небольшим индексом и фильтром Блума.</figcaption>
+</figure>
+<p>Записи становятся последовательными и пакетными, что хорошо подходит и жёстким дискам, и слою трансляции флеш-памяти (FTL) в SSD. Платить приходится в другом месте:</p>
+<div class="table-wrap"><table>
+<thead><tr><th></th><th>B+-дерево</th><th>LSM-дерево</th></tr></thead>
+<tbody>
+<tr><td>Чтение по ключу</td><td>один путь от корня до листа</td><td>memtable, затем несколько файлов; фильтры Блума делают большинство промахов дешёвыми</td></tr>
+<tr><td>Запись</td><td>на месте: одна случайная запись страницы плюс журнал</td><td>дозапись в журнал и memtable; уплотнение переписывает данные по разу на каждом уровне (усиление записи)</td></tr>
+<tr><td>Место</td><td>страницы частично пусты (заполнены примерно на 69%)</td><td>старые версии живут до уплотнения</td></tr>
+<tr><td>Просмотр диапазона</td><td>проход по листьям</td><td>слияние итераторов по всем уровням</td></tr>
+<tr><td>Где используется</td><td>ext4, XFS, btrfs, InnoDB, PostgreSQL, SQLite</td><td>RocksDB, LevelDB, Cassandra, метаданные Ceph BlueStore</td></tr>
+</tbody>
+</table></div>
+<p>Последняя строка важна для <a href="09-distributed.html">урока 09</a>. BlueStore в Ceph пишет данные объектов прямо на «сырое» блочное устройство, а все свои метаданные (какой объект в каких экстентах лежит, контрольные суммы, атрибуты объектов) хранит в RocksDB — LSM-дереве, которое работает поверх маленькой внутренней файловой системы BlueFS.</p>
+</section>
+<section id="concurrency">
+<h2>Много потоков, одно дерево</h2>
+<p>Расщепление меняет узел и его родителя, а возможно, и родителя родителя, и в это время другие потоки могут спускаться как раз через эти узлы. Большинству реальных систем хватает трёх приёмов.</p>
+<ul>
+<li><b>Сцепление защёлок</b> (latch coupling, или crabbing — «крабий шаг»). Кратковременная блокировка узла в памяти называется <b>защёлкой</b> (latch). Поток захватывает защёлку потомка, прежде чем отпустить родителя, — как краб, который переступает, не отпуская опоры. Вставляющий поток держит защёлки предков, пока не дойдёт до узла с запасом места, который не может расщепиться, и тогда отпускает всё, что выше.</li>
+<li><b>Оптимистичный спуск.</b> Большинство вставок ничего не расщепляет: при 340 записях в узле примерно одна вставка из 170 расщепляет лист. Поэтому поток спускается с разделяемыми защёлками, берёт исключительную защёлку только на лист и начинает заново медленным осторожным способом лишь в редком случае, когда лист нужно расщепить.</li>
+<li><b>B-link-деревья</b> (B-link trees; Леман и Яо, 1981). Каждый узел получает ссылку на правого соседа и <b>верхний ключ</b> (high key) — верхнюю границу своего диапазона ключей. Читатель, попавший в узел сразу после его расщепления, видит, что искомый ключ больше верхнего ключа, и идёт по правой ссылке к новому соседу. Тогда читателям вообще не нужно сцепление защёлок. B-дерево PostgreSQL устроено именно так, и его README подробно разбирает детали.</li>
+</ul>
+<p>Файловые системы используют более грубые блокировки. ext4 защищает дерево экстентов каждого файла семафором чтения-записи на inode, <code>i_data_sem</code>. XFS блокирует заголовочные блоки AG, пока меняет деревья этой AG, так что размещение в разных AG идёт параллельно; во многом поэтому XFS хорошо масштабируется на больших машинах. btrfs берёт блокировки чтения-записи на отдельные блоки дерева, и ей дополнительно помогает копирование при записи: зафиксированное дерево никогда не меняется, поэтому читать его всегда безопасно.</p>
+</section>
+<section id="in-memory">
+<h2>B-деревья и в оперативной памяти</h2>
+<p>У модели стоимости есть вторая, уменьшенная версия внутри компьютера. Процессор читает память кэш-линиями по 64 байта, а промах кэша с обращением в ОЗУ стоит около 100 нс, за которые современное процессорное ядро успело бы выполнить сотни инструкций. Двоичное дерево с одним ключом в узле даёт один промах кэша на уровень. Поэтому ядро Linux и в памяти переходит на широкие деревья:</p>
+<ul>
+<li><b>Maple tree</b> («кленовое дерево»), вошедшее в Linux 6.1, хранит отображения памяти каждого процесса. Его узлы занимают 256 байт (четыре кэш-линии) и на 64-битных машинах вмещают до 16 диапазонов, а поиск в нём работает под RCU без блокировок. Оно заменило красно-чёрное дерево вместе со связным списком.</li>
+<li><b>XArray</b>, который индексирует страничный кэш (<a href="05-vfs-cache.html#page-cache">урок 05</a>), — это radix-дерево с 64 слотами в узле, ключом в котором служит номер страницы внутри файла.</li>
+<li><b>Дерево состояний экстентов</b> ext4, тот самый кэш экстентов, о котором шла речь выше, — это красно-чёрное дерево на каждый inode. Небольшим, часто меняющимся множествам по-прежнему подходят двоичные деревья.</li>
+</ul>
+</section>
+<section class="lab" id="lab">
+<p class="tag">Практика 04</p>
+<h2>Как растут B-деревья ext4</h2>
+<p class="where">~/storage-course/labs/04-btrees/</p>
+<p>Вы соберёте образ ext4 размером 64 МиБ с файлами из 4, 20 и 1 500 экстентов и каталогом на 3 000 имён, а затем прочитаете оба дерева с помощью <code>debugfs</code> и <code>ext4walk</code> из практики 03. Права root не нужны: <code>mkimg.sh</code> вызывает <code>mkfs.ext4 -d</code>, а затем <code>e2fsck -fD</code>, чтобы построить индекс каталога.</p>
+<ol>
+<li>Соберите образ и программу обхода:
+<pre><code><span class="p">$</span> cd ~/storage-course/labs/04-btrees
+<span class="p">$</span> ./mkimg.sh
+<span class="p">$</span> (cd ../03-ondisk &amp;&amp; gcc -Wall -Wextra -O2 -o ext4walk ext4walk.c)</code></pre>
+</li>
+<li>Напечатайте три дерева экстентов и сравните их глубину с рисунком выше:
+<pre><code><span class="p">$</span> debugfs -R 'ex /extents/four'   btree.img
+<span class="p">$</span> debugfs -R 'ex /extents/twenty' btree.img | head -5
+<span class="p">$</span> debugfs -R 'ex /extents/deep'   btree.img | awk '$1 ~ /^[01]\//'</code></pre>
+</li>
+<li>Пройдите по индексным узлам с помощью <code>ext4walk</code>. Пример вывода на этой машине:
+<pre><code><span class="p">$</span> ../03-ondisk/ext4walk -n 0 btree.img /extents/deep | sed -n '/own block map/,/more extents/p'
+<span class="o">  -- the target's own block map:
+    block map: extent tree rooted in i_block (inode bytes 0x28..0x63)
+    extent node: eh_magic 0xF30A, eh_entries 1, eh_max 4, eh_depth 2 (index node)
+      index: file blocks &gt;= 0 -&gt; child node in disk block 3443
+      extent node: eh_magic 0xF30A, eh_entries 5, eh_max 340, eh_depth 1 (index node)
+        index: file blocks &gt;= 0 -&gt; child node in disk block 2086
+        extent node: eh_magic 0xF30A, eh_entries 339, eh_max 340, eh_depth 0 (leaf)
+          extent: file blocks 0..0 -&gt; disk blocks 2081..2081 (1 block)
+          extent: file blocks 2..2 -&gt; disk blocks 2082..2082 (1 block)
+          extent: file blocks 4..4 -&gt; disk blocks 2083..2083 (1 block)
+          ... 333 more extents ...</span></code></pre>
+</li>
+<li>Выведите htree, а затем найдите имя с ним и без него (<code>-L</code> принудительно включает линейный просмотр):
+<pre><code><span class="p">$</span> debugfs -R 'htree /bigdir' btree.img | head -14
+<span class="p">$</span> ../03-ondisk/ext4walk    btree.img /bigdir/no-such-file 2&gt;&amp;1 | grep -E 'read|ENOENT'
+<span class="o">    linear scan read 1 of 1 directory block
+    htree lookup read 2 of 20 directory blocks
+ext4walk: "no-such-file" not found in directory inode 12 (ENOENT)</span>
+<span class="p">$</span> ../03-ondisk/ext4walk -L btree.img /bigdir/no-such-file 2&gt;&amp;1 | grep -E 'read|ENOENT'
+<span class="o">    linear scan read 1 of 1 directory block
+    linear scan read 20 of 20 directory blocks
+ext4walk: "no-such-file" not found in directory inode 12 (ENOENT)</span></code></pre>
+Первая строка «1 of 1» относится к корневому каталогу: он маленький, и индекса у него нет.
+</li>
+<li>Сверьте хеш с собственной реализацией в <code>debugfs</code>:
+<pre><code><span class="p">$</span> seed=$(dumpe2fs -h btree.img 2&gt;/dev/null | awk -F': *' '/Directory Hash Seed/{print $2}')
+<span class="p">$</span> debugfs -R "dx_hash -h half_md4 -s $seed file-2233" btree.img
+<span class="p">$</span> ../03-ondisk/ext4walk btree.img /bigdir/file-2233 | grep 'hash('</code></pre>
+</li>
+<li>Запросите у ядра экстенты настоящего файла на вашей корневой файловой системе командой <code>filefrag -v</code> (шаг 7 в README создаёт для этого разреженный тестовый файл), а затем проверьте арифметику: <code>python3 -I fanout.py</code> и <code>python3 -I sqlite-btree.py</code>.</li>
+</ol>
+<p class="small muted">Проверено на этой машине (WSL2, Ubuntu 24.04, e2fsprogs 1.47.0, Python 3 с SQLite 3.45.1). Номера блоков и значения хешей у вас будут другими, потому что затравка хеша у каждой файловой системы случайная.</p>
+</section>
+<section class="check" id="check">
+<h2>Проверьте себя</h2>
+<details><summary>У дерева узлы по 4 КиБ без заголовка и записи по 16 байт. Какой высоты оно будет для 100 миллионов ключей?</summary><p>Ветвление 4096 / 16 = 256. 256<sup>3</sup> ≈ 16,8 миллиона — мало, а 256<sup>4</sup> ≈ 4,3 миллиарда — достаточно, так что высота 4. По уровням от листьев: 390 625 листьев, 1 526 узлов, 6 узлов, 1 корень.</p></details>
+<details><summary>Почему B-дерево растёт, добавляя новый корень, а не новый уровень листьев?</summary><p>Расщепление корня и новый корень над ним опускают все листья на один уровень одновременно, так что все листья остаются на одной глубине. Рост снизу сделал бы одни листья глубже других.</p></details>
+<details><summary>Почему в B+-дереве при расщеплении листа разделитель копируется наверх, а при расщеплении внутреннего узла — перемещается?</summary><p>Каждый ключ должен остаться в листе, где лежит его запись, поэтому лист сохраняет свою копию, а родитель получает ещё одну. Разделители во внутренних узлах — лишь указатели пути, поэтому средний из них может совсем покинуть свой узел.</p></details>
+<details><summary>У файла в ext4 четыре экстента, и появляется пятый. Что происходит с его <code>i_block</code>?</summary><p>Корень в inode (ёмкость 4) полон, поэтому ext4 наращивает дерево в глубину. Четыре экстента копируются в новый блок, который становится листом с местом на 340 записей, а <code>i_block</code> переписывается как индексный узел глубины 1 с единственной записью, указывающей на этот блок. Затем пятый экстент попадает в лист.</p></details>
+<details><summary>Что выигрывает htree, индексируя хеши имён, а не сами имена, и чем он за это платит?</summary><p>Он получает индексные записи фиксированного размера по 8 байт (около 500 на блок), равномерное распределение независимо от того, как названы файлы, и защиту от специально подобранных коллизий благодаря затравке, своей у каждой файловой системы. Платит он отказом от любого упорядочения по имени: поиска по префиксу нет, а <code>readdir</code> возвращает записи в порядке хешей. Кроме того, ему приходится обрабатывать коллизии хешей с помощью бита продолжения.</p></details>
+<details><summary>Почему btrfs не может связать свои листья слева направо?</summary><p>Копирование при записи даёт изменённому листу новый адрес. Ссылки соседей тогда указывали бы на старую копию, так что их тоже пришлось бы переписать, а за ними — их соседей, и так весь уровень. Вместо этого btrfs находит следующий лист, поднимаясь через родителя.</p></details>
+<details><summary>В практике 04 поиск отсутствующего имени стоит 2 чтения блоков с htree и 20 без него. Почему htree всё равно читает 2?</summary><p>Нужно прочитать корень, чтобы узнать, в каком листе мог бы лежать этот хеш, а затем просмотреть этот лист, чтобы убедиться, что имени там нет. Доказать отсутствие может только просмотр этого листа.</p></details>
+<details><summary>Вы проектируете хранилище, которое принимает миллионы мелких записей в секунду и редко читается. B+-дерево или LSM-дерево, и чем вы за это заплатите?</summary><p>LSM-дерево: записи превращаются в последовательные дозаписи и пакетные сбросы на диск. Платить придётся чтениями, которым может понадобиться проверить несколько файлов, усилением записи из-за уплотнения и местом, которое занимают старые версии, пока уплотнение их не удалит.</p></details>
+</section>
+<section class="further" id="further">
+<h2>Что почитать дальше</h2>
+<ul>
+<li><a href="https://doi.org/10.1145/356770.356776">Comer, <i>The Ubiquitous B-Tree</i> (ACM Computing Surveys, 1979)</a>: по-прежнему лучшее короткое введение, включая B+-деревья и другие варианты.</li>
+<li><a href="https://www.kernel.org/doc/html/latest/filesystems/ext4/index.html">ext4 Data Structures and Algorithms</a>: деревья экстентов описаны в разделе «The Contents of inode.i_block», а htree — в разделе «Directory Entries».</li>
+<li><a href="https://mirrors.edge.kernel.org/pub/linux/utils/fs/xfs/docs/xfs_filesystem_structure.pdf">XFS Algorithms &amp; Data Structures</a>: все B+-деревья XFS байт за байтом, с примерами <code>xfs_db</code>.</li>
+<li><a href="https://btrfs.readthedocs.io/en/latest/dev/On-disk-format.html">btrfs on-disk format</a>: ключи, элементы и список деревьев.</li>
+<li><a href="https://doi.org/10.1145/1326542.1326544">Rodeh, <i>B-trees, Shadowing, and Clones</i> (ACM TOS, 2008)</a>: устройство B-дерева с копированием при записи, на котором построена btrfs.</li>
+<li><a href="https://github.com/postgres/postgres/blob/master/src/backend/access/nbtree/README">PostgreSQL nbtree README</a>: Леман и Яо в промышленной системе, включая удаление страниц и выбор точки расщепления.</li>
+<li><a href="https://doi.org/10.1145/319628.319663">Lehman and Yao, <i>Efficient Locking for Concurrent Operations on B-Trees</i> (ACM TODS, 1981)</a>: B-link-дерево.</li>
+<li><a href="https://www.cs.umb.edu/~poneil/lsmtree.pdf">O'Neil et al., <i>The Log-Structured Merge-Tree</i> (1996)</a>: исходная статья об LSM-дереве.</li>
+</ul>
+</section>
+<nav class="pager-foot" aria-label="Следующий и предыдущий урок">
+<a class="prev" href="03-ondisk.html"><small>Назад</small>Внутри образа ext4</a>
+<a class="next" href="05-vfs-cache.html"><small>Дальше</small>VFS и кэши</a>
+</nav>
+</main>
+</div>
+<script>
+// ---- B+tree core: no DOM, testable in node ----
+var BP_SEQ = 0;
+function BPTree(order) {
+  this.order = order;            // max children of an index node
+  this.maxKeys = order - 1;      // max keys in any node
+  this.root = this.newLeaf([]);
+}
+BPTree.prototype.newLeaf = function (keys) {
+  return { leaf: true, keys: keys, next: null, id: ++BP_SEQ };
+};
+BPTree.prototype.newIndex = function (keys, children) {
+  return { leaf: false, keys: keys, children: children, id: ++BP_SEQ };
+};
+BPTree.prototype.height = function () {
+  var h = 1, n = this.root;
+  while (!n.leaf) { n = n.children[0]; h++; }
+  return h;
+};
+// child to follow: keys >= separator i go right of it
+BPTree.prototype.childIndex = function (node, key) {
+  var i = 0;
+  while (i < node.keys.length && key >= node.keys[i]) i++;
+  return i;
+};
+BPTree.prototype.search = function (key) {
+  var path = [], n = this.root;
+  for (;;) {
+    path.push(n);
+    if (n.leaf) break;
+    n = n.children[this.childIndex(n, key)];
+  }
+  return { path: path, leaf: n, found: n.keys.indexOf(key) >= 0 };
+};
+BPTree.prototype.insert = function (key) {
+  var s = this.search(key), events = [], touched = {}, split = {};
+  if (s.found) return { inserted: false, events: [key + " уже есть в дереве"], path: s.path, touched: touched, split: split };
+  var leaf = s.leaf, pos = 0;
+  while (pos < leaf.keys.length && leaf.keys[pos] < key) pos++;
+  leaf.keys.splice(pos, 0, key);
+  touched[leaf.id] = true;
+  events.push("вставка " + key + " в лист [" + leaf.keys.join(" ") + "]");
+  var node = leaf, level = s.path.length - 1;
+  while (node.keys.length > this.maxKeys) {
+    var sep, right, mid;
+    if (node.leaf) {
+      mid = Math.ceil(node.keys.length / 2);
+      right = this.newLeaf(node.keys.slice(mid));
+      node.keys = node.keys.slice(0, mid);
+      right.next = node.next;
+      node.next = right;
+      sep = right.keys[0];
+      events.push("переполнение листа: делится на [" + node.keys.join(" ") + "] и [" + right.keys.join(" ") + "]; " + sep + " копируется наверх");
+    } else {
+      mid = Math.floor(node.keys.length / 2);
+      sep = node.keys[mid];
+      right = this.newIndex(node.keys.slice(mid + 1), node.children.slice(mid + 1));
+      node.keys = node.keys.slice(0, mid);
+      node.children = node.children.slice(0, mid + 1);
+      events.push("переполнение индексного узла: делится на [" + node.keys.join(" ") + "] и [" + right.keys.join(" ") + "]; " + sep + " уходит наверх");
+    }
+    split[node.id] = true; split[right.id] = true;
+    touched[right.id] = true;
+    if (level === 0) {
+      this.root = this.newIndex([sep], [node, right]);
+      touched[this.root.id] = true;
+      events.push("корень расщепился, и у дерева появился новый корень: теперь высота " + this.height());
+      break;
+    }
+    var parent = s.path[level - 1], ci = parent.children.indexOf(node);
+    parent.keys.splice(ci, 0, sep);
+    parent.children.splice(ci + 1, 0, right);
+    touched[parent.id] = true;
+    node = parent;
+    level--;
+  }
+  return { inserted: true, events: events, path: s.path, touched: touched, split: split };
+};
+BPTree.prototype.leaves = function () {
+  var n = this.root;
+  while (!n.leaf) n = n.children[0];
+  var out = [];
+  for (; n; n = n.next) out.push(n);
+  return out;
+};
+BPTree.prototype.levels = function () {
+  var out = [], cur = [this.root];
+  while (cur.length) {
+    out.push(cur);
+    var nxt = [];
+    cur.forEach(function (n) { if (!n.leaf) nxt = nxt.concat(n.children); });
+    cur = nxt;
+  }
+  return out;
+};
+
+// ---- fanout calculator core ----
+function treeShape(keys, fanout) {
+  var levels = [], n = Math.max(1, Math.ceil(keys / fanout));
+  levels.push(n);
+  while (n > 1) { n = Math.ceil(n / fanout); levels.push(n); }
+  return levels;   // leaves first, root last
+}
+
+// ---- SVG renderer: returns markup, no DOM, testable in node ----
+// hl = { path: {id:true}, split: {id:true}, hitKey: number|null, newKey: number|null }
+function renderTree(tree, hl) {
+  hl = hl || {};
+  var path = hl.path || {}, split = hl.split || {};
+  var CELL = 30, H = 26, GAP = 16, LEVEL = 64, PAD = 14;
+  var levels = tree.levels(), depth = levels.length;
+  var leaves = levels[depth - 1];
+  var nodeW = tree.maxKeys * CELL;
+  var pos = {}, out = [];
+  leaves.forEach(function (n, i) {
+    pos[n.id] = { x: PAD + i * (nodeW + GAP), y: PAD + (depth - 1) * LEVEL };
+  });
+  for (var d = depth - 2; d >= 0; d--) {
+    levels[d].forEach(function (n) {
+      var first = pos[n.children[0].id], last = pos[n.children[n.children.length - 1].id];
+      pos[n.id] = { x: (first.x + last.x) / 2, y: PAD + d * LEVEL };
+    });
+  }
+  var width = 2 * PAD + leaves.length * nodeW + (leaves.length - 1) * GAP;
+  var height = 2 * PAD + (depth - 1) * LEVEL + H;
+  out.push('<svg viewBox="0 0 ' + width + ' ' + height + '" width="' + width + '" height="' + height +
+    '" role="img" aria-label="B+-дерево высотой ' + depth + '; ключей: ' + leaves.reduce(function (s, l) { return s + l.keys.length; }, 0) +
+    ', листьев: ' + leaves.length + '">');
+  out.push('<defs><marker id="ah-04-9" viewBox="0 0 10 10" refX="9" refY="5" markerWidth="6" markerHeight="6" orient="auto"><path class="ah" d="M0,0 L10,5 L0,10 z"/></marker></defs>');
+  // edges first, so nodes paint over their ends
+  levels.slice(0, depth - 1).forEach(function (lv) {
+    lv.forEach(function (n) {
+      var p = pos[n.id];
+      n.children.forEach(function (c, i) {
+        var q = pos[c.id], on = path[n.id] && path[c.id];
+        out.push('<line class="' + (on ? 'bp-edge-hit' : 'ln') + '" x1="' + (p.x + i * CELL) + '" y1="' + (p.y + H) +
+          '" x2="' + (q.x + nodeW / 2) + '" y2="' + q.y + '"/>');
+        out.push('<circle class="' + (on ? 'bp-ptr-hit' : 'bp-ptr') + '" cx="' + (p.x + i * CELL) + '" cy="' + (p.y + H) + '" r="2.5"/>');
+      });
+    });
+  });
+  // the leaf chain
+  for (var i = 0; i + 1 < leaves.length; i++) {
+    var a = pos[leaves[i].id], b = pos[leaves[i + 1].id];
+    out.push('<line class="lnd" x1="' + (a.x + nodeW + 1) + '" y1="' + (a.y + H / 2) + '" x2="' + (b.x - 1) + '" y2="' + (b.y + H / 2) +
+      '" marker-end="url(#ah-04-9)"/>');
+  }
+  // nodes
+  levels.forEach(function (lv) {
+    lv.forEach(function (n) {
+      var p = pos[n.id];
+      for (var j = 0; j < tree.maxKeys; j++) {
+        var k = n.keys[j], cls = 'bp-cell';
+        if (j >= n.keys.length) cls = 'bp-empty';
+        else if (n.leaf && k === hl.newKey) cls = 'bp-cell bp-new';
+        else if (n.leaf && k === hl.hitKey) cls = 'bp-cell bp-hit';
+        out.push('<rect class="' + cls + '" x="' + (p.x + j * CELL) + '" y="' + p.y + '" width="' + CELL + '" height="' + H + '"/>');
+        if (j < n.keys.length) {
+          out.push('<text class="t" x="' + (p.x + j * CELL + CELL / 2) + '" y="' + (p.y + 17.5) + '" text-anchor="middle">' + k + '</text>');
+        }
+      }
+      var ncls = 'bp-node' + (n.leaf ? ' bp-leaf' : '') + (split[n.id] ? ' bp-split' : '') + (path[n.id] ? ' bp-path' : '');
+      out.push('<rect class="' + ncls + '" x="' + p.x + '" y="' + p.y + '" width="' + nodeW + '" height="' + H + '"/>');
+    });
+  });
+  out.push('</svg>');
+  return out.join('');
+}
+
+// ---- fanout calculator core ----
+function parseCount(s) {
+  var v = Number(String(s).replace(/[,_\s]/g, ''));
+  return isFinite(v) && v >= 1 ? Math.floor(v) : NaN;
+}
+function fanoutReport(node, entry, header, keys, fillPct) {
+  var maxFan = Math.floor((node - header) / entry);
+  if (!(maxFan >= 2)) return null;
+  var fan = Math.max(2, Math.floor(maxFan * fillPct / 100));
+  var shape = treeShape(keys, fan).slice().reverse();     // root first
+  var total = shape.reduce(function (s, n) { return s + n; }, 0);
+  var upper = total - shape[shape.length - 1];
+  return {
+    maxFanout: maxFan, fanout: fan, height: shape.length, levels: shape,
+    totalBytes: total * node, upperBytes: upper * node,
+    binaryHeight: Math.ceil(Math.log2(keys + 1))
+  };
+}
+
+// ---- page wiring (needs the DOM) ----
+(function () {
+  var $ = function (id) { return document.getElementById(id); };
+  var stage = $('bp-stage'), stats = $('bp-stats'), log = $('bp-log');
+  var orderSel = $('bp-order'), keyIn = $('bp-key');
+  if (!stage) return;
+  var MAX_KEYS = 100, EXAMPLE = [5, 12, 20, 27, 33, 41, 48, 56, 63, 70, 78, 85];
+  var tree, history = [];
+
+  function ids(nodes) { var o = {}; nodes.forEach(function (n) { o[n.id] = true; }); return o; }
+  function show(n) { return '[' + n.keys.join(' ') + ']'; }
+  // Russian plural forms: 1 ключ, 2 ключа, 5 ключей
+  function word(n, one, few, many) {
+    var a = n % 10, b = n % 100;
+    return a === 1 && b !== 11 ? one : a >= 2 && a <= 4 && (b < 12 || b > 14) ? few : many;
+  }
+  function plural(n, one, few, many) { return n + ' ' + word(n, one, few, many); }
+  function exampleNote() {
+    return ['пример: ' + EXAMPLE.join(' ') + ', вставлены по возрастанию',
+      'ключи получает только самый правый лист, поэтому остальные листья сохраняют те ' +
+      plural(Math.ceil(tree.order / 2), 'ключ', 'ключа', 'ключей') + ', что оставило им расщепление'];
+  }
+
+  function draw(hl) {
+    stage.innerHTML = renderTree(tree, hl);
+    var lv = tree.levels(), nodes = 0, h = lv.length;
+    lv.forEach(function (l) { nodes += l.length; });
+    var leaves = lv[h - 1].length;
+    stats.textContent = 'порядок ' + tree.order + ': до ' + tree.maxKeys + ' ключей и ' + tree.order +
+      ' потомков в узле · ' + plural(history.length, 'ключ', 'ключа', 'ключей') + ' · ' + plural(nodes, 'узел', 'узла', 'узлов') +
+      ' (' + plural(nodes - leaves, 'индексный', 'индексных', 'индексных') + ', ' + plural(leaves, 'лист', 'листа', 'листьев') + ') · высота ' + h +
+      ', поэтому поиск читает ' + plural(h, 'узел', 'узла', 'узлов');
+    var focus = stage.querySelector('.bp-leaf.bp-path') || stage.querySelector('.bp-split');
+    if (focus) stage.scrollLeft = Number(focus.getAttribute('x')) + tree.maxKeys * 15 - stage.clientWidth / 2;
+  }
+  function say(lines) {
+    var li = document.createElement('li');
+    lines.forEach(function (text, i) {
+      var line = document.createElement('span');
+      line.textContent = text;
+      if (i) line.className = 'bp-sub';
+      li.appendChild(line);
+    });
+    log.insertBefore(li, log.firstChild);
+    while (log.children.length > 30) log.removeChild(log.lastChild);
+  }
+  function readKey() {
+    var k = Number(keyIn.value);
+    if (!Number.isInteger(k) || k < 1 || k > 999) {
+      say(['сначала введите целое число от 1 до 999']);
+      keyIn.focus();
+      return null;
+    }
+    return k;
+  }
+  function add(k) {
+    if (history.length >= MAX_KEYS) return null;
+    var r = tree.insert(k);
+    if (r.inserted) history.push(k);
+    return r;
+  }
+  function full() { say(['демонстрация ограничена ' + MAX_KEYS + ' ключами; нажмите «Сброс», чтобы начать заново']); }
+  function insertOne(k) {
+    var r = add(k);
+    if (!r) return full();
+    draw({ path: ids(tree.search(k).path), split: r.split, newKey: r.inserted ? k : null, hitKey: r.inserted ? null : k });
+    say(r.events);
+  }
+  function insertMany(keys, label) {
+    var leafSplits = 0, indexSplits = 0, grew = 0, added = 0, split = {}, last = null;
+    for (var i = 0; i < keys.length; i++) {
+      var r = add(keys[i]);
+      if (!r) break;
+      if (!r.inserted) continue;
+      added++; last = keys[i];
+      r.events.forEach(function (e) {
+        if (e.indexOf('переполнение листа') === 0) leafSplits++;
+        else if (e.indexOf('переполнение индексного узла') === 0) indexSplits++;
+        else if (e.indexOf('корень расщепился') === 0) grew++;
+      });
+      for (var id in r.split) split[id] = true;
+    }
+    if (!added) return full();
+    draw({ path: ids(tree.search(last).path), split: split, newKey: last });
+    say([label + ': вставлено ключей — ' + added + ' (' + keys.slice(0, added).join(' ') + ')',
+      plural(leafSplits, 'расщепление листа', 'расщепления листьев', 'расщеплений листьев') + ', ' +
+      plural(indexSplits, 'расщепление индексного узла', 'расщепления индексных узлов', 'расщеплений индексных узлов') +
+      (grew ? ', а корень расщепился ' + plural(grew, 'раз', 'раза', 'раз') + ': теперь высота ' + tree.height() : '')]);
+  }
+  function randomKeys(n) {
+    var have = {}, out = [];
+    tree.leaves().forEach(function (l) { l.keys.forEach(function (k) { have[k] = true; }); });
+    for (var tries = 0; out.length < n && tries < 5000; tries++) {
+      var k = 1 + Math.floor(Math.random() * 999);
+      if (!have[k]) { have[k] = true; out.push(k); }
+    }
+    return out;
+  }
+  function rebuild(order, keys) {
+    tree = new BPTree(order);
+    history = [];
+    keys.forEach(add);
+  }
+
+  $('bp-insert').addEventListener('click', function () { var k = readKey(); if (k !== null) insertOne(k); });
+  keyIn.addEventListener('keydown', function (e) {
+    if (e.key === 'Enter') { e.preventDefault(); var k = readKey(); if (k !== null) insertOne(k); }
+  });
+  $('bp-search').addEventListener('click', function () {
+    var k = readKey();
+    if (k === null) return;
+    var s = tree.search(k);
+    draw({ path: ids(s.path), hitKey: s.found ? k : null });
+    say(['поиск ' + k + ': ' + s.path.map(show).join(' → '),
+      s.found ? 'найден в листе после чтения ' + plural(s.path.length, 'узла', 'узлов', 'узлов')
+              : 'не найден: будь он в дереве, он лежал бы в этом листе (прочитано узлов: ' + s.path.length + ')']);
+  });
+  $('bp-random').addEventListener('click', function () {
+    var ks = randomKeys(1);
+    if (ks.length) insertOne(ks[0]);
+  });
+  $('bp-random10').addEventListener('click', function () { insertMany(randomKeys(10), '10 случайных'); });
+  $('bp-ascending').addEventListener('click', function () {
+    var top = 0, ks = [];
+    tree.leaves().forEach(function (l) { l.keys.forEach(function (k) { if (k > top) top = k; }); });
+    for (var k = top + 1; k <= 999 && ks.length < 10; k++) ks.push(k);
+    if (ks.length) insertMany(ks, '10 по возрастанию');
+  });
+  $('bp-example').addEventListener('click', function () {
+    rebuild(Number(orderSel.value), EXAMPLE);
+    draw({});
+    say(exampleNote());
+  });
+  $('bp-reset').addEventListener('click', function () {
+    rebuild(Number(orderSel.value), []);
+    draw({});
+    say(['пустое дерево: один лист, он же корень']);
+  });
+  orderSel.addEventListener('change', function () {
+    var keys = history.slice();
+    rebuild(Number(orderSel.value), keys);
+    draw({});
+    say(['дерево перестроено с порядком ' + tree.order + ' из тех же ключей (' + keys.length + '): высота ' + tree.height()]);
+  });
+
+  rebuild(Number(orderSel.value), EXAMPLE);
+  draw({});
+  say(exampleNote());
+
+  // ---- fanout calculator ----
+  var fan = { preset: $('fan-preset'), node: $('fan-node'), entry: $('fan-entry'), header: $('fan-header'),
+    keys: $('fan-keys'), fill: $('fan-fill'), out: $('fan-out') };
+  function num(n) { return n.toLocaleString('ru-RU'); }
+  function bytes(b) {
+    var u = ['Б', 'КиБ', 'МиБ', 'ГиБ', 'ТиБ', 'ПиБ'], i = 0;
+    while (b >= 1024 && i < u.length - 1) { b /= 1024; i++; }
+    return (i ? b.toFixed(1).replace('.', ',') : String(b)) + ' ' + u[i];
+  }
+  function ms(s) { return (s * 1e3).toFixed(2).replace('.', ',') + ' мс'; }
+  function calc() {
+    var node = Number(fan.node.value), entry = Number(fan.entry.value), header = Number(fan.header.value);
+    var keys = parseCount(fan.keys.value), fill = Number(fan.fill.value);
+    if (!(entry >= 1) || !(header >= 0) || !(keys >= 1) || keys > 1e15 || !(fill >= 10 && fill <= 100)) {
+      fan.out.textContent = 'запись ≥ 1 байта, заголовок ≥ 0, ключей от 1 до 10^15, заполнение от 10 до 100 %';
+      return;
+    }
+    var r = fanoutReport(node, entry, header, keys, fill);
+    if (!r) { fan.out.textContent = 'в узел такого размера помещается меньше 2 записей: увеличьте узел или уменьшите записи'; return; }
+    fan.out.textContent = [
+      'до ' + num(r.maxFanout) + ' записей в узле; при заполнении ' + fill + '% — ' + num(r.fanout),
+      num(keys) + ' ' + word(keys, 'ключ', 'ключа', 'ключей') + ' → высота ' + r.height +
+        ' (двоичному дереву поиска нужно ' + plural(r.binaryHeight, 'уровень', 'уровня', 'уровней') + ')',
+      'узлов на каждом уровне, начиная с корня: ' + r.levels.map(num).join(' → '),
+      r.height > 1 ? 'всё дерево — ' + bytes(r.totalBytes) + '; уровни над листьями — ' + bytes(r.upperBytes)
+                   : 'всё дерево — ' + bytes(r.totalBytes) + ' (один узел)',
+      'поиск без кэша: HDD ' + r.height + ' × 8 мс = ' + ms(r.height * 8e-3) +
+        ', NVMe ' + r.height + ' × 80 мкс = ' + ms(r.height * 80e-6),
+      r.height > 1 ? 'держите ' + bytes(r.upperBytes) + ' над листьями в ОЗУ, и поиск обойдётся 1 чтением'
+                   : 'всё дерево — один узел: 1 чтение'
+    ].join('\n');
+  }
+  fan.preset.addEventListener('change', function () {
+    var v = fan.preset.value.split(',');
+    if (v.length !== 5) return;
+    fan.node.value = v[0]; fan.entry.value = v[1]; fan.header.value = v[2];
+    fan.keys.value = num(Number(v[3])); fan.fill.value = v[4];
+    calc();
+  });
+  [fan.node, fan.entry, fan.header, fan.keys, fan.fill].forEach(function (el) {
+    el.addEventListener('input', function () { fan.preset.value = ''; calc(); });
+  });
+  calc();
+})();
+</script>
+<script src="../course.js?v=11"></script>
+</body>
+</html>

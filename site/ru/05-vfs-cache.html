@@ -1,0 +1,622 @@
+<!doctype html>
+<html lang="ru">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover">
+<title>VFS и кэши</title>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=IBM+Plex+Mono:wght@400;600&family=IBM+Plex+Sans+Condensed:wght@500;600;700&family=PT+Sans+Narrow:wght@400;700&family=Source+Serif+4:ital,opsz,wght@0,8..60,400;0,8..60,600;1,8..60,400&display=swap">
+<link rel="stylesheet" href="../course.css?v=10">
+</head>
+<body data-layer="kernel">
+<header class="topbar">
+<a class="brand" href="index.html">От open() до RDMA <span>· курс о хранении данных</span></a>
+<nav class="pager" aria-label="Навигация по урокам">
+<a href="04-btrees.html" rel="prev">← Назад</a>
+<details class="route"><summary>Урок 5 из 9</summary></details>
+<a href="06-nfs.html" rel="next">Дальше →</a>
+<details class="sections"><summary>Разделы</summary></details>
+<span class="lang-switch" aria-label="Язык"><a href="../05-vfs-cache.html" hreflang="en" lang="en">EN</a><b>RU</b></span>
+</nav>
+</header>
+<div class="layout">
+<nav class="rail" aria-label="Уроки">
+<div class="rail-title">Маршрут</div>
+<ol>
+<li class="user"><a href="01-syscalls.html"><span class="n">01</span><span>Системные вызовы и дескрипторы</span></a></li>
+<li class="block"><a href="02-blocks.html"><span class="n">02</span><span>Блочные устройства и адресация</span></a></li>
+<li class="fs"><a href="03-ondisk.html"><span class="n">03</span><span>Внутри образа ext4</span></a></li>
+<li class="fs"><a href="04-btrees.html"><span class="n">04</span><span>B-деревья на практике</span></a></li>
+<li class="kernel"><a href="05-vfs-cache.html" aria-current="page"><span class="n">05</span><span>VFS и кэши</span></a></li>
+<li class="net"><a href="06-nfs.html"><span class="n">06</span><span>NFS от v3 до 4.2</span></a></li>
+<li class="net"><a href="07-nfs-caching.html"><span class="n">07</span><span>Кэширование по сети</span></a></li>
+<li class="net"><a href="08-rdma.html"><span class="n">08</span><span>RDMA и NFS поверх RDMA</span></a></li>
+<li class="net"><a href="09-distributed.html"><span class="n">09</span><span>Распределённые файловые системы</span></a></li>
+<li class="extra"><a href="glossary.html"><span class="n">··</span><span>Глоссарий</span></a></li>
+</ol>
+<div class="rail-legend">
+<span style="--c: var(--l-user)">пространство пользователя</span>
+<span style="--c: var(--l-kernel)">ядро</span>
+<span style="--c: var(--l-fs)">файловая система</span>
+<span style="--c: var(--l-block)">блочный уровень</span>
+<span style="--c: var(--l-net)">сеть</span>
+</div>
+</nav>
+<main class="lesson">
+<header class="lesson-head">
+<p class="eyebrow">Урок 5 · Ядро</p>
+<h1>VFS и кэши</h1>
+<p class="lede">Урок 1 был о вызовах, которые делает программа. Уроки 2–4 были о блоках и деревьях на диске. Этот урок о слое ядра между ними: как <code>read()</code> находит нужную файловую систему и почему большинство чтений и записей вообще не доходит до диска.</p>
+<div class="outcomes">
+<b>После этого урока вы сможете</b>
+<ul>
+<li>назвать четыре объекта VFS и таблицу операций каждого из них;</li>
+<li>проследить <code>read()</code> от системного вызова до bio по настоящим именам функций ядра;</li>
+<li>объяснить страничный кэш (page cache), упреждающее чтение (readahead), грязные страницы и обратную запись (writeback), а также почему <code>write()</code> возвращается так быстро;</li>
+<li>надёжно записать файл с помощью <code>fsync</code> и приёма с переименованием и понимать, что означает неудачный <code>fsync</code>;</li>
+<li>выбирать между буферизованным вводом-выводом, <code>mmap</code> и <code>O_DIRECT</code>;</li>
+<li>точно сказать, какие гарантии исчезают, когда файл может изменить вторая машина.</li>
+</ul>
+</div>
+<nav class="toc" aria-label="Содержание урока">
+<b>В этом уроке</b>
+<ol>
+<li><a href="#where">Один слой, две задачи</a></li>
+<li><a href="#objects">Четыре объекта и их таблицы операций</a></li>
+<li><a href="#mounts">Монтирование: где кончается одна файловая система и начинается другая</a></li>
+<li><a href="#dcache">Кэш dentry и кэш inode</a></li>
+<li><a href="#trace-read">Проследим read()</a></li>
+<li><a href="#page-cache">Страничный кэш</a></li>
+<li><a href="#readahead">Упреждающее чтение</a></li>
+<li><a href="#reclaim">Вытеснение: списки LRU и освобождение памяти</a></li>
+<li><a href="#mmap">mmap использует те же страницы</a></li>
+<li><a href="#write-path">Запись: почему write() работает так быстро</a></li>
+<li><a href="#durability">Долговечность: fsync и его родственники</a></li>
+<li><a href="#direct">В обход кэша: O_DIRECT</a></li>
+<li><a href="#hints">Как сообщить ядру о своих намерениях</a></li>
+<li><a href="#stack">Все кэши сверху донизу</a></li>
+<li><a href="#one-machine">Почему на одной машине это просто</a></li>
+<li><a href="#lab">Практика 05: Наблюдаем за страничным кэшем</a></li>
+<li><a href="#check">Проверьте себя</a></li>
+<li><a href="#further">Что почитать дальше</a></li>
+</ol>
+</nav>
+</header>
+<section id="where">
+<h2>Один слой, две задачи</h2>
+<p>Любой файловый вызов программы сначала попадает в одну и ту же подсистему ядра: <b>виртуальную файловую систему</b> (Virtual File System, VFS). У неё две задачи.</p>
+<ol>
+<li><b>Диспетчеризация.</b> VFS отвечает за общие части любой файловой операции: поиск файлового дескриптора, проверку прав, разбор путей, хранение смещения в файле. Когда ей нужно то, что знает только конкретная файловая система, например как найти блок 7 файла, она вызывает эту файловую систему через таблицу указателей на функции.</li>
+<li><b>Кэширование.</b> VFS и подсистема управления памятью держат три больших кэша, общих для всех файловых систем: <b>кэш dentry</b> (имена), <b>кэш inode</b> (индексных дескрипторов, то есть метаданных файлов) и <b>страничный кэш</b> (содержимое файлов). Драйвер файловой системы заполняет их при промахе. При попадании драйвер часто вообще не вызывается.</li>
+</ol>
+<p>Благодаря первой задаче ext4, XFS, btrfs, tmpfs, procfs, NFS и FUSE выглядят для <code>cat</code> одинаково. Благодаря второй «тёплый» <code>read()</code> стоит одного копирования в памяти, а «холодный» требует обращения к устройству, которое может быть в тысячу раз медленнее.</p>
+<aside class="key"><span class="tag">Главное</span><p>VFS — это место, где «файл» перестаёт быть представлением программы и становится структурами данных файловой системы. Всё, что выше неё, универсально; всё, что ниже, относится к одной конкретной файловой системе или одному устройству.</p></aside>
+</section>
+<section id="objects">
+<h2>Четыре объекта и их таблицы операций</h2>
+<p>VFS описывает каждую смонтированную файловую систему четырьмя видами объектов в памяти. У каждого объекта есть указатель на таблицу функций, которую предоставляет файловая система. В C это обычный способ получить полиморфизм: структура, полная указателей на функции, которая заполняется один раз для каждого типа файловой системы.</p>
+<div class="table-wrap"><table>
+<thead><tr><th>Объект</th><th>Что представляет</th><th>Сколько живёт</th><th>Его операции</th></tr></thead>
+<tbody>
+<tr><td><code>struct super_block</code></td><td>один экземпляр смонтированной файловой системы: размер блока, корень, устройство, список inode</td><td>от монтирования до размонтирования</td><td><code>super_operations</code>: <code>alloc_inode</code>, <code>write_inode</code>, <code>evict_inode</code>, <code>sync_fs</code>, <code>statfs</code>, <code>put_super</code></td></tr>
+<tr><td><code>struct inode</code></td><td>один файл или каталог: <code>i_ino</code>, <code>i_mode</code>, <code>i_size</code>, временные метки, счётчик ссылок</td><td>пока на него кто-то ссылается, затем в кэше inode до вытеснения</td><td><code>inode_operations</code>: <code>lookup</code>, <code>create</code>, <code>mkdir</code>, <code>unlink</code>, <code>rename</code>, <code>setattr</code>, <code>getattr</code>, <code>permission</code></td></tr>
+<tr><td><code>struct dentry</code></td><td>одно имя в одном каталоге, связывающее это имя с inode (или ни с чем)</td><td>в кэше dentry до вытеснения</td><td><code>dentry_operations</code>: <code>d_revalidate</code>, <code>d_hash</code>, <code>d_compare</code>, <code>d_release</code></td></tr>
+<tr><td><code>struct file</code></td><td>одно описание открытого файла: смещение <code>f_pos</code>, флаги, режим доступа</td><td>от <code>open()</code> до последнего <code>close()</code></td><td><code>file_operations</code>: <code>read_iter</code>, <code>write_iter</code>, <code>llseek</code>, <code>fsync</code>, <code>open</code>, <code>release</code>, <code>unlocked_ioctl</code>, <code>fallocate</code></td></tr>
+</tbody>
+</table></div>
+<p>Пятая таблица важна не меньше четырёх перечисленных. У каждого inode есть указатель <code>i_mapping</code> на <code>struct address_space</code> — страничный кэш этого файла. Через его <code>address_space_operations</code> общий код страничного кэша просит файловую систему перенести данные между памятью и диском: <code>read_folio</code>, <code>readahead</code>, <code>writepages</code>, <code>dirty_folio</code>, <code>write_begin</code>, <code>write_end</code>, <code>direct_IO</code>, <code>release_folio</code>.</p>
+<p><code>struct file</code> — это описание открытого файла (open file description) из <a href="01-syscalls.html">урока 1</a>. Число, которое держит ваша программа, — индекс в таблице fd процесса, а этот слот указывает на <code>struct file</code>. <code>struct inode</code> в памяти строится из inode на диске, который вы разбирали вручную в <a href="03-ondisk.html">уроке 3</a>. Файловые системы обычно оборачивают его в собственную структуру побольше: ext4 встраивает его в <code>struct ext4_inode_info</code> и возвращается к обёртке макросом <code>EXT4_I()</code>, внутри которого работает <code>container_of()</code>.</p>
+<p>Вот таблица файловых операций ext4 в точности такой, какой она записана в <code>fs/ext4/file.c</code> в Linux 6.18 (убран один <code>#ifdef</code>):</p>
+<pre><code class="language-c">const struct file_operations ext4_file_operations = {
+	.llseek		= ext4_llseek,
+	.read_iter	= ext4_file_read_iter,
+	.write_iter	= ext4_file_write_iter,
+	.iopoll		= iocb_bio_iopoll,
+	.unlocked_ioctl = ext4_ioctl,
+	.mmap_prepare	= ext4_file_mmap_prepare,
+	.open		= ext4_file_open,
+	.release	= ext4_release_file,
+	.fsync		= ext4_sync_file,
+	.get_unmapped_area = thp_get_unmapped_area,
+	.splice_read	= ext4_file_splice_read,
+	.splice_write	= iter_file_splice_write,
+	.fallocate	= ext4_fallocate,
+	...
+};</code></pre>
+<p>Когда VFS нужно прочитать файл ext4, она вызывает <code>file-&gt;f_op-&gt;read_iter(...)</code>, и указатель ведёт в <code>ext4_file_read_iter</code>. У файла NFS <code>f_op</code> указывает на <code>nfs_file_operations</code>, и тот же вызов попадает в клиент NFS. Всё, что выше этой строки, не меняется.</p>
+<figure class="diagram">
+<svg viewBox="0 0 760 320" width="760" role="img" aria-label="Как объекты VFS указывают друг на друга: таблица fd процесса указывает на struct file, а тот — на dentry и inode; inode указывает на свой super_block и на address_space, в котором лежат фолио файла.">
+<defs><marker id="ah-05-1" viewBox="0 0 10 10" refX="9" refY="5" markerWidth="7" markerHeight="7" orient="auto-start-reverse"><path class="ah" d="M0,0 L10,5 L0,10 z"/></marker></defs>
+<rect class="k-user" x="16" y="100" width="120" height="120" rx="3"/>
+<text class="th" x="76" y="122" text-anchor="middle">таблица fd</text>
+<text class="t" x="30" y="146">0 stdin</text>
+<text class="t" x="30" y="166">1 stdout</text>
+<text class="t" x="30" y="186">2 stderr</text>
+<text class="t" x="30" y="206">3</text>
+<line class="ln" x1="48" y1="202" x2="174" y2="190" marker-end="url(#ah-05-1)"/>
+<rect class="k-kernel" x="176" y="140" width="150" height="84" rx="3"/>
+<text class="th" x="251" y="163" text-anchor="middle">struct file</text>
+<text class="ts" x="188" y="185">f_pos, f_flags</text>
+<text class="ts" x="188" y="203">f_op: file_operations</text>
+<rect class="k-kernel" x="372" y="20" width="190" height="72" rx="3"/>
+<text class="th" x="467" y="43" text-anchor="middle">struct dentry</text>
+<text class="ts" x="384" y="64">d_name "notes.txt"</text>
+<text class="ts" x="384" y="81">d_parent, d_op</text>
+<rect class="k-kernel" x="372" y="140" width="190" height="84" rx="3"/>
+<text class="th" x="467" y="163" text-anchor="middle">struct inode</text>
+<text class="ts" x="384" y="185">i_ino, i_mode, i_size</text>
+<text class="ts" x="384" y="203">i_op: inode_operations</text>
+<text class="ts" x="384" y="218">i_fop</text>
+<rect class="k-kernel" x="372" y="252" width="190" height="56" rx="3"/>
+<text class="th" x="467" y="275" text-anchor="middle">address_space</text>
+<text class="ts" x="384" y="296">a_ops, XArray i_pages</text>
+<rect class="k-kernel" x="600" y="140" width="148" height="84" rx="3"/>
+<text class="th" x="674" y="163" text-anchor="middle">super_block</text>
+<text class="ts" x="612" y="185">s_op, s_type</text>
+<text class="ts" x="612" y="203">s_bdev: /dev/sdd</text>
+<text class="ts" x="674" y="250" text-anchor="middle">фолио (страницы в кэше)</text>
+<rect class="k-kernel" x="604" y="260" width="40" height="40" rx="2"/>
+<text class="t" x="624" y="285" text-anchor="middle">0</text>
+<rect class="k-kernel" x="654" y="260" width="40" height="40" rx="2"/>
+<text class="t" x="674" y="285" text-anchor="middle">1</text>
+<rect class="k-kernel" x="704" y="260" width="40" height="40" rx="2"/>
+<text class="t" x="724" y="285" text-anchor="middle">7</text>
+<line class="ln" x1="300" y1="140" x2="372" y2="70" marker-end="url(#ah-05-1)"/>
+<text class="ts" x="318" y="98">f_path</text>
+<line class="ln" x1="326" y1="182" x2="370" y2="182" marker-end="url(#ah-05-1)"/>
+<text class="ts" x="349" y="174" text-anchor="middle">f_inode</text>
+<line class="ln" x1="467" y1="92" x2="467" y2="138" marker-end="url(#ah-05-1)"/>
+<text class="ts" x="474" y="120">d_inode</text>
+<line class="ln" x1="467" y1="224" x2="467" y2="250" marker-end="url(#ah-05-1)"/>
+<text class="ts" x="474" y="242">i_mapping</text>
+<line class="ln" x1="562" y1="182" x2="598" y2="182" marker-end="url(#ah-05-1)"/>
+<text class="ts" x="566" y="174">i_sb</text>
+<line class="ln" x1="562" y1="280" x2="602" y2="280" marker-end="url(#ah-05-1)"/>
+</svg>
+<figcaption>Объекты за fd 3. Фиолетовым показано состояние процесса, синим — состояние ядра, общее для всех процессов, открывших тот же файл. Два процесса, открывшие <code>notes.txt</code>, получают два <code>struct file</code> (два смещения), но общие dentry, inode и набор фолио в кэше.</figcaption>
+</figure>
+</section>
+<section id="mounts">
+<h2>Монтирование: где кончается одна файловая система и начинается другая</h2>
+<p><b>Монтирование</b> (mount) присоединяет корень файловой системы к каталогу уже смонтированной файловой системы. Ядро записывает каждое монтирование как <code>struct mount</code> (со встроенной <code>struct vfsmount</code>), и эта структура говорит: на этом dentry в этом родительском монтировании продолжай в другом <code>super_block</code>. Когда при обходе пути ядро доходит до dentry, помеченного как точка монтирования, оно ищет его в таблице монтирований и переходит к корню смонтированной файловой системы.</p>
+<p>Каждый процесс видит таблицу монтирований своего <b>пространства имён монтирования</b> (mount namespace). У контейнеров собственное пространство имён, поэтому у контейнера может быть другой <code>/</code>. Свой вид таблицы можно прочитать в <code>/proc/self/mountinfo</code> или в более удобном виде командой <code>findmnt</code>:</p>
+<pre><code><span class="p">$</span> findmnt -n -o SOURCE,FSTYPE,OPTIONS /
+<span class="o">/dev/sdd ext4   rw,relatime,discard,errors=remount-ro,data=ordered</span></code></pre>
+<p>Эта строка с машины курса называет блочное устройство (<code>/dev/sdd</code>, урок 2), тип файловой системы, чьи таблицы операций будут использоваться (<code>ext4</code>), и опции монтирования, которые меняют поведение внутри этих таблиц. <code>data=ordered</code> — режим журналирования ext4 из урока 3. <code>relatime</code> ограничивает, как часто чтение обновляет время доступа, потому что каждое такое обновление — это запись метаданных.</p>
+</section>
+<section id="dcache">
+<h2>Кэш dentry и кэш inode</h2>
+<p>В <a href="03-ondisk.html">уроке 3</a> вы разрешали путь вручную: прочитать корневой inode, прочитать блоки его каталога, найти имя, прочитать следующий inode и повторить. Делать так при каждом <code>open()</code> значило бы выполнять несколько чтений с диска на каждый вызов. Ядро избегает этого с помощью <b>кэша dentry</b> (dcache).</p>
+<p>Каждый dentry кэширует ответ на один вопрос: на что ссылается имя <i>N</i> в каталоге <i>P</i>? Сам dcache — это хеш-таблица, ключ в которой — пара (указатель на родительский dentry, хеш имени). Обход пути <code>/home/artem/notes.txt</code> превращается в три поиска в хеш-таблице: <code>("/", "home")</code>, затем <code>(home, "artem")</code>, затем <code>(artem, "notes.txt")</code>. Только промах вызывает <code>inode_operations-&gt;lookup</code> файловой системы, который читает каталог с диска и добавляет новый dentry.</p>
+<ul>
+<li><b>Положительный dentry</b> (positive dentry) указывает на inode.</li>
+<li><b>Отрицательный dentry</b> (negative dentry) записывает, что имени <em>нет</em>. Когда оболочка ищет команду в <code>$PATH</code> или компилятор проверяет двадцать каталогов include в поисках <code>stdio.h</code>, большинство этих поисков неудачны. Благодаря отрицательным dentry вторая неудача ничего не стоит.</li>
+<li>Неиспользуемые dentry остаются в списке LRU и освобождаются, когда нужна память. Любой dentry можно восстановить с диска, поэтому выбросить его всегда безопасно.</li>
+</ul>
+<p>К тому же большинство поисков обходится без блокировок. Сначала ядро пробует <b>RCU-обход</b> (RCU walk): идёт по dentry, не увеличивая счётчики ссылок и не захватывая блокировки, а в конце сверяет счётчики последовательности (sequence counters), чтобы убедиться, что за это время ничего не изменилось. Если что-то изменилось или нужного dentry нет, ядро откатывается к более медленному <b>обходу со ссылками</b> (ref walk), который берёт ссылки шаг за шагом. Поэтому <code>stat()</code> на горячем пути хорошо масштабируется на машинах с большим числом ядер.</p>
+<p><b>Кэш inode</b> хранит inode в памяти, на которые указывают dentry, с хешированием по паре (super_block, номер inode). dentry держит ссылку на свой inode, поэтому закэшированное имя удерживает в кэше и свой inode. Оба кэша можно увидеть на машине курса:</p>
+<pre><code><span class="p">$</span> cat /proc/sys/fs/dentry-state     <span class="c"># nr_dentry nr_unused age_limit want_pages nr_negative dummy</span>
+<span class="o">423361	382943	45	0	107134	0</span>
+<span class="p">$</span> cat /proc/sys/fs/inode-nr         <span class="c"># nr_inodes nr_free_inodes</span>
+<span class="o">408281	51650</span></code></pre>
+<p>Около 423 000 dentry, из них 107 000 отрицательных: система помнит 107 000 несуществующих имён. Большинство dentry не используется (файл никто не держит открытым), и они хранятся только потому, что иначе эта память простаивала бы.</p>
+</section>
+<section id="trace-read">
+<h2>Проследим read()</h2>
+<p>Теперь пройдём через ядро за одним вызовом, <code>read(fd, buf, 4096)</code> для файла ext4. Ниже имена функций из Linux 6.18. Имена в этой области меняются раз в несколько лет (во многих из них страницы уступили место фолио), так что сверяйтесь с исходниками ядра, которое у вас запущено.</p>
+<pre><code>read(fd, buf, 4096)                                  <span class="c">пространство пользователя</span>
+└ SYSCALL_DEFINE3(read) → ksys_read()                <span class="c">fs/read_write.c: fd → struct file</span>
+  └ vfs_read()                                       <span class="c">проверяет режим и диапазон, затем передаёт вызов дальше</span>
+    └ new_sync_read()                                <span class="c">оборачивает buf в kiocb + iov_iter</span>
+      └ file-&gt;f_op-&gt;read_iter() = ext4_file_read_iter()   <span class="c">fs/ext4/file.c</span>
+        └ generic_file_read_iter()                   <span class="c">mm/filemap.c (O_DIRECT идёт другим путём)</span>
+          └ filemap_read()
+            ├ filemap_get_pages()
+            │ ├ filemap_get_read_batch()             <span class="c">ищет индексы страниц в XArray</span>
+            │ ├ page_cache_sync_ra()                 <span class="c">промах: начать упреждающее чтение (mm/readahead.c)</span>
+            │ │ └ … read_pages() → a_ops-&gt;readahead() = ext4_readahead()
+            │ │       └ ext4_mpage_readpages()       <span class="c">поиск экстентов, сборка bio, submit_bio()</span>
+            │ ├ filemap_readahead()                  <span class="c">фолио с меткой PG_readahead: читать ещё дальше вперёд</span>
+            │ └ filemap_update_page()                <span class="c">фолио есть, но не заполнено: a_ops-&gt;read_folio()</span>
+            └ copy_folio_to_iter()                   <span class="c">скопировать байты в buf, сдвинуть f_pos</span></code></pre>
+<p>Здесь бросаются в глаза две вещи. Во-первых, собственный код ext4 появляется только в двух местах: на входе (<code>ext4_file_read_iter</code>) и на пути промаха (<code>ext4_readahead</code>, которая с помощью дерева экстентов из <a href="04-btrees.html">урока 4</a> переводит номера блоков файла в номера блоков диска). Всё остальное — общий код страничного кэша, одинаковый для всех дисковых файловых систем. Во-вторых, при попадании в кэш устройство вообще не затрагивается: вызов заканчивается копированием в памяти.</p>
+<p>При промахе читающий процесс засыпает. bio уходит на блочный уровень (<a href="02-blocks.html">урок 2</a>), драйвер программирует устройство, и устройство записывает данные в память фолио через DMA. Когда ввод-вывод завершается, обратный вызов завершения помечает фолио как <i>uptodate</i> и снимает с него блокировку. Это будит читающий процесс, и копирование идёт так, как будто было попадание.</p>
+<figure class="diagram">
+<svg viewBox="0 0 720 350" width="720" role="img" aria-label="Путь чтения: read() входит в vfs_read, затем filemap_read ищет страницу. При попадании данные копируются в буфер пользователя. При промахе ext4_readahead отображает блоки через дерево экстентов, bio уходит на устройство, а завершение будит читающий процесс, и тот копирует данные.">
+<defs><marker id="ah-05-2" viewBox="0 0 10 10" refX="9" refY="5" markerWidth="7" markerHeight="7" orient="auto-start-reverse"><path class="ah" d="M0,0 L10,5 L0,10 z"/></marker></defs>
+<rect class="k-user" x="200" y="12" width="320" height="34" rx="3"/>
+<text class="t" x="360" y="34" text-anchor="middle">read(fd, buf, 4096)</text>
+<rect class="k-kernel" x="200" y="64" width="320" height="34" rx="3"/>
+<text class="t" x="360" y="86" text-anchor="middle">vfs_read() → f_op-&gt;read_iter()</text>
+<rect class="k-kernel" x="200" y="116" width="320" height="34" rx="3"/>
+<text class="t" x="360" y="138" text-anchor="middle">filemap_read(): фолио в кэше?</text>
+<line class="ln" x1="360" y1="46" x2="360" y2="62" marker-end="url(#ah-05-2)"/>
+<line class="ln" x1="360" y1="98" x2="360" y2="114" marker-end="url(#ah-05-2)"/>
+<line class="ln" x1="290" y1="150" x2="180" y2="278" marker-end="url(#ah-05-2)"/>
+<text class="ts" x="60" y="215">попадание: копия в ОЗУ</text>
+<line class="ln" x1="440" y1="150" x2="530" y2="174" marker-end="url(#ah-05-2)"/>
+<text class="ts" x="540" y="162">промах</text>
+<rect class="k-fs" x="420" y="176" width="290" height="34" rx="3"/>
+<text class="t" x="565" y="198" text-anchor="middle">ext4_readahead(): новые фолио</text>
+<rect class="k-fs" x="420" y="228" width="290" height="34" rx="3"/>
+<text class="t" x="565" y="250" text-anchor="middle">экстенты: блок файла → блок диска</text>
+<rect class="k-block" x="420" y="280" width="290" height="34" rx="3"/>
+<text class="t" x="565" y="302" text-anchor="middle">submit_bio() → драйвер → DMA</text>
+<line class="ln" x1="565" y1="210" x2="565" y2="226" marker-end="url(#ah-05-2)"/>
+<line class="ln" x1="565" y1="262" x2="565" y2="278" marker-end="url(#ah-05-2)"/>
+<rect class="k-kernel" x="10" y="280" width="330" height="34" rx="3"/>
+<text class="t" x="175" y="302" text-anchor="middle">copy_folio_to_iter() → buf</text>
+<line class="ln" x1="420" y1="297" x2="342" y2="297" marker-end="url(#ah-05-2)"/>
+<text class="ts" x="381" y="336" text-anchor="middle">I/O завершён: фолио uptodate, читатель проснулся</text>
+</svg>
+<figcaption>Путь чтения, раскрашенный по слоям. Попадание остаётся в синем (общий код ядра и ОЗУ). Промах проваливается через файловую систему (зелёный) на блочный уровень и устройство (охра), а затем возвращается к тому же копированию.</figcaption>
+</figure>
+</section>
+<section id="page-cache">
+<h2>Страничный кэш</h2>
+<p>Страничный кэш (page cache) — это копия содержимого файлов, которую ядро держит в ОЗУ. Его устройство следует из объектов, описанных выше:</p>
+<ul>
+<li>У каждого inode один <code>address_space</code>, поэтому у каждого файла ровно один кэш, общий для всех процессов и всех описаний открытого файла.</li>
+<li>Внутри <code>address_space</code> поле <code>i_pages</code> — это структура <b>XArray</b>, которая отображает индекс страницы (смещение в файле, делённое на 4096) на <b>фолио</b> (folio).</li>
+<li>Фолио — это последовательность страниц, непрерывная в физической памяти, число страниц в которой — степень двойки; ядро обрабатывает её как единое целое. Фолио появились в Linux 5.16. До этого кэш управлялся по одной 4-КиБ <code>struct page</code> за раз. Большие фолио позволяют файловой системе закэшировать, скажем, 64 КиБ файла одной записью с одним набором флагов.</li>
+</ul>
+<p>XArray — это префиксное дерево (radix tree), и довод в пользу такого устройства тот же, что и для B-деревьев в <a href="04-btrees.html">уроке 4</a>. У каждого узла 64 слота, поэтому каждый уровень расходует 6 бит индекса. В файле размером 1 ГиБ 2<sup>18</sup> страниц, так что любая страница находится не глубже трёх уровней (6 + 6 + 6 бит). Большой коэффициент ветвления (fanout) делает дерево неглубоким, а неглубокое дерево означает мало переходов по указателям на один поиск.</p>
+<p>У каждого фолио есть флаги состояния. Вот те, что встретятся вам в этом курсе:</p>
+<div class="table-wrap"><table>
+<thead><tr><th>Флаг</th><th>Значение</th></tr></thead>
+<tbody>
+<tr><td><code>uptodate</code></td><td>содержимое фолио совпадает с файлом (или новее его); чтения можно обслуживать из него</td></tr>
+<tr><td><code>dirty</code></td><td>изменено в ОЗУ и ещё не записано на устройство</td></tr>
+<tr><td><code>writeback</code></td><td>идёт запись на устройство</td></tr>
+<tr><td><code>locked</code></td><td>кто-то выполняет с ним ввод-вывод или изменяет его; остальные ждут</td></tr>
+<tr><td><code>referenced</code>, <code>active</code></td><td>недавнее использование; учитывается при освобождении памяти</td></tr>
+<tr><td><code>readahead</code></td><td>метка, которая запускает следующее асинхронное упреждающее чтение</td></tr>
+</tbody>
+</table></div>
+<p>Здесь кэшируются не только данные файлов. Метаданные файловой системы, которые ext4 читает через само блочное устройство, например битовые карты, блоки таблицы inode и блоки журнала, живут в собственном <code>address_space</code> блочного устройства. Это строка <code>Buffers</code> в <code>/proc/meminfo</code>. Когда-то в Linux был отдельный «буферный кэш» (buffer cache) для блоков диска и страничный кэш для файлов, и одни и те же данные могли храниться дважды. С версии 2.4 они объединены, и копия одна.</p>
+<h3>Почему свободной памяти так мало</h3>
+<p>Страничный кэш занимает всю память, которая больше никому не нужна. На машине курса прямо перед запуском практики:</p>
+<pre><code><span class="p">$</span> free -h
+<span class="o">               total        used        free      shared  buff/cache   available
+Mem:            15Gi       3.3Gi       1.4Gi       4.7Mi        11Gi        12Gi
+Swap:          4.0Gi       608Ki       4.0Gi</span></code></pre>
+<p>Свободно только 1,4 ГиБ, но 11 ГиБ занято кэшем, а 12 ГиБ <i>доступно</i> (available): ядро может отдать эту память программам, выбросив чистые страницы из кэша. Смотрите на столбец <code>available</code>, а не на <code>free</code>. Неиспользуемая память ничего не делает, а память со страницами файлов ускоряет следующее чтение этих файлов.</p>
+</section>
+<section id="readahead">
+<h2>Упреждающее чтение</h2>
+<p>Обычно программы читают файлы от начала до конца. Если бы ядро ждало запроса от каждого <code>read()</code>, прежде чем загружать данные, каждый вызов платил бы полную задержку устройства. <b>Упреждающее чтение</b> (readahead) предполагает, что последовательному читателю понадобится следующий кусок, и загружает его заранее, так что устройство работает, пока программа занята текущим куском.</p>
+<ul>
+<li><b>Синхронное упреждающее чтение</b> (<code>page_cache_sync_ra()</code>) запускается при промахе. Оно читает больше, чем запрошено. Первое окно округляет запрос вверх до степени двойки и, если результат мал по сравнению с максимумом, умножает его на четыре.</li>
+<li><b>Асинхронное упреждающее чтение</b> (<code>page_cache_async_ra()</code>) запускается меткой. Внутри каждого окна ядро помечает одно фолио флагом <code>PG_readahead</code>. Когда читатель доходит до этого фолио, ядро начинает читать следующее окно, пока текущее ещё не дочитано. Пока окно маленькое, оно растёт в четыре раза, затем удваивается, вплоть до максимума.</li>
+</ul>
+<pre><code>файл:   |======окно 1======|==========окно 2==========|==================окно 3=================|
+                     ^ PG_readahead            ^ PG_readahead
+чтение:  ---читает------&gt;|  обращение к метке запускает окно 2, пока окно 1 ещё читается
+                            обращение к следующей метке запускает окно 3, и так далее</code></pre>
+<p>Максимум задаёт <code>read_ahead_kb</code> устройства. По умолчанию в ядре это 128 КиБ, и драйверы могут его увеличить. Виртуальный диск WSL сообщает 8 МиБ:</p>
+<pre><code><span class="p">$</span> cat /sys/block/sdd/queue/read_ahead_kb
+<span class="o">8192</span></code></pre>
+<p>Случайный доступ сводит упреждающее чтение на нет: ядро видит, что чтения не последовательные, и перестаёт увеличивать окно. Программа может и сама сообщить о своих намерениях через <code>posix_fadvise()</code>: <code>POSIX_FADV_SEQUENTIAL</code> заставляет Linux использовать окно побольше, а <code>POSIX_FADV_RANDOM</code> отключает упреждающее чтение для этого файла.</p>
+</section>
+<section id="reclaim">
+<h2>Вытеснение: списки LRU и освобождение памяти</h2>
+<p>Когда программе нужна память, а свободной мало, ядро <b>освобождает</b> (reclaim) страницы. Страницы в кэше оно держит в <b>списках LRU</b> (least recently used, «дольше всего не использовавшиеся»): отдельно для файловых страниц и для анонимной памяти (куча и стек), а также отдельно для каждой cgroup памяти и каждого узла NUMA.</p>
+<ul>
+<li>Только что закэшированное фолио попадает в <b>неактивный</b> (inactive) список. Если к нему снова обращаются, пока оно там, оно переходит в <b>активный</b> (active) список. Поэтому однократный последовательный проход по огромному файлу заполняет неактивный список и стареет в нём, не вытесняя по-настоящему горячие данные из активного.</li>
+<li>Освобождение памяти просматривает неактивный список со старого конца. <b>Чистое</b> файловое фолио освободить дешевле всего: на диске уже лежат те же данные, поэтому ядро его просто выбрасывает. <b>Грязное</b> фолио сначала нужно записать на диск. Анонимная память должна уйти в swap.</li>
+<li>Поток ядра <code>kswapd</code> освобождает память в фоне, когда свободная память опускается ниже порога (watermark). Если программа выделяет память быстрее, она сама выполняет <b>прямое освобождение</b> (direct reclaim), и это видно как всплеск задержки в этой программе.</li>
+</ul>
+<p>Начиная с Linux 6.1 есть также многопоколенческий LRU (multi-generational LRU, MGLRU), который распределяет страницы по нескольким поколениям возраста вместо двух списков. В некоторых дистрибутивах он включён по умолчанию. Идея та же: выбрасывать то, что дольше всего не использовалось, и в первую очередь чистые файловые страницы.</p>
+<p>Чтобы опустошить кэш для эксперимента, root может записать число в <code>/proc/sys/vm/drop_caches</code> (1 — страничный кэш, 2 — dentry и inode, 3 — и то и другое). Выбрасываются только чистые объекты, поэтому сначала выполните <code>sync</code>. Без root это можно сделать для отдельного файла через <code>posix_fadvise(fd, 0, 0, POSIX_FADV_DONTNEED)</code>; так и поступает практика этого урока. Оба способа нужны только для экспериментов. Сброс кэшей на рабочей машине лишь замедляет её.</p>
+</section>
+<section id="mmap">
+<h2>mmap использует те же страницы</h2>
+<p><code>mmap()</code> файла не создаёт второй копии. Когда программа обращается к адресу внутри отображения, для которого ещё нет записи в таблице страниц, обработчик страничного сбоя (page fault; для большинства файловых систем это <code>filemap_fault()</code>) находит фолио в том же страничном кэше, которым пользуется <code>read()</code>, при необходимости читает его с диска и отображает эту физическую память в таблицы страниц процесса.</p>
+<ul>
+<li><code>read()</code> одного процесса и чтение из отображения <code>MAP_SHARED</code> другим процессом видят одни и те же байты, потому что это и есть одни и те же байты.</li>
+<li>Запись в страницу <code>MAP_SHARED</code> помечает фолио грязным; при первой записи это происходит через хук файловой системы <code>page_mkwrite</code>. Затем фолио записывается на диск, как любое грязное фолио. <code>msync()</code> принудительно запускает эту запись для диапазона.</li>
+<li><code>MAP_PRIVATE</code> отображает общую страницу только для чтения и копирует её при первой записи (копирование при записи, COW). Частная копия — это анонимная память, и в файл она никогда не записывается.</li>
+</ul>
+</section>
+<section id="write-path">
+<h2>Запись: почему write() работает так быстро</h2>
+<p>Буферизованный <code>write()</code> копирует ваши байты в страничный кэш и возвращается. Устройство в этом не участвует. В Linux 6.18 путь для ext4 такой:</p>
+<pre><code>write(fd, buf, n)
+└ ksys_write() → vfs_write() → new_sync_write()
+  └ f_op-&gt;write_iter() = ext4_file_write_iter()
+    └ ext4_buffered_write_iter()
+      └ generic_perform_write()                      <span class="c">mm/filemap.c, цикл по диапазону</span>
+        ├ balance_dirty_pages_ratelimited()          <span class="c">возможно, заставить писателя подождать (см. ниже)</span>
+        ├ a_ops-&gt;write_begin() = ext4_da_write_begin()   <span class="c">найти или создать фолио, зарезервировать место</span>
+        ├ copy_folio_from_iter_atomic()              <span class="c">скопировать байты пользователя в фолио</span>
+        └ a_ops-&gt;write_end()   = ext4_da_write_end()     <span class="c">пометить фолио грязным, обновить i_size</span></code></pre>
+<p><code>da</code> означает <b>отложенное выделение</b> (delayed allocation) из <a href="03-ondisk.html">урока 3</a>. На этом шаге ext4 резервирует достаточно свободного места, чтобы данные гарантированно поместились, и поэтому может вернуть <code>ENOSPC</code> сразу, но конкретные блоки диска пока не выбирает. Когда позже произойдёт обратная запись, ext4 уже знает, сколько в файле данных, и может выделить один длинный непрерывный экстент вместо множества маленьких.</p>
+<h3>Обратная запись</h3>
+<p>Грязные фолио записываются на устройство позже, рабочими потоками ядра. У каждого блочного устройства своя работа по обратной записи (writeback). В <code>ps</code> или <code>top</code> она видна как <code>kworker</code>, в имени которого есть <code>flush-8:48</code> — номер major:minor устройства. Обратная запись начинается, когда происходит любое из следующего:</p>
+<ul>
+<li>объём грязных данных превышает <b>фоновый порог</b> (background threshold);</li>
+<li>фолио остаётся грязным дольше <code>dirty_expire_centisecs</code>; это проверяется каждые <code>dirty_writeback_centisecs</code>;</li>
+<li>программа вызывает <code>fsync()</code>, <code>fdatasync()</code>, <code>syncfs()</code> или <code>sync()</code>;</li>
+<li>освобождение памяти натыкается на грязные страницы и просит поток сброса (flusher) их очистить.</li>
+</ul>
+<p>Обратная запись вызывает <code>a_ops-&gt;writepages</code> файловой системы (<code>ext4_writepages</code>), которая теперь выделяет отложенные блоки, собирает bio и отправляет их. Вот настройки и их значения по умолчанию в ядре; на машине курса они такие же:</p>
+<div class="table-wrap"><table>
+<thead><tr><th>sysctl (vm.)</th><th>По умолчанию</th><th>Смысл</th></tr></thead>
+<tbody>
+<tr><td><code>dirty_background_ratio</code></td><td>10</td><td>начать фоновую обратную запись, когда грязные данные превышают этот процент памяти, пригодной для грязных данных</td></tr>
+<tr><td><code>dirty_ratio</code></td><td>20</td><td>выше этого процента пишущие процессы притормаживаются</td></tr>
+<tr><td><code>dirty_expire_centisecs</code></td><td>3000</td><td>данные, грязные дольше 30 с, записываются при следующем проходе потока сброса</td></tr>
+<tr><td><code>dirty_writeback_centisecs</code></td><td>500</td><td>поток сброса просыпается каждые 5 с, чтобы найти просроченные данные</td></tr>
+<tr><td><code>dirty_background_bytes</code>, <code>dirty_bytes</code></td><td>0</td><td>абсолютные пределы в байтах; ненулевые значения заменяют проценты</td></tr>
+</tbody>
+</table></div>
+<p>Проценты считаются от памяти, <i>пригодной для грязных данных</i> (dirtyable memory: примерно свободная память плюс страничный кэш, который можно освободить), а не от всего ОЗУ. Получившиеся пределы ядро публикует в страницах:</p>
+<pre><code><span class="p">$</span> grep -E 'nr_dirty(_background)?_threshold' /proc/vmstat
+<span class="o">nr_dirty_threshold 603763
+nr_dirty_background_threshold 301512</span></code></pre>
+<p>При 4 КиБ на страницу это около 1,15 ГиБ до начала фоновой обратной записи и около 2,3 ГиБ до притормаживания пишущих процессов. Запомните срок в 30 секунд по умолчанию: если после буферизованного <code>write()</code> пропадёт питание, можно потерять данные примерно за последние полминуты.</p>
+<h3>Притормаживание: balance_dirty_pages</h3>
+<p>Если бы программа могла загрязнять страницы быстрее, чем устройство их записывает, грязная память росла бы, пока не кончится ОЗУ. Поэтому <code>generic_perform_write()</code> по ходу работы вызывает <code>balance_dirty_pages_ratelimited()</code>. Когда грязная память для устройства превышает предел, ядро заставляет пишущий процесс засыпать короткими паузами. Их длина подобрана так, чтобы скорость записи процесса приблизилась к измеренной полосе пропускания устройства на запись. Начиная с Linux 3.2 притормаживаемый процесс только спит, а ввод-вывод выполняет поток сброса. С точки зрения программы <code>write()</code> вдруг начинает работать со скоростью диска, а не памяти.</p>
+<p>Практика показывает это переключение. Запись файла размером 256 МиБ шла со скоростью около 1,5 ГиБ/с, целиком в кэш. Запись файла размером 1 ГиБ, когда свободно было только 1,4 ГиБ памяти, замедлилась примерно до 345 МиБ/с, и к возврату последнего <code>write()</code> грязными оставались лишь около 390 МиБ: ядру пришлось освобождать память и записывать данные, пока программа ещё писала.</p>
+</section>
+<section id="durability">
+<h2>Долговечность: fsync и его родственники</h2>
+<p>После возврата <code>write()</code> ваши данные могут находиться в четырёх местах, и отключение питания переживает только последнее:</p>
+<ol>
+<li>страничный кэш (теряется при сбое машины или отключении питания);</li>
+<li>в пути через блочный уровень;</li>
+<li>энергозависимый кэш записи накопителя, буфер DRAM внутри SSD или HDD (теряется при отключении питания, если у накопителя нет защиты от потери питания);</li>
+<li>стабильный носитель: ячейки флеш-памяти NAND или магнитные пластины.</li>
+</ol>
+<p>Системные вызовы, которые продвигают данные вниз по этому списку:</p>
+<div class="table-wrap"><table>
+<thead><tr><th>Вызов</th><th>Что гарантировано после возврата</th></tr></thead>
+<tbody>
+<tr><td><code>fsync(fd)</code></td><td>данные файла и все его метаданные (размер, карта блоков, временные метки) находятся в стабильном хранилище, включая сброс кэша устройства</td></tr>
+<tr><td><code>fdatasync(fd)</code></td><td>данные плюс метаданные, нужные, чтобы прочитать их обратно (размер, карта блоков). Временные метки можно пропустить, что экономит фиксацию журнала</td></tr>
+<tr><td><code>open(…, O_SYNC)</code> / <code>O_DSYNC</code></td><td>каждый <code>write()</code> ведёт себя так, будто за ним вызван <code>fsync</code> / <code>fdatasync</code></td></tr>
+<tr><td><code>syncfs(fd)</code>, <code>sync()</code></td><td>всё в этой файловой системе / во всех файловых системах</td></tr>
+<tr><td><code>sync_file_range()</code></td><td>запускает или ожидает обратную запись диапазона байтов. Не фиксирует метаданные и не сбрасывает кэш устройства, поэтому долговечности не гарантирует</td></tr>
+</tbody>
+</table></div>
+<p>О сбросе кэша устройства обычно забывают. Чтобы запись стала долговечной, файловая система отправляет устройству команду FLUSH (флаг bio <code>REQ_PREFLUSH</code>), чтобы опустошить его кэш записи, или помечает запись как FUA, force unit access (<code>REQ_FUA</code>), чтобы эта запись прошла мимо кэша. ext4 делает это при фиксации журнала (сторона устройства описана в <a href="02-blocks.html">уроке 2</a>). Без этого <code>fsync</code> доказывал бы лишь, что данные дошли до ОЗУ накопителя.</p>
+<h3>Приём атомарной замены</h3>
+<p>Программы, которые сохраняют файл целиком, например редакторы, утилиты настройки и менеджеры пакетов, не должны оставлять после сбоя наполовину записанный файл. Стандартный рецепт опирается на то, что <code>rename()</code> заменяет запись в каталоге за один журналируемый шаг:</p>
+<pre><code class="language-c"><span class="c">/* заменить содержимое "config" так, чтобы пережить сбой */</span>
+int fd = open("config.tmp", O_WRONLY | O_CREAT | O_TRUNC, 0644);
+write_all(fd, data, len);        <span class="c">/* 1. новые байты попадают в страничный кэш  */</span>
+fsync(fd);                       <span class="c">/* 2. данные и inode нового файла долговечны */</span>
+close(fd);
+rename("config.tmp", "config");  <span class="c">/* 3. атомарно подменить имя                 */</span>
+int dfd = open(".", O_RDONLY | O_DIRECTORY);
+fsync(dfd);                      <span class="c">/* 4. само изменение каталога долговечно     */</span>
+close(dfd);</code></pre>
+<ul>
+<li>Сбой до шага 3: <code>config</code> — старый файл, целый. Может остаться лишний <code>config.tmp</code>.</li>
+<li>Сбой после шага 3, но до шага 4: переименование могло дойти до диска, а могло и не дойти, поэтому вы получите старый файл или новый, но никогда не их смесь.</li>
+<li>После шага 4: гарантированно новый файл.</li>
+</ul>
+<p>Пропуск шага 2 — классическая ошибка. Переименование может дойти до диска раньше данных, и после сбоя <code>config</code> будет указывать на пустой или частично записанный файл. В ext4 есть эвристика (опция монтирования <code>auto_da_alloc</code>, включена по умолчанию), которая заранее выталкивает данные, когда видит, что файл заменяют переименованием или усечением: слишком многие программы забывали шаг 2. Не полагайтесь на неё и не ждите её от других файловых систем.</p>
+<h3>Когда fsync завершается ошибкой</h3>
+<p>Обратная запись асинхронна, поэтому ошибка устройства обычно случается намного позже, чем вернулся <code>write()</code>, загрязнивший страницу. Основные места, где ядро может о ней сообщить: <code>fsync()</code>, <code>fdatasync()</code>, <code>sync_file_range()</code> и <code>close()</code> (в некоторых файловых системах, прежде всего в NFS).</p>
+<p>Начиная с Linux 4.13 каждый <code>address_space</code> записывает ошибки обратной записи в <code>errseq_t</code>: код ошибки плюс счётчик. Каждый <code>struct file</code> помнит значение счётчика, которое видел последним. <code>fsync()</code> сообщает об ошибке, если она была записана после последней проверки через это описание открытого файла, и затем обновляет свою копию счётчика. Так каждое описание открытого файла узнаёт о каждой ошибке ровно один раз.</p>
+<aside class="pitfall"><span class="tag">Ловушка: повторный fsync</span>
+<p>В 2018 году разработчики PostgreSQL обнаружили, что их логика восстановления предполагала, будто неудавшийся <code>fsync()</code> можно просто повторить. В Linux после ошибки обратной записи затронутые страницы больше не грязные: в зависимости от файловой системы ядро пометило их чистыми или выбросило. Второму <code>fsync()</code> нечего записывать, и он возвращает успех, хотя данные так и не дошли до диска.</p>
+<p>Вывод: ошибка <code>fsync()</code> означает, что данные, записанные после последнего успешного <code>fsync()</code>, могли пропасть. Восстанавливайте их из собственной копии, например из журнала упреждающей записи (write-ahead log). PostgreSQL исправил это так: сбой <code>fsync()</code> считается фатальным, сервер аварийно завершается, а затем воспроизводит свой WAL. Эта история известна как «fsyncgate».</p>
+</aside>
+</section>
+<section id="direct">
+<h2>В обход кэша: O_DIRECT</h2>
+<p>Открывая файл с <code>O_DIRECT</code>, вы просите ядро передавать данные через DMA прямо между вашим буфером и устройством, минуя страничный кэш. ext4 направляет такие запросы через <code>ext4_dio_read_iter()</code> и код прямого ввода-вывода iomap вместо <code>filemap_read()</code>.</p>
+<p>Зачем это нужно:</p>
+<ul>
+<li>Базы данных, такие как InnoDB (с <code>innodb_flush_method=O_DIRECT</code>), Oracle и ScyllaDB, держат собственный буферный пул. При буферизованном вводе-выводе каждая страница кэшировалась бы дважды: в базе данных и в страничном кэше.</li>
+<li>Расход памяти становится предсказуемым, и огромный проход по данным не может вытеснить закэшированные данные других приложений.</li>
+<li>Нет копирования между страничным кэшем и памятью пользователя.</li>
+</ul>
+<p>Цена — строгие правила и никакой помощи от ядра:</p>
+<ul>
+<li>Адрес буфера, смещение в файле и длина должны быть выровнены, традиционно по логическому размеру блока устройства (512 Б или 4 КиБ). Некоторые файловые системы требуют большего. Начиная с Linux 6.1 <code>statx()</code> с <code>STATX_DIOALIGN</code> сообщает точные требования для файла. Невыровненный запрос завершается ошибкой <code>EINVAL</code>; практика вызывает оба случая.</li>
+<li>Нет ни упреждающего чтения, ни отложенной записи (write-behind). Каждый <code>read()</code> ждёт устройство, поэтому для хорошей пропускной способности программе нужно много одновременных запросов (потоки, <code>io_uring</code> или AIO).</li>
+<li><code>O_DIRECT</code> не гарантирует долговечность. Данные минуют страничный кэш, но для изменений метаданных (размер файла, новые выделенные блоки) и для кэша записи устройства всё равно нужен <code>fsync()</code> или <code>O_DSYNC</code>.</li>
+<li>Смешивать буферизованный и прямой ввод-вывод в одном файле можно, но медленно: перед каждой операцией прямого ввода-вывода ядро записывает на диск и аннулирует закэшированные страницы в этом диапазоне.</li>
+</ul>
+</section>
+<section id="hints">
+<h2>Как сообщить ядру о своих намерениях</h2>
+<p>Кэши работают на догадках. Несколько вызовов заменяют догадки фактами:</p>
+<div class="table-wrap"><table>
+<thead><tr><th>Вызов</th><th>Эффект</th></tr></thead>
+<tbody>
+<tr><td><code>posix_fadvise(fd, off, len, POSIX_FADV_SEQUENTIAL)</code></td><td>окно упреждающего чтения побольше</td></tr>
+<tr><td><code>… POSIX_FADV_RANDOM</code></td><td>без упреждающего чтения</td></tr>
+<tr><td><code>… POSIX_FADV_WILLNEED</code> / <code>readahead(2)</code></td><td>начать читать этот диапазон в кэш прямо сейчас</td></tr>
+<tr><td><code>… POSIX_FADV_DONTNEED</code></td><td>запустить обратную запись грязных страниц диапазона и выбросить чистые</td></tr>
+<tr><td><code>madvise(addr, len, MADV_SEQUENTIAL | MADV_RANDOM | MADV_WILLNEED)</code></td><td>те же подсказки для диапазона, отображённого через <code>mmap</code></td></tr>
+</tbody>
+</table></div>
+<p><b>io_uring</b> (Linux 5.1) меняет не то, как запросы кэшируются, а то, как они отправляются. Программа и ядро делят два кольцевых буфера в памяти: <b>очередь отправки</b> (submission queue), куда программа кладёт запросы, и <b>очередь завершений</b> (completion queue), куда ядро кладёт результаты. Один вызов <code>io_uring_enter()</code> может отправить сотни чтений и записей, а в режиме опроса системные вызовы вообще не нужны. io_uring работает и с буферизованным, и с прямым вводом-выводом. Та же схема, очередь отправки в паре с очередью завершений, используется в NVMe на уровне оборудования (<a href="02-blocks.html">урок 2</a>) и в RDMA для сетевых передач (<a href="08-rdma.html">урок 8</a>).</p>
+</section>
+<section id="stack">
+<h2>Все кэши сверху донизу</h2>
+<p>Если сложить всё вместе, один <code>fwrite()</code> проходит через целый стек кэшей. Каждый из них поглощает записи и обслуживает чтения, и каждый опустошается своим механизмом.</p>
+<figure class="diagram">
+<svg viewBox="0 0 720 436" width="720" role="img" aria-label="Стек кэшей между приложением и стабильным носителем: кэш приложения и буфер stdio в пространстве пользователя; dcache, кэш inode и страничный кэш в ядре; уровень файловой системы; блочный уровень; кэш записи устройства; внизу стабильный носитель. Для каждой строки показано, что её опустошает.">
+<rect class="k-user" x="20" y="16" width="470" height="40" rx="3"/>
+<text class="t" x="34" y="41">кэш приложения (например, буферный пул СУБД)</text>
+<text class="ts" x="506" y="40">опустошает само приложение</text>
+<rect class="k-user" x="20" y="68" width="470" height="40" rx="3"/>
+<text class="t" x="34" y="93">буфер stdio: FILE*, fwrite(), printf()</text>
+<text class="ts" x="506" y="86">write() при fflush(), полном</text>
+<text class="ts" x="506" y="100">буфере или exit()</text>
+<line class="lnd" x1="20" y1="126" x2="700" y2="126"/>
+<text class="ts" x="700" y="120" text-anchor="end">граница системных вызовов</text>
+<rect class="k-kernel" x="20" y="138" width="140" height="56" rx="3"/>
+<text class="t" x="90" y="162" text-anchor="middle">dcache</text>
+<text class="ts" x="90" y="180" text-anchor="middle">имена</text>
+<rect class="k-kernel" x="170" y="138" width="140" height="56" rx="3"/>
+<text class="t" x="240" y="162" text-anchor="middle">кэш inode</text>
+<text class="ts" x="240" y="180" text-anchor="middle">атрибуты</text>
+<rect class="k-kernel" x="320" y="138" width="170" height="56" rx="3"/>
+<text class="t" x="405" y="162" text-anchor="middle">страничный кэш</text>
+<text class="ts" x="405" y="180" text-anchor="middle">данные, грязные фолио</text>
+<text class="ts" x="506" y="160">обратная запись (пороги,</text>
+<text class="ts" x="506" y="174">срок 30 с) или fsync()</text>
+<rect class="k-fs" x="20" y="208" width="470" height="40" rx="3"/>
+<text class="t" x="34" y="233">файловая система: отложенное выделение, журнал</text>
+<text class="ts" x="506" y="232">фиксация журнала</text>
+<rect class="k-block" x="20" y="262" width="470" height="40" rx="3"/>
+<text class="t" x="34" y="287">блочный уровень: очереди и слияние запросов</text>
+<text class="ts" x="506" y="286">отправка драйверу</text>
+<rect class="k-block" x="20" y="316" width="470" height="40" rx="3"/>
+<text class="t" x="34" y="341">кэш записи устройства (DRAM в накопителе)</text>
+<text class="ts" x="506" y="334">команда FLUSH или запись</text>
+<text class="ts" x="506" y="348">с FUA</text>
+<rect class="box" x="20" y="370" width="470" height="40" rx="3"/>
+<text class="t" x="34" y="395">стабильный носитель: флеш NAND или пластины</text>
+<text class="ts" x="506" y="394">переживает отключение питания</text>
+<text class="ts" x="20" y="430">Всё, что выше последней строки, теряется при отключении питания, если его не протолкнули вниз.</text>
+</svg>
+<figcaption>Все кэши между <code>fwrite()</code> и пластиной, раскрашенные по слоям. Правый столбец показывает, что выталкивает данные из каждого из них.</figcaption>
+</figure>
+<div class="table-wrap"><table>
+<thead><tr><th>Кэш</th><th>Что хранит</th><th>Когда теряется</th><th>Чем протолкнуть вниз</th></tr></thead>
+<tbody>
+<tr><td>буфер stdio</td><td>байты, которые программа записала через <code>fwrite</code>/<code>printf</code>, но ещё не передала в <code>write()</code></td><td>при аварийном завершении процесса (<code>abort()</code>, <code>SIGKILL</code>, <code>_exit()</code>)</td><td><code>fflush()</code></td></tr>
+<tr><td>страничный кэш</td><td>данные файлов, чистые и грязные</td><td>при сбое ядра, отключении питания</td><td><code>fsync()</code>, <code>fdatasync()</code></td></tr>
+<tr><td>dcache, кэш inode</td><td>имена и атрибуты</td><td>ничего важного не теряется: они восстанавливаются с диска, а изменения проходят через журнал</td><td><code>fsync()</code> файла или каталога</td></tr>
+<tr><td>кэш записи устройства</td><td>блоки, приём которых накопитель уже подтвердил</td><td>при отключении питания, если у накопителя нет защиты от потери питания</td><td>FLUSH / FUA, которые файловая система отправляет во время <code>fsync()</code></td></tr>
+</tbody>
+</table></div>
+<aside class="note"><span class="tag">Отступление: кэш под диском</span>
+<p>В виртуальной машине часто есть ещё один уровень: хост кэширует файл, в котором лежит виртуальный диск. Корневая файловая система WSL — это ext4 внутри файла виртуального диска в Windows, и Windows кэширует этот файл. Поэтому практика этого урока видит «холодные» чтения на скорости от 0,9 до 1,8 ГиБ/с даже после того, как гостевая система сбросила свой кэш. Данные пришли из ОЗУ хоста, а не с SSD. У любого уровня, которого вы не видите, тоже может быть кэш.</p>
+</aside>
+</section>
+<section id="one-machine">
+<h2>Почему на одной машине это просто</h2>
+<p>Нигде в этом уроке не пришлось иметь дело с устаревшими данными, и это не везение. На одной машине согласованность (coherence) достаётся бесплатно по трём причинам:</p>
+<ol>
+<li><b>Одна копия.</b> Для данной пары (inode, индекс страницы) в ОЗУ ровно одно фолио. Каждый процесс, который читает или отображает файл, использует это фолио. Запись одного процесса сразу видна следующему <code>read()</code> любого другого процесса, потому что больше обновлять нечего.</li>
+<li><b>Один привратник.</b> Каждое изменение файла или каталога проходит через VFS этого ядра. Тот же путь кода, который меняет каталог на диске, обновляет и dentry, поэтому dcache никогда не расходится с диском.</li>
+<li><b>Никто не пишет за спиной у ядра.</b> Диск меняется только тогда, когда ему велит это ядро. Кэшам никогда не нужно спрашивать «а не изменилось ли это?», потому что ответ всегда «нет».</li>
+</ol>
+<p>Теперь смонтируйте ту же файловую систему на второй машине по сети. У каждой машины свой страничный кэш, свой dcache и свой кэш inode, и ни одно ядро не видит изменений другого. Все три причины перестают действовать разом, и у каждого нарушения есть видимый симптом:</p>
+<div class="table-wrap"><table>
+<thead><tr><th>Что кэшируется на клиенте</th><th>Что ломается, когда файл меняет другая машина</th></tr></thead>
+<tbody>
+<tr><td>страничный кэш (данные)</td><td>чтение возвращает старое содержимое после того, как другой клиент записал новое</td></tr>
+<tr><td>кэш inode (атрибуты)</td><td><code>ls -l</code> показывает старые размер и mtime; запись с <code>O_APPEND</code> попадает в старый конец файла и затирает то, что дописал кто-то другой</td></tr>
+<tr><td>положительный dentry</td><td>имя указывает на файл, который другой клиент удалил или переименовал; следующая операция завершается ошибкой <code>ESTALE</code></td></tr>
+<tr><td>отрицательный dentry</td><td>файл, который другой клиент только что создал, считается отсутствующим</td></tr>
+<tr><td>грязные фолио</td><td>ваши записи не видны другим до обратной записи, а об ошибке записи (<code>ENOSPC</code>, <code>EIO</code>, квота) можно сообщить только позже, в <code>fsync()</code> или <code>close()</code></td></tr>
+<tr><td>блокировки</td><td>блокировки <code>flock()</code> и <code>fcntl()</code> в одном ядре ничего не значат для другого; для блокировок нужен протокол</td></tr>
+</tbody>
+</table></div>
+<p>Сетевая файловая система должна решить для каждого кэша из этой таблицы, когда ему доверять, а когда снова спросить сервер. Если спрашивать слишком часто, каждый <code>stat()</code> будет стоить круговой задержки по сети. Если слишком редко, программы увидят устаревшие данные. <a href="06-nfs.html">Урок 6</a> посвящён самому протоколу NFS, а <a href="07-nfs-caching.html">урок 7</a> — тому, как он отвечает на этот вопрос: тайм-ауты атрибутов, согласованность close-to-open и делегирование (delegation).</p>
+</section>
+<section class="lab" id="lab">
+<p class="tag">Практика 05</p>
+<h2>Наблюдаем за страничным кэшем</h2>
+<p class="where">~/storage-course/labs/05-cache/</p>
+<p>Одна программа на C, root не нужен. Она создаёт тестовый файл, а затем заполняет его страничный кэш, опустошает, загрязняет и обходит его, выводя время и число страниц в кэше на каждом шаге. Страницы в кэше она считает так же, как <code>fincore(1)</code>: отображает файл через <code>mmap()</code> (при этом ничего не читается), а затем спрашивает у <code>mincore()</code>, какие страницы находятся в памяти.</p>
+<ol>
+<li>Соберите и запустите её на пути в ext4, например в домашнем каталоге, а не в <code>/mnt/c</code> или <code>/mnt/d</code>:
+<pre><code><span class="p">$</span> cd ~/storage-course/labs/05-cache
+<span class="p">$</span> gcc -Wall -Wextra -O2 -o cache cache.c
+<span class="p">$</span> ./cache            <span class="c"># 256 МиБ; ./cache 1024 для 1 ГиБ</span></code></pre>
+</li>
+<li>Прочитайте вывод шаг за шагом. Пример вывода с машины курса, сокращённый (WSL2, Linux 6.18, ext4 на виртуальном диске, поэтому абсолютные числа не отражают реальное оборудование):
+<pre><code><span class="o">1. create with buffered write(), then fsync
+    Dirty after write() returns       264444 kB
+    write() of all data (to cache)          0.163 s    1567.4 MiB/s
+    fsync()                                 0.316 s
+    resident after write+fsync              65536 / 65536 pages (100.0%)
+
+2. posix_fadvise(DONTNEED) on a clean file
+    resident after DONTNEED                     0 / 65536 pages (  0.0%)
+
+3. cold read
+    read, cache cold                        0.142 s    1796.6 MiB/s
+    resident after cold read                65536 / 65536 pages (100.0%)
+
+4. warm read
+    read, cache warm                        0.021 s   12119.7 MiB/s
+
+5. buffered overwrite, sampling /proc/meminfo
+       written     Dirty kB   Writeback kB
+        32 MiB        35104              0
+       128 MiB       133408              0
+       256 MiB       264480              0
+    resident DONTNEED while dirty           63856 / 65536 pages ( 97.4%)
+    fsync() of the overwrite                0.088 s
+    Dirty after fsync                   2336 kB
+    resident DONTNEED after fsync               0 / 65536 pages (  0.0%)
+
+6. O_DIRECT read (bypasses the page cache)
+    read, O_DIRECT, 1 MiB aligned           0.182 s    1402.8 MiB/s
+    resident after O_DIRECT read                0 / 65536 pages (  0.0%)
+    pread(O_DIRECT, buf+1)  -&gt; -1 (Invalid argument)
+    pread(O_DIRECT, off=1)  -&gt; -1 (Invalid argument)</span></code></pre>
+На что обратить внимание:
+<ul>
+<li>Шаг 1: <code>write()</code> завершился со скоростью памяти, а Dirty вырос примерно на 256 МиБ. До <code>fsync()</code> данные были только в ОЗУ.</li>
+<li>Шаги 3 и 4: тёплое чтение оказалось примерно в 7 раз быстрее холодного. На настоящем NVMe-накопителе разрыв больше, а на жёстком диске намного больше. Здесь «холодное» чтение всё равно обслуживалось из кэша хоста Windows.</li>
+<li>Шаг 5: Dirty рос на мегабайт с каждым записанным мегабайтом, и обратная запись не началась, потому что 256 МиБ намного меньше фонового порога в 1,15 ГиБ. <code>DONTNEED</code> для грязных данных выбросил только 2,6% страниц: грязные фолио нельзя выбросить, пока они не записаны.</li>
+<li>Шаг 6: <code>O_DIRECT</code> прочитал весь файл и не оставил в кэше ни одной страницы. Невыровненные запросы были отклонены с <code>EINVAL</code>.</li>
+</ul>
+</li>
+<li>Запустите её снова с 1 ГиБ и наблюдайте за системой во второй панели tmux:
+<pre><code><span class="p">$</span> vmstat 1
+<span class="p">$</span> watch -n1 'grep -E "^(Dirty|Writeback):" /proc/meminfo'</code></pre>
+На машине курса создание файла размером 1 ГиБ замедлилось до 345 МиБ/с, а <code>vmstat</code> показал всплеск около 1 ГБ/с в столбце <code>bo</code> (blocks out, записанные блоки), когда обратная запись дошла до диска:
+<pre><code><span class="o"> r  b   swpd   free   buff  cache   si   so    bi    bo   in   cs us sy id wa st gu
+ 2  1    608 1777644 2308908 8986380    0    0 516100 1049188 4157 4654  2  8 86  4  0  0
+ 1  0    608 1536004 2303312 9271064    0    0 550416     0 3666 3111  1 16 82  0  0  0</span></code></pre>
+<code>bi</code> и <code>bo</code> — это КиБ в секунду, прочитанные с блочных устройств и записанные на них. <code>wa</code> — доля времени в процентах, когда процессор простаивал в ожидании ввода-вывода.
+</li>
+<li>Посмотрите на настройки политики и вычисленные пределы:
+<pre><code><span class="p">$</span> cat /proc/sys/vm/dirty_{background_ratio,ratio,expire_centisecs,writeback_centisecs}
+<span class="o">10
+20
+3000
+500</span>
+<span class="p">$</span> grep -E 'nr_dirty(_background)?_threshold' /proc/vmstat</code></pre>
+</li>
+<li>Необязательно, нужен root: опустошите все кэши командой <code>sync; echo 3 | sudo tee /proc/sys/vm/drop_caches</code> и посмотрите, как падает <code>buff/cache</code> в выводе <code>free -h</code>. Установите <code>strace</code> и выполните <code>strace -e trace=pread64,pwrite64,fsync,fadvise64 ./cache 16</code>, чтобы увидеть системные вызовы программы. Эти шаги здесь не запускались.</li>
+<li>Уберите за собой: <code>rm -f testfile.bin cache</code>.</li>
+</ol>
+</section>
+<section class="check" id="check">
+<h2>Проверьте себя</h2>
+<details><summary>Два процесса открывают и читают один и тот же файл размером 1 ГиБ. Сколько страничного кэша это займёт?</summary><p>Около 1 ГиБ, один раз. Фолио принадлежат <code>address_space</code> inode, а не какому-то из процессов или <code>struct file</code>. У процессов разные смещения, а закэшированные данные общие.</p></details>
+<details><summary><code>write()</code> вернул успех, а через секунду пропало питание. Данные на диске?</summary><p>Скорее всего, нет. Буферизованная запись только копирует данные в страничный кэш. Грязные данные записываются, когда превышен порог или они старше 30 секунд (по умолчанию), либо когда кто-то вызывает <code>fsync()</code>. Даже после обратной записи они могут лежать в энергозависимом кэше накопителя, пока файловая система не отправит FLUSH.</p></details>
+<details><summary>Зачем в приёме атомарной замены вызывать <code>fsync</code> для каталога после <code>rename()</code>?</summary><p>Переименование меняет каталог, а не файл. <code>fsync</code> файла делает долговечными его данные и inode, но новая запись в каталоге — часть метаданных каталога. Пока каталог не синхронизирован, сбой может вернуть старое имя.</p></details>
+<details><summary><code>fsync()</code> вернул <code>EIO</code>. Вы вызываете его снова, и он возвращает 0. Данные в безопасности?</summary><p>Нет. После ошибки обратной записи Linux больше не считает неудачные страницы грязными, поэтому второму <code>fsync()</code> нечего записывать, и он сообщает об успехе. Считайте данные, записанные после последнего успешного <code>fsync()</code>, потерянными и запишите их заново из своей копии или журнала.</p></details>
+<details><summary>Что такое отрицательный dentry и какой нагрузке он помогает?</summary><p>Это закэшированная запись о том, что имени в каталоге нет. Выигрывает всё, что перебирает много путей, которые обычно не существуют: поиск в <code>$PATH</code> оболочкой, поиск по путям include компилятором, поиск библиотек динамическим компоновщиком.</p></details>
+<details><summary>Почему буферы, смещения и длины для <code>O_DIRECT</code> должны быть выровнены?</summary><p>Устройство передаёт данные через DMA единицами своего логического размера блока прямо в ваш буфер или из него. Между ними нет фолио страничного кэша, которое могло бы поглотить неполный блок или выполнить read-modify-write, поэтому запрос должен совпадать с тем, что умеет оборудование.</p></details>
+<details><summary>Как ядро запускает следующее упреждающее чтение раньше, чем программа его попросит?</summary><p>Оно помечает одно фолио в каждом окне упреждающего чтения флагом <code>PG_readahead</code>. Когда чтения программы доходят до этого фолио, <code>filemap_get_pages()</code> видит флаг и вызывает <code>page_cache_async_ra()</code>, которая начинает читать следующее, обычно большее, окно, пока программа ещё дочитывает текущее.</p></details>
+<details><summary>Назовите два кэша, благодаря которым локальная согласованность достаётся бесплатно, и скажите, что заменяет эту гарантию в сетевой файловой системе.</summary><p>Страничный кэш (одно фолио на страницу файла, общее для всех) и dcache (его обновляет тот же код, что меняет каталог). В сетевой файловой системе у каждого клиента свои копии, поэтому клиент должен решать, когда перепроверять данные у сервера, или добиться от сервера обещания уведомить его об изменениях. Как это делает NFS, рассказывают уроки 6 и 7.</p></details>
+</section>
+<section class="further" id="further">
+<h2>Что почитать дальше</h2>
+<ul>
+<li><a href="https://docs.kernel.org/filesystems/vfs.html">Overview of the Linux Virtual File System</a>: справочник самого ядра по объектам VFS и всем таблицам операций.</li>
+<li><a href="https://docs.kernel.org/filesystems/path-lookup.html">Pathname lookup</a>: подробно о том, как работают dcache, RCU-обход и переход через точки монтирования.</li>
+<li><a href="https://docs.kernel.org/admin-guide/sysctl/vm.html">Documentation for /proc/sys/vm</a>: все настройки грязных данных и освобождения памяти с точной семантикой.</li>
+<li><a href="https://docs.kernel.org/core-api/xarray.html">XArray</a>: структура данных, на которой построен индекс страничного кэша.</li>
+<li><a href="https://lwn.net/Articles/752063/">PostgreSQL's fsync() surprise</a> (LWN, 2018): история fsyncgate.</li>
+<li><a href="https://lwn.net/Articles/849538/">Clarifying memory management with page folios</a> (LWN, 2021): почему страничный кэш перешёл со страниц на фолио.</li>
+<li><a href="https://man7.org/linux/man-pages/man2/open.2.html">open(2)</a>: разделы об <code>O_DIRECT</code>, <code>O_SYNC</code> и <code>O_DSYNC</code>. А также <a href="https://man7.org/linux/man-pages/man2/fsync.2.html">fsync(2)</a>.</li>
+<li><a href="https://kernel.dk/io_uring.pdf">Efficient IO with io_uring</a>: статья Йенса Аксбо (Jens Axboe) о том, как устроен io_uring.</li>
+</ul>
+</section>
+<nav class="pager-foot" aria-label="Следующий и предыдущий урок">
+<a class="prev" href="04-btrees.html"><small>Назад</small>B-деревья на практике</a>
+<a class="next" href="06-nfs.html"><small>Дальше</small>NFS от v3 до 4.2</a>
+</nav>
+</main>
+</div>
+<script src="../course.js?v=11"></script>
+</body>
+</html>

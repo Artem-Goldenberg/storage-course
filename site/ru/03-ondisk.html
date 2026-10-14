@@ -1,0 +1,579 @@
+<!doctype html>
+<html lang="ru">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover">
+<title>Внутри образа ext4</title>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=IBM+Plex+Mono:wght@400;600&family=IBM+Plex+Sans+Condensed:wght@500;600;700&family=PT+Sans+Narrow:wght@400;700&family=Source+Serif+4:ital,opsz,wght@0,8..60,400;0,8..60,600;1,8..60,400&display=swap">
+<link rel="stylesheet" href="../course.css?v=10">
+</head>
+<body data-layer="fs">
+<header class="topbar">
+<a class="brand" href="index.html">От open() до RDMA <span>· курс о хранении данных</span></a>
+<nav class="pager" aria-label="Навигация по урокам">
+<a href="02-blocks.html" rel="prev">← Назад</a>
+<details class="route"><summary>Урок 3 из 9</summary></details>
+<a href="04-btrees.html" rel="next">Дальше →</a>
+<details class="sections"><summary>Разделы</summary></details>
+<span class="lang-switch" aria-label="Язык"><a href="../03-ondisk.html" hreflang="en" lang="en">EN</a><b>RU</b></span>
+</nav>
+</header>
+<div class="layout">
+<nav class="rail" aria-label="Уроки">
+<div class="rail-title">Маршрут</div>
+<ol>
+<li class="user"><a href="01-syscalls.html"><span class="n">01</span><span>Системные вызовы и дескрипторы</span></a></li>
+<li class="block"><a href="02-blocks.html"><span class="n">02</span><span>Блочные устройства и адресация</span></a></li>
+<li class="fs"><a href="03-ondisk.html" aria-current="page"><span class="n">03</span><span>Внутри образа ext4</span></a></li>
+<li class="fs"><a href="04-btrees.html"><span class="n">04</span><span>B-деревья на практике</span></a></li>
+<li class="kernel"><a href="05-vfs-cache.html"><span class="n">05</span><span>VFS и кэши</span></a></li>
+<li class="net"><a href="06-nfs.html"><span class="n">06</span><span>NFS от v3 до 4.2</span></a></li>
+<li class="net"><a href="07-nfs-caching.html"><span class="n">07</span><span>Кэширование по сети</span></a></li>
+<li class="net"><a href="08-rdma.html"><span class="n">08</span><span>RDMA и NFS поверх RDMA</span></a></li>
+<li class="net"><a href="09-distributed.html"><span class="n">09</span><span>Распределённые файловые системы</span></a></li>
+<li class="extra"><a href="glossary.html"><span class="n">··</span><span>Глоссарий</span></a></li>
+</ol>
+<div class="rail-legend">
+<span style="--c: var(--l-user)">пространство пользователя</span>
+<span style="--c: var(--l-kernel)">ядро</span>
+<span style="--c: var(--l-fs)">файловая система</span>
+<span style="--c: var(--l-block)">блочный уровень</span>
+<span style="--c: var(--l-net)">сеть</span>
+</div>
+</nav>
+<main class="lesson">
+<header class="lesson-head">
+<p class="eyebrow">Урок 3 · Уровень файловой системы</p>
+<h1>Внутри образа ext4</h1>
+<p class="lede">Диск — это пронумерованный массив блоков. В этом уроке мы откроем настоящую файловую систему ext4 и разберём те немногие записи, которые превращают эти номера в каталоги, имена и файлы, вплоть до смещения в байтах каждого нужного поля.</p>
+<div class="outcomes">
+<b>После этого урока вы сможете</b>
+<ul>
+<li>найти и расшифровать суперблок, дескриптор группы и inode в шестнадцатеричном дампе;</li>
+<li>двумя делениями превратить номер inode в смещение в байтах на устройстве;</li>
+<li>пройти по экстентам inode к данным файла и распознать дыру;</li>
+<li>разрешить путь на диске так же, как это делает ядро: по одному каталогу на каждый компонент пути;</li>
+<li>сказать, что журнал защищает после сбоя, а что нет.</li>
+</ul>
+</div>
+<nav class="toc" aria-label="Содержание урока">
+<b>В этом уроке</b>
+<ol>
+<li><a href="#the-job">Задача: имена поверх номеров</a></li>
+<li><a href="#layout">Карта тома ext4</a></li>
+<li><a href="#superblock">Шаг 1: суперблок</a></li>
+<li><a href="#descriptors">Шаг 2: таблица дескрипторов групп</a></li>
+<li><a href="#inode-address">Шаг 3: номер inode — это адрес</a></li>
+<li><a href="#inode">Запись inode</a></li>
+<li><a href="#extents">От inode к данным: карты блоков и экстенты</a></li>
+<li><a href="#directories">Каталоги — это файлы с именами</a></li>
+<li><a href="#walk">Разрешение пути на диске</a></li>
+<li><a href="#links">Жёсткие ссылки, счётчики ссылок и удаление</a></li>
+<li><a href="#allocation">Выделение места: выбор блоков</a></li>
+<li><a href="#journal">Устойчивость к сбоям: журнал</a></li>
+<li><a href="#cow">Другой ответ: копирование при записи</a></li>
+<li><a href="#xfs">XFS в одном разделе</a></li>
+<li><a href="#lab">Практика 03: Обход образа ext4 вручную</a></li>
+<li><a href="#check">Проверьте себя</a></li>
+<li><a href="#further">Что почитать дальше</a></li>
+</ol>
+</nav>
+</header>
+<section id="the-job">
+<h2>Задача: имена поверх номеров</h2>
+<p>В <a href="02-blocks.html">уроке 02</a> устройство дало нам две операции: прочитать блок <var>n</var> и записать блок <var>n</var>. Программам нужно другое. Они просят <code>/docs/notes/hello.txt</code>, ожидают, что у файла есть владелец, размер и права доступа, и что его байты вернутся по порядку. Файловая система соединяет одно с другим. Это структура данных, которая хранится в тех же самых блоках, и она должна быстро отвечать на пять вопросов:</p>
+<ol>
+<li>Где начинается файловая система и как она устроена? Ответ даёт <b>суперблок</b>.</li>
+<li>Кому принадлежит данный файл, какого он размера и когда менялся? Это <b>inode</b> (индексный дескриптор).</li>
+<li>В каких блоках диска лежат байты файла и в каком порядке? Это <b>карта блоков</b> inode, которая в ext4 представляет собой набор <b>экстентов</b>.</li>
+<li>На какой файл указывает имя? Это знает <b>каталог</b> — файл, заполненный записями вида <code>(имя, номер inode)</code>.</li>
+<li>Какие блоки и inode свободны? Это записано в <b>битовых картах</b> (bitmaps).</li>
+</ol>
+<p>Кроме того, нужен способ сохранить всё это согласованным, если питание пропадёт посреди обновления. ext4 использует для этого <b>журнал</b>.</p>
+<p>Мы разбираем ext4, потому что это файловая система по умолчанию в Debian и Ubuntu, на ней стоит корень этой самой WSL (<code>df -T /</code> говорит <code>ext4</code>), а её формат описан в дереве исходников ядра с точностью до байта. Все числа в этом уроке взяты из образа размером 16 МиБ, который собирается в <a href="#lab">практике 03</a>, так что каждое из них можно воспроизвести.</p>
+<aside class="key"><span class="tag">Главное</span><p>Файловая система — это структура данных, узлами которой служат блоки диска. Любая операция (открытие, чтение, создание, удаление) — это обход этой структуры. Если вы умеете пройти по указателям вручную, в работе файловой системы не остаётся ничего загадочного.</p></aside>
+</section>
+<section id="layout">
+<h2>Карта тома ext4</h2>
+<p>ext4 делит том на <b>группы блоков</b> (block groups). Каждая группа охватывает <code>s_blocks_per_group</code> блоков, то есть 8 × размер блока: в одном блоке битовой карты 8 бит на байт, и каждый бит отвечает за один блок. При блоках по 4 КиБ группа состоит из 32 768 блоков, или 128 МиБ. На диске в 1 ТиБ 8192 группы.</p>
+<p>Каждая группа может содержать:</p>
+<ul>
+<li>резервную копию <b>суперблока</b> и <b>таблицы дескрипторов групп</b> (с возможностью <code>sparse_super</code> их хранят только группы 0 и 1 и группы, номера которых — степени 3, 5 и 7);</li>
+<li><b>битовую карту блоков</b>: по одному биту на каждый блок группы, 1 = занят;</li>
+<li><b>битовую карту inode</b>: по одному биту на каждую ячейку inode в группе;</li>
+<li><b>таблицу inode</b>: inode группы, хранящиеся массивом записей фиксированного размера;</li>
+<li>блоки данных: всё остальное, включая содержимое файлов, содержимое каталогов и блоки дерева экстентов.</li>
+</ul>
+<p>Группы нужны ради локальности. ext4 старается поместить inode файла, его каталог и его данные в одну группу, чтобы вращающемуся диску не приходилось гонять головку через всю пластину ради одного файла. Кроме того, благодаря группам каждая битовая карта занимает ровно один блок, а независимые выделения места могут идти одновременно в разных группах.</p>
+<p>В современной ext4 есть ещё <code>flex_bg</code>. Эта возможность собирает битовые карты и таблицы inode 16 соседних групп вместе в начале первой из них. Так метаданные всей flex-группы лежат подряд, и большие экстенты данных не разрезаются метаданными каждые 128 МиБ. Вот группа 0 образа из практики по данным <code>dumpe2fs</code> (где лежат метаданные) и <code>debugfs -R 'icheck N'</code> (какому inode принадлежит блок <var>N</var>):</p>
+<figure class="diagram">
+<svg viewBox="0 0 760 240" width="760" role="img" aria-label="Карта блоков группы 0 в образе из практики. Первая строка: блок 0 суперблок, 1 таблица дескрипторов групп, 2 зарезервированный блок дескрипторов, 3 битовая карта блоков, с 4 по 8 корневой каталог и lost+found, с 9 по 18 журнал, 19 битовая карта inode, с 20 по 34 журнал. Вторая строка: с 35 по 290 таблица inode, 291 блок resize inode, с 292 по 1290 журнал, с 1291 по 1324 файлы и каталоги практики, с 1325 по 4095 свободно.">
+<text class="ts" x="15" y="22">блоки 0–34 (блоки по 4 КиБ; ширина не в масштабе)</text>
+<rect class="k-fs" x="15" y="34" width="76" height="62" rx="2"/>
+<text class="t" x="53" y="56" text-anchor="middle">0</text>
+<text class="ts" x="53" y="74" text-anchor="middle">суперблок</text>
+<rect class="k-fs" x="91" y="34" width="46" height="62" rx="2"/>
+<text class="t" x="114" y="56" text-anchor="middle">1</text>
+<text class="ts" x="114" y="74" text-anchor="middle">GDT</text>
+<rect class="k-fs" x="137" y="34" width="58" height="62" rx="2"/>
+<text class="t" x="166" y="56" text-anchor="middle">2</text>
+<text class="ts" x="166" y="74" text-anchor="middle">резерв</text>
+<text class="ts" x="166" y="88" text-anchor="middle">GDT</text>
+<rect class="k-fs" x="195" y="34" width="78" height="62" rx="2"/>
+<text class="t" x="234" y="56" text-anchor="middle">3</text>
+<text class="ts" x="234" y="74" text-anchor="middle">бит. карта</text>
+<text class="ts" x="234" y="88" text-anchor="middle">блоков</text>
+<rect class="k-user" x="273" y="34" width="84" height="62" rx="2"/>
+<text class="t" x="315" y="56" text-anchor="middle">4–8</text>
+<text class="ts" x="315" y="74" text-anchor="middle">каталог /</text>
+<text class="ts" x="315" y="88" text-anchor="middle">lost+found</text>
+<rect class="k-kernel" x="357" y="34" width="80" height="62" rx="2"/>
+<text class="t" x="397" y="56" text-anchor="middle">9–18</text>
+<text class="ts" x="397" y="74" text-anchor="middle">журнал</text>
+<rect class="k-fs" x="437" y="34" width="90" height="62" rx="2"/>
+<text class="t" x="482" y="56" text-anchor="middle">19</text>
+<text class="ts" x="482" y="74" text-anchor="middle">бит. карта</text>
+<text class="ts" x="482" y="88" text-anchor="middle">inode</text>
+<rect class="k-kernel" x="527" y="34" width="218" height="62" rx="2"/>
+<text class="t" x="636" y="56" text-anchor="middle">20–34</text>
+<text class="ts" x="636" y="74" text-anchor="middle">журнал</text>
+<text class="ts" x="15" y="114">блоки 35–4095</text>
+<rect class="k-fs" x="15" y="124" width="170" height="62" rx="2"/>
+<text class="t" x="100" y="146" text-anchor="middle">35–290</text>
+<text class="ts" x="100" y="164" text-anchor="middle">таблица inode</text>
+<rect class="box" x="185" y="124" width="64" height="62" rx="2"/>
+<text class="t" x="217" y="146" text-anchor="middle">291</text>
+<text class="ts" x="217" y="164" text-anchor="middle">resize</text>
+<rect class="k-kernel" x="249" y="124" width="210" height="62" rx="2"/>
+<text class="t" x="354" y="146" text-anchor="middle">292–1290</text>
+<text class="ts" x="354" y="164" text-anchor="middle">журнал</text>
+<rect class="k-user" x="459" y="124" width="120" height="62" rx="2"/>
+<text class="t" x="519" y="146" text-anchor="middle">1291–1324</text>
+<text class="ts" x="519" y="164" text-anchor="middle">файлы, каталоги</text>
+<text class="ts" x="519" y="178" text-anchor="middle">из tree/</text>
+<rect class="box" x="579" y="124" width="166" height="62" rx="2"/>
+<text class="t" x="662" y="146" text-anchor="middle">1325–4095</text>
+<text class="ts" x="662" y="164" text-anchor="middle">свободно</text>
+<rect class="k-fs" x="15" y="214" width="14" height="14"/>
+<text class="ts" x="35" y="225">метаданные, адрес по формуле</text>
+<rect class="k-kernel" x="285" y="214" width="14" height="14"/>
+<text class="ts" x="305" y="225">журнал jbd2 (inode 8)</text>
+<rect class="k-user" x="470" y="214" width="14" height="14"/>
+<text class="ts" x="490" y="225">данные каталогов и файлов</text>
+</svg>
+<figcaption>Группа 0 образа <code>disk.img</code> из практики 03 — единственная группа в этом образе на 16 МиБ. С <code>flex_bg</code> mkfs резервирует место под битовые карты 16 групп (блоки 3–18 и 19–34). Здесь существует только одна группа, поэтому битовые карты занимают лишь блоки 3 и 19, а промежутки mkfs заполнил корневым каталогом, <code>lost+found</code> и первыми 25 блоками журнала длиной 1024 блока. Блок 2 зарезервирован, чтобы таблица дескрипторов могла вырасти при увеличении файловой системы, а блок 291 — это блок двойной косвенной адресации inode для изменения размера (resize inode, inode 7), который учитывает эти зарезервированные блоки. С байта 1024 блока 0 начинается суперблок.</figcaption>
+</figure>
+</section>
+<section id="superblock">
+<h2>Шаг 1: суперблок</h2>
+<p>Суперблок всегда лежит по <b>байту 1024</b>, каков бы ни был размер блока. Первые 1024 байта оставлены свободными под загрузочный сектор. Чтение по смещению в байтах позволяет драйверу найти суперблок, ещё не зная размера блока, который сам хранится в суперблоке. При блоках по 4 КиБ суперблок лежит внутри блока 0. При блоках по 1 КиБ он занимает блок 1, и <code>s_first_data_block</code> равно 1.</p>
+<p>Все многобайтовые поля хранятся в порядке little-endian (младший байт первым). Магическое число <code>0xEF53</code> лежит по байту 1024 + 0x38 = 0x438 в виде двух байтов <code>53 ef</code>:</p>
+<pre><code><span class="p">$</span> xxd -s $((1024 + 0x38)) -l 2 disk.img
+<span class="o">00000438: 53ef                                     S.</span></code></pre>
+<p>Поля, по которым находится всё остальное:</p>
+<div class="table-wrap"><table>
+<thead><tr><th>Смещение</th><th>Поле</th><th>Размер</th><th>Значение в практике и смысл</th></tr></thead>
+<tbody>
+<tr><td><code>0x00</code></td><td><code>s_inodes_count</code></td><td>4</td><td>4096 inode во всей файловой системе</td></tr>
+<tr><td><code>0x04</code></td><td><code>s_blocks_count_lo</code></td><td>4</td><td>4096 блоков (младшие 32 бита; <code>_hi</code> лежит по <code>0x150</code>)</td></tr>
+<tr><td><code>0x14</code></td><td><code>s_first_data_block</code></td><td>4</td><td>0 (1 при блоках по 1 КиБ)</td></tr>
+<tr><td><code>0x18</code></td><td><code>s_log_block_size</code></td><td>4</td><td>2, значит, размер блока = 1024 &lt;&lt; 2 = 4096</td></tr>
+<tr><td><code>0x20</code></td><td><code>s_blocks_per_group</code></td><td>4</td><td>32768</td></tr>
+<tr><td><code>0x28</code></td><td><code>s_inodes_per_group</code></td><td>4</td><td>4096</td></tr>
+<tr><td><code>0x38</code></td><td><code>s_magic</code></td><td>2</td><td><code>0xEF53</code>: это ext2/3/4</td></tr>
+<tr><td><code>0x58</code></td><td><code>s_inode_size</code></td><td>2</td><td>256 байт на запись inode</td></tr>
+<tr><td><code>0x5C</code></td><td><code>s_feature_compat</code></td><td>4</td><td>возможности, которые старый драйвер может игнорировать</td></tr>
+<tr><td><code>0x60</code></td><td><code>s_feature_incompat</code></td><td>4</td><td>возможности, которые старый драйвер обязан понимать, чтобы вообще смонтировать файловую систему</td></tr>
+<tr><td><code>0x64</code></td><td><code>s_feature_ro_compat</code></td><td>4</td><td>возможности, при которых старый драйвер может читать, но не писать</td></tr>
+<tr><td><code>0x68</code></td><td><code>s_uuid</code></td><td>16</td><td>UUID файловой системы (то, что печатает <code>blkid</code>)</td></tr>
+<tr><td><code>0x78</code></td><td><code>s_volume_name</code></td><td>16</td><td><code>"lab03"</code></td></tr>
+<tr><td><code>0xFE</code></td><td><code>s_desc_size</code></td><td>2</td><td>64: размер дескриптора группы, когда установлен <code>64bit</code></td></tr>
+</tbody>
+</table></div>
+<p>Три маски возможностей (feature masks) позволили одному дисковому формату вырасти из ext2 (1993) через ext3 (журнал) до ext4 (экстенты, 64-битные номера блоков, контрольные суммы) так, чтобы старые ядра не могли по незнанию его испортить:</p>
+<ul>
+<li><b>compat</b> (<code>has_journal</code>, <code>dir_index</code>, <code>ext_attr</code>): старый драйвер, не знающий этого бита, всё равно может смонтировать файловую систему на чтение и запись.</li>
+<li><b>ro_compat</b> (<code>metadata_csum</code>, <code>huge_file</code>, <code>dir_nlink</code>): старый драйвер может смонтировать её только на чтение, потому что запись оставила бы новые структуры устаревшими.</li>
+<li><b>incompat</b> (<code>extents</code>, <code>64bit</code>, <code>flex_bg</code>, <code>filetype</code>): старый драйвер обязан отказаться, потому что прочитал бы данные неправильно.</li>
+</ul>
+<p>В образе из практики включены <code>has_journal ext_attr resize_inode dir_index filetype extents 64bit flex_bg sparse_super large_file huge_file dir_nlink extra_isize metadata_csum</code> — именно это <code>mkfs.ext4</code> в Ubuntu 24.04 включает по умолчанию (см. <code>/etc/mke2fs.conf</code>).</p>
+</section>
+<section id="descriptors">
+<h2>Шаг 2: таблица дескрипторов групп</h2>
+<p>Таблица дескрипторов групп (group descriptor table, GDT) начинается в блоке, следующем за блоком с суперблоком, то есть в блоке <code>s_first_data_block + 1</code>. Это массив, по одному дескриптору на группу. В файловых системах без <code>64bit</code> каждый дескриптор занимает 32 байта. С <code>64bit</code> он занимает <code>s_desc_size</code> байт (на практике 64), и в дополнительных 32 байтах лежат старшие половины номеров блоков.</p>
+<div class="table-wrap"><table>
+<thead><tr><th>Смещение</th><th>Поле</th><th>Размер</th><th>Смысл</th></tr></thead>
+<tbody>
+<tr><td><code>0x00</code></td><td><code>bg_block_bitmap_lo</code></td><td>4</td><td>номер блока битовой карты блоков этой группы</td></tr>
+<tr><td><code>0x04</code></td><td><code>bg_inode_bitmap_lo</code></td><td>4</td><td>номер блока битовой карты inode</td></tr>
+<tr><td><code>0x08</code></td><td><code>bg_inode_table_lo</code></td><td>4</td><td>первый блок таблицы inode (35 в практике)</td></tr>
+<tr><td><code>0x0C</code></td><td><code>bg_free_blocks_count_lo</code></td><td>2</td><td>свободных блоков в группе</td></tr>
+<tr><td><code>0x0E</code></td><td><code>bg_free_inodes_count_lo</code></td><td>2</td><td>свободных inode в группе</td></tr>
+<tr><td><code>0x10</code></td><td><code>bg_used_dirs_count_lo</code></td><td>2</td><td>каталогов в группе (по этому счётчику распределитель разносит каталоги)</td></tr>
+<tr><td><code>0x12</code></td><td><code>bg_flags</code></td><td>2</td><td>например, <code>INODE_ZEROED</code>: таблица обнулена</td></tr>
+<tr><td><code>0x1E</code></td><td><code>bg_checksum</code></td><td>2</td><td>контрольная сумма дескриптора</td></tr>
+<tr><td><code>0x20</code></td><td><code>bg_block_bitmap_hi</code></td><td>4</td><td>старшие 32 бита (только в 64-байтовых дескрипторах)</td></tr>
+<tr><td><code>0x28</code></td><td><code>bg_inode_table_hi</code></td><td>4</td><td>старшие 32 бита номера блока таблицы inode</td></tr>
+</tbody>
+</table></div>
+<p>Битовые карты — самая простая структура в файловой системе. Бит <var>i</var> битовой карты блоков группы говорит, занят ли блок <code>group_start + i</code>. Найти свободный блок — значит найти нулевой бит. Освободить блок — значит сбросить один бит и увеличить счётчики свободных блоков в дескрипторе и в суперблоке. Битовая карта inode делает то же самое для ячеек inode.</p>
+<p>Счётчики свободного места продублированы намеренно. <code>df</code> читает их из суперблока за постоянное время, а не сканирует все битовые карты. Поэтому <code>df</code> на заполненном томе в 20 ТБ отвечает мгновенно, а <code>du</code> на том же томе работает минутами.</p>
+</section>
+<section id="inode-address">
+<h2>Шаг 3: номер inode — это адрес</h2>
+<p>У каждого файла и каталога есть <b>inode</b>, и inode нумеруются с 1. Таблица inode каждой группы — это массив записей фиксированного размера, поэтому номер inode по сути является адресом. Чтобы найти inode, хватает двух делений и одного умножения:</p>
+<pre><code>group  = (ino - 1) / s_inodes_per_group
+index  = (ino - 1) % s_inodes_per_group
+offset = bg_inode_table[group] * block_size + index * s_inode_size</code></pre>
+<figure class="diagram">
+<svg viewBox="0 0 680 360" width="680" role="img" aria-label="Шесть шагов от номера inode 17 до байтов файла: вычислить группу и индекс, прочитать дескриптор группы, вычислить смещение inode в байтах, прочитать i_block, найти экстент, прочитать блок данных">
+<defs><marker id="ah-03-1" viewBox="0 0 10 10" refX="9" refY="5" markerWidth="7" markerHeight="7" orient="auto-start-reverse"><path class="ah" d="M0,0 L10,5 L0,10 z"/></marker></defs>
+<text class="ts" x="20" y="38">вход</text>
+<rect class="k-user" x="170" y="14" width="490" height="40" rx="3"/>
+<text class="t" x="185" y="39">inode 17   (hello.txt, из записи каталога)</text>
+<line class="ln" x1="415" y1="54" x2="415" y2="68" marker-end="url(#ah-03-1)"/>
+<text class="ts" x="20" y="96">арифметика</text>
+<rect class="k-fs" x="170" y="72" width="490" height="40" rx="3"/>
+<text class="t" x="185" y="97">группа (17-1)/4096 = 0   индекс (17-1)%4096 = 16</text>
+<line class="ln" x1="415" y1="112" x2="415" y2="126" marker-end="url(#ah-03-1)"/>
+<text class="ts" x="20" y="154">чтение GDT</text>
+<rect class="k-fs" x="170" y="130" width="490" height="40" rx="3"/>
+<text class="t" x="185" y="155">дескриптор 0 с байта 4096: bg_inode_table = 35</text>
+<line class="ln" x1="415" y1="170" x2="415" y2="184" marker-end="url(#ah-03-1)"/>
+<text class="ts" x="20" y="212">чтение inode</text>
+<rect class="k-fs" x="170" y="188" width="490" height="40" rx="3"/>
+<text class="t" x="185" y="213">байт 35*4096 + 16*256 = 147456: запись в 256 байт</text>
+<line class="ln" x1="415" y1="228" x2="415" y2="242" marker-end="url(#ah-03-1)"/>
+<text class="ts" x="20" y="270">i_block</text>
+<rect class="k-fs" x="170" y="246" width="490" height="40" rx="3"/>
+<text class="t" x="185" y="271">экстент: блок файла 0, длина 1 -&gt; блок диска 1321</text>
+<line class="ln" x1="415" y1="286" x2="415" y2="300" marker-end="url(#ah-03-1)"/>
+<text class="ts" x="20" y="328">чтение данных</text>
+<rect class="k-block" x="170" y="304" width="490" height="40" rx="3"/>
+<text class="t" x="185" y="329">байт 1321*4096 = 5410816: "This file lives at..."</text>
+</svg>
+<figcaption>Каждый шаг — это либо арифметика, либо чтение одного блока. Искать что-либо приходится, только когда мы доходим до каталога.</figcaption>
+</figure>
+<p>Некоторые номера inode зарезервированы. Inode 1 учитывает плохие блоки, inode 2 — <b>всегда корневой каталог</b>, inode 7 хранит зарезервированные блоки GDT для изменения размера на лету, inode 8 — журнал, а первый обычный inode — <code>s_first_ino</code>, обычно 11; его <code>mkfs</code> отдаёт каталогу <code>lost+found</code>.</p>
+<p>У такого устройства есть следствие, с которым можно столкнуться в реальной эксплуатации. Таблицы inode выделяет <code>mkfs</code>, и они никогда не растут, поэтому число файлов фиксируется при форматировании параметром <code>inode_ratio</code> (по умолчанию один inode на 16 КиБ диска). Диск, заполненный миллионами крошечных файлов, может сообщать <code>No space left on device</code>, хотя <code>df</code> показывает свободные гигабайты. <code>df -i</code> покажет, что кончились inode. XFS обходит эту проблему, выделяя inode динамически, как мы увидим в конце урока.</p>
+</section>
+<section id="inode">
+<h2>Запись inode</h2>
+<p>Inode хранит всё о файле, кроме его имени и данных. Первые 128 байт устроены так же, как в классической ext2. Остаток 256-байтового inode занимают расширения: наносекундные временные метки, время создания и небольшие расширенные атрибуты.</p>
+<div class="table-wrap"><table>
+<thead><tr><th>Смещение</th><th>Поле</th><th>Размер</th><th>Смысл</th></tr></thead>
+<tbody>
+<tr><td><code>0x00</code></td><td><code>i_mode</code></td><td>2</td><td>тип файла (старшие 4 бита) + биты прав доступа; <code>0x81A4</code> = обычный файл, 0644</td></tr>
+<tr><td><code>0x02</code></td><td><code>i_uid</code></td><td>2</td><td>владелец, младшие 16 бит (старшие биты в <code>osd2</code>)</td></tr>
+<tr><td><code>0x04</code></td><td><code>i_size_lo</code></td><td>4</td><td>размер в байтах, младшие 32 бита (<code>i_size_high</code> по <code>0x6C</code>)</td></tr>
+<tr><td><code>0x08</code></td><td><code>i_atime</code></td><td>4</td><td>последний доступ, секунды с 1970 года</td></tr>
+<tr><td><code>0x0C</code></td><td><code>i_ctime</code></td><td>4</td><td>последнее изменение inode (chmod, link, rename)</td></tr>
+<tr><td><code>0x10</code></td><td><code>i_mtime</code></td><td>4</td><td>последнее изменение данных</td></tr>
+<tr><td><code>0x14</code></td><td><code>i_dtime</code></td><td>4</td><td>время удаления (0, пока файл существует)</td></tr>
+<tr><td><code>0x18</code></td><td><code>i_gid</code></td><td>2</td><td>группа, младшие 16 бит</td></tr>
+<tr><td><code>0x1A</code></td><td><code>i_links_count</code></td><td>2</td><td>число записей каталогов, указывающих на этот inode</td></tr>
+<tr><td><code>0x1C</code></td><td><code>i_blocks_lo</code></td><td>4</td><td>выделенное место в 512-байтовых единицах (8 = один блок 4 КиБ)</td></tr>
+<tr><td><code>0x20</code></td><td><code>i_flags</code></td><td>4</td><td><code>0x80000</code> EXTENTS_FL, <code>0x1000</code> INDEX_FL (каталог с htree), ...</td></tr>
+<tr><td><code>0x28</code></td><td><code>i_block[15]</code></td><td>60</td><td>карта блоков: 15 указателей (ext2/3) или корень дерева экстентов (ext4)</td></tr>
+<tr><td><code>0x64</code></td><td><code>i_generation</code></td><td>4</td><td>увеличивается при повторном использовании номера inode (его используют хэндлы файлов NFS: <a href="06-nfs.html">урок 06</a>)</td></tr>
+<tr><td><code>0x6C</code></td><td><code>i_size_high</code></td><td>4</td><td>размер, старшие 32 бита</td></tr>
+<tr><td><code>0x80</code></td><td><code>i_extra_isize</code></td><td>2</td><td>сколько байт сверх 128 используется (32 в практике)</td></tr>
+<tr><td><code>0x90</code></td><td><code>i_crtime</code></td><td>4</td><td>время создания (то, что <code>statx</code> называет birth time)</td></tr>
+</tbody>
+</table></div>
+<p>Вот inode 17 (<code>/docs/notes/hello.txt</code>) из образа практики в сыром виде, с подписью каждого поля:</p>
+<figure class="diagram">
+<pre><span class="p">$</span> xxd -s 147456 -l 64 disk.img
+00024000: <b>a481</b> <b>e803</b> <b>0001 0000</b> cc35 ce6a cc35 ce6a  .........5.j.5.j
+          mode uid  size=0x100   atime     ctime
+          0644 1000 =256 байт
+00024010: cc35 ce6a 0000 0000 <b>e803</b> <b>0200</b> <b>0800 0000</b>  .5.j............
+          mtime     dtime=0   gid  links i_blocks=8
+                              1000 =2    (8 x 512 Б = 4 КиБ)
+00024020: <b>0000 0800</b> 0000 0000 <b>0af3 0100 0400 0000</b>  ................
+          flags     osd1      --- заголовок экстента ---
+          0x80000             magic entries max depth
+          EXTENTS             F30A  1      4    0
+00024030: 0000 0000 <b>0000 0000 0100 0000 2905 0000</b>  ............)...
+          eh_gen    -------- один экстент ------------
+                    блок файла 0, длина 1, начало 0x529 = 1321</pre>
+<figcaption>Little-endian: <code>a481</code> — это 0x81A4, <code>2905 0000</code> — это 0x00000529. Счётчик ссылок равен 2, потому что <code>/docs/hello-again.txt</code> — жёсткая ссылка на тот же inode.</figcaption>
+</figure>
+<p>Обратите внимание, чего в inode <em>нет</em>: имени файла. Имена живут только в каталогах. Одно это решение объясняет жёсткие ссылки, объясняет, почему <code>mv</code> внутри одной файловой системы мгновенен для файла любого размера, и объясняет, почему файл может продолжать жить после удаления его последнего имени.</p>
+<aside class="note"><span class="tag">Отступление</span><p>32-битные временные метки переполнились бы в 2038 году. Дополнительные поля 256-байтового inode добавляют наносекунды и два дополнительных бита эпохи, что отодвигает предел до 2446 года. В файловых системах с 128-байтовыми inode для этого нет места, и новые версии <code>mkfs</code> об этом предупреждают.</p></aside>
+</section>
+<section id="extents">
+<h2>От inode к данным: карты блоков и экстенты</h2>
+<p>60 байт <code>i_block</code> говорят, где лежат данные файла. ext2 и ext3 использовали их как 15 указателей на блоки, по 4 байта каждый:</p>
+<figure class="diagram">
+<pre>ext2/ext3: i_block = 15 указателей (в блок 4 КиБ помещается 1024 указателя)
+
+  i_block[0..11] --&gt; 12 блоков данных напрямую                    блоки файла 0..11
+  i_block[12]    --&gt; косвенный блок --&gt; 1024 блока данных         12..1035
+  i_block[13]    --&gt; двойной косвенный --&gt; 1024 косвенных
+                                       --&gt; 1024^2 блоков данных   1036..1049611
+  i_block[14]    --&gt; тройной косвенный --&gt; ... --&gt; 1024^3 блоков  1049612..1074791436
+
+ext4: i_block = заголовок экстентов + до 4 экстентов (по 12 байт)
+
+  [ eh_magic 0xF30A | eh_entries 2 | eh_max 4 | eh_depth 0 ]
+  [ ee_block 0   | ee_len 1 | ee_start 1318 ]   блок файла 0   -&gt; диск 1318
+  [ ee_block 256 | ee_len 1 | ee_start 1319 ]   блок файла 256 -&gt; диск 1319
+                                                (блоки 1..255: дыра)</pre>
+<figcaption>Две карты блоков. Схема с указателями хранит по указателю на каждый блок. Экстент хранит одну запись на непрерывный участок. Пример с экстентами — файл <code>/data/sparse.dat</code> из практики.</figcaption>
+</figure>
+<p>Схема с указателями проста и работает, но ей нужен указатель на каждый блок, как бы аккуратно ни были расположены блоки. Файлу в 1 ГиБ, записанному подряд, всё равно нужно 262 144 указателя, то есть 1 МиБ косвенных блоков, и чтобы удалить такой файл, приходится прочитать их все и узнать, какие блоки освобождать. Кроме того, схема упирается в предел 2<sup>32</sup> блоков.</p>
+<p><b>Экстент</b> (extent) описывает непрерывный участок: «блоки файла с <var>L</var> по <var>L+n−1</var> лежат в блоках диска с <var>P</var> по <var>P+n−1</var>». ext4 упаковывает это в 12 байт:</p>
+<div class="table-wrap"><table>
+<thead><tr><th>Структура</th><th>Поля (смещение: имя)</th><th>Роль</th></tr></thead>
+<tbody>
+<tr><td><code>ext4_extent_header</code></td><td>0x0 <code>eh_magic</code> (0xF30A), 0x2 <code>eh_entries</code>, 0x4 <code>eh_max</code>, 0x6 <code>eh_depth</code>, 0x8 <code>eh_generation</code></td><td>начинает каждый узел дерева</td></tr>
+<tr><td><code>ext4_extent</code></td><td>0x0 <code>ee_block</code>, 0x4 <code>ee_len</code>, 0x6 <code>ee_start_hi</code>, 0x8 <code>ee_start_lo</code></td><td>запись в листе: один участок блоков</td></tr>
+<tr><td><code>ext4_extent_idx</code></td><td>0x0 <code>ei_block</code>, 0x4 <code>ei_leaf_lo</code>, 0x8 <code>ei_leaf_hi</code></td><td>индексная запись: «блоки файла, начиная с этого, описаны узлом в вот этом блоке»</td></tr>
+</tbody>
+</table></div>
+<p>Один экстент покрывает до 32 768 блоков (128 МиБ при блоках по 4 КиБ). Если <code>ee_len</code> больше 32 768, экстент <b>незаписанный</b> (unwritten): блоки зарезервированы, например вызовом <code>fallocate()</code>, но ни разу не записывались, поэтому чтение возвращает нули, не обращаясь к диску. Файлу в 100 КБ, записанному за один раз, нужен один экстент. В практике <code>/data/big.txt</code> имеет размер 102 000 байт: 25 блоков в одном экстенте.</p>
+<p>В 60 байтах inode помещаются 12-байтовый заголовок и четыре экстента. Если файлу нужен пятый экстент, у него вырастает дерево: четыре записи переезжают в новый блок, вмещающий 340 таких записей, а корень в inode становится индексным узлом, который указывает на этот блок. Это дерево — B+-дерево, и ему посвящён <a href="04-btrees.html">урок 04</a>.</p>
+<h3>Дыры</h3>
+<p>Если блок файла не покрыт ни одним экстентом, этот блок — <b>дыра</b> (hole). У него нет блока на диске, и при чтении он возвращает нули. <code>/data/sparse.dat</code> в практике имеет длину 1 048 726 байт, но занимает два блока: <code>ls -ls</code> показывает 8 КиБ выделенного места, а его <code>i_blocks</code> равно 16 (в 512-байтовых единицах). <code>i_size</code> — это логическая длина, а <code>i_blocks</code> — сколько файл стоит на диске. <code>du</code> сообщает второе, а <code>ls -l</code> — первое.</p>
+<h3>Символические ссылки</h3>
+<p>Символическая ссылка — это inode, данными которого служит путь к цели. Если путь короче 60 байт, ext4 хранит его прямо в <code>i_block</code> и вообще не выделяет блок данных. Это <b>быстрая символическая ссылка</b> (fast symlink), и у неё нет флага <code>EXTENTS_FL</code>. Более длинные пути получают блок данных, как любой файл. В практике есть ссылка каждого вида.</p>
+</section>
+<section id="directories">
+<h2>Каталоги — это файлы с именами</h2>
+<p>Каталог — это inode с типом <code>S_IFDIR</code>, в блоках данных которого лежат записи каталога. Каждая запись — это <code>ext4_dir_entry_2</code>:</p>
+<div class="table-wrap"><table>
+<thead><tr><th>Смещение</th><th>Поле</th><th>Размер</th><th>Смысл</th></tr></thead>
+<tbody>
+<tr><td><code>0x0</code></td><td><code>inode</code></td><td>4</td><td>номер inode; 0 означает «неиспользуемая запись»</td></tr>
+<tr><td><code>0x4</code></td><td><code>rec_len</code></td><td>2</td><td>байт от этой записи до следующей</td></tr>
+<tr><td><code>0x6</code></td><td><code>name_len</code></td><td>1</td><td>длина имени</td></tr>
+<tr><td><code>0x7</code></td><td><code>file_type</code></td><td>1</td><td>1 файл, 2 каталог, 3 символьное устройство, 4 блочное устройство, 5 fifo, 6 сокет, 7 символическая ссылка</td></tr>
+<tr><td><code>0x8</code></td><td><code>name</code></td><td>name_len</td><td>не завершается NUL; запись дополняется до границы 4 байт</td></tr>
+</tbody>
+</table></div>
+<p>Записи упакованы одна за другой. <code>rec_len</code> служит ссылкой на следующую запись, а <code>rec_len</code> последней записи растягивается до конца блока. Вот блок каталога <code>/docs</code> из образа практики в расшифрованном виде:</p>
+<figure class="diagram">
+<pre>/docs, блок каталога 0
+смещ.   inode  rec_len  name_len  тип      имя
+     0     16       12         1  dir      .
+    12      2       12         2  dir      ..
+    24     17       24        15  file     hello-again.txt
+    48     18       16         6  symlink  latest
+    64     19     4020         5  dir      notes             &lt;- rec_len тянется до байта 4084
+  4084      0       12         0  0xDE     (хвост с контрольной суммой, похож на пустую запись)</pre>
+<figcaption>Каждая запись — это 8 байт заголовка плюс имя, с округлением вверх до кратного 4. Последние 12 байт хранят контрольную сумму, замаскированную под неиспользуемую запись, чтобы программы, написанные до появления контрольных сумм, её пропускали.</figcaption>
+</figure>
+<p>Из такого устройства следует несколько вещей:</p>
+<ul>
+<li><code>.</code> и <code>..</code> — настоящие записи, которые есть в каждом каталоге.</li>
+<li><b>Удаление</b> записи ничего не сдвигает. <code>rec_len</code> предыдущей записи увеличивается и поглощает её, а байты остаются на диске, пока место не понадобится снова.</li>
+<li><b>Создание</b> записи — это поиск записи с достаточным запасом после её собственного имени и разделение её <code>rec_len</code> либо добавление нового блока.</li>
+<li>Байт <code>file_type</code> дублирует информацию из inode. Он нужен, чтобы <code>readdir</code> мог сообщить тип каждой записи (<code>d_type</code>), не читая каждый inode, и это делает <code>find -type d</code> и <code>ls --color</code> намного дешевле.</li>
+<li><b>Поиск линейный.</b> Чтобы найти одно имя, приходится читать блоки каталога, пока оно не встретится. В каталоге со 100 000 файлов один <code>open()</code> мог бы просканировать мегабайты. ext4 решает это индексом под названием <b>htree</b> — B-деревом, ключом в котором служит хеш имени. О нём рассказывает <a href="04-btrees.html#htree">урок 04</a>.</li>
+</ul>
+</section>
+<section id="walk">
+<h2>Разрешение пути на диске</h2>
+<p>Теперь части складываются вместе. Чтобы открыть <code>/docs/notes/hello.txt</code>, когда в кэше ничего нет, нужно сделать следующее:</p>
+<ol>
+<li>Прочитать inode 2, корневой каталог. Найти его данные по его экстентам.</li>
+<li>Просмотреть блоки корневого каталога в поисках <code>docs</code>. Получить inode 16.</li>
+<li>Прочитать inode 16, убедиться, что это каталог, найти в нём <code>notes</code>. Получить inode 19.</li>
+<li>Прочитать inode 19, найти в нём <code>hello.txt</code>. Получить inode 17.</li>
+<li>Прочитать inode 17. Его экстенты говорят, где лежат байты.</li>
+</ol>
+<p>Вот что печатает <code>ext4walk</code> из практики (с сокращениями):</p>
+<pre><code>-- "/"
+  inode 2: group = (2-1) / 4096 = 0, index = (2-1) % 4096 = 1
+    inode at byte 143616 = 35 * 4096 + 1 * 256
+    i_mode 0040755 (directory)  i_size 4096  i_links_count 5  i_flags 0x80000 EXTENTS
+      extent: file blocks 0..0 -&gt; disk blocks 4..4 (1 block)
+    dir block 0 = disk block 4: .(2) ..(2) lost+found(11) data(12) docs(16)  &lt;- "docs" found
+-- "docs"
+  inode 16: ... dir block 0 = disk block 1320: .(16) ..(2) hello-again.txt(17) latest(18) notes(19)  &lt;- "notes" found
+-- "notes"
+  inode 19: ... dir block 0 = disk block 1322: .(19) ..(16) hello.txt(17)  &lt;- "hello.txt" found
+-- "hello.txt"
+  inode 17: i_mode 0100644 (regular file)  i_size 256  i_links_count 2  i_flags 0x80000 EXTENTS
+      extent: file blocks 0..0 -&gt; disk blocks 1321..1321 (1 block)</code></pre>
+<p>На холодную каждый компонент пути стоит минимум двух чтений блоков: одного в таблице inode и одного в каталоге. Путь глубиной в десять уровней — это двадцать чтений до первого байта данных. Ядро избегает почти всех из них благодаря <b>кэшу dentry</b>, который запоминает <code>(родитель, имя) → inode</code>, и <b>кэшу inode</b>. Обоим посвящён <a href="05-vfs-cache.html#dcache">урок 05</a>. Обход по диску происходит только при промахе кэша.</p>
+<p>Кроме того, ядро проверяет права на каждом шаге. Чтобы пройти через каталог, нужно право на выполнение (поиск) в нём. Поэтому <code>chmod 700 ~/private</code> защищает все файлы ниже, какие бы права ни были у самих этих файлов.</p>
+<p>Точки монтирования обрабатываются уровнем выше. Когда обход доходит до каталога, на который смонтирована другая файловая система, VFS переключается на корневой inode этой файловой системы. ext4 этого никогда не видит.</p>
+</section>
+<section id="links">
+<h2>Жёсткие ссылки, счётчики ссылок и удаление</h2>
+<p>Поскольку имена живут в каталогах, ничто не мешает двум записям хранить один и тот же номер inode. Это и есть <b>жёсткая ссылка</b> (hard link). <code>ln a b</code> добавляет запись и увеличивает <code>i_links_count</code>. Ни одно из имён не является «оригиналом». В практике <code>/docs/hello-again.txt</code> и <code>/docs/notes/hello.txt</code> оба указывают на inode 17, и его счётчик ссылок равен 2.</p>
+<p>У каталогов счётчик ссылок предсказуем: 2 + число подкаталогов. Одна ссылка — запись в родительском каталоге, ещё одна — собственная запись <code>.</code> каталога, и запись <code>..</code> каждого подкаталога добавляет по одной. В корне образа из практики есть <code>lost+found</code>, <code>data</code> и <code>docs</code>, поэтому его счётчик равен 5. (С возможностью <code>dir_nlink</code> каталог, у которого больше 65 000 подкаталогов, ставит счётчик в 1, что означает «не отслеживается».)</p>
+<p>Удаление файла через <code>unlink()</code> работает с именами:</p>
+<ol>
+<li>Удалить запись каталога, присоединив её к <code>rec_len</code> соседней записи.</li>
+<li>Уменьшить <code>i_links_count</code>.</li>
+<li>Если счётчик дошёл до 0 и ни один процесс не держит файл открытым, освободить его: пройти по экстентам, сбросить их биты в битовой карте блоков, сбросить бит inode в битовой карте inode, записать <code>i_dtime</code> и обновить счётчики свободного места.</li>
+<li>Если какой-то процесс всё ещё держит файл открытым, inode попадает в <b>список осиротевших inode</b> (orphan list), и место освобождается при последнем <code>close()</code>. Если система упадёт раньше, при следующем монтировании осиротевший inode будет найден и работа будет доделана, так что место не утечёт.</li>
+</ol>
+<p>Ничего не перезаписывается. Биты переключаются, а старые байты остаются в свободных блоках, пока там не разместится что-то другое. Поэтому утилиты восстановления удалённых файлов иногда срабатывают, и поэтому для надёжного удаления одного <code>rm</code> мало.</p>
+</section>
+<section id="allocation">
+<h2>Выделение места: выбор блоков</h2>
+<p>Прочитать структуры — половина дела. Вторая половина — решить, куда класть новое, и цель на любом масштабе одна: класть рядом то, что читается вместе, длинными непрерывными участками.</p>
+<ul>
+<li><b>Каталоги разносятся, файлы группируются.</b> Распределитель Орлова (Orlov allocator) помещает новые каталоги верхнего уровня в группы с большим числом свободных inode и блоков, а файлы и подкаталоги — в группу родителя или рядом с ней.</li>
+<li><b>Многоблочный распределитель</b> (<code>mballoc</code>) выделяет много блоков за один запрос и быстро находит свободные участки размером в степень двойки с помощью buddy-битовых карт в памяти. Он также держит предварительные выделения (preallocations) на каждый файл и на каждый процессор, чтобы небольшие дописывания ложились рядом друг с другом.</li>
+<li><b>Отложенное выделение</b> (delayed allocation) даёт самый большой выигрыш. <code>write()</code> лишь копирует данные в страничный кэш и резервирует место. Настоящие блоки выбираются позже, во время обратной записи (<a href="05-vfs-cache.html#write-path">урок 05</a>). К этому моменту ядро часто уже знает окончательный размер файла и может выделить один большой экстент вместо серии маленьких.</li>
+</ul>
+<aside class="pitfall"><span class="tag">Ловушка</span><p>Отложенное выделение расширяет окно, в течение которого данные существуют только в памяти. В 2009 году многие приложения теряли содержимое файлов после сбоев на ранних версиях ext4, потому что записывали новый файл и переименовывали его поверх старого, не вызывая <code>fsync()</code>. Переименование попадало в журнал, а блоки под данные ещё не были выделены, и после сбоя файл оказывался пустым. В ext4 добавили эвристику (<code>auto_da_alloc</code>), которая в этом сценарии принудительно выделяет блоки. Безопасный порядок по-прежнему такой: запись, <code>fsync</code>, переименование. Он разобран в <a href="05-vfs-cache.html#durability">уроке 05</a>.</p></aside>
+<p>Со временем свободное место фрагментируется, и новые файлы дробятся на множество экстентов. <code>filefrag -v</code> показывает экстенты файла, а <code>e4defrag</code> переписывает фрагментированные файлы. На SSD фрагментация значит меньше, чем на вращающихся дисках, но совсем значение не теряет: больше экстентов — значит, глубже дерево и больше мелких операций ввода-вывода.</p>
+</section>
+<section id="journal">
+<h2>Устойчивость к сбоям: журнал</h2>
+<p>Создание одного файла затрагивает несколько блоков: битовую карту inode, сам inode, блок родительского каталога, inode родителя (mtime) и счётчики свободного места в дескрипторе группы. Диск записывает их по одному и может менять их порядок. Если питание пропадёт после одних записей и до других, файловая система окажется несогласованной. Запись каталога может указывать на inode, который всё ещё помечен свободным, или блок может быть помечен занятым, хотя ни один файл им не владеет.</p>
+<p>Ответом ext2 был <code>fsck</code>: после некорректного завершения работы просканировать каждый inode, каждую битовую карту и каждый каталог и исправить противоречия. Это занимает время, пропорциональное размеру файловой системы, то есть часы на больших дисках.</p>
+<p>ext3 и ext4 добавляют <b>журнал упреждающей записи</b> (write-ahead journal), которым управляет уровень ядра <code>jbd2</code> и который хранится в inode 8. Прежде чем какой-либо блок метаданных будет записан на своё постоянное место, изменение сначала записывается в журнал:</p>
+<figure class="diagram">
+<svg viewBox="0 0 740 268" width="740" role="img" aria-label="Временная шкала журнала: текущая транзакция, запись в журнал, блок фиксации, контрольная точка, освобождение места в журнале; при сбое до фиксации транзакция отбрасывается, при сбое после фиксации она воспроизводится">
+<defs><marker id="ah-03-2" viewBox="0 0 10 10" refX="9" refY="5" markerWidth="7" markerHeight="7" orient="auto-start-reverse"><path class="ah" d="M0,0 L10,5 L0,10 z"/></marker></defs>
+<rect class="k-kernel" x="10" y="20" width="132" height="74" rx="3"/>
+<text class="th" x="76" y="42" text-anchor="middle">1 текущая</text>
+<text class="ts" x="76" y="62" text-anchor="middle">блоки метаданных</text>
+<text class="ts" x="76" y="78" text-anchor="middle">изменены в ОЗУ</text>
+<line class="ln" x1="142" y1="57" x2="156" y2="57" marker-end="url(#ah-03-2)"/>
+<rect class="k-fs" x="158" y="20" width="132" height="74" rx="3"/>
+<text class="th" x="224" y="42" text-anchor="middle">2 журнал</text>
+<text class="ts" x="224" y="62" text-anchor="middle">дескриптор + копии</text>
+<text class="ts" x="224" y="78" text-anchor="middle">блоков в журнал</text>
+<line class="ln" x1="290" y1="57" x2="304" y2="57" marker-end="url(#ah-03-2)"/>
+<rect class="k-fs" x="306" y="20" width="132" height="74" rx="3"/>
+<text class="th" x="372" y="42" text-anchor="middle">3 фиксация</text>
+<text class="ts" x="372" y="62" text-anchor="middle">блок фиксации,</text>
+<text class="ts" x="372" y="78" text-anchor="middle">сброс кэша</text>
+<line class="ln" x1="438" y1="57" x2="452" y2="57" marker-end="url(#ah-03-2)"/>
+<rect class="k-block" x="454" y="20" width="132" height="74" rx="3"/>
+<text class="th" x="520" y="42" text-anchor="middle">4 контрольная точка</text>
+<text class="ts" x="520" y="62" text-anchor="middle">запись блоков</text>
+<text class="ts" x="520" y="78" text-anchor="middle">на их места</text>
+<line class="ln" x1="586" y1="57" x2="600" y2="57" marker-end="url(#ah-03-2)"/>
+<rect class="box" x="602" y="20" width="128" height="74" rx="3"/>
+<text class="th" x="666" y="42" text-anchor="middle">5 освобождение</text>
+<text class="ts" x="666" y="62" text-anchor="middle">место в журнале</text>
+<text class="ts" x="666" y="78" text-anchor="middle">снова доступно</text>
+<line class="lnd" x1="300" y1="104" x2="300" y2="150"/>
+<text class="t" x="290" y="168" text-anchor="end">сбой здесь:</text>
+<text class="ts" x="290" y="186" text-anchor="end">блока фиксации нет, поэтому при</text>
+<text class="ts" x="290" y="202" text-anchor="end">монтировании транзакция отбрасывается.</text>
+<text class="ts" x="290" y="218" text-anchor="end">Её как будто не было.</text>
+<line class="lnd" x1="446" y1="104" x2="446" y2="150"/>
+<text class="t" x="456" y="168">сбой здесь:</text>
+<text class="ts" x="456" y="186">при монтировании блоки из журнала</text>
+<text class="ts" x="456" y="202">переписываются на свои места.</text>
+<text class="ts" x="456" y="218">Как будто транзакция завершилась.</text>
+<text class="ts" x="10" y="244">data=ordered: блоки данных файла записываются до шага 3,</text>
+<text class="ts" x="10" y="260">поэтому зафиксированные метаданные никогда не указывают на старые данные.</text>
+</svg>
+<figcaption>Одна транзакция jbd2. Двойная запись одних и тех же блоков (сначала в журнал, потом на место) — цена возможности воспроизвести журнал.</figcaption>
+</figure>
+<p>Блок фиксации (commit block) — это атомарный переключатель. У транзакции либо есть действительный блок фиксации в журнале, либо нет. При монтировании восстановление воспроизводит каждую зафиксированную транзакцию и отбрасывает всё, что идёт после последней фиксации. Это занимает секунды независимо от размера диска.</p>
+<p>jbd2 объединяет много операций в одну транзакцию и по умолчанию фиксирует её каждые 5 секунд (опция монтирования <code>commit=</code>) или раньше, когда программа вызывает <code>fsync()</code>. ext4 предлагает три режима для данных:</p>
+<div class="table-wrap"><table>
+<thead><tr><th>Режим</th><th>Что проходит через журнал</th><th>После сбоя</th></tr></thead>
+<tbody>
+<tr><td><code>data=ordered</code> (по умолчанию)</td><td>только метаданные; блоки данных принудительно записываются на диск до того, как зафиксируются ссылающиеся на них метаданные</td><td>всё согласовано; в файле никогда не окажутся старые блоки другого файла</td></tr>
+<tr><td><code>data=writeback</code></td><td>только метаданные, без упорядочивания данных</td><td>метаданные согласованы, но в недавно удлинённом файле может оказаться устаревший мусор</td></tr>
+<tr><td><code>data=journal</code></td><td>метаданные и данные</td><td>самый надёжный режим, но каждый байт записывается дважды</td></tr>
+</tbody>
+</table></div>
+<aside class="pitfall"><span class="tag">Ловушка</span><p>Журнал защищает собственные структуры файловой системы. Он не делает ваши записи надёжно сохранёнными. Данные, которые оставались в страничном кэше, когда пропало питание, теряются, с журналом или без, и журнал не делает обновление двух файлов атомарным. Долговечность (durability) — задача приложения, через <code>fsync()</code>, и <a href="05-vfs-cache.html#durability">урок 05</a> показывает, как сделать это правильно.</p></aside>
+</section>
+<section id="cow">
+<h2>Другой ответ: копирование при записи</h2>
+<p>btrfs и ZFS решают ту же задачу без журнала. Они никогда не перезаписывают живой блок. Изменение пишется в новое место, а значит, должен измениться и блок, который на него указывает, и так далее вверх до корня. Фиксация записывает положение нового корня в суперблок (в ZFS он называется uberblock) одной атомарной записью. До этой записи старое дерево цело, после неё новое дерево полностью готово, поэтому не бывает момента, когда на диске лежит наполовину обновлённая структура.</p>
+<p>У копирования при записи (COW) три больших преимущества. Снимки (snapshots) почти бесплатны: достаточно сохранить старый корень и его блоки. Каждый указатель может нести контрольную сумму блока, на который он указывает, поэтому тихое повреждение данных обнаруживается при чтении. И метаданные не пишутся дважды. Цена — фрагментация файлов, которые перезаписываются на месте (базы данных, образы виртуальных машин), и более сложный учёт свободного места, потому что блок может принадлежать сразу нескольким снимкам. <a href="04-btrees.html#btrfs">Урок 04</a> показывает B-дерево с копированием при записи, на котором построена btrfs.</p>
+</section>
+<section id="xfs">
+<h2>XFS в одном разделе</h2>
+<p>XFS, файловая система по умолчанию в Red Hat Enterprise Linux, отвечает на те же вопросы деревьями там, где ext4 использует массивы. Она делит том на <b>группы выделения</b> (allocation groups, AG) размером до 1 ТиБ. Каждая из них — почти независимая файловая система со своими индексами свободного места и inode, так что много потоков могут выделять место параллельно. Inode не выделяются заранее в фиксированных таблицах. Они создаются по требованию пачками по 64 и учитываются B+-деревом в каждой AG, а номер inode кодирует AG, блок и ячейку, где он лежит, так что это по-прежнему адрес. Свободное место учитывается не битовой картой, а двумя B+-деревьями на каждую AG. Экстенты файла хранятся в inode, пока там помещаются, а затем переезжают в B+-дерево, и большие каталоги — это B+-деревья с ключом по хешу имени. Метаданные журналируются, данные — нет. Раз каждая структура здесь — дерево, XFS естественно изучать сразу после этого урока: <a href="04-btrees.html#xfs">урок 04</a> разбирает её по частям.</p>
+</section>
+<section class="lab" id="lab">
+<p class="tag">Практика 03</p>
+<h2>Обход образа ext4 вручную</h2>
+<p class="where">~/storage-course/labs/03-ondisk/</p>
+<p>Вы соберёте файловую систему ext4 на 16 МиБ внутри обычного файла без прав root (<code>mkfs.ext4 -d</code> копирует дерево каталогов прямо при форматировании), а затем будете разрешать в ней пути с помощью <code>ext4walk</code> — программы на C длиной 900 строк, которая не использует ничего, кроме <code>pread()</code>. Она комментирует каждый шаг, называя поля и смещения в байтах.</p>
+<ol>
+<li>Соберите образ и программу обхода:
+<pre><code><span class="p">$</span> cd ~/storage-course/labs/03-ondisk
+<span class="p">$</span> ./mkimg.sh
+<span class="o">built disk.img (4096-byte blocks) from ./tree</span>
+<span class="p">$</span> gcc -Wall -Wextra -O2 -o ext4walk ext4walk.c</code></pre>
+</li>
+<li>Найдите магическое число сами, по байту 1024 + 0x38:
+<pre><code><span class="p">$</span> xxd -s $((1024 + 0x38)) -l 2 disk.img
+<span class="o">00000438: 53ef                                     S.</span></code></pre>
+</li>
+<li>Пройдите по пути и прочитайте комментарии программы сверху вниз. Пример вывода на этой машине (номера блоков у вас будут другими):
+<pre><code><span class="p">$</span> ./ext4walk disk.img /docs/notes/hello.txt
+<span class="o">== step 1: superblock (bytes 1024..2047 of the image) ==
+  s_magic            0xEF53   (offset 0x38: this is ext2/3/4)
+  s_log_block_size   2   -&gt; block size = 1024 &lt;&lt; 2 = 4096 bytes
+  s_inodes_per_group 4096
+  s_inode_size       256 bytes
+  descriptor size    64 bytes   (64bit feature: s_desc_size)
+  group descriptor table starts at block 1 (byte 4096)
+...
+-- "hello.txt"
+  inode 17: group = (17-1) / 4096 = 0, index = (17-1) % 4096 = 16
+    group 0 descriptor at byte 4096 -&gt; bg_inode_table = block 35
+    inode at byte 147456 = 35 * 4096 + 16 * 256
+...
+  contents (up to 512 visible bytes):
+  | This file lives at /docs/notes/hello.txt.</span></code></pre>
+</li>
+<li>Проверьте каждое утверждение настоящими инструментами:
+<pre><code><span class="p">$</span> debugfs -R 'stat /docs/notes/hello.txt' disk.img    <span class="c"># EXTENTS: (0):1321</span>
+<span class="p">$</span> debugfs -R 'ls -l /docs' disk.img
+<span class="p">$</span> xxd -s 147456 -l 64 disk.img                         <span class="c"># сам inode в сыром виде</span></code></pre>
+</li>
+<li>Попробуйте другие виды файлов и сравните, что печатает программа:
+<pre><code><span class="p">$</span> ./ext4walk -q disk.img /data/sparse.dat     <span class="c"># 2 экстента, дыра в 255 блоков</span>
+<span class="p">$</span> ./ext4walk -q -n 0 disk.img /data/big.txt   <span class="c"># 25 смежных блоков, 1 экстент</span>
+<span class="p">$</span> ./ext4walk -q disk.img /docs/latest         <span class="c"># быстрая символическая ссылка, цель внутри i_block</span>
+<span class="p">$</span> ./ext4walk -q disk.img /data/long-link      <span class="c"># медленная символическая ссылка, цель в блоке данных</span>
+<span class="p">$</span> ./ext4walk disk.img /docs/nope              <span class="c"># ENOENT после просмотра блока</span></code></pre>
+</li>
+<li>Пересоберите образ с блоками по 1 КиБ (<code>./mkimg.sh disk1k.img 1024</code>) и посмотрите, как <code>s_first_data_block</code> становится равным 1, а таблица дескрипторов переезжает в блок 2. Устройство ext2 с косвенными блоками описано в шаге 8 файла <code>README.md</code> этой практики (он на английском).</li>
+</ol>
+<p class="small muted">Проверено на этой машине (WSL2, e2fsprogs 1.47.0, ядро 6.18) на образах ext4 с блоками по 4 КиБ и 1 КиБ и на образе ext2 с блоками по 1 КиБ. Всё работает без прав root.</p>
+</section>
+<section class="check" id="check">
+<h2>Проверьте себя</h2>
+<details><summary>Суперблок лежит по байту 1024. Какой это блок в файловой системе с блоками по 1 КиБ и где начинается таблица дескрипторов групп?</summary><p>Блок 1, поэтому <code>s_first_data_block</code> равно 1. Таблица дескрипторов начинается в следующем блоке, блоке 2. При блоках по 4 КиБ суперблок лежит внутри блока 0, а таблица начинается с блока 1.</p></details>
+<details><summary><code>s_inodes_per_group</code> равно 8192, inode занимают по 256 байт, блоки — по 4 КиБ, а <code>bg_inode_table</code> группы 3 равно 98304. По какому байту лежит inode 24 600?</summary><p>Группа = 24599 / 8192 = 3 (целочисленное деление), индекс = 24599 − 3 × 8192 = 23. Байт = 98304 × 4096 + 23 × 256 = 402 653 184 + 5888 = 402 659 072.</p></details>
+<details><summary>Почему <code>mv big.iso archive/big.iso</code> в пределах одной файловой системы занимает одинаковое время для файла в 1 КБ и для файла в 100 ГБ?</summary><p>Меняются только записи каталогов: одна удаляется из исходного каталога, а другая добавляется в целевой. Inode, его экстенты и блоки данных не трогаются, потому что имена в inode не хранятся.</p></details>
+<details><summary>Размер файла по <code>ls -l</code> — 1 ГиБ, а <code>du</code> говорит 8 КиБ. Как так?</summary><p>Файл разреженный. <code>i_size</code> — логическая длина, а экстентами отображены только два блока. Остальное — дыры: их не покрывает ни один экстент, они не занимают места на диске и читаются как нули. <code>du</code> сообщает <code>i_blocks</code>.</p></details>
+<details><summary>У каталога три подкаталога. Каков его счётчик ссылок и почему?</summary><p>5: его запись в родительском каталоге, его собственная запись <code>.</code> и запись <code>..</code> в каждом из трёх подкаталогов.</p></details>
+<details><summary>Ядро 2008 года монтирует файловую систему, в суперблоке которой в <code>s_feature_ro_compat</code> установлен неизвестный ему бит. Что произойдёт? А если неизвестный бит стоит в <code>incompat</code>?</summary><p>Неизвестный бит ro_compat разрешает только монтирование на чтение, потому что запись могла бы оставить новую структуру устаревшей. Неизвестный бит incompat заставляет ядро отказаться от монтирования, потому что оно могло бы неправильно прочитать сами данные.</p></details>
+<details><summary>Может ли при <code>data=ordered</code> файл, в который дописывали данные в момент отключения питания, после перезагрузки содержать старые байты другого, удалённого файла?</summary><p>Нет. В режиме ordered новые блоки данных записываются до того, как зафиксируется транзакция, которая их выделяет. Либо выделение не зафиксировано (дописанное потеряно), либо оно зафиксировано вместе с правильными данными. При <code>data=writeback</code> такой порядок не гарантируется, и старые блоки могут появиться.</p></details>
+<details><summary>Зачем ext4 хранит <code>file_type</code> в каждой записи каталога, если тип уже есть в поле <code>i_mode</code> inode?</summary><p>Чтобы <code>readdir()</code> мог вернуть тип каждой записи (<code>d_type</code>), не читая по inode на каждую запись. Инструменты, которым нужно знать только «каталог ли это?» (<code>find</code>, <code>ls --color</code>, <code>du</code>), экономят по одному случайному чтению на файл.</p></details>
+</section>
+<section class="further" id="further">
+<h2>Что почитать дальше</h2>
+<ul>
+<li><a href="https://www.kernel.org/doc/html/latest/filesystems/ext4/index.html">ext4 Data Structures and Algorithms</a>: описание каждой структуры из этого урока от самого ядра, с точностью до байта.</li>
+<li><a href="https://git.kernel.org/pub/scm/linux/kernel/git/torvalds/linux.git/tree/fs/ext4/ext4.h">fs/ext4/ext4.h</a>: структуры на C (<code>ext4_super_block</code>, <code>ext4_group_desc</code>, <code>ext4_inode</code>).</li>
+<li><a href="https://pages.cs.wisc.edu/~remzi/OSTEP/file-implementation.pdf">OSTEP, File System Implementation</a>: крошечная учебная файловая система, построенная шаг за шагом; прочитайте, если что-то выше показалось слишком быстрым.</li>
+<li><a href="https://pages.cs.wisc.edu/~remzi/OSTEP/file-ffs.pdf">OSTEP, Locality and the Fast File System</a>: откуда взялись группы блоков (группы цилиндров).</li>
+<li><a href="https://pages.cs.wisc.edu/~remzi/OSTEP/file-journaling.pdf">OSTEP, Crash Consistency: FSCK and Journaling</a>: сценарии сбоев в подробностях, включая сравнение режима ordered с журналированием только метаданных.</li>
+<li><a href="https://www.kernel.org/doc/html/latest/admin-guide/ext4.html">ext4 admin guide</a>: опции монтирования, такие как <code>data=</code>, <code>commit=</code> и <code>auto_da_alloc</code>.</li>
+<li><a href="https://man7.org/linux/man-pages/man8/debugfs.8.html">debugfs(8)</a>: отладчик ext2/3/4, который используется в практике; <code>stat</code>, <code>ex</code>, <code>ls -l</code>, <code>htree</code>, <code>icheck</code>, <code>ncheck</code>.</li>
+</ul>
+</section>
+<nav class="pager-foot" aria-label="Следующий и предыдущий урок">
+<a class="prev" href="02-blocks.html"><small>Назад</small>Блочные устройства и адресация</a>
+<a class="next" href="04-btrees.html"><small>Дальше</small>B-деревья на практике</a>
+</nav>
+</main>
+</div>
+<script src="../course.js?v=11"></script>
+</body>
+</html>

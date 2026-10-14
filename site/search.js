@@ -9,6 +9,16 @@
   var BLOCKS = "p, li, dt, dd, td, th, pre, figcaption, summary, h3, h4, blockquote";
   var MAX_TERMS = 6, MAX_SECTIONS = 10;
   var WORD = /[\wÀ-ɏЀ-ӿ]/;
+  // the Russian home page (ru/index.html) loads this same script next to the Russian lessons
+  var TEXT = document.documentElement.lang === "ru" ? {
+    glossary: "Глоссарий", lessons: "В уроках", loading: "Загружаю уроки…",
+    failed: "Не удалось загрузить уроки, поэтому поиск недоступен. Попробуйте перезагрузить страницу.",
+    none: function (q) { return "По запросу «" + q + "» ничего не найдено. Попробуйте более короткое слово."; }
+  } : {
+    glossary: "Glossary", lessons: "In the lessons", loading: "Loading the lessons…",
+    failed: "Could not load the lessons, so search is unavailable. Try reloading the page.",
+    none: function (q) { return "Nothing matches “" + q + "”. Try a shorter word."; }
+  };
 
   var input = document.getElementById("sx-input");
   var panel = document.getElementById("sx-panel");
@@ -186,7 +196,7 @@
         href: href,
         layer: s ? s.page.layer : "kernel",
         num: s ? s.page.num : "··",
-        where: s ? s.page.title + " · " + s.title : "Glossary",
+        where: s ? s.page.title + " · " + s.title : TEXT.glossary,
         title: mark(t.term, q.marks),
         text: mark(t.def, q.marks)
       };
@@ -268,9 +278,9 @@
     open(true);
     if (!index) {
       list.innerHTML = "";
-      status.textContent = "Loading the lessons…";
+      status.textContent = TEXT.loading;
       load().then(render, function () {
-        status.textContent = "Could not load the lessons, so search is unavailable. Try reloading the page.";
+        status.textContent = TEXT.failed;
       });
       return;
     }
@@ -284,10 +294,10 @@
       terms = searchTerms(q);
       sections = searchSections(q);
     }
-    list.innerHTML = group("Glossary", terms, 0) + group("In the lessons", sections, terms.length);
+    list.innerHTML = group(TEXT.glossary, terms, 0) + group(TEXT.lessons, sections, terms.length);
     options = Array.prototype.slice.call(list.querySelectorAll(".sx-item"));
     var n = terms.length + sections.length;
-    status.textContent = n ? "" : "Nothing matches “" + raw + "”. Try a shorter word.";
+    status.textContent = n ? "" : TEXT.none(raw);
   }
 
   input.addEventListener("input", render);

@@ -1,0 +1,469 @@
+<!doctype html>
+<html lang="ru">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover">
+<title>Системные вызовы и файловые дескрипторы</title>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=IBM+Plex+Mono:wght@400;600&family=IBM+Plex+Sans+Condensed:wght@500;600;700&family=PT+Sans+Narrow:wght@400;700&family=Source+Serif+4:ital,opsz,wght@0,8..60,400;0,8..60,600;1,8..60,400&display=swap">
+<link rel="stylesheet" href="../course.css?v=10">
+</head>
+<body data-layer="user">
+<header class="topbar">
+<a class="brand" href="index.html">От open() до RDMA <span>· курс о хранении данных</span></a>
+<nav class="pager" aria-label="Навигация по урокам">
+<a href="index.html" rel="prev">← Обзор</a>
+<details class="route"><summary>Урок 1 из 9</summary></details>
+<a href="02-blocks.html" rel="next">Дальше →</a>
+<details class="sections"><summary>Разделы</summary></details>
+<span class="lang-switch" aria-label="Язык"><a href="../01-syscalls.html" hreflang="en" lang="en">EN</a><b>RU</b></span>
+</nav>
+</header>
+<div class="layout">
+<nav class="rail" aria-label="Уроки">
+<div class="rail-title">Маршрут</div>
+<ol>
+<li class="user"><a href="01-syscalls.html" aria-current="page"><span class="n">01</span><span>Системные вызовы и дескрипторы</span></a></li>
+<li class="block"><a href="02-blocks.html"><span class="n">02</span><span>Блочные устройства и адресация</span></a></li>
+<li class="fs"><a href="03-ondisk.html"><span class="n">03</span><span>Внутри образа ext4</span></a></li>
+<li class="fs"><a href="04-btrees.html"><span class="n">04</span><span>B-деревья на практике</span></a></li>
+<li class="kernel"><a href="05-vfs-cache.html"><span class="n">05</span><span>VFS и кэши</span></a></li>
+<li class="net"><a href="06-nfs.html"><span class="n">06</span><span>NFS от v3 до 4.2</span></a></li>
+<li class="net"><a href="07-nfs-caching.html"><span class="n">07</span><span>Кэширование по сети</span></a></li>
+<li class="net"><a href="08-rdma.html"><span class="n">08</span><span>RDMA и NFS поверх RDMA</span></a></li>
+<li class="net"><a href="09-distributed.html"><span class="n">09</span><span>Распределённые файловые системы</span></a></li>
+<li class="extra"><a href="glossary.html"><span class="n">··</span><span>Глоссарий</span></a></li>
+</ol>
+<div class="rail-legend">
+<span style="--c: var(--l-user)">пространство пользователя</span>
+<span style="--c: var(--l-kernel)">ядро</span>
+<span style="--c: var(--l-fs)">файловая система</span>
+<span style="--c: var(--l-block)">блочный уровень</span>
+<span style="--c: var(--l-net)">сеть</span>
+</div>
+</nav>
+<main class="lesson">
+<header class="lesson-head">
+<p class="eyebrow">Урок 1 · Пространство пользователя у дверей ядра</p>
+<h1>Системные вызовы и файловые дескрипторы</h1>
+<p class="lede">Каждая система хранения в этом курсе, от ext4 до NFS-сервера за RDMA-фабрикой, существует ради того, чтобы отвечать на горстку вызовов вроде <code>open</code>, <code>read</code> и <code>write</code>. Этот урок о самих вызовах: что на самом деле происходит, когда программа на C делает такой вызов, и на что в действительности указывает маленькое целое число, которое называют файловым дескриптором.</p>
+<div class="outcomes">
+<b>После этого урока вы сможете</b>
+<ul>
+<li>объяснить, что такое системный вызов, на уровне режимов процессора и регистров;</li>
+<li>правильно пользоваться <code>open</code>, <code>read</code>, <code>write</code>, <code>lseek</code>, <code>pread</code>, <code>close</code> и <code>stat</code>, включая неполные передачи и ошибки;</li>
+<li>нарисовать три таблицы, которые стоят за дескриптором, и предсказать, кто разделяет смещение после <code>dup</code>, <code>fork</code> или второго <code>open</code>;</li>
+<li>отличать файл от его имени и объяснить, почему удалённый файл может по-прежнему занимать место на диске;</li>
+<li>назвать каждый буфер, через который проходят ваши байты на пути к диску.</li>
+</ul>
+</div>
+<nav class="toc" aria-label="Содержание урока">
+<b>В этом уроке</b>
+<ol>
+<li><a href="#why">Почему начинать с системного вызова</a></li>
+<li><a href="#syscall">Что такое системный вызов</a></li>
+<li><a href="#file-api">Открытие файла</a></li>
+<li><a href="#read-write">Чтение и запись, включая то, что идёт не так</a></li>
+<li><a href="#offsets">Смещения, дыры и позиционный ввод-вывод</a></li>
+<li><a href="#tables">Три таблицы за дескриптором</a></li>
+<li><a href="#everything-fd">Всё есть дескриптор</a></li>
+<li><a href="#metadata">Метаданные и каталоги</a></li>
+<li><a href="#names">Имя — это не файл</a></li>
+<li><a href="#buffers">Где ждут ваши байты: буферы над системным вызовом и под ним</a></li>
+<li><a href="#next-steps">Куда вызов идёт дальше</a></li>
+<li><a href="#lab">Практика 01: Дескрипторы, смещения и имена на опыте</a></li>
+<li><a href="#check">Проверьте себя</a></li>
+<li><a href="#further">Что почитать дальше</a></li>
+</ol>
+</nav>
+</header>
+<section id="why">
+<h2>Почему начинать с системного вызова</h2>
+<p>Программа не может сама обратиться к диску, сетевой карте или памяти другого процесса. Она работает в песочнице, которую обеспечивает процессор. Когда ей нужно что-то за пределами песочницы, она просит ядро, и единственный способ попросить — <strong>системный вызов</strong> (system call, коротко syscall).</p>
+<p>Поэтому интерфейс системных вызовов служит контрактом для всего, что лежит ниже. Когда вы вызываете <code>read(fd, buf, 4096)</code>, вы не знаете и не обязаны знать, откуда придут байты: с NVMe-накопителя, с USB-флешки, из канала (pipe) или с сервера в соседнем здании, который говорит по NFS поверх RDMA. Ядро выбирает нужный код по тому, на что ссылается <code>fd</code>. Каждый следующий урок курса посвящён одной из реализаций, стоящих за этим же небольшим набором вызовов, так что сами вызовы стоит знать точно.</p>
+</section>
+<section id="syscall">
+<h2>Что такое системный вызов</h2>
+<p>Современный процессор выполняет код на разных <strong>уровнях привилегий</strong> (privilege levels). На x86-64 их называют кольцами (rings). Ваша программа работает в кольце 3, в <strong>режиме пользователя</strong> (user mode): она может вычислять и обращаться к собственной памяти, но процессор не даёт ей выполнять привилегированные инструкции, программировать устройства или читать память за пределами своего адресного пространства. Ядро работает в кольце 0, в <strong>режиме ядра</strong> (kernel mode), где разрешено всё.</p>
+<p>Системный вызов — это контролируемый переход из кольца 3 в кольцо 0, который может попасть только в один адрес, выбранный ядром при загрузке. В Linux на x86-64 для этого служит инструкция <code>syscall</code>, а соглашение такое:</p>
+<ul>
+<li><strong>номер системного вызова</strong> помещается в регистр <code>rax</code> (<code>read</code> — 0, <code>write</code> — 1, <code>open</code> — 2, <code>close</code> — 3);</li>
+<li>до шести аргументов передаются в <code>rdi</code>, <code>rsi</code>, <code>rdx</code>, <code>r10</code>, <code>r8</code>, <code>r9</code>;</li>
+<li>процессор сохраняет адрес возврата в <code>rcx</code>, а флаги в <code>r11</code>, переключается в кольцо 0 и переходит в точку входа ядра, <code>entry_SYSCALL_64</code>;</li>
+<li>ядро по <code>rax</code> выбирает обработчик (классически индексируя массив <code>sys_call_table</code>; свежие ядра для x86 из соображений безопасности компилируют диспетчеризацию в оператор <code>switch</code>), выполняет его, кладёт результат в <code>rax</code> и возвращается в кольцо 3 инструкцией <code>sysret</code>.</li>
+</ul>
+<p>Результат — одно целое число. Значение от −4095 до −1 означает неудачу, и его модуль — номер ошибки. Всё остальное — успех: число байтов, новый дескриптор или ноль.</p>
+<figure class="diagram">
+<svg viewBox="0 0 700 420" width="700" role="img" aria-label="Вызов read проходит из пользовательского кода через обёртку glibc, переходит в ядро инструкцией syscall, доходит до read_iter файловой системы и возвращает наверх число или отрицательный errno.">
+<defs><marker id="ah-01-1" viewBox="0 0 10 10" refX="9" refY="5" markerWidth="7" markerHeight="7" orient="auto-start-reverse"><path class="ah" d="M0,0 L10,5 L0,10 z"/></marker></defs>
+<rect class="k-user" x="10" y="10" width="680" height="165" rx="4"/>
+<text class="ts" x="24" y="30">ПРОСТРАНСТВО ПОЛЬЗОВАТЕЛЯ · ring 3 · ваш процесс</text>
+<rect class="box" x="30" y="45" width="470" height="36" rx="3"/>
+<text class="t" x="44" y="68">n = read(fd, buf, 4096);    // ваш код</text>
+<rect class="box" x="30" y="115" width="470" height="46" rx="3"/>
+<text class="t" x="44" y="134">glibc read(): eax = 0  (SYS_read)</text>
+<text class="t" x="44" y="152">rdi = fd, rsi = buf, rdx = 4096; syscall</text>
+<rect class="box" x="520" y="115" width="160" height="46" rx="3"/>
+<text class="ts" x="532" y="134">if rax &lt; 0:</text>
+<text class="ts" x="532" y="152">errno=−rax; return −1</text>
+<line class="lnd" x1="10" y1="190" x2="690" y2="190"/>
+<rect class="box" x="168" y="181" width="364" height="18" rx="2"/>
+<text class="ts" x="350" y="194" text-anchor="middle">инструкция syscall: ring 3 → ring 0</text>
+<rect class="k-kernel" x="10" y="205" width="680" height="205" rx="4"/>
+<text class="ts" x="24" y="225">ЯДРО · ring 0</text>
+<rect class="box" x="30" y="240" width="470" height="36" rx="3"/>
+<text class="t" x="44" y="263">entry_SYSCALL_64 → do_syscall_64 → ksys_read()</text>
+<rect class="box" x="30" y="296" width="470" height="36" rx="3"/>
+<text class="t" x="44" y="319">fdget(fd) → struct file; vfs_read(file, …, &amp;f_pos)</text>
+<rect class="box" x="30" y="352" width="470" height="36" rx="3"/>
+<text class="t" x="44" y="375">file-&gt;f_op-&gt;read_iter(): ext4, NFS, канал, сокет…</text>
+<rect class="box" x="520" y="352" width="160" height="36" rx="3"/>
+<text class="ts" x="532" y="375">rax = n или −errno</text>
+<line class="ln" x1="265" y1="81" x2="265" y2="113" marker-end="url(#ah-01-1)"/>
+<line class="ln" x1="265" y1="161" x2="265" y2="238" marker-end="url(#ah-01-1)"/>
+<line class="ln" x1="265" y1="276" x2="265" y2="294" marker-end="url(#ah-01-1)"/>
+<line class="ln" x1="265" y1="332" x2="265" y2="350" marker-end="url(#ah-01-1)"/>
+<line class="ln" x1="500" y1="370" x2="518" y2="370" marker-end="url(#ah-01-1)"/>
+<line class="ln" x1="600" y1="352" x2="600" y2="163" marker-end="url(#ah-01-1)"/>
+<text class="ts" x="608" y="290">sysret</text>
+<polyline class="ln" points="600,115 600,63 502,63" marker-end="url(#ah-01-1)"/>
+</svg>
+<figcaption>Один вызов <code>read</code> сверху вниз и обратно. Сторона ядра не знает, что за объект стоит за <code>fd</code>, пока не пройдёт от дескриптора к <code>struct file</code> и не вызовет собственный <code>read_iter</code> этого файла.</figcaption>
+</figure>
+<h3>Обёртка libc</h3>
+<p>Инструкцию <code>syscall</code> вы редко пишете сами. Библиотека C (в большинстве систем Linux это glibc) предоставляет для каждого вызова небольшую функцию-обёртку. Обёртка раскладывает аргументы по регистрам, выполняет <code>syscall</code> и переводит результат в соглашение C: при ошибке она записывает положительный номер ошибки в потоковую (thread-local) переменную <code>errno</code> и возвращает −1. Поэтому в man-страницах и написано «returns −1 and sets errno».</p>
+<pre><code class="language-c"><span class="c">// Три способа сделать один и тот же вызов (практика 01 выполняет все три)</span>
+write(1, msg, len);                      <span class="c">// обёртка libc</span>
+syscall(SYS_write, 1, msg, len);         <span class="c">// универсальная точка входа libc: любой вызов по номеру</span>
+asm volatile ("syscall" : "=a"(ret)      <span class="c">// голая инструкция</span>
+              : "a"(1L), "D"(1L), "S"(msg), "d"(len)
+              : "rcx", "r11", "memory");</code></pre>
+<p>Обёртки иногда выполняют не тот системный вызов, на который намекает их имя. В текущей glibc <code>open()</code> на самом деле выполняет <code>openat(AT_FDCWD, path, …)</code>, а <code>fork()</code> выполняет <code>clone</code>. Вы увидите это, если запустите программу под <code>strace</code>.</p>
+<h3>Сколько стоит системный вызов</h3>
+<p>Само переключение режима дёшево по сравнению с вводом-выводом: от десятков до нескольких сотен наносекунд на современных процессорах и больше, если включены некоторые защиты от уязвимостей процессора. Но по сравнению с вызовом функции оно дорого, поэтому программы, которые делают миллионы крошечных вызовов (скажем, один <code>read</code> на байт), тратят большую часть времени на пересечение границы. Буферизация в пространстве пользователя, пакетные интерфейсы вроде <code>readv</code> и <code>io_uring</code> существуют именно для того, чтобы пересекать её реже.</p>
+<aside class="note"><span class="tag">Отступление: vDSO</span><p>Некоторые вызовы только читают информацию, которую ядро и так публикует, например текущее время. Для них ядро отображает в каждый процесс маленькую разделяемую библиотеку, <strong>vDSO</strong>. <code>clock_gettime</code> и <code>gettimeofday</code> выполняются там целиком в режиме пользователя, вообще без системного вызова. Файловый ввод-вывод к таким вызовам никогда не относится: ему всегда нужно ядро.</p></aside>
+</section>
+<section id="file-api">
+<h2>Открытие файла</h2>
+<pre><code class="language-c">#include &lt;fcntl.h&gt;
+int open(const char *pathname, int flags, ... /* mode_t mode */);
+int openat(int dirfd, const char *pathname, int flags, ... /* mode_t mode */);</code></pre>
+<p><code>open</code> разрешает путь в файл, проверяет ваши права, создаёт в ядре служебные структуры для этого «открытия» и возвращает <strong>файловый дескриптор</strong> (file descriptor): небольшое неотрицательное целое число. POSIX гарантирует, что это <em>наименьший</em> номер, не занятый в вашем процессе. Дескрипторы 0, 1 и 2 обычно заняты стандартным вводом, выводом и выводом ошибок, поэтому первый открытый вами файл обычно получает номер 3.</p>
+<p>Аргумент <code>flags</code> — побитовое ИЛИ: ровно один режим доступа плюс любое число модификаторов.</p>
+<div class="table-wrap"><table>
+<thead><tr><th>Флаг</th><th>Значение</th></tr></thead>
+<tbody>
+<tr><td><code>O_RDONLY</code> / <code>O_WRONLY</code> / <code>O_RDWR</code></td><td>Режим доступа: чтение, запись или и то и другое. Проверяется по правам файла один раз, в момент открытия.</td></tr>
+<tr><td><code>O_CREAT</code></td><td>Создать файл, если его нет. Требует третьего аргумента, <code>mode</code>.</td></tr>
+<tr><td><code>O_EXCL</code></td><td>Вместе с <code>O_CREAT</code>: завершиться с <code>EEXIST</code>, если имя уже существует. Проверка и создание выполняются одним атомарным шагом, поэтому это классический способ сделать файл-блокировку.</td></tr>
+<tr><td><code>O_TRUNC</code></td><td>Если файл существует и открыт на запись, обрезать его до длины 0.</td></tr>
+<tr><td><code>O_APPEND</code></td><td>Перед каждым <code>write</code> переходить в текущий конец файла, атомарно вместе с записью. Подробности ниже.</td></tr>
+<tr><td><code>O_CLOEXEC</code></td><td>Автоматически закрыть дескриптор, когда процесс вызывает <code>execve</code>. Не даёт дескрипторам утекать в запускаемые вами программы.</td></tr>
+<tr><td><code>O_NONBLOCK</code></td><td>Никогда не засыпать в ожидании данных, вместо этого возвращать <code>EAGAIN</code>. Имеет смысл для каналов, сокетов и терминалов, но не для обычных файлов.</td></tr>
+<tr><td><code>O_SYNC</code> / <code>O_DSYNC</code></td><td>Каждый <code>write</code> возвращается только тогда, когда данные (а для <code>O_SYNC</code> и все метаданные) лежат на стабильном носителе. Как если бы после каждой записи вызывался <code>fsync</code>.</td></tr>
+<tr><td><code>O_DIRECT</code></td><td>Обойти страничный кэш ядра и передавать данные через DMA прямо между вашим буфером и устройством. Требует соблюдать правила выравнивания. Разбирается в <a href="05-vfs-cache.html">уроке 05</a>.</td></tr>
+</tbody>
+</table></div>
+<p>Когда <code>O_CREAT</code> создаёт файл, его биты прав равны <code>mode &amp; ~umask</code>. <strong>umask</strong> — это маска процесса, обычно <code>022</code>, которая убирает право записи у группы и остальных. Поэтому привычный <code>open(path, O_WRONLY|O_CREAT|O_TRUNC, 0666)</code> создаёт файл с режимом <code>0644</code> (<code>rw-r--r--</code>).</p>
+<aside class="pitfall"><span class="tag">Ловушка</span><p>Права проверяются при <code>open</code>, а не при каждом <code>read</code>. Если кто-то сделает файлу <code>chmod</code> 000 после того, как вы его открыли, ваш дескриптор продолжит работать. Дескриптор — это мандат (capability): кто им владеет, тот им и пользуется. По этой же причине его можно передать другому процессу через Unix-сокет.</p></aside>
+</section>
+<section id="read-write">
+<h2>Чтение и запись, включая то, что идёт не так</h2>
+<pre><code class="language-c">#include &lt;unistd.h&gt;
+ssize_t read(int fd, void *buf, size_t count);
+ssize_t write(int fd, const void *buf, size_t count);
+int close(int fd);</code></pre>
+<p><code>read</code> копирует до <code>count</code> байтов из файла в <code>buf</code>, начиная с текущего <strong>смещения</strong> (offset) дескриптора, и сдвигает смещение на число скопированных байтов. <code>write</code> делает обратное. Оба возвращают число реально переданных байтов. Три возвращаемых значения требуют внимания:</p>
+<ul>
+<li><strong>0 от <code>read</code></strong> означает конец файла (а для канала или сокета — что другая сторона закрыла его). Это не ошибка.</li>
+<li><strong>Меньше байтов, чем запрошено</strong>, так называемая <em>неполная передача</em> (short count), — законный результат. Чтение из канала возвращает то, что в нём есть. Чтение у конца файла возвращает остаток. Запись на почти заполненный диск, в заполненный неблокирующий канал или в сокет может записать только часть буфера. Ваш код обязан работать в цикле.</li>
+<li><strong>−1</strong> означает ошибку, причина лежит в <code>errno</code>. Две из них на самом деле не являются неудачами: <code>EINTR</code> (обработчик сигнала сработал раньше, чем были переданы какие-либо данные, поэтому повторите вызов) и <code>EAGAIN</code> (неблокирующий дескриптор, данных пока нет).</li>
+</ul>
+<p>Поэтому правильная функция «записать всё» выглядит так:</p>
+<pre><code class="language-c">static int write_all(int fd, const void *buf, size_t len)
+{
+    const char *p = buf;
+    while (len &gt; 0) {
+        ssize_t n = write(fd, p, len);
+        if (n &lt; 0) {
+            if (errno == EINTR)
+                continue;           <span class="c">// прервано до записи хоть чего-то: повторить</span>
+            return -1;              <span class="c">// настоящая ошибка: ENOSPC, EIO, EBADF, ...</span>
+        }
+        p   += n;                   <span class="c">// неполная запись: сдвинуться за записанное</span>
+        len -= (size_t)n;
+    }
+    return 0;
+}</code></pre>
+<p>Ошибки, которые в работе с хранилищами встречаются чаще всего:</p>
+<div class="table-wrap"><table>
+<thead><tr><th>errno</th><th>Типичная причина</th></tr></thead>
+<tbody>
+<tr><td><code>ENOENT</code></td><td>Какого-то компонента пути не существует.</td></tr>
+<tr><td><code>EACCES</code> / <code>EPERM</code></td><td>Доступ запрещён битами прав, ACL или модулем безопасности.</td></tr>
+<tr><td><code>EEXIST</code></td><td><code>O_CREAT|O_EXCL</code> или <code>mkdir</code> для уже существующего имени.</td></tr>
+<tr><td><code>EBADF</code></td><td>Дескриптор не открыт или открыт не для такого вида доступа.</td></tr>
+<tr><td><code>EMFILE</code></td><td>Процесс упёрся в свой лимит дескрипторов.</td></tr>
+<tr><td><code>ENOSPC</code> / <code>EDQUOT</code></td><td>Диск заполнен / превышена квота. В сетевых файловых системах эти ошибки могут всплыть поздно, на <code>close</code> или <code>fsync</code>.</td></tr>
+<tr><td><code>EIO</code></td><td>Устройство или сервер сообщили о сбое ввода-вывода. Относитесь к этому серьёзно; см. историю с fsync в <a href="05-vfs-cache.html">уроке 05</a>.</td></tr>
+<tr><td><code>ESTALE</code></td><td>Только NFS: сервер больше не узнаёт хэндл файла. Хэндлы файлов объясняются в <a href="06-nfs.html">уроке 06</a>.</td></tr>
+</tbody>
+</table></div>
+<aside class="pitfall"><span class="tag">Ловушка: close может завершиться ошибкой</span><p><code>close</code> тоже возвращает код ошибки, и в NFS именно здесь часто впервые проявляется отложенная ошибка записи, потому что клиент сбрасывает кэшированные записи при закрытии. Проверяйте его. В Linux не повторяйте <code>close</code> после <code>EINTR</code>: дескриптор уже освобождён, и повторный вызов может закрыть дескриптор, который другой поток только что открыл под тем же номером.</p></aside>
+</section>
+<section id="offsets">
+<h2>Смещения, дыры и позиционный ввод-вывод</h2>
+<pre><code class="language-c">off_t   lseek(int fd, off_t offset, int whence);   <span class="c">// SEEK_SET, SEEK_CUR, SEEK_END, SEEK_DATA, SEEK_HOLE</span>
+ssize_t pread(int fd, void *buf, size_t count, off_t offset);
+ssize_t pwrite(int fd, const void *buf, size_t count, off_t offset);</code></pre>
+<p><code>lseek</code> только меняет число в ядре и никакого ввода-вывода не выполняет. <code>lseek(fd, 0, SEEK_CUR)</code> — идиома для вопроса «какое у меня текущее смещение?».</p>
+<p>Смещение можно перенести <em>за</em> конец файла. Если затем записать данные, длина файла скачком вырастет до конца новых данных, а промежуток между ними станет <strong>дырой</strong> (hole). За дырой не стоит никаких дисковых блоков. Чтение из дыры возвращает нули. Практика создаёт файл длиной 1 ГиБ + 1 байт, который занимает на диске единственный блок в 4 КиБ:</p>
+<pre><code><span class="o">st_size   = 1073741825 bytes (apparent size)
+st_blocks = 8 x 512 B = 4096 bytes actually allocated
+SEEK_DATA from 0 -&gt; 1073741824 (everything before is a hole)</span></code></pre>
+<p>Файлы с дырами называют <strong>разреженными</strong> (sparse). Образы дисков виртуальных машин и файлы баз данных часто разрежены. <code>SEEK_DATA</code> и <code>SEEK_HOLE</code> позволяют программе вроде <code>cp</code> или <code>tar</code> пропускать дыры, а не читать гигабайты нулей. NFS получил ту же возможность в версии 4.2 вместе с операциями <code>SEEK</code> и <code>READ_PLUS</code> (<a href="06-nfs.html">урок 06</a>).</p>
+<p><code>pread</code> и <code>pwrite</code> принимают смещение аргументом и не трогают смещение дескриптора. Используйте их всякий раз, когда несколько потоков делят один дескриптор: отдельные вызовы <code>lseek</code> + <code>read</code> из двух потоков состязаются друг с другом, а каждый <code>pread</code> самодостаточен. Базы данных пользуются почти исключительно <code>pread</code>/<code>pwrite</code>.</p>
+<aside class="note"><span class="tag">Отступление: документированная причуда Linux</span><p>POSIX говорит, что <code>pwrite</code> пишет по указанному вами смещению, даже если дескриптор открыт с <code>O_APPEND</code>. Linux же дописывает данные в конец файла. Страница man <code>pwrite(2)</code> упоминает это в разделе BUGS.</p></aside>
+</section>
+<section id="tables">
+<h2>Три таблицы за дескриптором</h2>
+<p>Номер дескриптора — это индекс. Пройдя по нему, вы проходите через три структуры ядра, и если знать, какое состояние в какой из них живёт, становится понятно большинство неожиданностей при работе с файлами.</p>
+<ol>
+<li><strong>Таблица дескрипторов процесса.</strong> Массив, который есть у каждого процесса (в ядре это <code>struct files_struct</code>). Ячейка <em>n</em> хранит указатель на описание открытого файла и ещё один флаг на уровне самого дескриптора: close-on-exec (<code>FD_CLOEXEC</code>).</li>
+<li><strong>Описание открытого файла</strong> (open file description), в ядре <code>struct file</code>. Каждый успешный <code>open</code> создаёт новое. В нём хранятся <strong>текущее смещение</strong> (<code>f_pos</code>), режим доступа, флаги состояния вроде <code>O_APPEND</code> и <code>O_NONBLOCK</code>, счётчик ссылок и указатель на таблицу операций для этого вида файлов (<code>f_op</code>). Описания открытых файлов всех процессов вместе образуют общесистемную таблицу открытых файлов.</li>
+<li><strong>inode (индексный дескриптор) в памяти</strong> (<code>struct inode</code>). Один на файл, сколько бы раз его ни открывали. В нём хранится то, что верно для самого файла: размер, владелец, режим, временные метки, счётчик ссылок и то, где лежат данные. <a href="03-ondisk.html">Урок 03</a> показывает его версию на диске.</li>
+</ol>
+<figure class="diagram">
+<svg viewBox="0 0 720 440" width="720" role="img" aria-label="У процесса A дескрипторы 3 и 4 указывают на одну общую struct file, а дескриптор 5 — на вторую struct file. У его потомка, процесса B, есть копии, которые указывают на те же две struct file. Обе struct file указывают на один inode.">
+<defs><marker id="ah-01-2" viewBox="0 0 10 10" refX="9" refY="5" markerWidth="7" markerHeight="7" orient="auto-start-reverse"><path class="ah" d="M0,0 L10,5 L0,10 z"/></marker></defs>
+<text class="ts" x="20" y="40">таблицы дескрипторов</text>
+<text class="ts" x="20" y="56">процессов</text>
+<text class="ts" x="250" y="30">описания открытых файлов (общие для системы)</text>
+<text class="th" x="20" y="168">процесс A</text>
+<rect class="k-user" x="20" y="180" width="130" height="24"/><text class="t" x="30" y="197">0  tty</text>
+<rect class="k-user" x="20" y="204" width="130" height="24"/><text class="t" x="30" y="221">1  tty</text>
+<rect class="k-user" x="20" y="228" width="130" height="24"/><text class="t" x="30" y="245">2  tty</text>
+<rect class="k-user" x="20" y="252" width="130" height="24"/><text class="t" x="30" y="269">3  open()</text>
+<rect class="k-user" x="20" y="276" width="130" height="24"/><text class="t" x="30" y="293">4  dup(3)</text>
+<rect class="k-user" x="20" y="300" width="130" height="24"/><text class="t" x="30" y="317">5  open()</text>
+<text class="th" x="570" y="168">процесс B = fork(A)</text>
+<rect class="k-user" x="570" y="180" width="130" height="24"/><text class="t" x="580" y="197">0  tty</text>
+<rect class="k-user" x="570" y="204" width="130" height="24"/><text class="t" x="580" y="221">1  tty</text>
+<rect class="k-user" x="570" y="228" width="130" height="24"/><text class="t" x="580" y="245">2  tty</text>
+<rect class="k-user" x="570" y="252" width="130" height="24"/><text class="t" x="580" y="269">3  копия</text>
+<rect class="k-user" x="570" y="276" width="130" height="24"/><text class="t" x="580" y="293">4  копия</text>
+<rect class="k-user" x="570" y="300" width="130" height="24"/><text class="t" x="580" y="317">5  копия</text>
+<rect class="k-kernel" x="250" y="40" width="220" height="86" rx="3"/>
+<text class="t" x="262" y="60">struct file #1</text>
+<text class="ts" x="262" y="80">f_pos   = 6   (общее!)</text>
+<text class="ts" x="262" y="96">f_flags = O_RDWR</text>
+<text class="ts" x="262" y="112">f_count = 4</text>
+<rect class="k-kernel" x="250" y="340" width="220" height="86" rx="3"/>
+<text class="t" x="262" y="360">struct file #2</text>
+<text class="ts" x="262" y="380">f_pos   = 0</text>
+<text class="ts" x="262" y="396">f_flags = O_RDONLY</text>
+<text class="ts" x="262" y="412">f_count = 2</text>
+<rect class="k-fs" x="270" y="190" width="180" height="90" rx="3"/>
+<text class="t" x="282" y="210">struct inode</text>
+<text class="ts" x="282" y="230">i_ino   = 2826040</text>
+<text class="ts" x="282" y="246">i_size  = 26</text>
+<text class="ts" x="282" y="262">i_nlink = 1</text>
+<line class="ln" x1="150" y1="264" x2="248" y2="88" marker-end="url(#ah-01-2)"/>
+<line class="ln" x1="150" y1="288" x2="248" y2="104" marker-end="url(#ah-01-2)"/>
+<line class="ln" x1="150" y1="312" x2="248" y2="372" marker-end="url(#ah-01-2)"/>
+<line class="ln" x1="570" y1="264" x2="472" y2="88" marker-end="url(#ah-01-2)"/>
+<line class="ln" x1="570" y1="288" x2="472" y2="104" marker-end="url(#ah-01-2)"/>
+<line class="ln" x1="570" y1="312" x2="472" y2="372" marker-end="url(#ah-01-2)"/>
+<line class="ln" x1="360" y1="126" x2="360" y2="188" marker-end="url(#ah-01-2)"/>
+<line class="ln" x1="360" y1="340" x2="360" y2="282" marker-end="url(#ah-01-2)"/>
+</svg>
+<figcaption>Состояние после первой демонстрации практики 01. Дескрипторы 3 и 4 в процессе A и их копии в порождённом процессе B ведут к <code>struct file #1</code>, поэтому чтение через любой из них сдвигает одно и то же смещение. Дескриптор 5 получен вторым <code>open</code> и имеет собственное смещение. Оба описания относятся к одному файлу, поэтому у них общий inode.</figcaption>
+</figure>
+<h3>Кто что разделяет</h3>
+<ul>
+<li><strong><code>dup(fd)</code></strong> создаёт новый дескриптор (наименьший свободный номер), который указывает на <em>то же самое</em> описание открытого файла. <code>dup2(old, new)</code> делает то же в конкретную ячейку, предварительно закрыв то, что там было. Командная оболочка пользуется этим для перенаправлений: <code>cmd &gt; out.txt</code> — это <code>open</code>, за которым следует <code>dup2(fd, 1)</code>, а <code>2&gt;&amp;1</code> — это <code>dup2(1, 2)</code>.</li>
+<li><strong><code>fork()</code></strong> даёт потомку копию таблицы дескрипторов родителя. Копии указывают на те же описания открытых файлов, поэтому родитель и потомок разделяют смещения. Вот почему родитель и потомок, которые пишут в унаследованный файл журнала, перемежают свои строки, а не затирают друг друга.</li>
+<li><strong>Второй <code>open()</code></strong> того же пути, из того же процесса или из другого, создаёт новое описание открытого файла со своим смещением. Два открытия встречаются только на уровне inode.</li>
+</ul>
+<p>Флаги делятся по тем же границам. Close-on-exec живёт в таблице дескрипторов, поэтому он свой у каждого дескриптора, и <code>dup</code> его не копирует. Флаги состояния вроде <code>O_APPEND</code> и <code>O_NONBLOCK</code> живут в описании открытого файла, поэтому установка <code>O_NONBLOCK</code> через один дескриптор вызовом <code>fcntl(fd, F_SETFL, …)</code> влияет на все дескрипторы во всех процессах, которые разделяют это описание.</p>
+<h3>Два писателя, и зачем нужен O_APPEND</h3>
+<p>Пусть два процесса открывают через <code>open</code> один и тот же файл журнала на запись без <code>O_APPEND</code>. У каждого своё описание открытого файла, и оба смещения начинаются с 0. Процесс A записывает <code>AAAA</code>. Процесс B, чьё смещение всё ещё равно 0, записывает <code>BB</code> поверх. Теперь в файле <code>BBAA</code>. Практика 01 воспроизводит ровно это.</p>
+<p>Предварительный переход в конец не помогает: между <code>lseek(fd, 0, SEEK_END)</code> процесса A и его <code>write</code> процесс B может дописать свои данные, и тогда A их затрёт. <code>O_APPEND</code> превращает «перейти в конец, затем записать» в один шаг внутри ядра, который выполняется под блокировкой inode, поэтому два дописывающих процесса на одной локальной файловой системе никогда не затрут друг друга. С <code>O_APPEND</code> в файле практики оказывается <code>AAAABB</code>.</p>
+<aside class="pitfall"><span class="tag">Ловушка: O_APPEND поверх NFS</span><p>Атомарность <code>O_APPEND</code> обеспечивается тем, что одно ядро держит одну блокировку. У двух NFS-клиентов, дописывающих в один файл, у каждого своё ядро и своё представление о том, где конец файла, поэтому их записи могут затирать друг друга. <a href="07-nfs-caching.html">Урок 07</a> объясняет почему и что делать вместо этого.</p></aside>
+</section>
+<section id="everything-fd">
+<h2>Всё есть дескриптор</h2>
+<p>Таблица хранит указатели на <code>struct file</code>, а <code>struct file</code> может представлять почти всё, за чем стоит функция <code>read_iter</code> или <code>write_iter</code>:</p>
+<ul>
+<li>обычные файлы и каталоги на любой файловой системе;</li>
+<li>каналы (<code>pipe()</code>), Unix- и сетевые сокеты (<code>socket()</code>, <code>accept()</code>);</li>
+<li>файлы устройств вроде <code>/dev/null</code>, <code>/dev/tty</code> и «сырых» дисков вроде <code>/dev/sda</code> (<a href="02-blocks.html">урок 02</a>);</li>
+<li>источники событий ядра: <code>eventfd</code>, <code>timerfd</code>, <code>signalfd</code>, <code>epoll</code>, <code>inotify</code>, <code>io_uring</code>.</li>
+</ul>
+<p>Одни и те же вызовы <code>read</code>, <code>write</code> и <code>close</code> работают со всеми ними, и именно это на практике означает «всё есть файл».</p>
+<h3>Как увидеть свои дескрипторы</h3>
+<p>Linux публикует таблицу каждого процесса в <code>/proc/&lt;pid&gt;/fd</code> в виде символических ссылок, цели которых описывают, на что указывает каждый дескриптор. <code>/proc/self</code> — это сам вызывающий процесс. Для каждого дескриптора <code>/proc/&lt;pid&gt;/fdinfo/&lt;n&gt;</code> показывает смещение и флаги описания открытого файла. Из практики 01:</p>
+<pre><code><span class="o">fd 3   -&gt; /home/artem/storage-course/labs/01-fds/scratch/alphabet.txt
+fd 4   -&gt; pipe:[81567245]
+fd 5   -&gt; pipe:[81567245]
+/proc/self/fdinfo/3:
+  pos:    7
+  flags:  02100000
+  mnt_id: 81
+  ino:    2826040</span></code></pre>
+<p>Флаги записаны в восьмеричном виде: <code>02000000</code> — это <code>O_CLOEXEC</code>, <code>0100000</code> — <code>O_LARGEFILE</code> (на 64-битных системах ставится автоматически), а режим доступа в младших битах равен 0, то есть <code>O_RDONLY</code>. Оба конца канала показывают в скобках один и тот же номер inode. <code>ls -l /proc/$$/fd</code> показывает дескрипторы вашей командной оболочки, а <code>lsof -p PID</code> показывает то же самое для любого процесса, который вам разрешено просматривать.</p>
+<h3>Лимиты и утечки</h3>
+<p>У каждого процесса есть ограничение на число открытых дескрипторов, <code>RLIMIT_NOFILE</code>; оболочка показывает его командой <code>ulimit -n</code>, а программа читает вызовом <code>getrlimit</code>. Во многих дистрибутивах мягкий лимит по умолчанию равен 1024; в этой сессии WSL он равен 1048576. Когда процесс упирается в лимит, <code>open</code>, <code>socket</code> и <code>accept</code> завершаются с <code>EMFILE</code>. Сервер, который никогда не закрывает дескрипторы, рано или поздно упрётся в лимит, поэтому «too many open files» в журнале почти всегда означает утечку.</p>
+<p>Дескрипторы наследуются через <code>execve</code>, если не помечены как close-on-exec. Если установить этот флаг позже через <code>fcntl</code>, остаётся окно, в котором другой поток может выполнить <code>fork</code> и <code>exec</code> и унести ваш дескриптор в постороннюю программу. Передача <code>O_CLOEXEC</code> в <code>open</code> закрывает это окно, поэтому аккуратный код передаёт его везде.</p>
+</section>
+<section id="metadata">
+<h2>Метаданные и каталоги</h2>
+<h3>stat</h3>
+<pre><code class="language-c">int stat(const char *path, struct stat *st);   <span class="c">// следует по символическим ссылкам</span>
+int lstat(const char *path, struct stat *st);  <span class="c">// не следует</span>
+int fstat(int fd, struct stat *st);            <span class="c">// по дескриптору</span></code></pre>
+<p><code>stat</code> возвращает атрибуты inode. Поля, которые понадобятся в этом курсе:</p>
+<div class="table-wrap"><table>
+<thead><tr><th>Поле</th><th>Значение</th></tr></thead>
+<tbody>
+<tr><td><code>st_dev</code>, <code>st_ino</code></td><td>Устройство (файловая система) и номер inode. Вместе они однозначно определяют файл на этой машине. Два пути с одинаковой парой — жёсткие ссылки на один файл.</td></tr>
+<tr><td><code>st_mode</code></td><td>Тип файла (обычный, каталог, символическая ссылка, устройство, канал, сокет) и биты прав.</td></tr>
+<tr><td><code>st_nlink</code></td><td>Сколько записей в каталогах (имён) указывают на этот inode.</td></tr>
+<tr><td><code>st_uid</code>, <code>st_gid</code></td><td>Владелец и группа в виде чисел. NFS переносит эти числа или имена по сети, что порождает свои проблемы (<a href="06-nfs.html">урок 06</a>).</td></tr>
+<tr><td><code>st_size</code></td><td>Длина в байтах, включая дыры.</td></tr>
+<tr><td><code>st_blocks</code></td><td>Реально выделенное место, всегда в единицах по 512 байт, каким бы ни был настоящий размер блока. Именно это показывает <code>du</code>; <code>ls -l</code> показывает <code>st_size</code>.</td></tr>
+<tr><td><code>st_blksize</code></td><td>Предпочтительный размер ввода-вывода, обычно 4096 локально и часто 1 МиБ в NFS.</td></tr>
+<tr><td><code>st_atim</code>, <code>st_mtim</code>, <code>st_ctim</code></td><td>Последний доступ, последнее изменение данных и последнее изменение inode (запись данных, но также <code>chmod</code>, <code>chown</code>, <code>link</code>). На современных файловых системах — с наносекундным разрешением.</td></tr>
+</tbody>
+</table></div>
+<p>Более новый вызов <code>statx</code> возвращает ту же информацию плюс дополнительные поля вроде времени создания файла (birth time) и позволяет запросить только часть полей. Это важно в сетевых файловых системах, где некоторые атрибуты дорого получать.</p>
+<h3>Чтение каталога</h3>
+<p>Каталог — это файл, содержимое которого представляет собой список записей (имя, номер inode). Прочитать его напрямую через <code>read</code> нельзя. Linux предоставляет <code>getdents64</code>, который заполняет буфер записями такого вида:</p>
+<pre><code class="language-c">struct linux_dirent64 {
+    ino64_t        d_ino;     <span class="c">// номер inode, на который указывает имя</span>
+    off64_t        d_off;     <span class="c">// непрозрачная метка (cookie): откуда продолжит следующее чтение</span>
+    unsigned short d_reclen;  <span class="c">// длина этой записи</span>
+    unsigned char  d_type;    <span class="c">// DT_REG, DT_DIR, DT_LNK, ... или DT_UNKNOWN</span>
+    char           d_name[];  <span class="c">// имя, завершённое NUL</span>
+};</code></pre>
+<p>Функции <code>opendir</code>/<code>readdir</code> из библиотеки C оборачивают его буфером. Обратите внимание, чего здесь нет: размеров, владельцев, временных меток. Листинг каталога даёт только имена и номера inode, поэтому <code>ls -l</code> должен вызвать <code>stat</code> для каждой записи. На локальном диске это дёшево, когда всё в кэше. По сети это было настолько медленно, что в NFSv3 добавили <code>READDIRPLUS</code>, который возвращает атрибуты вместе с именами. Метка <code>d_off</code> играет ту же роль, что и cookie, по которому NFS продолжает длинный листинг в нескольких запросах.</p>
+<h3>Имена: link, unlink, rename</h3>
+<ul>
+<li><code>link(old, new)</code> добавляет второе имя существующему inode и увеличивает <code>st_nlink</code>. Оба имени равноправны, ни одно из них не «оригинал».</li>
+<li><code>unlink(path)</code> удаляет имя и уменьшает <code>st_nlink</code>. При этом он не обязательно что-то удаляет; см. следующий раздел.</li>
+<li><code>rename(old, new)</code> перемещает имя, а если <code>new</code> существует, заменяет его <strong>атомарно</strong>: любой другой процесс видит под этим именем либо старый файл, либо новый, но никогда пустоту и никогда смесь. Приложения полагаются на это, чтобы безопасно обновлять файлы: записать временный файл, сделать ему <code>fsync</code>, затем выполнить <code>rename</code> поверх настоящего имени. <a href="05-vfs-cache.html">Урок 05</a> разбирает полный рецепт, включая <code>fsync</code> каталога, который тоже нужен.</li>
+</ul>
+</section>
+<section id="names">
+<h2>Имя — это не файл</h2>
+<p>Ядро освобождает inode и данные файла, только когда до нуля доходят два счётчика: счётчик ссылок (имён в каталогах) и число открытых ссылок (описаний открытых файлов плюс отображений в память). <code>unlink</code> влияет только на первый.</p>
+<p>Поэтому программа может открыть файл, лишиться его имени и продолжать читать и писать его. Из практики:</p>
+<pre><code><span class="o">before unlink: inode 2826042, nlink 1
+after unlink:  inode 2826042, nlink 0, access(path) -&gt; No such file or directory
+/proc/self/fd/3 -&gt; /home/artem/storage-course/labs/01-fds/scratch/doomed.txt (deleted)
+pread through the fd still returns "still here"</span></code></pre>
+<p>Это полезно: так получаются анонимные временные файлы, которые сами исчезают при завершении процесса. Это же источник классической эксплуатационной загадки: <code>df</code> говорит, что диск заполнен, а <code>du</code> не находит ничего большого. Обычно виноват долгоживущий процесс, который всё ещё пишет в кем-то удалённый файл журнала. Место вернётся, только когда процесс закроет файл или завершится. <code>lsof +L1</code> показывает открытые файлы со счётчиком ссылок меньше 1.</p>
+<aside class="note"><span class="tag">Забегая вперёд</span><p>Сервер NFSv3 понятия не имеет, какие файлы держат открытыми его клиенты. Чтобы сценарий «удалён, но открыт» продолжал работать, NFS-клиент его имитирует: вместо удаления файла, который ещё открыт, он переименовывает его в <code>.nfsXXXXXXXX</code> и удаляет это имя при последнем закрытии. Клиент Linux делает так и с NFSv4. Вы встретите эти «глупые переименования» (silly renames) в <a href="07-nfs-caching.html">уроке 07</a>.</p></aside>
+</section>
+<section id="buffers">
+<h2>Где ждут ваши байты: буферы над системным вызовом и под ним</h2>
+<p>Когда <code>write</code> возвращает управление, ваших данных ещё нет на диске. Они скопированы в <strong>страничный кэш</strong> (page cache) ядра, то есть в копию содержимого файлов в памяти, и помечены как грязные. Ядро запишет грязные страницы на устройство позже, как правило в течение примерно 30 секунд. Кроме того, большинство программ добавляют над системным вызовом собственный буфер через библиотеку <code>stdio</code> языка C.</p>
+<figure class="diagram">
+<pre>  ваш процесс          fprintf(f, ...)           буфер FILE* в памяти процесса (stdio, ~4–8 КиБ)
+                              │  fflush(f), буфер полон, перевод строки на tty или fclose
+  ─────────────────────────── ▼ write(fd, ...) ── граница системного вызова ──────────
+  ядро                 страничный кэш            грязные страницы в ОЗУ, общие для всех процессов
+                              │  обратная запись (через секунды) или fsync(fd)
+  блочный уровень + драйвер   ▼ (урок 02)
+  устройство           энергозависимый кэш       кэш записи в DRAM накопителя
+                              │  команда FLUSH / FUA (её посылает fsync)
+                              ▼
+                       стабильный носитель       флеш-память NAND или магнитная пластина</pre>
+<figcaption>Четыре места, где может ждать байт. Каждая стрелка — отдельная операция, и только последняя переживает отключение питания. <code>fflush</code> переносит данные только через границу системного вызова; <code>fsync</code> проталкивает их до конца.</figcaption>
+</figure>
+<h3>stdio — это кэш в пространстве пользователя</h3>
+<p><code>fopen</code> оборачивает дескриптор в объект <code>FILE</code> с буфером. <code>fprintf</code> и <code>fwrite</code> копируют данные в этот буфер, и только когда он заполнится (или вы вызовете <code>fflush</code> либо <code>fclose</code>), stdio вызывает <code>write</code>. Режим буферизации зависит от цели: полная буферизация для файлов и каналов, построчная для терминалов и никакой для <code>stderr</code>. Изменить его можно через <code>setvbuf</code>.</p>
+<p>Практика показывает два следствия. После <code>fprintf</code> ядро сообщает, что длина файла 0 байт, потому что данные всё ещё в вашем процессе. А смешивание stdio с прямым <code>write</code> на одном дескрипторе меняет порядок вывода:</p>
+<pre><code><span class="o">after fprintf:  file size on the kernel side = 0
+after fflush:   file size on the kernel side = 19
+...
+2nd (write)
+1st (fprintf)</span></code></pre>
+<p>На практике важны ещё два следствия. Процесс, убитый сигналом <code>SIGKILL</code>, теряет всё, что лежит в его буферах stdio, хотя всё, что он уже передал в <code>write</code>, переживёт его в страничном кэше. А <code>fork</code> при несброшенных данных stdio дублирует буфер, и один и тот же вывод может появиться дважды. Поэтому практика 01 отключает буферизацию своего <code>stdout</code>.</p>
+<h3>fsync и fdatasync</h3>
+<pre><code class="language-c">int fsync(int fd);       <span class="c">// данные + все метаданные надёжно записаны до возврата</span>
+int fdatasync(int fd);   <span class="c">// данные + только метаданные, нужные, чтобы их прочитать (например, размер, но не mtime)</span></code></pre>
+<p>Именно эти вызовы превращают «записано» в «надёжно записано» (durable). Они записывают грязные страницы файла на устройство, ждут завершения, а затем просят устройство сбросить его собственный энергозависимый кэш. Они медленные, это миллисекунды, а не микросекунды, поэтому программы их группируют. <a href="05-vfs-cache.html">Урок 05</a> подробно разбирает страничный кэш и обратную запись, а <a href="02-blocks.html">урок 02</a> объясняет, что означает FLUSH для устройства.</p>
+<h3>Кратко об mmap</h3>
+<p><code>mmap</code> отображает страницы файла из страничного кэша прямо в ваше адресное пространство, так что обычные чтения и записи памяти читают и пишут файл без вызовов <code>read</code> и <code>write</code>. Отображения <code>MAP_SHARED</code> записываются обратно в файл; отображения <code>MAP_PRIVATE</code> дают вид с копированием при записи, изменения в котором никогда не попадают в файл. Страницы подгружаются при первом обращении через страничный отказ (page fault). <code>msync</code> — это версия <code>fsync</code> для mmap. mmap и страничный кэш — одна и та же память, поэтому <a href="05-vfs-cache.html">урок 05</a> рассматривает их вместе.</p>
+</section>
+<section id="next-steps">
+<h2>Куда вызов идёт дальше</h2>
+<p>Внутри ядра дескриптор привёл к <code>struct file</code>, а <code>struct file</code> — к таблице операций. Эту таблицу заполняет та файловая система, на которой лежит файл. Уровень, которому принадлежат эти объекты и который выполняет через них диспетчеризацию, называется <strong>виртуальной файловой системой</strong> (Virtual File System, VFS); там же живут страничный кэш и кэш имён. Это <a href="05-vfs-cache.html">урок 05</a>.</p>
+<p>Но прежде курс опускается на самое дно стека: к устройству, которое в итоге хранит байты, и к тому, как оно адресуется. Это <a href="02-blocks.html">урок 02</a>. Затем уроки 03 и 04 строят над ним файловую систему, так что к уроку 05 оба конца пути будут вам знакомы.</p>
+</section>
+<section class="lab" id="lab">
+<p class="tag">Практика 01</p>
+<h2>Дескрипторы, смещения и имена на опыте</h2>
+<p class="where">~/storage-course/labs/01-fds/</p>
+<ol>
+<li>Соберите и запустите демонстрацию прямого системного вызова. Она печатает одну и ту же строку тремя способами, а затем показывает «сырое» значение, которое вернуло ядро, рядом с соглашением libc:
+<pre><code><span class="p">$</span> cd ~/storage-course/labs/01-fds
+<span class="p">$</span> gcc -Wall -Wextra -O2 -o rawsyscall rawsyscall.c &amp;&amp; ./rawsyscall
+<span class="o">1. libc wrapper write()
+2. generic syscall(SYS_write, ...)
+3. inline asm: the syscall instruction
+raw syscall on a closed fd returned -9 (-EBADF is -9)
+libc write() on a closed fd returned -1, errno=9 (Bad file descriptor)</span></code></pre>
+</li>
+<li>Соберите и запустите шесть демонстраций дескрипторов (или по одной: <code>./fds N</code>). Запускайте их в домашнем каталоге, где ext4; в <code>/mnt/c</code> или <code>/mnt/d</code> числа для разреженного файла будут другими.
+<pre><code><span class="p">$</span> gcc -Wall -Wextra -O2 -o fds fds.c &amp;&amp; ./fds
+<span class="o">== 1. who shares the offset? ==
+    read 1 byte via fd 3 -&gt; 'a'
+    offset seen by fd 4 (dup)        = 1
+    offset seen by fd 5 (other open) = 0
+    child read 5 bytes via its copy of fd 3
+    parent's offset on fd 3 is now 6 (moved by the child)
+    'other' is still at 0
+== 2. two writers, with and without O_APPEND ==
+    contents of scratch/log.txt: "BBAA"
+    contents of scratch/log.txt: "AAAABB"</span></code></pre>
+Пример вывода с WSL-машины, на которой готовился курс. Прежде чем читать исходник, предскажите каждую строку по схеме трёх таблиц.
+</li>
+<li>Читайте <code>fds.c</code> рядом с выводом. Каждая демонстрация — короткая функция с комментарием о том, что она доказывает. Измените демонстрацию 2 так, чтобы с <code>O_APPEND</code> открывался только один из двух дескрипторов, и предскажите результат до запуска.</li>
+<li>Посмотрите на таблицу своей оболочки: <code>ls -l /proc/$$/fd</code> и <code>cat /proc/$$/fdinfo/0</code>. Затем выполните <code>sleep 100 &gt; /tmp/x &amp;</code> и изучите <code>/proc/$!/fd</code>, чтобы увидеть перенаправление, которое оболочка настроила через <code>dup2</code>.</li>
+<li>Необязательно, для установки нужен root: <code>sudo apt install strace</code>, затем <code>strace -f -e trace=openat,read,write,lseek,dup,clone ./fds 1</code>. Обратите внимание, что <code>fork</code> выглядит как <code>clone</code>, а <code>fopen</code> — как <code>openat</code>. Этот шаг на машине курса не выполнялся.</li>
+</ol>
+</section>
+<section class="check" id="check">
+<h2>Проверьте себя</h2>
+<details><summary>Процесс дважды открывает один и тот же файл, получая дескрипторы 3 и 4, и записывает «hello» через 3. Затем он читает 5 байтов через 4. Что он прочитает и каким будет смещение дескриптора 4 после этого?</summary><p>Он прочитает «hello». Два вызова open создали два описания открытого файла с отдельными смещениями, поэтому дескриптор 4 начинает с 0. Данные при этом общие, потому что оба описания ведут к одному inode и одному страничному кэшу, так что байты, записанные через 3, видны. После чтения смещение 4 равно 5, и смещение 3 тоже равно 5, каждое считается отдельно.</p></details>
+<details><summary>Почему <code>cmd &gt; log 2&gt;&amp;1</code> сохраняет оба потока целыми, а <code>cmd &gt; log 2&gt; log</code> может терять вывод?</summary><p><code>2&gt;&amp;1</code> — это <code>dup2(1, 2)</code>: оба дескриптора разделяют одно описание открытого файла и одно смещение, поэтому записи из любого из них ложатся друг за другом. <code>2&gt; log</code> открывает файл второй раз и создаёт второе описание, смещение которого начинается с 0, поэтому вывод stderr затирает вывод stdout в файле, точно как в демонстрации 2 из практики.</p></details>
+<details><summary><code>read</code> вернул 100, а вы просили 4096. Это ошибка? А 0? А −1 с errno EINTR?</summary><p>100 — неполное чтение: это законно, и если нужно больше, читайте в цикле. Для обычного файла это обычно означает, что вы дошли до конца. 0 означает конец файла. −1 с <code>EINTR</code> означает, что сигнал прервал вызов до того, как были переданы данные, поэтому вызов нужно повторить.</p></details>
+<details><summary><code>df</code> показывает, что файловая система заполнена на 100%, а <code>du -sh /</code> насчитывает гораздо меньше. Какое объяснение наиболее вероятно и как его подтвердить?</summary><p>Какой-то процесс держит открытым удалённый файл. Имени уже нет, поэтому <code>du</code> (который обходит имена) его не видит, но inode и его блоки остаются выделенными до закрытия последней ссылки. <code>lsof +L1</code> перечисляет такие файлы; перезапуск процесса или сигнал, который заставит его переоткрыть журнал, освобождает место.</p></details>
+<details><summary>Программа вызывает <code>fprintf(f, ...)</code>, а затем её убивают сигналом SIGKILL. Окажется ли текст в файле? А если перед этим она вызвала <code>fflush(f)</code>? А если сразу после <code>fflush</code> у машины пропало питание?</summary><p>Без <code>fflush</code> — нет: текст оставался в буфере stdio в памяти процесса. После <code>fflush</code> текст находится в страничном кэше ядра и переживает смерть процесса. Отключение питания сразу после <code>fflush</code> всё ещё может его потерять, потому что ничто не заставило страничный кэш и кэш накопителя записать данные на стабильный носитель. Для этого нужен <code>fsync</code>.</p></details>
+<details><summary><code>ls -l</code> говорит, что файл занимает 10 ГиБ, а <code>du</code> — 12 КиБ. Как так?</summary><p>Файл разреженный. <code>ls -l</code> показывает <code>st_size</code>, логическую длину с учётом дыр. <code>du</code> показывает <code>st_blocks</code>, реально выделенное место. Большая часть файла — дыры, за которыми нет блоков.</p></details>
+<details><summary>Почему лучше передать <code>O_CLOEXEC</code> в <code>open</code>, чем вызвать <code>fcntl(fd, F_SETFD, FD_CLOEXEC)</code> сразу после него?</summary><p>В многопоточной программе другой поток может вызвать <code>fork</code> и <code>execve</code> между вашими <code>open</code> и <code>fcntl</code>, и новая программа унаследует дескриптор. Если установить флаг внутри <code>open</code>, такого окна не остаётся.</p></details>
+</section>
+<section class="further" id="further">
+<h2>Что почитать дальше</h2>
+<ul>
+<li><a href="https://man7.org/linux/man-pages/man2/open.2.html">open(2)</a>: все флаги и мелкий шрифт про <code>O_DIRECT</code>, <code>O_TMPFILE</code> и <code>O_PATH</code>.</li>
+<li><a href="https://man7.org/linux/man-pages/man2/syscall.2.html">syscall(2)</a>: соглашения о регистрах для всех архитектур в одной таблице.</li>
+<li><a href="https://lwn.net/Articles/604287/">Anatomy of a system call, part 1</a> (LWN): что происходит внутри ядра при входе в системный вызов и выходе из него.</li>
+<li><a href="https://man7.org/linux/man-pages/man5/proc_pid_fdinfo.5.html">proc_pid_fdinfo(5)</a>: все поля <code>/proc/PID/fdinfo</code>.</li>
+<li><a href="https://man7.org/linux/man-pages/man7/vdso.7.html">vdso(7)</a>: какие вызовы вообще обходятся без ядра.</li>
+<li><a href="https://pages.cs.wisc.edu/~remzi/OSTEP/file-intro.pdf">OSTEP, «Files and Directories»</a>: бесплатная глава учебника, которая разбирает тот же API со стороны операционной системы.</li>
+<li><a href="https://man7.org/tlpi/">The Linux Programming Interface</a> (Керриск), главы 4, 5 и 13: исчерпывающая книга о файловом вводе-выводе, буферизации и дескрипторах.</li>
+</ul>
+</section>
+<nav class="pager-foot" aria-label="Следующий и предыдущий урок">
+<a class="prev" href="index.html"><small>Назад</small>Обзор курса</a>
+<a class="next" href="02-blocks.html"><small>Дальше</small>Блочные устройства и адресация</a>
+</nav>
+</main>
+</div>
+<script src="../course.js?v=11"></script>
+</body>
+</html>
