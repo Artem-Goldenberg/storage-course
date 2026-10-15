@@ -143,7 +143,7 @@ pre .o { color: var(--ink-2); }            /* program output */
   align-items: center;
   justify-content: space-between;
   gap: 0.5rem 1.5rem;
-  padding: 0.7rem 1.25rem;
+  padding: 0.7rem max(1.25rem, env(safe-area-inset-right)) 0.7rem max(1.25rem, env(safe-area-inset-left));
   border-bottom: 1px solid var(--rule);
   background: var(--panel);
   font-family: var(--display);
@@ -160,6 +160,7 @@ pre .o { color: var(--ink-2); }            /* program output */
   display: flex;
   flex-wrap: wrap;
   align-items: center;
+  margin-left: auto;
   gap: 0.4rem 1rem;
   font-size: 0.92rem;
   color: var(--ink-2);
@@ -177,7 +178,10 @@ pre .o { color: var(--ink-2); }            /* program output */
   display: grid;
   grid-template-columns: 15.5rem minmax(0, 1fr);
   column-gap: 3rem;
-  padding: 2.25rem clamp(1rem, 2.5vw, 2.5rem) 4rem;
+  /* the pages draw under a landscape phone's camera cutout (viewport-fit=cover),
+     so every side gutter is at least as wide as the safe-area inset */
+  --gutter: clamp(1rem, 2.5vw, 2.5rem);
+  padding: 2.25rem max(var(--gutter), env(safe-area-inset-right)) 4rem max(var(--gutter), env(safe-area-inset-left));
 }
 .layout > .rail {
   grid-column: 1;
@@ -289,7 +293,7 @@ html { scroll-padding-top: 4.5rem; }
 .route > .rail, .sections > .toc {
   position: absolute;
   top: calc(100% + 4px);
-  right: 1.25rem;
+  right: max(1.25rem, env(safe-area-inset-right));
   z-index: 30;
   width: min(20rem, calc(100vw - 2rem));
   max-height: calc(100vh - 6rem);
@@ -569,14 +573,14 @@ html[lang="ru"] { --display: "PT Sans Narrow", "Arial Narrow", "Helvetica Neue",
    The top bar tucks away while you read and returns on a scroll up; the menus
    open full width with rows a finger can hit. */
 @media (max-width: 860px) {
-  .topbar { padding: 0.5rem 1rem; gap: 0.35rem 1rem; transition: transform 0.2s ease; }
+  .topbar { padding: 0.5rem max(1rem, env(safe-area-inset-right)) 0.5rem max(1rem, env(safe-area-inset-left)); gap: 0.35rem 1rem; transition: transform 0.2s ease; }
   .topbar.is-tucked { transform: translateY(-100%); }
   .pager { gap: 0.4rem 0.6rem; }
   .pager > a { padding-block: 0.45rem; }
   .route > summary, .sections > summary { padding: 0.45rem 0.65rem; }
   .route > .rail, .sections > .toc {
-    left: 0.75rem;
-    right: 0.75rem;
+    left: max(0.75rem, env(safe-area-inset-left));
+    right: max(0.75rem, env(safe-area-inset-right));
     width: auto;
     max-height: calc(100vh - 100% - 1.5rem);
     max-height: calc(100dvh - 100% - 1.5rem);
@@ -585,16 +589,23 @@ html[lang="ru"] { --display: "PT Sans Narrow", "Arial Narrow", "Helvetica Neue",
   .route .rail a { padding: 0.55rem 0.6rem; }
 }
 
+/* When the bar no longer fits on one line it takes two rows: the course name with
+   the language switch, then the pager on a row of its own. */
+@media (max-width: 780px) {
+  .topbar > .lang-switch { order: 1; margin-left: auto; }
+  .pager { order: 2; flex: 1 1 100%; margin-left: 0; }
+}
+
 /* Phones: prose keeps a 1rem gutter, but code, tables and diagrams run edge to
    edge, since every pixel of width is worth more to them than the frame. */
 @media (max-width: 600px) {
   .brand span { display: none; }
-  /* the pager gets a row of its own: prev at the left edge, next at the right */
-  .pager { flex: 1 1 100%; justify-content: space-between; font-size: 0.875rem; }
-  .pager > .sections { order: 1; }
+  .pager { justify-content: space-between; font-size: 0.875rem; }
+  /* in a lesson the row is the lesson menu at the left, then the sections menu and
+     a next arrow at the right; the way back is the lesson menu and the pager at the
+     foot of the page. The arrow keeps its link text for screen readers */
+  .pager > .sections { order: 1; margin-left: auto; }
   .pager > [rel="next"] { order: 2; }
-  /* in a lesson, prev and next shrink to arrow buttons so the row fits a 360px phone;
-     the link text stays for screen readers */
   .pager:has(> .sections) > a[rel] {
     display: flex;
     align-items: center;
@@ -606,11 +617,11 @@ html[lang="ru"] { --display: "PT Sans Narrow", "Arial Narrow", "Helvetica Neue",
     border: 1px solid var(--rule);
     border-radius: 3px;
   }
-  .pager:has(> .sections) > a[rel="prev"]::before { content: "←"; content: "←" / ""; font-size: 1.1rem; }
+  .pager:has(> .sections) > a[rel="prev"] { display: none; }
   .pager:has(> .sections) > a[rel="next"]::after { content: "→"; content: "→" / ""; font-size: 1.1rem; }
   .pager:has(> .sections) > a[rel]:hover { background: var(--code-bg); }
 
-  .layout { padding-inline: 1rem; }
+  .layout { --gutter: 1rem; }
   .lesson { row-gap: 2.25rem; }
   h1 { font-size: 2rem; }
   h2 { font-size: 1.45rem; }

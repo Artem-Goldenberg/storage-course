@@ -3,9 +3,9 @@
 <link rel="preconnect" href="https://fonts.googleapis.com">
 <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
 <link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=IBM+Plex+Mono:wght@400;600&family=IBM+Plex+Sans+Condensed:wght@500;600;700&family=Source+Serif+4:ital,opsz,wght@0,8..60,400;0,8..60,600;1,8..60,400&display=swap">
-<link rel="stylesheet" href="course.css?v=10">
+<link rel="stylesheet" href="course.css?v=11">
 <style>
-  .home { max-width: 74rem; margin: 0 auto; padding-block: 2.5rem 4rem; padding-inline: 1.25rem; display: grid; gap: 3.5rem; }
+  .home { max-width: 74rem; margin: 0 auto; padding-block: 2.5rem 4rem; padding-inline: max(1.25rem, env(safe-area-inset-left)) max(1.25rem, env(safe-area-inset-right)); display: grid; gap: 3.5rem; }
   .home > * { min-width: 0; }
   .hero { display: grid; gap: 1rem; max-width: 48rem; }
   .hero h1 { font-size: clamp(2.3rem, 6vw, 3.6rem); letter-spacing: -0.015em; }
@@ -187,8 +187,8 @@
 <nav class="pager" aria-label="Course">
 <a href="01-syscalls.html">Start with lesson 01 →</a>
 <a href="glossary.html">Glossary</a>
-<span class="lang-switch" aria-label="Language"><b>EN</b><a href="ru/index.html" hreflang="ru" lang="ru">RU</a></span>
 </nav>
+<span class="lang-switch" aria-label="Language"><b>EN</b><a href="ru/index.html" hreflang="ru" lang="ru">RU</a></span>
 </header>
 <main class="home">
 <header class="hero">
