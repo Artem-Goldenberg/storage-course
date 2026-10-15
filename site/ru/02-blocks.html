@@ -119,6 +119,161 @@ sdd        512  4096    1     4096         4 write_back   [none] mq-deadline kyb
 <p>Одни и те же две операции, чтение секторов и запись секторов, скрывают оборудование, которое различается по скорости в тысячу раз. Каждое проектное решение выше этого уровня, от распределителей блоков в файловых системах до кэширования в NFS, определяется этими числами.</p>
 <h3>Вращающиеся диски</h3>
 <p>Жёсткий диск (HDD) хранит данные магнитным способом на вращающихся <strong>пластинах</strong> (platters). У каждой поверхности пластины есть <strong>головка</strong> (head) на рычаге; кольцо данных под головкой при одном положении рычага — это <strong>дорожка</strong> (track); дорожки делятся на <strong>секторы</strong> (sectors); а набор дорожек при одном положении рычага на всех поверхностях — это <strong>цилиндр</strong> (cylinder).</p>
+<figure class="diagram">
+<svg viewBox="0 0 700 392" width="700" role="img" aria-label="Устройство жёсткого диска. Сбоку: три пластины на шпинделе, шесть головок на рычагах, которые двигаются вместе, и цилиндр — одна и та же дорожка на всех поверхностях. Сверху одна поверхность: концентрические дорожки, разделённые на секторы, на внешних дорожках секторов больше, один сектор выделен, головка на рычаге.">
+<defs><marker id="ah-02-0" viewBox="0 0 10 10" refX="9" refY="5" markerWidth="7" markerHeight="7" orient="auto-start-reverse"><path class="ah" d="M0,0 L10,5 L0,10 z"/></marker></defs>
+<text class="ts" x="20" y="24">СБОКУ: 3 ПЛАСТИНЫ, 6 ГОЛОВОК</text>
+<rect class="ah" x="124" y="54" width="12" height="190"/>
+<rect class="k-block" x="30" y="70" width="200" height="10" rx="2"/>
+<rect class="c-block" x="199" y="70" width="14" height="10"/>
+<rect class="c-block" x="47" y="70" width="14" height="10"/>
+<rect class="k-block" x="30" y="140" width="200" height="10" rx="2"/>
+<rect class="c-block" x="199" y="140" width="14" height="10"/>
+<rect class="c-block" x="47" y="140" width="14" height="10"/>
+<rect class="k-block" x="30" y="210" width="200" height="10" rx="2"/>
+<rect class="c-block" x="199" y="210" width="14" height="10"/>
+<rect class="c-block" x="47" y="210" width="14" height="10"/>
+<rect class="hl" x="197" y="56" width="18" height="178" rx="2" stroke-dasharray="4 3"/>
+<rect class="ah" x="262" y="54" width="16" height="182" rx="3"/>
+<polygon class="ah" points="212,64.5 262,63 262,68 212,66.5"/>
+<rect class="ah" x="200" y="63" width="12" height="5" rx="1"/>
+<text class="ts" x="193" y="69.5" text-anchor="end">0</text>
+<polygon class="ah" points="212,83.5 262,82 262,87 212,85.5"/>
+<rect class="ah" x="200" y="82" width="12" height="5" rx="1"/>
+<text class="ts" x="193" y="88.5" text-anchor="end">1</text>
+<polygon class="ah" points="212,134.5 262,133 262,138 212,136.5"/>
+<rect class="ah" x="200" y="133" width="12" height="5" rx="1"/>
+<text class="ts" x="193" y="139.5" text-anchor="end">2</text>
+<polygon class="ah" points="212,153.5 262,152 262,157 212,155.5"/>
+<rect class="ah" x="200" y="152" width="12" height="5" rx="1"/>
+<text class="ts" x="193" y="158.5" text-anchor="end">3</text>
+<polygon class="ah" points="212,204.5 262,203 262,208 212,206.5"/>
+<rect class="ah" x="200" y="203" width="12" height="5" rx="1"/>
+<text class="ts" x="193" y="209.5" text-anchor="end">4</text>
+<polygon class="ah" points="212,223.5 262,222 262,227 212,225.5"/>
+<rect class="ah" x="200" y="222" width="12" height="5" rx="1"/>
+<text class="ts" x="193" y="228.5" text-anchor="end">5</text>
+<text class="ts" x="34" y="62">пластина</text>
+<text class="ts" x="130" y="260" text-anchor="middle">шпиндель</text>
+<text class="ts" x="278" y="46" text-anchor="end">рычаги ходят только вместе</text>
+<line class="ln" x1="206" y1="236" x2="206" y2="272"/>
+<text class="ts" x="206" y="285" text-anchor="middle">цилиндр: одна и та же</text>
+<text class="ts" x="206" y="299" text-anchor="middle">дорожка на всех 6 поверхностях</text>
+<text class="ts" x="360" y="24">СВЕРХУ: ОДНА ПОВЕРХНОСТЬ</text>
+<circle class="k-block" cx="500" cy="180" r="140"/>
+<path class="c-block" fill-opacity=".35" fill-rule="evenodd" d="M616,180 A116 116 0 1 0 384,180 A116 116 0 1 0 616,180 Z M596,180 A96 96 0 1 0 404,180 A96 96 0 1 0 596,180 Z"/>
+<path class="c-block" d="M479.9,294.2 A116 116 0 0 0 520.1,294.2 L516.7,274.5 A96 96 0 0 1 483.3,274.5 Z"/>
+<circle class="ln" style="stroke-width:.7;stroke-opacity:.5" cx="500" cy="180" r="36"/>
+<circle class="ln" style="stroke-width:.7;stroke-opacity:.5" cx="500" cy="180" r="56"/>
+<circle class="ln" style="stroke-width:.7;stroke-opacity:.5" cx="500" cy="180" r="76"/>
+<circle class="ln" style="stroke-width:.7;stroke-opacity:.5" cx="500" cy="180" r="96"/>
+<circle class="ln" style="stroke-width:.7;stroke-opacity:.5" cx="500" cy="180" r="116"/>
+<circle class="ln" style="stroke-width:.7;stroke-opacity:.5" cx="500" cy="180" r="136"/>
+<line class="ln" style="stroke-width:.7;stroke-opacity:.5" x1="536" y1="180" x2="556" y2="180"/>
+<line class="ln" style="stroke-width:.7;stroke-opacity:.5" x1="531.2" y1="162" x2="548.5" y2="152"/>
+<line class="ln" style="stroke-width:.7;stroke-opacity:.5" x1="518" y1="148.8" x2="528" y2="131.5"/>
+<line class="ln" style="stroke-width:.7;stroke-opacity:.5" x1="500" y1="144" x2="500" y2="124"/>
+<line class="ln" style="stroke-width:.7;stroke-opacity:.5" x1="482" y1="148.8" x2="472" y2="131.5"/>
+<line class="ln" style="stroke-width:.7;stroke-opacity:.5" x1="468.8" y1="162" x2="451.5" y2="152"/>
+<line class="ln" style="stroke-width:.7;stroke-opacity:.5" x1="464" y1="180" x2="444" y2="180"/>
+<line class="ln" style="stroke-width:.7;stroke-opacity:.5" x1="468.8" y1="198" x2="451.5" y2="208"/>
+<line class="ln" style="stroke-width:.7;stroke-opacity:.5" x1="482" y1="211.2" x2="472" y2="228.5"/>
+<line class="ln" style="stroke-width:.7;stroke-opacity:.5" x1="500" y1="216" x2="500" y2="236"/>
+<line class="ln" style="stroke-width:.7;stroke-opacity:.5" x1="518" y1="211.2" x2="528" y2="228.5"/>
+<line class="ln" style="stroke-width:.7;stroke-opacity:.5" x1="531.2" y1="198" x2="548.5" y2="208"/>
+<line class="ln" style="stroke-width:.7;stroke-opacity:.5" x1="556" y1="180" x2="576" y2="180"/>
+<line class="ln" style="stroke-width:.7;stroke-opacity:.5" x1="548.5" y1="152" x2="565.8" y2="142"/>
+<line class="ln" style="stroke-width:.7;stroke-opacity:.5" x1="528" y1="131.5" x2="538" y2="114.2"/>
+<line class="ln" style="stroke-width:.7;stroke-opacity:.5" x1="500" y1="124" x2="500" y2="104"/>
+<line class="ln" style="stroke-width:.7;stroke-opacity:.5" x1="472" y1="131.5" x2="462" y2="114.2"/>
+<line class="ln" style="stroke-width:.7;stroke-opacity:.5" x1="451.5" y1="152" x2="434.2" y2="142"/>
+<line class="ln" style="stroke-width:.7;stroke-opacity:.5" x1="444" y1="180" x2="424" y2="180"/>
+<line class="ln" style="stroke-width:.7;stroke-opacity:.5" x1="451.5" y1="208" x2="434.2" y2="218"/>
+<line class="ln" style="stroke-width:.7;stroke-opacity:.5" x1="472" y1="228.5" x2="462" y2="245.8"/>
+<line class="ln" style="stroke-width:.7;stroke-opacity:.5" x1="500" y1="236" x2="500" y2="256"/>
+<line class="ln" style="stroke-width:.7;stroke-opacity:.5" x1="528" y1="228.5" x2="538" y2="245.8"/>
+<line class="ln" style="stroke-width:.7;stroke-opacity:.5" x1="548.5" y1="208" x2="565.8" y2="218"/>
+<line class="ln" style="stroke-width:.7;stroke-opacity:.5" x1="576" y1="180" x2="596" y2="180"/>
+<line class="ln" style="stroke-width:.7;stroke-opacity:.5" x1="571.4" y1="154" x2="590.2" y2="147.2"/>
+<line class="ln" style="stroke-width:.7;stroke-opacity:.5" x1="558.2" y1="131.1" x2="573.5" y2="118.3"/>
+<line class="ln" style="stroke-width:.7;stroke-opacity:.5" x1="538" y1="114.2" x2="548" y2="96.9"/>
+<line class="ln" style="stroke-width:.7;stroke-opacity:.5" x1="513.2" y1="105.2" x2="516.7" y2="85.5"/>
+<line class="ln" style="stroke-width:.7;stroke-opacity:.5" x1="486.8" y1="105.2" x2="483.3" y2="85.5"/>
+<line class="ln" style="stroke-width:.7;stroke-opacity:.5" x1="462" y1="114.2" x2="452" y2="96.9"/>
+<line class="ln" style="stroke-width:.7;stroke-opacity:.5" x1="441.8" y1="131.1" x2="426.5" y2="118.3"/>
+<line class="ln" style="stroke-width:.7;stroke-opacity:.5" x1="428.6" y1="154" x2="409.8" y2="147.2"/>
+<line class="ln" style="stroke-width:.7;stroke-opacity:.5" x1="424" y1="180" x2="404" y2="180"/>
+<line class="ln" style="stroke-width:.7;stroke-opacity:.5" x1="428.6" y1="206" x2="409.8" y2="212.8"/>
+<line class="ln" style="stroke-width:.7;stroke-opacity:.5" x1="441.8" y1="228.9" x2="426.5" y2="241.7"/>
+<line class="ln" style="stroke-width:.7;stroke-opacity:.5" x1="462" y1="245.8" x2="452" y2="263.1"/>
+<line class="ln" style="stroke-width:.7;stroke-opacity:.5" x1="486.8" y1="254.8" x2="483.3" y2="274.5"/>
+<line class="ln" style="stroke-width:.7;stroke-opacity:.5" x1="513.2" y1="254.8" x2="516.7" y2="274.5"/>
+<line class="ln" style="stroke-width:.7;stroke-opacity:.5" x1="538" y1="245.8" x2="548" y2="263.1"/>
+<line class="ln" style="stroke-width:.7;stroke-opacity:.5" x1="558.2" y1="228.9" x2="573.5" y2="241.7"/>
+<line class="ln" style="stroke-width:.7;stroke-opacity:.5" x1="571.4" y1="206" x2="590.2" y2="212.8"/>
+<line class="ln" style="stroke-width:.7;stroke-opacity:.5" x1="596" y1="180" x2="616" y2="180"/>
+<line class="ln" style="stroke-width:.7;stroke-opacity:.5" x1="590.2" y1="147.2" x2="609" y2="140.3"/>
+<line class="ln" style="stroke-width:.7;stroke-opacity:.5" x1="573.5" y1="118.3" x2="588.9" y2="105.4"/>
+<line class="ln" style="stroke-width:.7;stroke-opacity:.5" x1="548" y1="96.9" x2="558" y2="79.5"/>
+<line class="ln" style="stroke-width:.7;stroke-opacity:.5" x1="516.7" y1="85.5" x2="520.1" y2="65.8"/>
+<line class="ln" style="stroke-width:.7;stroke-opacity:.5" x1="483.3" y1="85.5" x2="479.9" y2="65.8"/>
+<line class="ln" style="stroke-width:.7;stroke-opacity:.5" x1="452" y1="96.9" x2="442" y2="79.5"/>
+<line class="ln" style="stroke-width:.7;stroke-opacity:.5" x1="426.5" y1="118.3" x2="411.1" y2="105.4"/>
+<line class="ln" style="stroke-width:.7;stroke-opacity:.5" x1="409.8" y1="147.2" x2="391" y2="140.3"/>
+<line class="ln" style="stroke-width:.7;stroke-opacity:.5" x1="404" y1="180" x2="384" y2="180"/>
+<line class="ln" style="stroke-width:.7;stroke-opacity:.5" x1="409.8" y1="212.8" x2="391" y2="219.7"/>
+<line class="ln" style="stroke-width:.7;stroke-opacity:.5" x1="426.5" y1="241.7" x2="411.1" y2="254.6"/>
+<line class="ln" style="stroke-width:.7;stroke-opacity:.5" x1="452" y1="263.1" x2="442" y2="280.5"/>
+<line class="ln" style="stroke-width:.7;stroke-opacity:.5" x1="483.3" y1="274.5" x2="479.9" y2="294.2"/>
+<line class="ln" style="stroke-width:.7;stroke-opacity:.5" x1="516.7" y1="274.5" x2="520.1" y2="294.2"/>
+<line class="ln" style="stroke-width:.7;stroke-opacity:.5" x1="548" y1="263.1" x2="558" y2="280.5"/>
+<line class="ln" style="stroke-width:.7;stroke-opacity:.5" x1="573.5" y1="241.7" x2="588.9" y2="254.6"/>
+<line class="ln" style="stroke-width:.7;stroke-opacity:.5" x1="590.2" y1="212.8" x2="609" y2="219.7"/>
+<line class="ln" style="stroke-width:.7;stroke-opacity:.5" x1="616" y1="180" x2="636" y2="180"/>
+<line class="ln" style="stroke-width:.7;stroke-opacity:.5" x1="612" y1="150" x2="631.4" y2="144.8"/>
+<line class="ln" style="stroke-width:.7;stroke-opacity:.5" x1="600.5" y1="122" x2="617.8" y2="112"/>
+<line class="ln" style="stroke-width:.7;stroke-opacity:.5" x1="582" y1="98" x2="596.2" y2="83.8"/>
+<line class="ln" style="stroke-width:.7;stroke-opacity:.5" x1="558" y1="79.5" x2="568" y2="62.2"/>
+<line class="ln" style="stroke-width:.7;stroke-opacity:.5" x1="530" y1="68" x2="535.2" y2="48.6"/>
+<line class="ln" style="stroke-width:.7;stroke-opacity:.5" x1="500" y1="64" x2="500" y2="44"/>
+<line class="ln" style="stroke-width:.7;stroke-opacity:.5" x1="470" y1="68" x2="464.8" y2="48.6"/>
+<line class="ln" style="stroke-width:.7;stroke-opacity:.5" x1="442" y1="79.5" x2="432" y2="62.2"/>
+<line class="ln" style="stroke-width:.7;stroke-opacity:.5" x1="418" y1="98" x2="403.8" y2="83.8"/>
+<line class="ln" style="stroke-width:.7;stroke-opacity:.5" x1="399.5" y1="122" x2="382.2" y2="112"/>
+<line class="ln" style="stroke-width:.7;stroke-opacity:.5" x1="388" y1="150" x2="368.6" y2="144.8"/>
+<line class="ln" style="stroke-width:.7;stroke-opacity:.5" x1="384" y1="180" x2="364" y2="180"/>
+<line class="ln" style="stroke-width:.7;stroke-opacity:.5" x1="388" y1="210" x2="368.6" y2="215.2"/>
+<line class="ln" style="stroke-width:.7;stroke-opacity:.5" x1="399.5" y1="238" x2="382.2" y2="248"/>
+<line class="ln" style="stroke-width:.7;stroke-opacity:.5" x1="418" y1="262" x2="403.8" y2="276.2"/>
+<line class="ln" style="stroke-width:.7;stroke-opacity:.5" x1="442" y1="280.5" x2="432" y2="297.8"/>
+<line class="ln" style="stroke-width:.7;stroke-opacity:.5" x1="470" y1="292" x2="464.8" y2="311.4"/>
+<line class="ln" style="stroke-width:.7;stroke-opacity:.5" x1="500" y1="296" x2="500" y2="316"/>
+<line class="ln" style="stroke-width:.7;stroke-opacity:.5" x1="530" y1="292" x2="535.2" y2="311.4"/>
+<line class="ln" style="stroke-width:.7;stroke-opacity:.5" x1="558" y1="280.5" x2="568" y2="297.8"/>
+<line class="ln" style="stroke-width:.7;stroke-opacity:.5" x1="582" y1="262" x2="596.2" y2="276.2"/>
+<line class="ln" style="stroke-width:.7;stroke-opacity:.5" x1="600.5" y1="238" x2="617.8" y2="248"/>
+<line class="ln" style="stroke-width:.7;stroke-opacity:.5" x1="612" y1="210" x2="631.4" y2="215.2"/>
+<circle class="box" cx="500" cy="180" r="24"/>
+<circle class="ah" cx="500" cy="180" r="6"/>
+<path class="ln" d="M357.2,232 A152 152 0 0 0 448,322.8" marker-end="url(#ah-02-0)"/>
+<text class="ts" x="318" y="300">вращение</text>
+<text class="ts" x="318" y="314">7200 об/мин</text>
+<polygon class="ah" points="675.5,303.6 601.4,142.9 597.8,144.5 664.5,308.4"/>
+<polygon class="ah" points="600.5,135.7 593.2,138.9 597.9,149.9 605.3,146.7"/>
+<circle class="ah" cx="670" cy="306" r="12"/>
+<circle class="box" cx="670" cy="306" r="4"/>
+<path class="ln" d="M559.8,145.3 A194.9 194.9 0 0 1 628,115.7" marker-start="url(#ah-02-0)" marker-end="url(#ah-02-0)"/>
+<text class="ts" x="634" y="113.7">поиск</text>
+<line class="ln" x1="605.6" y1="147.7" x2="646" y2="170"/>
+<text class="ts" x="650" y="176">головка</text>
+<line class="ln" x1="352" y1="121" x2="397.4" y2="142.7"/>
+<text class="ts" x="318" y="118">дорожка</text>
+<line class="ln" x1="520" y1="338" x2="503" y2="299"/>
+<text class="ts" x="522" y="350">сектор: 512 Б или 4 КиБ</text>
+<text class="ts" x="20" y="382">CHS = (цилиндр, головка, сектор): положение рычага, какая поверхность, какой сектор дорожки</text>
+</svg>
+<figcaption>Диск с тремя пластинами. В обычном диске все рычаги сидят на одном приводе и поворачиваются вместе, поэтому шесть головок всегда стоят над дорожками одного радиуса: этот набор дорожек и есть цилиндр. Читает или пишет в каждый момент только одна головка. Перевести рычаг на нужную дорожку — это поиск, а потом головка ждёт, пока нужный сектор подъедет под неё при вращении. Внешние дорожки длиннее и вмещают больше секторов (здесь 24 против 12 у оси), поэтому у настоящего диска нет одного числа «секторов на дорожку».</figcaption>
+</figure>
 <p>Ранние ПК адресовали секторы по этой геометрии, тройкой (цилиндр, головка, сектор), которая называется <strong>CHS</strong>. Старый интерфейс BIOS допускал 1024 цилиндра, 255 головок и 63 сектора на дорожку, что ограничивает диск примерно 8,4 ГБ. К тому же у дисков перестала быть фиксированная геометрия: внешние дорожки длиннее и вмещают больше секторов, чем внутренние. Поэтому CHS сменила <strong>логическая адресация блоков</strong> (Logical Block Addressing, LBA): секторы просто нумеруются 0, 1, 2, …, а диск сам сопоставляет каждому номеру физическое место. Для справки, перевод из старой схемы: <code>LBA = (C × heads + H) × sectors_per_track + (S − 1)</code>. Все устройства в этом уроке, включая SSD и NVMe-накопители, адресуются по LBA.</p>
 <p>Чтение случайного сектора складывается из трёх затрат:</p>
 <ul>
