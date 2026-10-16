@@ -1,6 +1,14 @@
 {
  "page": "02-blocks.html",
  "sources": {
+  "nvme-name": {
+    "url": "https://nvmexpress.org/nvme-form-factors-blog-series-part-i-from-the-beginning-how-nvme-got-its-start/",
+    "title": "NVM Express: From the Beginning: How NVMe Got its Start",
+    "where": {
+      "en": "opening paragraph and Opening Up Options",
+      "ru": "первый абзац и раздел Opening Up Options"
+    }
+  },
   "ldd3": {
    "url": "https://lwn.net/images/pdf/LDD3/ch03.pdf#page=2",
    "title": "Linux Device Drivers, Third Edition, Chapter 3: Char Drivers",
@@ -875,6 +883,24 @@
   }
  },
  "cites": [
+{
+  "src": "nvme-name",
+  "en": "stands for <b>Non-Volatile Memory Express</b>.",
+  "ru": "расшифровывается как <b>Non-Volatile Memory Express</b>.",
+  "quote": "Non-Volatile Memory Express (what a mouthful!)"
+},
+{
+  "src": "nvme-name",
+  "en": "Here we discuss local NVMe devices connected through PCI Express.",
+  "ru": "Здесь рассматриваются локальные устройства NVMe, подключённые через PCI Express.",
+  "quote": "By attaching directly to the host PCIe lanes we now have a wide range of attachment options."
+},
+{
+  "src": "bvec-biovec",
+  "en": "describes one memory segment by its starting page, byte offset and length; a bio can contain several segments.",
+  "ru": "описывает один сегмент памяти через начальную страницу, смещение в байтах и длину; в bio может быть несколько сегментов.",
+  "quote": "struct bio_vec - a contiguous range of physical memory addresses … @bv_page: First page associated with the address range."
+},
   {
    "src": [
     "ldd3",
@@ -979,7 +1005,7 @@
   },
   {
    "src": "abi-sched",
-   "en": "The available I/O schedulers; the active one is in brackets.",
+   "en": "The available <a href=\"glossary.html#g-io\">I/O</a> schedulers; the active one is in brackets.",
    "ru": "Доступные планировщики ввода-вывода; активный указан в квадратных скобках.",
    "quote": "When read, this file will display the current and available IO schedulers for this block device. The currently active IO scheduler will be enclosed in [] brackets."
   },

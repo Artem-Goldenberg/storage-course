@@ -1965,8 +1965,8 @@
     "nfs5-v3opts",
     "kd-localio"
    ],
-   "en": "<td>NFSv3 POSIX ACLs (Linux and Solaris side protocol)",
-   "ru": "<td>POSIX ACL в NFSv3 (побочный протокол Linux и Solaris)",
+   "en": "<td>NFSv3 <a href=\"glossary.html#g-posix\">POSIX</a> ACLs (Linux and Solaris side protocol)",
+   "ru": "<td><a href=\"glossary.html#g-posix\">POSIX</a> ACL в NFSv3 (побочный протокол Linux и Solaris)",
    "quote": {
     "k-nfsacl-h": "#define NFS_ACL_PROGRAM 100227",
     "nfs5-v3opts": "The NFSACL sideband protocol is a proprietary protocol implemented in Solaris that manages Access Control Lists.",
@@ -2601,7 +2601,7 @@
   },
   {
    "src": "rfc8881-20.3",
-   "en": "the client can always fall back to doing I/O through the MDS.",
+   "en": "the client can always fall back to doing <a href=\"glossary.html#g-io\">I/O</a> through the MDS.",
    "ru": "клиент всегда может вернуться к вводу-выводу через MDS.",
    "quote": "a clora_changed value of TRUE indicates some level of change for the layout and the client SHOULD NOT write and commit modified data to the storage devices. In this case, the client writes and commits data through the metadata server."
   },
@@ -2624,8 +2624,8 @@
     "rfc5663-2.2.1",
     "rfc8154-1"
    ],
-   "en": "SCSI device identifiers for SCSI layouts).",
-   "ru": "идентификаторы устройств SCSI для раскладок SCSI).",
+   "en": "<a href=\"glossary.html#g-scsi\">SCSI</a> device identifiers for SCSI layouts).",
+   "ru": "идентификаторы устройств <a href=\"glossary.html#g-scsi\">SCSI</a> для раскладок SCSI).",
    "quote": {
     "rfc8881-18.40": "The GETDEVICEINFO operation returns pNFS storage device address information for the specified device ID.",
     "rfc8881-13.3": "nflda_multipath_ds_list: An array of lists of data servers, where each list can be one or more elements, and each element represents a data server address",

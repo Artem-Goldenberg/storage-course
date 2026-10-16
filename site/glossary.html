@@ -75,14 +75,14 @@
 <div class="gl-tools">
 <label for="gl-filter">Filter</label>
 <input id="gl-filter" type="search" placeholder="e.g. delegation, extent, rkey" autocomplete="off">
-<span class="gl-count" id="gl-count">98 terms</span>
+<span class="gl-count" id="gl-count">128 terms</span>
 </div>
-<nav class="letters" aria-label="Jump to letter"><a href="#letter-num">#</a> <a href="#letter-A">A</a> <a href="#letter-B">B</a> <a href="#letter-C">C</a> <a href="#letter-D">D</a> <a href="#letter-E">E</a> <a href="#letter-F">F</a> <a href="#letter-G">G</a> <a href="#letter-H">H</a> <a href="#letter-I">I</a> <a href="#letter-J">J</a> <a href="#letter-L">L</a> <a href="#letter-M">M</a> <a href="#letter-N">N</a> <a href="#letter-O">O</a> <a href="#letter-P">P</a> <a href="#letter-Q">Q</a> <a href="#letter-R">R</a> <a href="#letter-S">S</a> <a href="#letter-V">V</a> <a href="#letter-W">W</a> <a href="#letter-X">X</a></nav>
+<nav class="letters" aria-label="Jump to letter"><a href="#letter-num">#</a> <a href="#letter-A">A</a> <a href="#letter-B">B</a> <a href="#letter-C">C</a> <a href="#letter-D">D</a> <a href="#letter-E">E</a> <a href="#letter-F">F</a> <a href="#letter-G">G</a> <a href="#letter-H">H</a> <a href="#letter-I">I</a> <a href="#letter-J">J</a> <a href="#letter-L">L</a> <a href="#letter-M">M</a> <a href="#letter-N">N</a> <a href="#letter-O">O</a> <a href="#letter-P">P</a> <a href="#letter-Q">Q</a> <a href="#letter-R">R</a> <a href="#letter-S">S</a> <a href="#letter-T">T</a> <a href="#letter-V">V</a> <a href="#letter-W">W</a> <a href="#letter-X">X</a></nav>
 <p class="gl-empty" id="gl-empty" hidden>No term matches. Try a shorter word.</p>
 <section class="letter" data-letter="#">
 <h2 id="letter-num">#</h2>
 <dl>
-<div class="entry" id="g-512e-4kn" data-text="512e / 4kn drives with 512-byte logical and 4 kib physical sectors, or 4 kib for both.">
+<div class="entry" id="g-512e-4kn" data-text="512e / 4kn drives with 512-byte logical and 4 kib physical sectors, or 4 kib for both. 02">
 <dt>512e / 4Kn</dt>
 <dd>Drives with 512-byte logical and 4 KiB physical sectors, or 4 KiB for both. <a class="layer-chip block" href="02-blocks.html#addressing" title="Block devices &amp;amp; addressing">02</a></dd>
 </div>
@@ -91,19 +91,27 @@
 <section class="letter" data-letter="A">
 <h2 id="letter-A">A</h2>
 <dl>
-<div class="entry" id="g-address-space" data-text="address_space one file&#x27;s page cache: an xarray of folios plus its address_space_operations.">
+<div class="entry" id="g-address-space" data-text="address_space one file&#x27;s page cache: an xarray of folios plus its address_space_operations . 05">
 <dt>address_space</dt>
 <dd>One file's page cache: an XArray of folios plus its <code>address_space_operations</code>. <a class="layer-chip kernel" href="05-vfs-cache.html#page-cache" title="The VFS and the page cache">05</a></dd>
 </div>
-<div class="entry" id="g-atomic-replace-pattern" data-text="atomic replace pattern write a temp file, fsync it, rename it over the target, fsync the directory.">
+<div class="entry" id="g-ahci" data-text="ahci (advanced host controller interface) the programming interface through which software controls a sata host controller. 02">
+<dt>AHCI (Advanced Host Controller Interface)</dt>
+<dd>The programming interface through which software controls a SATA host controller. <a class="layer-chip block" href="02-blocks.html#hardware">02</a></dd>
+</div>
+<div class="entry" id="g-api" data-text="api (application programming interface) an interface through which a program uses another component: operations, arguments, results and their meaning. 06">
+<dt>API (Application Programming Interface)</dt>
+<dd>An interface through which a program uses another component: operations, arguments, results and their meaning. <a class="layer-chip user" href="06-nfs.html#why">06</a></dd>
+</div>
+<div class="entry" id="g-atomic-replace-pattern" data-text="atomic replace pattern write a temp file, fsync it, rename it over the target, fsync the directory. 05">
 <dt>Atomic replace pattern</dt>
 <dd>Write a temp file, <code>fsync</code> it, <code>rename</code> it over the target, <code>fsync</code> the directory. <a class="layer-chip kernel" href="05-vfs-cache.html#durability" title="The VFS and the page cache">05</a></dd>
 </div>
-<div class="entry" id="g-attribute-cache" data-text="attribute cache the nfs client&#x27;s cache of file attributes, trusted for a timeout that adapts between acregmin and acregmax (3 to 60 s).">
+<div class="entry" id="g-attribute-cache" data-text="attribute cache the nfs client&#x27;s cache of file attributes, trusted for a timeout that adapts between acregmin and acregmax (3 to 60 s). 07">
 <dt>Attribute cache</dt>
 <dd>The NFS client's cache of file attributes, trusted for a timeout that adapts between acregmin and acregmax (3 to 60 s). <a class="layer-chip net" href="07-nfs-caching.html#attr" title="NFS client caching and coherence">07</a></dd>
 </div>
-<div class="entry" id="g-auth-sys" data-text="auth_sys rpc credential that sends a numeric uid, gid and up to 16 groups, which the server simply trusts.">
+<div class="entry" id="g-auth-sys" data-text="auth_sys rpc credential that sends a numeric uid, gid and up to 16 groups, which the server simply trusts. 06">
 <dt>AUTH_SYS</dt>
 <dd>RPC credential that sends a numeric uid, gid and up to 16 groups, which the server simply trusts. <a class="layer-chip net" href="06-nfs.html#rpc" title="NFS from v3 to 4.2">06</a></dd>
 </div>
@@ -112,68 +120,72 @@
 <section class="letter" data-letter="B">
 <h2 id="letter-B">B</h2>
 <dl>
-<div class="entry" id="g-balance-dirty-pages" data-text="balance_dirty_pages throttling that makes writers sleep when dirty memory exceeds its limit.">
-<dt>balance_dirty_pages</dt>
-<dd>Throttling that makes writers sleep when dirty memory exceeds its limit. <a class="layer-chip kernel" href="05-vfs-cache.html#write-path" title="The VFS and the page cache">05</a></dd>
+<div class="entry" id="g-bplustree" data-text="b+tree a b-tree that keeps all records in the leaves and only separator keys in the internal nodes; leaves are linked for range scans. 04">
+<dt>B+tree</dt>
+<dd>A B-tree that keeps all records in the leaves and only separator keys in the internal nodes; leaves are linked for range scans. <a class="layer-chip fs" href="04-btrees.html#bplus" title="B-trees in filesystems and databases">04</a></dd>
 </div>
-<div class="entry" id="g-bio" data-text="bio the block layer&#x27;s i/o descriptor: device, start sector, memory segments and a completion callback.">
-<dt>bio</dt>
-<dd>The block layer's I/O descriptor: device, start sector, memory segments and a completion callback. <a class="layer-chip block" href="02-blocks.html#block-layer" title="Block devices &amp;amp; addressing">02</a></dd>
-</div>
-<div class="entry" id="g-b-link-tree" data-text="b-link tree a b+tree variant with right-sibling links, so readers can carry on while a node splits.">
+<div class="entry" id="g-b-link-tree" data-text="b-link tree a b+tree variant with right-sibling links, so readers can carry on while a node splits. 04">
 <dt>B-link tree</dt>
 <dd>A B+tree variant with right-sibling links, so readers can carry on while a node splits. <a class="layer-chip fs" href="04-btrees.html#concurrency" title="B-trees in filesystems and databases">04</a></dd>
 </div>
-<div class="entry" id="g-blk-mq" data-text="blk-mq the multi-queue block layer: per-cpu software queues mapped onto the device&#x27;s hardware queues.">
-<dt>blk-mq</dt>
-<dd>The multi-queue block layer: per-CPU software queues mapped onto the device's hardware queues. <a class="layer-chip block" href="02-blocks.html#block-layer" title="Block devices &amp;amp; addressing">02</a></dd>
-</div>
-<div class="entry" id="g-block-device" data-text="block device a device addressed as a fixed-size array of sectors that can be read and written in any order.">
-<dt>Block device</dt>
-<dd>A device addressed as a fixed-size array of sectors that can be read and written in any order. <a class="layer-chip block" href="02-blocks.html#what" title="Block devices &amp;amp; addressing">02</a></dd>
-</div>
-<div class="entry" id="g-block-group" data-text="block group a fixed-size slice of an ext4 filesystem with its own bitmaps and its part of the inode table.">
-<dt>Block group</dt>
-<dd>A fixed-size slice of an ext4 filesystem with its own bitmaps and its part of the inode table. <a class="layer-chip fs" href="03-ondisk.html#layout" title="The ext4 on-disk format">03</a></dd>
-</div>
-<div class="entry" id="g-b-tree" data-text="b-tree a balanced search tree with many keys per node, where all leaves are at the same depth.">
+<div class="entry" id="g-b-tree" data-text="b-tree a balanced search tree with many keys per node, where all leaves are at the same depth. 04">
 <dt>B-tree</dt>
 <dd>A balanced search tree with many keys per node, where all leaves are at the same depth. <a class="layer-chip fs" href="04-btrees.html#btree" title="B-trees in filesystems and databases">04</a></dd>
 </div>
-<div class="entry" id="g-bplustree" data-text="b+tree a b-tree that keeps all records in the leaves and only separator keys in the internal nodes; leaves are linked for range scans.">
-<dt>B+tree</dt>
-<dd>A B-tree that keeps all records in the leaves and only separator keys in the internal nodes; leaves are linked for range scans. <a class="layer-chip fs" href="04-btrees.html#bplus" title="B-trees in filesystems and databases">04</a></dd>
+<div class="entry" id="g-balance-dirty-pages" data-text="balance_dirty_pages throttling that makes writers sleep when dirty memory exceeds its limit. 05">
+<dt>balance_dirty_pages</dt>
+<dd>Throttling that makes writers sleep when dirty memory exceeds its limit. <a class="layer-chip kernel" href="05-vfs-cache.html#write-path" title="The VFS and the page cache">05</a></dd>
+</div>
+<div class="entry" id="g-bio" data-text="bio / struct bio (block i/o) a block input/output descriptor in linux. in c, struct bio means the structure type named bio: it describes a device, starting sector, memory segments and a completion callback. 02">
+<dt>bio / struct bio (block I/O)</dt>
+<dd>A block input/output descriptor in Linux. In C, struct bio means the structure type named bio: it describes a device, starting sector, memory segments and a completion callback. <a class="layer-chip block" href="02-blocks.html#block-layer" title="Block devices &amp;amp; addressing">02</a></dd>
+</div>
+<div class="entry" id="g-bio-vec" data-text="bio_vec a linux c structure describing one memory segment of a block i/o operation: its starting page, byte offset and length. a bio refers to a list of these segments. 02">
+<dt>bio_vec</dt>
+<dd>A Linux C structure describing one memory segment of a block I/O operation: its starting page, byte offset and length. A bio refers to a list of these segments. <a class="layer-chip block" href="02-blocks.html#block-layer">02</a></dd>
+</div>
+<div class="entry" id="g-blk-mq" data-text="blk-mq (multi-queue block i/o) the linux multi-queue block i/o layer: software queues associated with cpus feed hardware dispatch queues for the device. 02">
+<dt>blk-mq (multi-queue block I/O)</dt>
+<dd>The Linux multi-queue block I/O layer: software queues associated with CPUs feed hardware dispatch queues for the device. <a class="layer-chip block" href="02-blocks.html#block-layer" title="Block devices &amp;amp; addressing">02</a></dd>
+</div>
+<div class="entry" id="g-block-device" data-text="block device a device addressed as a fixed-size array of sectors that can be read and written in any order. 02">
+<dt>Block device</dt>
+<dd>A device addressed as a fixed-size array of sectors that can be read and written in any order. <a class="layer-chip block" href="02-blocks.html#what" title="Block devices &amp;amp; addressing">02</a></dd>
+</div>
+<div class="entry" id="g-block-group" data-text="block group a fixed-size slice of an ext4 filesystem with its own bitmaps and its part of the inode table. 03">
+<dt>Block group</dt>
+<dd>A fixed-size slice of an ext4 filesystem with its own bitmaps and its part of the inode table. <a class="layer-chip fs" href="03-ondisk.html#layout" title="The ext4 on-disk format">03</a></dd>
 </div>
 </dl>
 </section>
 <section class="letter" data-letter="C">
 <h2 id="letter-C">C</h2>
 <dl>
-<div class="entry" id="g-change-attribute" data-text="change attribute an nfsv4 value the server must change on every modification of a file; linux backs it with i_version.">
+<div class="entry" id="g-change-attribute" data-text="change attribute an nfsv4 value the server must change on every modification of a file; linux backs it with i_version . 07">
 <dt>Change attribute</dt>
 <dd>An NFSv4 value the server must change on every modification of a file; Linux backs it with <code>i_version</code>. <a class="layer-chip net" href="07-nfs-caching.html#change" title="NFS client caching and coherence">07</a></dd>
 </div>
-<div class="entry" id="g-close-to-open-consistency" data-text="close-to-open consistency an open made after another client&#x27;s close sees that client&#x27;s writes. the nfs contract.">
+<div class="entry" id="g-close-to-open-consistency" data-text="close-to-open consistency an open made after another client&#x27;s close sees that client&#x27;s writes. the nfs contract. 07">
 <dt>Close-to-open consistency</dt>
 <dd>An open made after another client's close sees that client's writes. The NFS contract. <a class="layer-chip net" href="07-nfs-caching.html#cto" title="NFS client caching and coherence">07</a></dd>
 </div>
-<div class="entry" id="g-completion-queue-cq" data-text="completion queue (cq) where the nic posts a completion entry for each finished work request.">
+<div class="entry" id="g-completion-queue-cq" data-text="completion queue (cq) where the nic posts a completion entry for each finished work request. 08">
 <dt>Completion queue (CQ)</dt>
 <dd>Where the NIC posts a completion entry for each finished work request. <a class="layer-chip net" href="08-rdma.html#verbs" title="RDMA and NFS over RDMA">08</a></dd>
 </div>
-<div class="entry" id="g-compound" data-text="compound the single nfsv4 procedure: a list of operations run in order until one fails.">
+<div class="entry" id="g-compound" data-text="compound the single nfsv4 procedure: a list of operations run in order until one fails. 06">
 <dt>COMPOUND</dt>
 <dd>The single NFSv4 procedure: a list of operations run in order until one fails. <a class="layer-chip net" href="06-nfs.html#v4" title="NFS from v3 to 4.2">06</a></dd>
 </div>
-<div class="entry" id="g-consistent-hashing" data-text="consistent hashing placement on a hash ring, where adding a node moves only about 1/(n+1) of the data.">
+<div class="entry" id="g-consistent-hashing" data-text="consistent hashing placement on a hash ring, where adding a node moves only about 1/(n+1) of the data. 09">
 <dt>Consistent hashing</dt>
 <dd>Placement on a hash ring, where adding a node moves only about 1/(N+1) of the data. <a class="layer-chip net" href="09-distributed.html#placement" title="Distributed filesystems">09</a></dd>
 </div>
-<div class="entry" id="g-copy-on-write-cow" data-text="copy-on-write (cow) never overwriting a block in place: new versions are written elsewhere and the parent pointers updated, up to the root.">
+<div class="entry" id="g-copy-on-write-cow" data-text="copy-on-write (cow) never overwriting a block in place: new versions are written elsewhere and the parent pointers updated, up to the root. 03">
 <dt>Copy-on-write (COW)</dt>
 <dd>Never overwriting a block in place: new versions are written elsewhere and the parent pointers updated, up to the root. <a class="layer-chip fs" href="03-ondisk.html#cow" title="The ext4 on-disk format">03</a></dd>
 </div>
-<div class="entry" id="g-crush" data-text="crush ceph&#x27;s deterministic placement function over a weighted hierarchy of failure domains, using straw2 at each level.">
+<div class="entry" id="g-crush" data-text="crush ceph&#x27;s deterministic placement function over a weighted hierarchy of failure domains, using straw2 at each level. 09">
 <dt>CRUSH</dt>
 <dd>Ceph's deterministic placement function over a weighted hierarchy of failure domains, using straw2 at each level. <a class="layer-chip net" href="09-distributed.html#crush" title="Distributed filesystems">09</a></dd>
 </div>
@@ -182,43 +194,43 @@
 <section class="letter" data-letter="D">
 <h2 id="letter-D">D</h2>
 <dl>
-<div class="entry" id="g-delayed-allocation" data-text="delayed allocation choosing disk blocks at writeback time instead of at write() time, so the allocator sees larger runs.">
+<div class="entry" id="g-delayed-allocation" data-text="delayed allocation choosing disk blocks at writeback time instead of at write() time, so the allocator sees larger runs. 03">
 <dt>Delayed allocation</dt>
 <dd>Choosing disk blocks at writeback time instead of at <code>write()</code> time, so the allocator sees larger runs. <a class="layer-chip fs" href="03-ondisk.html#allocation" title="The ext4 on-disk format">03</a></dd>
 </div>
-<div class="entry" id="g-delegation" data-text="delegation a server promise that lets a client open and cache a file without asking again, until the server sends cb_recall.">
+<div class="entry" id="g-delegation" data-text="delegation a server promise that lets a client open and cache a file without asking again, until the server sends cb_recall. 07">
 <dt>Delegation</dt>
 <dd>A server promise that lets a client open and cache a file without asking again, until the server sends CB_RECALL. <a class="layer-chip net" href="07-nfs-caching.html#delegations" title="NFS client caching and coherence">07</a></dd>
 </div>
-<div class="entry" id="g-deleted-but-open-file" data-text="deleted-but-open file an unlinked inode kept alive by an open descriptor, still using space until the last close.">
+<div class="entry" id="g-deleted-but-open-file" data-text="deleted-but-open file an unlinked inode kept alive by an open descriptor, still using space until the last close. 01">
 <dt>Deleted-but-open file</dt>
 <dd>An unlinked inode kept alive by an open descriptor, still using space until the last close. <a class="layer-chip user" href="01-syscalls.html#names" title="Syscalls &amp;amp; file descriptors">01</a></dd>
 </div>
-<div class="entry" id="g-dentry" data-text="dentry cached link from (parent directory, name) to an inode, or to nothing.">
+<div class="entry" id="g-dentry" data-text="dentry cached link from (parent directory, name) to an inode, or to nothing. 05">
 <dt>Dentry</dt>
 <dd>Cached link from (parent directory, name) to an inode, or to nothing. <a class="layer-chip kernel" href="05-vfs-cache.html#dcache" title="The VFS and the page cache">05</a></dd>
 </div>
-<div class="entry" id="g-directory-entry" data-text="directory entry a variable-length record pairing a name with an inode number inside a directory block.">
+<div class="entry" id="g-directory-entry" data-text="directory entry a variable-length record pairing a name with an inode number inside a directory block. 03">
 <dt>Directory entry</dt>
 <dd>A variable-length record pairing a name with an inode number inside a directory block. <a class="layer-chip fs" href="03-ondisk.html#directories" title="The ext4 on-disk format">03</a></dd>
 </div>
-<div class="entry" id="g-dirty-page" data-text="dirty page cached data changed in ram and not yet written to the device.">
+<div class="entry" id="g-dirty-page" data-text="dirty page cached data changed in ram and not yet written to the device. 05">
 <dt>Dirty page</dt>
 <dd>Cached data changed in RAM and not yet written to the device. <a class="layer-chip kernel" href="05-vfs-cache.html#write-path" title="The VFS and the page cache">05</a></dd>
 </div>
-<div class="entry" id="g-discard-trim" data-text="discard / trim a command telling a device that a range of lbas no longer holds useful data.">
+<div class="entry" id="g-discard-trim" data-text="discard / trim a command telling a device that a range of lbas no longer holds useful data. 02">
 <dt>Discard / TRIM</dt>
 <dd>A command telling a device that a range of LBAs no longer holds useful data. <a class="layer-chip block" href="02-blocks.html#hardware" title="Block devices &amp;amp; addressing">02</a></dd>
 </div>
-<div class="entry" id="g-dma" data-text="dma a device copies to or from ram by itself, using physical or iommu addresses of pinned pages.">
-<dt>DMA</dt>
-<dd>A device copies to or from RAM by itself, using physical or IOMMU addresses of pinned pages. <a class="layer-chip net" href="08-rdma.html#dma" title="RDMA and NFS over RDMA">08</a></dd>
+<div class="entry" id="g-dma" data-text="dma (direct memory access) direct memory access: a device transfers data to or from ram without the cpu copying each byte. the cpu still sets up the transfer. 08">
+<dt>DMA (Direct Memory Access)</dt>
+<dd>Direct memory access: a device transfers data to or from RAM without the CPU copying each byte. The CPU still sets up the transfer. <a class="layer-chip net" href="08-rdma.html#dma" title="RDMA and NFS over RDMA">08</a></dd>
 </div>
-<div class="entry" id="g-doorbell" data-text="doorbell a memory-mapped write that tells the nic (or an nvme drive) new work is waiting.">
+<div class="entry" id="g-doorbell" data-text="doorbell a memory-mapped write that tells the nic (or an nvme drive) new work is waiting. 08">
 <dt>Doorbell</dt>
 <dd>A memory-mapped write that tells the NIC (or an NVMe drive) new work is waiting. <a class="layer-chip net" href="08-rdma.html#doorbell" title="RDMA and NFS over RDMA">08</a></dd>
 </div>
-<div class="entry" id="g-duplicate-request-cache-drc" data-text="duplicate request cache (drc) the server&#x27;s cache of recent replies, used to answer retransmitted non-idempotent requests.">
+<div class="entry" id="g-duplicate-request-cache-drc" data-text="duplicate request cache (drc) the server&#x27;s cache of recent replies, used to answer retransmitted non-idempotent requests. 06">
 <dt>Duplicate request cache (DRC)</dt>
 <dd>The server's cache of recent replies, used to answer retransmitted non-idempotent requests. <a class="layer-chip net" href="06-nfs.html#v3" title="NFS from v3 to 4.2">06</a></dd>
 </div>
@@ -227,27 +239,27 @@
 <section class="letter" data-letter="E">
 <h2 id="letter-E">E</h2>
 <dl>
-<div class="entry" id="g-erasure-coding" data-text="erasure coding k data chunks plus m coding chunks; survives any m losses at (k+m)/k raw overhead.">
+<div class="entry" id="g-erasure-coding" data-text="erasure coding k data chunks plus m coding chunks; survives any m losses at (k+m)/k raw overhead. 09">
 <dt>Erasure coding</dt>
 <dd>k data chunks plus m coding chunks; survives any m losses at (k+m)/k raw overhead. <a class="layer-chip net" href="09-distributed.html#redundancy" title="Distributed filesystems">09</a></dd>
 </div>
-<div class="entry" id="g-errno" data-text="errno per-thread error code. the kernel returns −errno; the libc wrapper turns that into −1 plus errno.">
+<div class="entry" id="g-errno" data-text="errno per-thread error code. the kernel returns −errno; the libc wrapper turns that into −1 plus errno . 01">
 <dt>errno</dt>
 <dd>Per-thread error code. The kernel returns −errno; the libc wrapper turns that into −1 plus <code>errno</code>. <a class="layer-chip user" href="01-syscalls.html#read-write" title="Syscalls &amp;amp; file descriptors">01</a></dd>
 </div>
-<div class="entry" id="g-errseq-t" data-text="errseq_t per-file writeback error counter that lets fsync report each error once per open file.">
+<div class="entry" id="g-errseq-t" data-text="errseq_t per-file writeback error counter that lets fsync report each error once per open file. 05">
 <dt>errseq_t</dt>
 <dd>Per-file writeback error counter that lets <code>fsync</code> report each error once per open file. <a class="layer-chip kernel" href="05-vfs-cache.html#durability" title="The VFS and the page cache">05</a></dd>
 </div>
-<div class="entry" id="g-estale" data-text="estale stale file handle: the server no longer recognises a handle, usually because the file was removed or replaced.">
+<div class="entry" id="g-estale" data-text="estale stale file handle: the server no longer recognises a handle, usually because the file was removed or replaced. 06">
 <dt>ESTALE</dt>
 <dd>Stale file handle: the server no longer recognises a handle, usually because the file was removed or replaced. <a class="layer-chip net" href="06-nfs.html#filehandles" title="NFS from v3 to 4.2">06</a></dd>
 </div>
-<div class="entry" id="g-extent" data-text="extent one run of contiguous blocks, described as (file block, length, disk block).">
+<div class="entry" id="g-extent" data-text="extent one run of contiguous blocks, described as (file block, length, disk block). 03">
 <dt>Extent</dt>
 <dd>One run of contiguous blocks, described as (file block, length, disk block). <a class="layer-chip fs" href="03-ondisk.html#extents" title="The ext4 on-disk format">03</a></dd>
 </div>
-<div class="entry" id="g-extent-tree" data-text="extent tree ext4&#x27;s b+tree of extents, rooted in the inode&#x27;s 60-byte i_block.">
+<div class="entry" id="g-extent-tree" data-text="extent tree ext4&#x27;s b+tree of extents, rooted in the inode&#x27;s 60-byte i_block . 04">
 <dt>Extent tree</dt>
 <dd>ext4's B+tree of extents, rooted in the inode's 60-byte <code>i_block</code>. <a class="layer-chip fs" href="04-btrees.html#ext4-extents" title="B-trees in filesystems and databases">04</a></dd>
 </div>
@@ -256,52 +268,60 @@
 <section class="letter" data-letter="F">
 <h2 id="letter-F">F</h2>
 <dl>
-<div class="entry" id="g-fanout" data-text="fanout the number of children one tree node can point to: node size divided by entry size.">
+<div class="entry" id="g-fanout" data-text="fanout the number of children one tree node can point to: node size divided by entry size. 04">
 <dt>Fanout</dt>
 <dd>The number of children one tree node can point to: node size divided by entry size. <a class="layer-chip fs" href="04-btrees.html#cost-model" title="B-trees in filesystems and databases">04</a></dd>
 </div>
-<div class="entry" id="g-fencing" data-text="fencing making a suspected-dead node harmless (power off, storage cut-off, blocklist, epoch) before taking over its work.">
+<div class="entry" id="g-fencing" data-text="fencing making a suspected-dead node harmless (power off, storage cut-off, blocklist, epoch) before taking over its work. 09">
 <dt>Fencing</dt>
 <dd>Making a suspected-dead node harmless (power off, storage cut-off, blocklist, epoch) before taking over its work. <a class="layer-chip net" href="09-distributed.html#failure" title="Distributed filesystems">09</a></dd>
 </div>
-<div class="entry" id="g-file-descriptor-fd" data-text="file descriptor (fd) a small integer that indexes the process&#x27;s table of open files.">
+<div class="entry" id="g-file-descriptor-fd" data-text="file descriptor (fd) a small integer that indexes the process&#x27;s table of open files. 01">
 <dt>File descriptor (fd)</dt>
 <dd>A small integer that indexes the process's table of open files. <a class="layer-chip user" href="01-syscalls.html#file-api" title="Syscalls &amp;amp; file descriptors">01</a></dd>
 </div>
-<div class="entry" id="g-file-handle" data-text="file handle an opaque id the server issues for a file (up to 64 bytes in v3, 128 in v4), usually encoding filesystem id, inode and generation.">
+<div class="entry" id="g-file-handle" data-text="file handle an opaque id the server issues for a file (up to 64 bytes in v3, 128 in v4), usually encoding filesystem id, inode and generation. 06">
 <dt>File handle</dt>
 <dd>An opaque ID the server issues for a file (up to 64 bytes in v3, 128 in v4), usually encoding filesystem id, inode and generation. <a class="layer-chip net" href="06-nfs.html#filehandles" title="NFS from v3 to 4.2">06</a></dd>
 </div>
-<div class="entry" id="g-flush-fua" data-text="flush / fua make the device&#x27;s whole volatile write cache durable, or make one write durable before it completes.">
-<dt>FLUSH / FUA</dt>
-<dd>Make the device's whole volatile write cache durable, or make one write durable before it completes. <a class="layer-chip block" href="02-blocks.html#durability" title="Block devices &amp;amp; addressing">02</a></dd>
+<div class="entry" id="g-flush-fua" data-text="flush / fua (force unit access) flush makes prior cached writes durable. fua, force unit access, requires the individual write to reach stable storage before completion. flush is a command name, not an acronym. 02">
+<dt>FLUSH / FUA (Force Unit Access)</dt>
+<dd>FLUSH makes prior cached writes durable. FUA, Force Unit Access, requires the individual write to reach stable storage before completion. FLUSH is a command name, not an acronym. <a class="layer-chip block" href="02-blocks.html#durability" title="Block devices &amp;amp; addressing">02</a></dd>
 </div>
-<div class="entry" id="g-folio" data-text="folio a power-of-two run of contiguous pages managed as one unit (linux 5.16 and later).">
+<div class="entry" id="g-folio" data-text="folio a power-of-two run of contiguous pages managed as one unit (linux 5.16 and later). 05">
 <dt>Folio</dt>
 <dd>A power-of-two run of contiguous pages managed as one unit (Linux 5.16 and later). <a class="layer-chip kernel" href="05-vfs-cache.html#page-cache" title="The VFS and the page cache">05</a></dd>
 </div>
-<div class="entry" id="g-frwr" data-text="frwr fast registration: register and invalidate memory through work requests, per i/o, without a system call.">
+<div class="entry" id="g-frwr" data-text="frwr fast registration: register and invalidate memory through work requests, per i/o, without a system call. 08">
 <dt>FRWR</dt>
 <dd>Fast registration: register and invalidate memory through work requests, per I/O, without a system call. <a class="layer-chip net" href="08-rdma.html#costs" title="RDMA and NFS over RDMA">08</a></dd>
 </div>
-<div class="entry" id="g-fsync-fdatasync" data-text="fsync / fdatasync wait until a file&#x27;s data, plus all or only the needed metadata, is on stable storage, including a device cache flush.">
+<div class="entry" id="g-fsync-fdatasync" data-text="fsync / fdatasync wait until a file&#x27;s data, plus all or only the needed metadata, is on stable storage, including a device cache flush. 05">
 <dt>fsync / fdatasync</dt>
 <dd>Wait until a file's data, plus all or only the needed metadata, is on stable storage, including a device cache flush. <a class="layer-chip kernel" href="05-vfs-cache.html#durability" title="The VFS and the page cache">05</a></dd>
 </div>
-<div class="entry" id="g-ftl-flash-translation-layer" data-text="ftl (flash translation layer) ssd firmware that maps lbas to flash pages and never overwrites in place.">
+<div class="entry" id="g-ftl-flash-translation-layer" data-text="ftl (flash translation layer) ssd firmware that maps lbas to flash pages and never overwrites in place. 02">
 <dt>FTL (flash translation layer)</dt>
 <dd>SSD firmware that maps LBAs to flash pages and never overwrites in place. <a class="layer-chip block" href="02-blocks.html#hardware" title="Block devices &amp;amp; addressing">02</a></dd>
+</div>
+<div class="entry" id="g-fuse" data-text="fuse (filesystem in userspace) a linux interface for implementing a filesystem in a user-space process; the kernel forwards filesystem requests to that process. 05">
+<dt>FUSE (Filesystem in Userspace)</dt>
+<dd>A Linux interface for implementing a filesystem in a user-space process; the kernel forwards filesystem requests to that process. <a class="layer-chip kernel" href="05-vfs-cache.html#where">05</a></dd>
 </div>
 </dl>
 </section>
 <section class="letter" data-letter="G">
 <h2 id="letter-G">G</h2>
 <dl>
-<div class="entry" id="g-grace-period" data-text="grace period the window after a server restart when clients may only reclaim the opens and locks they held before.">
+<div class="entry" id="g-grace-period" data-text="grace period the window after a server restart when clients may only reclaim the opens and locks they held before. 06">
 <dt>Grace period</dt>
 <dd>The window after a server restart when clients may only reclaim the opens and locks they held before. <a class="layer-chip net" href="06-nfs.html#v4" title="NFS from v3 to 4.2">06</a></dd>
 </div>
-<div class="entry" id="g-group-descriptor" data-text="group descriptor the per-group entry giving the block numbers of that group&#x27;s bitmaps and inode table.">
+<div class="entry" id="g-gro" data-text="gro (generic receive offload) the kernel combines compatible received packets into a larger unit for subsequent protocol processing. 08">
+<dt>GRO (Generic Receive Offload)</dt>
+<dd>The kernel combines compatible received packets into a larger unit for subsequent protocol processing. <a class="layer-chip net" href="08-rdma.html#tcp-cost">08</a></dd>
+</div>
+<div class="entry" id="g-group-descriptor" data-text="group descriptor the per-group entry giving the block numbers of that group&#x27;s bitmaps and inode table. 03">
 <dt>Group descriptor</dt>
 <dd>The per-group entry giving the block numbers of that group's bitmaps and inode table. <a class="layer-chip fs" href="03-ondisk.html#descriptors" title="The ext4 on-disk format">03</a></dd>
 </div>
@@ -310,15 +330,23 @@
 <section class="letter" data-letter="H">
 <h2 id="letter-H">H</h2>
 <dl>
-<div class="entry" id="g-hard-link" data-text="hard link a second directory entry for the same inode, counted in i_links_count.">
+<div class="entry" id="g-hard-link" data-text="hard link a second directory entry for the same inode, counted in i_links_count . 03">
 <dt>Hard link</dt>
 <dd>A second directory entry for the same inode, counted in <code>i_links_count</code>. <a class="layer-chip fs" href="03-ondisk.html#links" title="The ext4 on-disk format">03</a></dd>
 </div>
-<div class="entry" id="g-hole" data-text="hole a range of file blocks with no extent, which reads back as zeros.">
+<div class="entry" id="g-hdd" data-text="hdd (hard disk drive) a hard disk drive stores data magnetically on rotating platters and moves heads to reach it. 02">
+<dt>HDD (Hard Disk Drive)</dt>
+<dd>A hard disk drive stores data magnetically on rotating platters and moves heads to reach it. <a class="layer-chip block" href="02-blocks.html#hardware">02</a></dd>
+</div>
+<div class="entry" id="g-hole" data-text="hole a range of file blocks with no extent, which reads back as zeros. 03">
 <dt>Hole</dt>
 <dd>A range of file blocks with no extent, which reads back as zeros. <a class="layer-chip fs" href="03-ondisk.html#extents" title="The ext4 on-disk format">03</a></dd>
 </div>
-<div class="entry" id="g-htree" data-text="htree ext4&#x27;s hashed b-tree directory index, whose root (dx_root) lives in directory block 0.">
+<div class="entry" id="g-hpc" data-text="hpc (high-performance computing) high-performance computing: large computational jobs, often distributed across many nodes of a cluster. 08">
+<dt>HPC (High-Performance Computing)</dt>
+<dd>High-performance computing: large computational jobs, often distributed across many nodes of a cluster. <a class="layer-chip net" href="08-rdma.html#fabrics">08</a></dd>
+</div>
+<div class="entry" id="g-htree" data-text="htree ext4&#x27;s hashed b-tree directory index, whose root ( dx_root ) lives in directory block 0. 04">
 <dt>htree</dt>
 <dd>ext4's hashed B-tree directory index, whose root (<code>dx_root</code>) lives in directory block 0. <a class="layer-chip fs" href="04-btrees.html#htree" title="B-trees in filesystems and databases">04</a></dd>
 </div>
@@ -327,100 +355,148 @@
 <section class="letter" data-letter="I">
 <h2 id="letter-I">I</h2>
 <dl>
-<div class="entry" id="g-inline-threshold" data-text="inline threshold the largest rpc message sent in a plain send; anything bigger needs chunks.">
+<div class="entry" id="g-io" data-text="i/o (input/output) input/output: transferring data between a program, memory and devices, including file reads and writes. 01">
+<dt>I/O (Input/Output)</dt>
+<dd>Input/output: transferring data between a program, memory and devices, including file reads and writes. <a class="layer-chip user" href="01-syscalls.html#syscall">01</a></dd>
+</div>
+<div class="entry" id="g-inline-threshold" data-text="inline threshold the largest rpc message sent in a plain send; anything bigger needs chunks. 08">
 <dt>Inline threshold</dt>
 <dd>The largest RPC message sent in a plain SEND; anything bigger needs chunks. <a class="layer-chip net" href="08-rdma.html#inline" title="RDMA and NFS over RDMA">08</a></dd>
 </div>
-<div class="entry" id="g-inode" data-text="inode the fixed-size record holding a file&#x27;s type, permissions, size, timestamps, link count and block map.">
+<div class="entry" id="g-inode" data-text="inode the fixed-size record holding a file&#x27;s type, permissions, size, timestamps, link count and block map. 03">
 <dt>Inode</dt>
 <dd>The fixed-size record holding a file's type, permissions, size, timestamps, link count and block map. <a class="layer-chip fs" href="03-ondisk.html#inode" title="The ext4 on-disk format">03</a></dd>
 </div>
-<div class="entry" id="g-inode-number-arithmetic" data-text="inode number arithmetic group = (ino − 1) / inodes_per_group; the byte offset follows from the group&#x27;s inode table block and the inode size.">
+<div class="entry" id="g-inode-number-arithmetic" data-text="inode number arithmetic group = (ino − 1) / inodes_per_group; the byte offset follows from the group&#x27;s inode table block and the inode size. 03">
 <dt>Inode number arithmetic</dt>
 <dd>group = (ino − 1) / inodes_per_group; the byte offset follows from the group's inode table block and the inode size. <a class="layer-chip fs" href="03-ondisk.html#inode-address" title="The ext4 on-disk format">03</a></dd>
+</div>
+<div class="entry" id="g-iommu" data-text="iommu (input/output memory management unit) hardware that translates device-visible dma addresses to physical memory addresses and controls which memory a device can access. 08">
+<dt>IOMMU (Input/Output Memory Management Unit)</dt>
+<dd>Hardware that translates device-visible DMA addresses to physical memory addresses and controls which memory a device can access. <a class="layer-chip kernel" href="08-rdma.html#dma">08</a></dd>
+</div>
+<div class="entry" id="g-iscsi" data-text="iscsi (internet scsi) a protocol carrying scsi commands over tcp/ip so a remote storage target appears as a block device. 02">
+<dt>iSCSI (Internet SCSI)</dt>
+<dd>A protocol carrying SCSI commands over TCP/IP so a remote storage target appears as a block device. <a class="layer-chip net" href="02-blocks.html#users">02</a></dd>
 </div>
 </dl>
 </section>
 <section class="letter" data-letter="J">
 <h2 id="letter-J">J</h2>
 <dl>
-<div class="entry" id="g-jbd2-journal" data-text="jbd2 journal ext4&#x27;s write-ahead log: metadata changes commit as transactions and are replayed after a crash.">
-<dt>jbd2 journal</dt>
-<dd>ext4's write-ahead log: metadata changes commit as transactions and are replayed after a crash. <a class="layer-chip fs" href="03-ondisk.html#journal" title="The ext4 on-disk format">03</a></dd>
+<div class="entry" id="g-jbd2-journal" data-text="jbd2 (journaling block device 2) the linux journaling layer used by ext4. it commits metadata changes as transactions and replays committed transactions after a crash. 03">
+<dt>jbd2 (Journaling Block Device 2)</dt>
+<dd>The Linux journaling layer used by ext4. It commits metadata changes as transactions and replays committed transactions after a crash. <a class="layer-chip fs" href="03-ondisk.html#journal" title="The ext4 on-disk format">03</a></dd>
 </div>
 </dl>
 </section>
 <section class="letter" data-letter="L">
 <h2 id="letter-L">L</h2>
 <dl>
-<div class="entry" id="g-lba-logical-block-address" data-text="lba (logical block address) the sector number a device is addressed by, counting from 0.">
+<div class="entry" id="g-lba-logical-block-address" data-text="lba (logical block address) the sector number a device is addressed by, counting from 0. 02">
 <dt>LBA (logical block address)</dt>
 <dd>The sector number a device is addressed by, counting from 0. <a class="layer-chip block" href="02-blocks.html#hardware" title="Block devices &amp;amp; addressing">02</a></dd>
 </div>
-<div class="entry" id="g-ldlm" data-text="ldlm lustre&#x27;s distributed lock manager; a client may cache only the byte ranges and metadata it holds locks on.">
+<div class="entry" id="g-ldlm" data-text="ldlm lustre&#x27;s distributed lock manager; a client may cache only the byte ranges and metadata it holds locks on. 09">
 <dt>LDLM</dt>
 <dd>Lustre's distributed lock manager; a client may cache only the byte ranges and metadata it holds locks on. <a class="layer-chip net" href="09-distributed.html#lustre" title="Distributed filesystems">09</a></dd>
 </div>
-<div class="entry" id="g-lease" data-text="lease the period (90 s by default on linux) for which a client&#x27;s nfsv4 state stays valid without renewal.">
+<div class="entry" id="g-lease" data-text="lease the period (90 s by default on linux) for which a client&#x27;s nfsv4 state stays valid without renewal. 06">
 <dt>Lease</dt>
 <dd>The period (90 s by default on Linux) for which a client's NFSv4 state stays valid without renewal. <a class="layer-chip net" href="06-nfs.html#v4" title="NFS from v3 to 4.2">06</a></dd>
 </div>
-<div class="entry" id="g-lsm-tree" data-text="lsm tree buffers writes in memory and merges sorted files in the background instead of updating a tree in place (rocksdb, bluestore metadata).">
-<dt>LSM tree</dt>
-<dd>Buffers writes in memory and merges sorted files in the background instead of updating a tree in place (RocksDB, BlueStore metadata). <a class="layer-chip fs" href="04-btrees.html#lsm" title="B-trees in filesystems and databases">04</a></dd>
+<div class="entry" id="g-lru" data-text="lru (least recently used) an eviction policy that prefers data not used for the longest time. linux uses lists or generations to approximate recency when reclaiming memory. 05">
+<dt>LRU (Least Recently Used)</dt>
+<dd>An eviction policy that prefers data not used for the longest time. Linux uses lists or generations to approximate recency when reclaiming memory. <a class="layer-chip kernel" href="05-vfs-cache.html#reclaim">05</a></dd>
+</div>
+<div class="entry" id="g-lsm-tree" data-text="lsm tree (log-structured merge-tree) a log-structured merge-tree buffers writes in memory and merges sorted files in the background instead of updating tree pages in place. 04">
+<dt>LSM tree (Log-Structured Merge-Tree)</dt>
+<dd>A log-structured merge-tree buffers writes in memory and merges sorted files in the background instead of updating tree pages in place. <a class="layer-chip fs" href="04-btrees.html#lsm" title="B-trees in filesystems and databases">04</a></dd>
 </div>
 </dl>
 </section>
 <section class="letter" data-letter="M">
 <h2 id="letter-M">M</h2>
 <dl>
-<div class="entry" id="g-maple-tree" data-text="maple tree the linux kernel&#x27;s in-memory b-tree of address ranges, used for a process&#x27;s memory map.">
+<div class="entry" id="g-maple-tree" data-text="maple tree the linux kernel&#x27;s in-memory b-tree of address ranges, used for a process&#x27;s memory map. 04">
 <dt>Maple tree</dt>
 <dd>The Linux kernel's in-memory B-tree of address ranges, used for a process's memory map. <a class="layer-chip fs" href="04-btrees.html#in-memory" title="B-trees in filesystems and databases">04</a></dd>
 </div>
-<div class="entry" id="g-memory-region-mr" data-text="memory region (mr) a registered, pinned buffer. its lkey lets local work requests use it; its rkey lets a remote peer access it.">
+<div class="entry" id="g-memory-region-mr" data-text="memory region (mr) a registered, pinned buffer. its lkey lets local work requests use it; its rkey lets a remote peer access it. 08">
 <dt>Memory region (MR)</dt>
 <dd>A registered, pinned buffer. Its lkey lets local work requests use it; its rkey lets a remote peer access it. <a class="layer-chip net" href="08-rdma.html#verbs" title="RDMA and NFS over RDMA">08</a></dd>
+</div>
+<div class="entry" id="g-mtu" data-text="mtu (maximum transmission unit) the largest packet a link can carry without fragmentation at the relevant network layer. on ethernet, the ip mtu excludes the ethernet header. 08">
+<dt>MTU (Maximum Transmission Unit)</dt>
+<dd>The largest packet a link can carry without fragmentation at the relevant network layer. On Ethernet, the IP MTU excludes the Ethernet header. <a class="layer-chip net" href="08-rdma.html#tcp-cost">08</a></dd>
 </div>
 </dl>
 </section>
 <section class="letter" data-letter="N">
 <h2 id="letter-N">N</h2>
 <dl>
-<div class="entry" id="g-negative-dentry" data-text="negative dentry a cached record that a name does not exist, so repeated misses skip the filesystem.">
+<div class="entry" id="g-nand" data-text="nand flash non-volatile memory used in ssds. nand refers to the not-and logic-gate arrangement; flash is programmed in pages and erased in larger blocks. 02">
+<dt>NAND flash</dt>
+<dd>Non-volatile memory used in SSDs. NAND refers to the NOT-AND logic-gate arrangement; flash is programmed in pages and erased in larger blocks. <a class="layer-chip block" href="02-blocks.html#hardware">02</a></dd>
+</div>
+<div class="entry" id="g-napi" data-text="napi the linux networking mechanism that combines interrupt notifications with polling to process packets in batches. the current kernel documentation treats napi as a name, not an acronym. 08">
+<dt>NAPI</dt>
+<dd>The Linux networking mechanism that combines interrupt notifications with polling to process packets in batches. The current kernel documentation treats NAPI as a name, not an acronym. <a class="layer-chip net" href="08-rdma.html#tcp-cost">08</a></dd>
+</div>
+<div class="entry" id="g-nas" data-text="nas (network-attached storage) storage accessed over a network at the file level, for example through nfs or smb. 06">
+<dt>NAS (Network-Attached Storage)</dt>
+<dd>Storage accessed over a network at the file level, for example through NFS or SMB. <a class="layer-chip net" href="06-nfs.html#why">06</a></dd>
+</div>
+<div class="entry" id="g-negative-dentry" data-text="negative dentry a cached record that a name does not exist, so repeated misses skip the filesystem. 05">
 <dt>Negative dentry</dt>
 <dd>A cached record that a name does not exist, so repeated misses skip the filesystem. <a class="layer-chip kernel" href="05-vfs-cache.html#dcache" title="The VFS and the page cache">05</a></dd>
 </div>
-<div class="entry" id="g-nvme-queue-pair" data-text="nvme queue pair submission and completion ring buffers in host ram, driven by doorbell writes. rdma reuses the same model.">
+<div class="entry" id="g-nfs" data-text="nfs (network file system) a network filesystem protocol: a client accesses files on a server through ordinary file operations such as open, read and write. 06">
+<dt>NFS (Network File System)</dt>
+<dd>A network filesystem protocol: a client accesses files on a server through ordinary file operations such as open, read and write. <a class="layer-chip net" href="06-nfs.html#why">06</a></dd>
+</div>
+<div class="entry" id="g-nic" data-text="nic (network interface card) a network adapter that sends and receives frames and transfers packet data between the network and host memory. 08">
+<dt>NIC (Network Interface Card)</dt>
+<dd>A network adapter that sends and receives frames and transfers packet data between the network and host memory. <a class="layer-chip net" href="08-rdma.html#tcp-cost">08</a></dd>
+</div>
+<div class="entry" id="g-nvme" data-text="nvme (non-volatile memory express) a storage interface designed for non-volatile memory. local nvme devices use pci express; nvme over fabrics carries commands over a network. nvme names the interface, not the flash memory itself. 02">
+<dt>NVMe (Non-Volatile Memory Express)</dt>
+<dd>A storage interface designed for non-volatile memory. Local NVMe devices use PCI Express; NVMe over Fabrics carries commands over a network. NVMe names the interface, not the flash memory itself. <a class="layer-chip block" href="02-blocks.html#hardware">02</a></dd>
+</div>
+<div class="entry" id="g-nvme-queue-pair" data-text="nvme queue pair submission and completion ring buffers in host ram, driven by doorbell writes. rdma reuses the same model. 02">
 <dt>NVMe queue pair</dt>
 <dd>Submission and completion ring buffers in host RAM, driven by doorbell writes. RDMA reuses the same model. <a class="layer-chip block" href="02-blocks.html#hardware" title="Block devices &amp;amp; addressing">02</a></dd>
+</div>
+<div class="entry" id="g-nvme-of" data-text="nvme-of (nvme over fabrics) nvme over a network fabric, for example over rdma or tcp, providing access to remote storage through nvme commands. 08">
+<dt>NVMe-oF (NVMe over Fabrics)</dt>
+<dd>NVMe over a network fabric, for example over RDMA or TCP, providing access to remote storage through NVMe commands. <a class="layer-chip net" href="08-rdma.html#storage">08</a></dd>
 </div>
 </dl>
 </section>
 <section class="letter" data-letter="O">
 <h2 id="letter-O">O</h2>
 <dl>
-<div class="entry" id="g-o-append" data-text="o_append open flag that moves every write to end-of-file atomically first. atomic on local filesystems only, not on nfs.">
+<div class="entry" id="g-o-append" data-text="o_append open flag that moves every write to end-of-file atomically first. atomic on local filesystems only, not on nfs. 01">
 <dt>O_APPEND</dt>
 <dd>Open flag that moves every write to end-of-file atomically first. Atomic on local filesystems only, not on NFS. <a class="layer-chip user" href="01-syscalls.html#tables" title="Syscalls &amp;amp; file descriptors">01</a></dd>
 </div>
-<div class="entry" id="g-o-cloexec" data-text="o_cloexec flag that closes a descriptor automatically on execve.">
+<div class="entry" id="g-o-cloexec" data-text="o_cloexec flag that closes a descriptor automatically on execve . 01">
 <dt>O_CLOEXEC</dt>
 <dd>Flag that closes a descriptor automatically on <code>execve</code>. <a class="layer-chip user" href="01-syscalls.html#everything-fd" title="Syscalls &amp;amp; file descriptors">01</a></dd>
 </div>
-<div class="entry" id="g-o-direct" data-text="o_direct open flag for dma between the user buffer and the device, bypassing the page cache. needs aligned buffers and offsets.">
+<div class="entry" id="g-o-direct" data-text="o_direct open flag for dma between the user buffer and the device, bypassing the page cache. needs aligned buffers and offsets. 05">
 <dt>O_DIRECT</dt>
 <dd>Open flag for DMA between the user buffer and the device, bypassing the page cache. Needs aligned buffers and offsets. <a class="layer-chip kernel" href="05-vfs-cache.html#direct" title="The VFS and the page cache">05</a></dd>
 </div>
-<div class="entry" id="g-onc-rpc" data-text="onc rpc the remote procedure call framework (rfc 5531) under every nfs message; replies are matched to calls by xid.">
-<dt>ONC RPC</dt>
-<dd>The remote procedure call framework (RFC 5531) under every NFS message; replies are matched to calls by xid. <a class="layer-chip net" href="06-nfs.html#rpc" title="NFS from v3 to 4.2">06</a></dd>
+<div class="entry" id="g-onc-rpc" data-text="onc rpc (open network computing remote procedure call) rpc means remote procedure call: invoking a procedure on another machine through messages. onc rpc is the framework used by nfs (rfc 5531); the transaction id, xid, matches replies to calls. 06">
+<dt>ONC RPC (Open Network Computing Remote Procedure Call)</dt>
+<dd>RPC means Remote Procedure Call: invoking a procedure on another machine through messages. ONC RPC is the framework used by NFS (RFC 5531); the transaction ID, xid, matches replies to calls. <a class="layer-chip net" href="06-nfs.html#rpc" title="NFS from v3 to 4.2">06</a></dd>
 </div>
-<div class="entry" id="g-open-file-description" data-text="open file description the kernel object (struct file) made by open(), holding the offset and status flags; shared after dup and fork.">
+<div class="entry" id="g-open-file-description" data-text="open file description the kernel object ( struct file ) made by open() , holding the offset and status flags; shared after dup and fork . 01">
 <dt>Open file description</dt>
 <dd>The kernel object (<code>struct file</code>) made by <code>open()</code>, holding the offset and status flags; shared after <code>dup</code> and <code>fork</code>. <a class="layer-chip user" href="01-syscalls.html#tables" title="Syscalls &amp;amp; file descriptors">01</a></dd>
 </div>
-<div class="entry" id="g-operation-table" data-text="operation table a struct of function pointers a filesystem fills in so the vfs can call it.">
+<div class="entry" id="g-operation-table" data-text="operation table a struct of function pointers a filesystem fills in so the vfs can call it. 05">
 <dt>Operation table</dt>
 <dd>A struct of function pointers a filesystem fills in so the VFS can call it. <a class="layer-chip kernel" href="05-vfs-cache.html#objects" title="The VFS and the page cache">05</a></dd>
 </div>
@@ -429,28 +505,36 @@
 <section class="letter" data-letter="P">
 <h2 id="letter-P">P</h2>
 <dl>
-<div class="entry" id="g-page-cache" data-text="page cache the kernel&#x27;s ram copy of file contents, shared by read, write and mmap.">
+<div class="entry" id="g-page-cache" data-text="page cache the kernel&#x27;s ram copy of file contents, shared by read , write and mmap . 05">
 <dt>Page cache</dt>
 <dd>The kernel's RAM copy of file contents, shared by <code>read</code>, <code>write</code> and <code>mmap</code>. <a class="layer-chip kernel" href="05-vfs-cache.html#page-cache" title="The VFS and the page cache">05</a></dd>
 </div>
-<div class="entry" id="g-placement-group-pg" data-text="placement group (pg) a ceph hash bucket of objects within a pool; crush maps pgs, not single objects, to osds.">
+<div class="entry" id="g-pcie" data-text="pcie (pci express) peripheral component interconnect express: a serial interconnect between the computer and devices such as nvme drives and network adapters. 02">
+<dt>PCIe (PCI Express)</dt>
+<dd>Peripheral Component Interconnect Express: a serial interconnect between the computer and devices such as NVMe drives and network adapters. <a class="layer-chip block" href="02-blocks.html#hardware">02</a></dd>
+</div>
+<div class="entry" id="g-placement-group-pg" data-text="placement group (pg) a ceph hash bucket of objects within a pool; crush maps pgs, not single objects, to osds. 09">
 <dt>Placement group (PG)</dt>
 <dd>A Ceph hash bucket of objects within a pool; CRUSH maps PGs, not single objects, to OSDs. <a class="layer-chip net" href="09-distributed.html#pgs" title="Distributed filesystems">09</a></dd>
 </div>
-<div class="entry" id="g-pnfs" data-text="pnfs nfsv4.1 feature where a metadata server hands out layouts so clients read and write the data servers directly.">
-<dt>pNFS</dt>
-<dd>NFSv4.1 feature where a metadata server hands out layouts so clients read and write the data servers directly. <a class="layer-chip net" href="06-nfs.html#v41" title="NFS from v3 to 4.2">06</a></dd>
+<div class="entry" id="g-pnfs" data-text="pnfs (parallel nfs) parallel nfs: an nfsv4.1 feature in which a metadata server provides layouts so clients can access data servers directly. 06">
+<dt>pNFS (parallel NFS)</dt>
+<dd>Parallel NFS: an NFSv4.1 feature in which a metadata server provides layouts so clients can access data servers directly. <a class="layer-chip net" href="06-nfs.html#v41" title="NFS from v3 to 4.2">06</a></dd>
+</div>
+<div class="entry" id="g-posix" data-text="posix (portable operating system interface) a family of standards for operating-system interfaces, including file operations and their required behaviour. 01">
+<dt>POSIX (Portable Operating System Interface)</dt>
+<dd>A family of standards for operating-system interfaces, including file operations and their required behaviour. <a class="layer-chip user" href="01-syscalls.html#file-api">01</a></dd>
 </div>
 </dl>
 </section>
 <section class="letter" data-letter="Q">
 <h2 id="letter-Q">Q</h2>
 <dl>
-<div class="entry" id="g-queue-pair-qp" data-text="queue pair (qp) a send queue plus a receive queue: the rdma endpoint. it must move reset → init → rtr → rts before use.">
+<div class="entry" id="g-queue-pair-qp" data-text="queue pair (qp) a send queue plus a receive queue: the rdma endpoint. it must move reset → init → rtr → rts before use. 08">
 <dt>Queue pair (QP)</dt>
 <dd>A send queue plus a receive queue: the RDMA endpoint. It must move RESET → INIT → RTR → RTS before use. <a class="layer-chip net" href="08-rdma.html#qp" title="RDMA and NFS over RDMA">08</a></dd>
 </div>
-<div class="entry" id="g-quorum" data-text="quorum a majority of a small odd-sized group must agree, so at most one side of a network split can make changes.">
+<div class="entry" id="g-quorum" data-text="quorum a majority of a small odd-sized group must agree, so at most one side of a network split can make changes. 09">
 <dt>Quorum</dt>
 <dd>A majority of a small odd-sized group must agree, so at most one side of a network split can make changes. <a class="layer-chip net" href="09-distributed.html#failure" title="Distributed filesystems">09</a></dd>
 </div>
@@ -459,43 +543,55 @@
 <section class="letter" data-letter="R">
 <h2 id="letter-R">R</h2>
 <dl>
-<div class="entry" id="g-rcu-walk" data-text="rcu walk lock-free path lookup through the dcache that falls back to a reference-counted walk when something changes.">
+<div class="entry" id="g-rbd" data-text="rbd (rados block device) ceph block storage: a virtual disk whose data is stored as objects in rados. 09">
+<dt>RBD (RADOS Block Device)</dt>
+<dd>Ceph block storage: a virtual disk whose data is stored as objects in RADOS. <a class="layer-chip net" href="09-distributed.html#ceph">09</a></dd>
+</div>
+<div class="entry" id="g-rcu" data-text="rcu (read-copy update) a synchronization mechanism that lets readers access shared data while updates are published separately; old versions are reclaimed after pre-existing readers finish. 04">
+<dt>RCU (Read-Copy Update)</dt>
+<dd>A synchronization mechanism that lets readers access shared data while updates are published separately; old versions are reclaimed after pre-existing readers finish. <a class="layer-chip kernel" href="04-btrees.html#in-memory">04</a></dd>
+</div>
+<div class="entry" id="g-rcu-walk" data-text="rcu walk lock-free path lookup through the dcache that falls back to a reference-counted walk when something changes. 05">
 <dt>RCU walk</dt>
 <dd>Lock-free path lookup through the dcache that falls back to a reference-counted walk when something changes. <a class="layer-chip kernel" href="05-vfs-cache.html#dcache" title="The VFS and the page cache">05</a></dd>
 </div>
-<div class="entry" id="g-rdma" data-text="rdma a nic reads or writes another machine&#x27;s registered memory directly, with no remote cpu or kernel on the data path.">
-<dt>RDMA</dt>
-<dd>A NIC reads or writes another machine's registered memory directly, with no remote CPU or kernel on the data path. <a class="layer-chip net" href="08-rdma.html#idea" title="RDMA and NFS over RDMA">08</a></dd>
+<div class="entry" id="g-rdma" data-text="rdma (remote direct memory access) remote direct memory access: a network adapter transfers data directly to or from registered memory on another machine. one-sided operations do not require its cpu to handle each transfer. 08">
+<dt>RDMA (Remote Direct Memory Access)</dt>
+<dd>Remote direct memory access: a network adapter transfers data directly to or from registered memory on another machine. One-sided operations do not require its CPU to handle each transfer. <a class="layer-chip net" href="08-rdma.html#idea" title="RDMA and NFS over RDMA">08</a></dd>
 </div>
-<div class="entry" id="g-readahead" data-text="readahead fetching file data before it is asked for, triggered by sequential access.">
-<dt>Readahead</dt>
-<dd>Fetching file data before it is asked for, triggered by sequential access. <a class="layer-chip kernel" href="05-vfs-cache.html#readahead" title="The VFS and the page cache">05</a></dd>
-</div>
-<div class="entry" id="g-read-modify-write" data-text="read-modify-write reading a whole unit to change part of it, caused by small or misaligned writes.">
-<dt>Read-modify-write</dt>
-<dd>Reading a whole unit to change part of it, caused by small or misaligned writes. <a class="layer-chip block" href="02-blocks.html#addressing" title="Block devices &amp;amp; addressing">02</a></dd>
-</div>
-<div class="entry" id="g-read-write-reply-chunk" data-text="read / write / reply chunk memory the client advertises so the server can pull bulk arguments, or push bulk results and long replies, by rdma.">
+<div class="entry" id="g-read-write-reply-chunk" data-text="read / write / reply chunk memory the client advertises so the server can pull bulk arguments, or push bulk results and long replies, by rdma. 08">
 <dt>Read / write / reply chunk</dt>
 <dd>Memory the client advertises so the server can pull bulk arguments, or push bulk results and long replies, by RDMA. <a class="layer-chip net" href="08-rdma.html#chunks" title="RDMA and NFS over RDMA">08</a></dd>
 </div>
-<div class="entry" id="g-reclaim-kswapd" data-text="reclaim / kswapd freeing memory by dropping clean pages, writing dirty ones and swapping anonymous ones.">
+<div class="entry" id="g-read-modify-write" data-text="read-modify-write reading a whole unit to change part of it, caused by small or misaligned writes. 02">
+<dt>Read-modify-write</dt>
+<dd>Reading a whole unit to change part of it, caused by small or misaligned writes. <a class="layer-chip block" href="02-blocks.html#addressing" title="Block devices &amp;amp; addressing">02</a></dd>
+</div>
+<div class="entry" id="g-readahead" data-text="readahead fetching file data before it is asked for, triggered by sequential access. 05">
+<dt>Readahead</dt>
+<dd>Fetching file data before it is asked for, triggered by sequential access. <a class="layer-chip kernel" href="05-vfs-cache.html#readahead" title="The VFS and the page cache">05</a></dd>
+</div>
+<div class="entry" id="g-reclaim-kswapd" data-text="reclaim / kswapd freeing memory by dropping clean pages, writing dirty ones and swapping anonymous ones. 05">
 <dt>Reclaim / kswapd</dt>
 <dd>Freeing memory by dropping clean pages, writing dirty ones and swapping anonymous ones. <a class="layer-chip kernel" href="05-vfs-cache.html#reclaim" title="The VFS and the page cache">05</a></dd>
 </div>
-<div class="entry" id="g-reliable-connected-rc" data-text="reliable connected (rc) the rdma transport with acknowledged, in-order delivery between one pair of qps; the one storage protocols use.">
+<div class="entry" id="g-reliable-connected-rc" data-text="reliable connected (rc) the rdma transport with acknowledged, in-order delivery between one pair of qps; the one storage protocols use. 08">
 <dt>Reliable Connected (RC)</dt>
 <dd>The RDMA transport with acknowledged, in-order delivery between one pair of QPs; the one storage protocols use. <a class="layer-chip net" href="08-rdma.html#transports" title="RDMA and NFS over RDMA">08</a></dd>
 </div>
-<div class="entry" id="g-roce-v2" data-text="roce v2 rdma over ethernet in udp/ip packets (destination port 4791), relying on pfc and ecn/dcqcn.">
+<div class="entry" id="g-rgw" data-text="rgw (rados gateway) the ceph object-storage gateway, providing s3- and swift-compatible interfaces on top of rados. 09">
+<dt>RGW (RADOS Gateway)</dt>
+<dd>The Ceph object-storage gateway, providing S3- and Swift-compatible interfaces on top of RADOS. <a class="layer-chip net" href="09-distributed.html#ceph">09</a></dd>
+</div>
+<div class="entry" id="g-roce-v2" data-text="roce v2 rdma over ethernet in udp/ip packets (destination port 4791), relying on pfc and ecn/dcqcn. 08">
 <dt>RoCE v2</dt>
 <dd>RDMA over Ethernet in UDP/IP packets (destination port 4791), relying on PFC and ECN/DCQCN. <a class="layer-chip net" href="08-rdma.html#fabrics" title="RDMA and NFS over RDMA">08</a></dd>
 </div>
-<div class="entry" id="g-rpc-over-rdma" data-text="rpc-over-rdma the rfc 8166 framing that carries onc rpc, and so nfs, over rdma, with credits and chunk lists.">
+<div class="entry" id="g-rpc-over-rdma" data-text="rpc-over-rdma the rfc 8166 framing that carries onc rpc, and so nfs, over rdma, with credits and chunk lists. 08">
 <dt>RPC-over-RDMA</dt>
 <dd>The RFC 8166 framing that carries ONC RPC, and so NFS, over RDMA, with credits and chunk lists. <a class="layer-chip net" href="08-rdma.html#header" title="RDMA and NFS over RDMA">08</a></dd>
 </div>
-<div class="entry" id="g-rpcsec-gss" data-text="rpcsec_gss kerberos security for rpc: krb5 authenticates, krb5i adds integrity, krb5p adds encryption.">
+<div class="entry" id="g-rpcsec-gss" data-text="rpcsec_gss kerberos security for rpc: krb5 authenticates, krb5i adds integrity, krb5p adds encryption. 06">
 <dt>RPCSEC_GSS</dt>
 <dd>Kerberos security for RPC: krb5 authenticates, krb5i adds integrity, krb5p adds encryption. <a class="layer-chip net" href="06-nfs.html#rpc" title="NFS from v3 to 4.2">06</a></dd>
 </div>
@@ -504,48 +600,77 @@
 <section class="letter" data-letter="S">
 <h2 id="letter-S">S</h2>
 <dl>
-<div class="entry" id="g-server-side-copy" data-text="server-side copy nfsv4.2 copy, triggered by copy_file_range(): the server copies the data without sending it through the client.">
+<div class="entry" id="g-san" data-text="san (storage area network) a storage network that gives hosts access to block devices; the host runs the filesystem on those devices. 06">
+<dt>SAN (Storage Area Network)</dt>
+<dd>A storage network that gives hosts access to block devices; the host runs the filesystem on those devices. <a class="layer-chip net" href="06-nfs.html#why">06</a></dd>
+</div>
+<div class="entry" id="g-sas" data-text="sas (serial attached scsi) a serial storage interface that carries scsi commands, commonly used for server drives. 02">
+<dt>SAS (Serial Attached SCSI)</dt>
+<dd>A serial storage interface that carries SCSI commands, commonly used for server drives. <a class="layer-chip block" href="02-blocks.html#what">02</a></dd>
+</div>
+<div class="entry" id="g-sata" data-text="sata (serial ata) serial advanced technology attachment: a serial interface for connecting storage devices such as hard disks and ssds. 02">
+<dt>SATA (Serial ATA)</dt>
+<dd>Serial Advanced Technology Attachment: a serial interface for connecting storage devices such as hard disks and SSDs. <a class="layer-chip block" href="02-blocks.html#hardware">02</a></dd>
+</div>
+<div class="entry" id="g-scsi" data-text="scsi (small computer system interface) a family of standards including storage commands. linux uses its scsi layer for several kinds of disk, not just devices with a physical scsi connection. 02">
+<dt>SCSI (Small Computer System Interface)</dt>
+<dd>A family of standards including storage commands. Linux uses its SCSI layer for several kinds of disk, not just devices with a physical SCSI connection. <a class="layer-chip block" href="02-blocks.html#what">02</a></dd>
+</div>
+<div class="entry" id="g-server-side-copy" data-text="server-side copy nfsv4.2 copy, triggered by copy_file_range() : the server copies the data without sending it through the client. 06">
 <dt>Server-side copy</dt>
 <dd>NFSv4.2 COPY, triggered by <code>copy_file_range()</code>: the server copies the data without sending it through the client. <a class="layer-chip net" href="06-nfs.html#v42" title="NFS from v3 to 4.2">06</a></dd>
 </div>
-<div class="entry" id="g-session-slot-table" data-text="session slot table nfsv4.1 per-slot sequence numbers and cached replies that give exactly-once semantics.">
+<div class="entry" id="g-session-slot-table" data-text="session slot table nfsv4.1 per-slot sequence numbers and cached replies that give exactly-once semantics. 06">
 <dt>Session slot table</dt>
 <dd>NFSv4.1 per-slot sequence numbers and cached replies that give exactly-once semantics. <a class="layer-chip net" href="06-nfs.html#v41" title="NFS from v3 to 4.2">06</a></dd>
 </div>
-<div class="entry" id="g-silly-rename" data-text="silly rename the nfs client renaming an unlinked file it still has open to .nfsxxxx, and removing it at the last close.">
+<div class="entry" id="g-silly-rename" data-text="silly rename the nfs client renaming an unlinked file it still has open to .nfsxxxx , and removing it at the last close. 07">
 <dt>Silly rename</dt>
 <dd>The NFS client renaming an unlinked file it still has open to <code>.nfsXXXX</code>, and removing it at the last close. <a class="layer-chip net" href="07-nfs-caching.html#failures" title="NFS client caching and coherence">07</a></dd>
 </div>
-<div class="entry" id="g-sparse-file" data-text="sparse file a file with holes: ranges with no disk blocks that read back as zeros.">
+<div class="entry" id="g-sparse-file" data-text="sparse file a file with holes: ranges with no disk blocks that read back as zeros. 01">
 <dt>Sparse file</dt>
 <dd>A file with holes: ranges with no disk blocks that read back as zeros. <a class="layer-chip user" href="01-syscalls.html#offsets" title="Syscalls &amp;amp; file descriptors">01</a></dd>
 </div>
-<div class="entry" id="g-stateid" data-text="stateid a 16-byte nfsv4 identifier for an open, lock, delegation or layout, sent with read, write, lock and close.">
+<div class="entry" id="g-ssd" data-text="ssd (solid-state drive) a solid-state drive: a storage device with no moving mechanical parts, usually built from nand flash memory. 02">
+<dt>SSD (Solid-State Drive)</dt>
+<dd>A solid-state drive: a storage device with no moving mechanical parts, usually built from NAND flash memory. <a class="layer-chip block" href="02-blocks.html#hardware">02</a></dd>
+</div>
+<div class="entry" id="g-stateid" data-text="stateid a 16-byte nfsv4 identifier for an open, lock, delegation or layout, sent with read, write, lock and close. 06">
 <dt>Stateid</dt>
 <dd>A 16-byte NFSv4 identifier for an open, lock, delegation or layout, sent with READ, WRITE, LOCK and CLOSE. <a class="layer-chip net" href="06-nfs.html#v4" title="NFS from v3 to 4.2">06</a></dd>
 </div>
-<div class="entry" id="g-striping" data-text="striping raid 0 of a file&#x27;s bytes across several data servers, set by stripe size and stripe count.">
+<div class="entry" id="g-striping" data-text="striping raid 0 of a file&#x27;s bytes across several data servers, set by stripe size and stripe count. 09">
 <dt>Striping</dt>
 <dd>RAID 0 of a file's bytes across several data servers, set by stripe size and stripe count. <a class="layer-chip net" href="09-distributed.html#lustre" title="Distributed filesystems">09</a></dd>
 </div>
-<div class="entry" id="g-super-block" data-text="super_block in-memory object for one mounted filesystem instance; carries its super_operations.">
+<div class="entry" id="g-super-block" data-text="super_block in-memory object for one mounted filesystem instance; carries its super_operations . 05">
 <dt>super_block</dt>
 <dd>In-memory object for one mounted filesystem instance; carries its <code>super_operations</code>. <a class="layer-chip kernel" href="05-vfs-cache.html#objects" title="The VFS and the page cache">05</a></dd>
 </div>
-<div class="entry" id="g-superblock" data-text="superblock the 1 kib record at byte 1024 holding the filesystem&#x27;s sizes, counts, features and the magic number 0xef53.">
+<div class="entry" id="g-superblock" data-text="superblock the 1 kib record at byte 1024 holding the filesystem&#x27;s sizes, counts, features and the magic number 0xef53 . 03">
 <dt>Superblock</dt>
 <dd>The 1 KiB record at byte 1024 holding the filesystem's sizes, counts, features and the magic number <code>0xEF53</code>. <a class="layer-chip fs" href="03-ondisk.html#superblock" title="The ext4 on-disk format">03</a></dd>
 </div>
-<div class="entry" id="g-system-call" data-text="system call a request from a user program to the kernel, made with the syscall instruction: number in rax, arguments in registers.">
+<div class="entry" id="g-system-call" data-text="system call a request from a user program to the kernel, made with the syscall instruction: number in rax , arguments in registers. 01">
 <dt>System call</dt>
 <dd>A request from a user program to the kernel, made with the <code>syscall</code> instruction: number in <code>rax</code>, arguments in registers. <a class="layer-chip user" href="01-syscalls.html#syscall" title="Syscalls &amp;amp; file descriptors">01</a></dd>
+</div>
+</dl>
+</section>
+<section class="letter" data-letter="T">
+<h2 id="letter-T">T</h2>
+<dl>
+<div class="entry" id="g-tso" data-text="tso (tcp segmentation offload) the network adapter splits a large outgoing tcp buffer into packets, reducing per-packet work on the cpu. 08">
+<dt>TSO (TCP Segmentation Offload)</dt>
+<dd>The network adapter splits a large outgoing TCP buffer into packets, reducing per-packet work on the CPU. <a class="layer-chip net" href="08-rdma.html#tcp-cost">08</a></dd>
 </div>
 </dl>
 </section>
 <section class="letter" data-letter="V">
 <h2 id="letter-V">V</h2>
 <dl>
-<div class="entry" id="g-vfs-virtual-file-system" data-text="vfs (virtual file system) the kernel layer that turns file syscalls into calls on a specific filesystem&#x27;s operation tables.">
+<div class="entry" id="g-vfs-virtual-file-system" data-text="vfs (virtual file system) the kernel layer that turns file syscalls into calls on a specific filesystem&#x27;s operation tables. 05">
 <dt>VFS (virtual file system)</dt>
 <dd>The kernel layer that turns file syscalls into calls on a specific filesystem's operation tables. <a class="layer-chip kernel" href="05-vfs-cache.html#where" title="The VFS and the page cache">05</a></dd>
 </div>
@@ -554,30 +679,30 @@
 <section class="letter" data-letter="W">
 <h2 id="letter-W">W</h2>
 <dl>
-<div class="entry" id="g-write-amplification" data-text="write amplification the ratio of flash writes to host writes, raised by garbage collection.">
+<div class="entry" id="g-write-amplification" data-text="write amplification the ratio of flash writes to host writes, raised by garbage collection. 02">
 <dt>Write amplification</dt>
 <dd>The ratio of flash writes to host writes, raised by garbage collection. <a class="layer-chip block" href="02-blocks.html#hardware" title="Block devices &amp;amp; addressing">02</a></dd>
 </div>
-<div class="entry" id="g-writeback" data-text="writeback flusher threads writing dirty folios to the device on thresholds, on age, or on fsync.">
-<dt>Writeback</dt>
-<dd>Flusher threads writing dirty folios to the device on thresholds, on age, or on <code>fsync</code>. <a class="layer-chip kernel" href="05-vfs-cache.html#write-path" title="The VFS and the page cache">05</a></dd>
-</div>
-<div class="entry" id="g-write-verifier" data-text="write verifier an 8-byte value in write and commit replies that changes when the server restarts, telling clients to resend uncommitted data.">
+<div class="entry" id="g-write-verifier" data-text="write verifier an 8-byte value in write and commit replies that changes when the server restarts, telling clients to resend uncommitted data. 06">
 <dt>Write verifier</dt>
 <dd>An 8-byte value in WRITE and COMMIT replies that changes when the server restarts, telling clients to resend uncommitted data. <a class="layer-chip net" href="06-nfs.html#v3" title="NFS from v3 to 4.2">06</a></dd>
+</div>
+<div class="entry" id="g-writeback" data-text="writeback flusher threads writing dirty folios to the device on thresholds, on age, or on fsync . 05">
+<dt>Writeback</dt>
+<dd>Flusher threads writing dirty folios to the device on thresholds, on age, or on <code>fsync</code>. <a class="layer-chip kernel" href="05-vfs-cache.html#write-path" title="The VFS and the page cache">05</a></dd>
 </div>
 </dl>
 </section>
 <section class="letter" data-letter="X">
 <h2 id="letter-X">X</h2>
 <dl>
-<div class="entry" id="g-xarray" data-text="xarray the radix tree that indexes a file&#x27;s folios by page index.">
+<div class="entry" id="g-xarray" data-text="xarray the radix tree that indexes a file&#x27;s folios by page index. 05">
 <dt>XArray</dt>
 <dd>The radix tree that indexes a file's folios by page index. <a class="layer-chip kernel" href="05-vfs-cache.html#page-cache" title="The VFS and the page cache">05</a></dd>
 </div>
-<div class="entry" id="g-xdr" data-text="xdr big-endian, 4-byte-aligned encoding of rpc arguments, with no field tags on the wire (rfc 4506).">
-<dt>XDR</dt>
-<dd>Big-endian, 4-byte-aligned encoding of RPC arguments, with no field tags on the wire (RFC 4506). <a class="layer-chip net" href="06-nfs.html#rpc" title="NFS from v3 to 4.2">06</a></dd>
+<div class="entry" id="g-xdr" data-text="xdr (external data representation) external data representation: a machine-independent encoding for rpc arguments and results, using big-endian byte order and four-byte alignment (rfc 4506). 06">
+<dt>XDR (External Data Representation)</dt>
+<dd>External data representation: a machine-independent encoding for RPC arguments and results, using big-endian byte order and four-byte alignment (RFC 4506). <a class="layer-chip net" href="06-nfs.html#rpc" title="NFS from v3 to 4.2">06</a></dd>
 </div>
 </dl>
 </section>

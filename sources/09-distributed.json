@@ -1044,8 +1044,8 @@
         "gpfs-metanode",
         "jsc-jupiter"
       ],
-      "en": "GPFS is fully POSIX-coherent and runs some of the largest HPC filesystems.",
-      "ru": "GPFS полностью согласована по POSIX и обслуживает одни из крупнейших файловых систем в HPC.",
+      "en": "GPFS is fully POSIX-coherent and runs some of the largest <a href=\"glossary.html#g-hpc\">HPC</a> filesystems.",
+      "ru": "GPFS полностью согласована по POSIX и обслуживает одни из крупнейших файловых систем в <a href=\"glossary.html#g-hpc\">HPC</a>.",
       "quote": {
         "gpfs-metanode": "Thus, GPFS uses distributed locking to guarantee POSIX semantics",
         "jsc-jupiter": "JUPITER – EXASTORE (HOME/DATA) … Gross Capacity: 308 PB; Net Capacity: 210 PB … IBM Storage Scale (aka Spectrum Scale/GPFS)"
@@ -1305,8 +1305,8 @@
     },
     {
       "src": "iana-pnfs",
-      "en": "SCSI and <b>flexible files</b> (RFC 8435).",
-      "ru": "SCSI и <b>flexible files</b> (RFC 8435).",
+      "en": "<a href=\"glossary.html#g-scsi\">SCSI</a> and <b>flexible files</b> (RFC 8435).",
+      "ru": "<a href=\"glossary.html#g-scsi\">SCSI</a> и <b>flexible files</b> (RFC 8435).",
       "quote": "LAYOUT4_NFSV4_1_FILES 0x00000001 RFC 8881 … LAYOUT4_OSD2_OBJECTS 0x00000002 RFC 5664 … LAYOUT4_BLOCK_VOLUME 0x00000003 RFC 5663 … LAYOUT4_FLEX_FILES 0x00000004 RFC 8435 … LAYOUT4_SCSI 0x00000005 RFC 8154"
     },
     {
@@ -1371,8 +1371,8 @@
         "bluestore-paper",
         "rocksdb"
       ],
-      "en": "in RocksDB, an LSM-tree key-value store.",
-      "ru": "в RocksDB — хранилище ключ-значение на основе LSM-дерева.",
+      "en": "in RocksDB, an <a href=\"glossary.html#g-lsm-tree\">LSM</a>-tree key-value store.",
+      "ru": "в RocksDB — хранилище ключ-значение на основе <a href=\"glossary.html#g-lsm-tree\">LSM-дерева</a>.",
       "quote": {
         "ceph-devices": "BlueStore consumes raw block devices or partitions. … RocksDB’s key/value database is embedded in order to manage internal metadata, including the mapping of object names to block locations on disk.",
         "bluestore-paper": "object information is stored in the O namespace (that is, RocksDB keys start with O and their values represent object metadata), block allocation metadata is stored in the B namespace",

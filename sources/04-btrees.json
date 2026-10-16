@@ -920,8 +920,8 @@
     "ostep-hdd",
     "ostep-ssd-ops"
    ],
-   "en": "10–100 µs on an NVMe SSD.",
-   "ru": "10–100 мкс на NVMe SSD.",
+   "en": "10–100 µs on an <a href=\"glossary.html#g-nvme\">NVMe</a> <a href=\"glossary.html#g-ssd\">SSD</a>.",
+   "ru": "10–100 мкс на <a href=\"glossary.html#g-nvme\">NVMe</a> <a href=\"glossary.html#g-ssd\">SSD</a>.",
    "quote": {
     "ostep-hdd": "Thus, from our equation above, TI/O for the Cheetah roughly equals 6 ms. … The same calculation for the Barracuda yields a TI/O of about 13.2 ms",
     "ostep-ssd-ops": "Read (a page): … This operation is typically quite fast, 10s of microseconds or so, regardless of location on the device"
@@ -1275,8 +1275,8 @@
   },
   {
    "src": "nfsd",
-   "en": "NFS servers pass the same positions to clients as READDIR cookies.",
-   "ru": "NFS-серверы передают клиентам те же позиции в качестве cookie для READDIR.",
+   "en": "<a href=\"glossary.html#g-nfs\">NFS</a> servers pass the same positions to clients as READDIR cookies.",
+   "ru": "<a href=\"glossary.html#g-nfs\">NFS-серверы</a> передают клиентам те же позиции в качестве cookie для READDIR.",
    "quote": "if (fhp->fh_64bit_cookies) file->f_mode |= FMODE_64BITHASH; else file->f_mode |= FMODE_32BITHASH; offset = vfs_llseek(file, offset, SEEK_SET);"
   },
   {
@@ -1667,7 +1667,7 @@
     "ostep-ssd-perf"
    ],
    "en": "which suits both hard disks and the flash translation layer of SSDs.",
-   "ru": "что хорошо подходит и жёстким дискам, и слою трансляции флеш-памяти (FTL) в SSD.",
+   "ru": "что хорошо подходит и жёстким дискам, и слою трансляции флеш-памяти (<a href=\"glossary.html#g-ftl-flash-translation-layer\">FTL</a>) в SSD.",
    "quote": {
     "lsm-paper": "The algorithm has greatly reduced disk arm movements compared to a traditional access methods such as B-trees",
     "ostep-ssd-perf": "The reason for such unexpectedly good random-write performance is due to the log-structured design of many SSDs, which transforms random writes into sequential ones and improves performance."
@@ -1810,8 +1810,8 @@
     "maple-h",
     "maple-rst"
    ],
-   "en": "and it supports lookups under RCU without locks.",
-   "ru": "а поиск в нём работает под RCU без блокировок.",
+   "en": "and it supports lookups under <a href=\"glossary.html#g-rcu\">RCU</a> (Read-Copy Update, a mechanism for concurrent access to shared data) without locks.",
+   "ru": "а поиск в нём работает под <a href=\"glossary.html#g-rcu\">RCU</a> (Read-Copy Update — механизм конкурентного доступа к общим данным) без блокировок.",
    "quote": {
     "maple-h": "/* 64bit sizes */ #define MAPLE_NODE_SLOTS 31 /* 256 bytes including ->parent */ #define MAPLE_RANGE64_SLOTS 16 /* 256 bytes */",
     "maple-rst": "The tree can also be put into an RCU-safe mode of operation which allows reading and writing concurrently."

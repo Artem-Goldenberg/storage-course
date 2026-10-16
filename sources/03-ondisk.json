@@ -1046,8 +1046,8 @@
         "k-inodes",
         "src-ialloc-gen"
       ],
-      "en": "set to a new random value when the inode number is reused (NFS file handles use it: <a href=\"06-nfs.html\">lesson 06</a>)",
-      "ru": "получает новое случайное значение при повторном использовании номера inode (его используют хэндлы файлов NFS: <a href=\"06-nfs.html\">урок 06</a>)",
+      "en": "set to a new random value when the inode number is reused (<a href=\"glossary.html#g-nfs\">NFS</a> file handles use it: <a href=\"06-nfs.html\">lesson 06</a>)",
+      "ru": "получает новое случайное значение при повторном использовании номера inode (его используют хэндлы файлов <a href=\"glossary.html#g-nfs\">NFS</a>: <a href=\"06-nfs.html\">урок 06</a>)",
       "quote": {
         "k-inodes": "0x64 | __le32 | i_generation | File version (for NFS).",
         "src-ialloc-gen": "inode->i_generation = get_random_u32();"
