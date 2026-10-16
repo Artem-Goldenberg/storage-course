@@ -477,21 +477,21 @@ misaligned: partition starts at LBA 63 (byte 32,256)
 <text class="t" x="175.0" y="325.0" text-anchor="middle">hctx 0</text>
 <rect class="box" x="390" y="304" width="170" height="32" rx="3"/>
 <text class="t" x="475.0" y="325.0" text-anchor="middle">hctx 1</text>
-<text class="ts" x="325" y="354" text-anchor="middle">2 hardware dispatch contexts in blk-mq (still kernel structures)</text>
+<text class="ts" x="325" y="354" text-anchor="middle">blk-mq: kernel structures</text>
 <rect class="k-kernel" x="10" y="394" width="630" height="62" rx="4"/>
 <text class="ts" x="24" y="413" text-anchor="start">NVMe DRIVER</text>
 <text class="t" x="24" y="438" text-anchor="start">Build commands → write to submission queues → notify controller</text>
-<line class="ln" x1="175" y1="360" x2="175" y2="392" marker-end="url(#ah-02-2)"/>
-<line class="ln" x1="475" y1="360" x2="475" y2="392" marker-end="url(#ah-02-2)"/>
+<line class="ln" x1="175" y1="336" x2="175" y2="392" marker-end="url(#ah-02-2)"/>
+<line class="ln" x1="475" y1="336" x2="475" y2="392" marker-end="url(#ah-02-2)"/>
 <text class="ts" x="325" y="381" text-anchor="middle">blk-mq calls the driver</text>
-<text class="ts" x="40" y="485" text-anchor="start">Device command queues (NVMe Submission Queues)</text>
+<text class="ts" x="325" y="478" text-anchor="middle">NVMe Submission Queues</text>
 <rect class="box" x="65" y="496" width="220" height="36" rx="3"/>
 <text class="t" x="175.0" y="519.0" text-anchor="middle">NVMe SQ 0</text>
 <rect class="box" x="365" y="496" width="220" height="36" rx="3"/>
 <text class="t" x="475.0" y="519.0" text-anchor="middle">NVMe SQ 1</text>
-<line class="ln" x1="175" y1="488" x2="175" y2="494" marker-end="url(#ah-02-2)"/>
+<line class="ln" x1="175" y1="456" x2="175" y2="494" marker-end="url(#ah-02-2)"/>
 <line class="ln" x1="175" y1="532" x2="175" y2="564" marker-end="url(#ah-02-2)"/>
-<line class="ln" x1="475" y1="488" x2="475" y2="494" marker-end="url(#ah-02-2)"/>
+<line class="ln" x1="475" y1="456" x2="475" y2="494" marker-end="url(#ah-02-2)"/>
 <line class="ln" x1="475" y1="532" x2="475" y2="564" marker-end="url(#ah-02-2)"/>
 <rect class="k-block" x="10" y="566" width="630" height="100" rx="4"/>
 <text class="ts" x="24" y="586" text-anchor="start">NVMe CONTROLLER</text>
@@ -504,7 +504,7 @@ misaligned: partition starts at LBA 63 (byte 32,256)
 <path class="lnd" d="M640 630 H668 V132 H612" fill="none" marker-end="url(#ah-02-2)"/>
 <text class="ts" transform="translate(688,390) rotate(-90)" text-anchor="middle">completion → driver → bi_end_io() → wake reader</text>
 </svg>
-<figcaption>Example mapping: CPU 0 and 1 share hctx 0; CPU 2 and 3 share hctx 1. The number of device queues depends on the controller and driver configuration, not just the CPU count. The NVMe submission queues usually reside in host memory and are read by the controller. This shows a queued path; requests can also be dispatched directly, and an I/O scheduler may change the staging path. A read leaving ext4 on CPU 1. The dashed path on the right is the completion: the device's interrupt runs the driver, which completes the request, which calls the bio's <code>bi_end_io</code>, which marks the page valid and wakes the process waiting for it.</figcaption>
+<figcaption>Example: four CPU queues share two NVMe queues. The dashed line shows completion.</figcaption>
 </figure>
 <p>Step by step:</p>
 <ol>
