@@ -447,50 +447,64 @@ misaligned: partition starts at LBA 63 (byte 32,256)
 <p>A <code>bio</code> says: "transfer <code>bi_size</code> bytes starting at sector <code>bi_sector</code>, to or from these pieces of memory, and call <code>bi_end_io</code> when done".<sup class="cite"><a href="#src-55" id="cite-55-2" title="include/linux/bvec.h, Linux v6.12 source — struct bvec_iter, line 78">55</a><a href="#src-69" id="cite-69" title="include/linux/blk_types.h, Linux v6.12 source — struct bio, lines 214–278">69</a></sup> The memory does not have to be contiguous: the <code>bio_vec</code> list can point at scattered pages, and the device's DMA engine gathers or scatters them.<sup class="cite"><a href="#src-42" id="cite-42-5" title="NVM Express Base Specification, Revision 2.1 — section 2.1, Memory-Based Transport Model (PCIe)">42</a><a href="#src-68" id="cite-68-2" title="include/linux/bvec.h, Linux v6.12 source — struct bio_vec, lines 19–35">68</a></sup> A filesystem builds a <code>bio</code> and calls <code>submit_bio()</code>; from then on it is the block layer's job.<sup class="cite"><a href="#src-70" id="cite-70" title="block/blk-core.c, Linux v6.12 source — submit_bio(), comment at lines 873–885">70</a></sup></p>
 <h3>From bio to the device: blk-mq</h3>
 <figure class="diagram">
-<svg viewBox="0 0 700 520" width="700" role="img" aria-label="Path of a read: ext4 builds a bio, the plug list merges it into a request, it passes through a per-CPU software queue and a hardware queue to the driver and the device, and completion flows back up through bi_end_io.">
+<svg viewBox="0 0 700 680" width="700" role="img" aria-label="NVMe example: 4 CPU queues map to 2 block-layer hctx contexts. The driver writes commands into 2 NVMe queues; the controller executes them.">
 <defs><marker id="ah-02-2" viewBox="0 0 10 10" refX="9" refY="5" markerWidth="7" markerHeight="7" orient="auto-start-reverse"><path class="ah" d="M0,0 L10,5 L0,10 z"/></marker></defs>
 <rect class="k-fs" x="10" y="10" width="630" height="56" rx="4"/>
 <text class="ts" x="24" y="28">FILESYSTEM (lesson 03)</text>
 <text class="t" x="24" y="52">ext4 needs block 244 → read 8 sectors from 1952 into a page</text>
-<rect class="k-kernel" x="10" y="80" width="630" height="320" rx="4"/>
+<rect class="k-kernel" x="10" y="80" width="630" height="280" rx="4"/>
 <text class="ts" x="24" y="98">BLOCK LAYER</text>
 <rect class="box" x="40" y="106" width="570" height="46" rx="3"/>
 <text class="t" x="54" y="125">submit_bio(): struct bio { bi_sector = 1952, bi_size = 4096,</text>
 <text class="t" x="54" y="143">                        bi_io_vec → page, bi_end_io }</text>
 <rect class="box" x="40" y="170" width="570" height="36" rx="3"/>
 <text class="t" x="54" y="193">plug list: hold briefly, merge neighbours into a struct request</text>
-<text class="ts" x="40" y="226">software staging queues, one per CPU (or the I/O scheduler, if one is set)</text>
-<rect class="box" x="40" y="234" width="120" height="30" rx="3"/><text class="t" x="100" y="254" text-anchor="middle">ctx cpu0</text>
-<rect class="box" x="190" y="234" width="120" height="30" rx="3"/><text class="t" x="250" y="254" text-anchor="middle">ctx cpu1</text>
-<rect class="box" x="340" y="234" width="120" height="30" rx="3"/><text class="t" x="400" y="254" text-anchor="middle">ctx cpu2</text>
-<rect class="box" x="490" y="234" width="120" height="30" rx="3"/><text class="t" x="550" y="254" text-anchor="middle">ctx cpu3</text>
-<text class="ts" x="40" y="296">hardware dispatch queues, mapped onto the device's own queues</text>
-<rect class="box" x="40" y="304" width="120" height="30" rx="3"/><text class="t" x="100" y="324" text-anchor="middle">hctx 0</text>
-<rect class="box" x="190" y="304" width="120" height="30" rx="3"/><text class="t" x="250" y="324" text-anchor="middle">hctx 1</text>
-<rect class="box" x="340" y="304" width="120" height="30" rx="3"/><text class="t" x="400" y="324" text-anchor="middle">hctx 2</text>
-<rect class="box" x="490" y="304" width="120" height="30" rx="3"/><text class="t" x="550" y="324" text-anchor="middle">hctx 3</text>
-<rect class="box" x="40" y="350" width="570" height="36" rx="3"/>
-<text class="t" x="54" y="373">driver (nvme; sd + storvsc on WSL): build command, ring doorbell</text>
-<rect class="k-block" x="10" y="414" width="630" height="96" rx="4"/>
-<text class="ts" x="24" y="432">DEVICE</text>
-<text class="t" x="24" y="456">fetch command · read flash or platter · DMA 4096 bytes into the page</text>
-<text class="t" x="24" y="478">post completion · interrupt (or the CPU polls)</text>
-<text class="ts" x="24" y="498">cache, FTL and media are all inside the device; the kernel sees only LBAs</text>
+
+<text class="ts" x="40" y="226" text-anchor="start">4 software queues: one per logical CPU</text>
+<rect class="box" x="40" y="234" width="120" height="30" rx="3"/>
+<text class="t" x="100.0" y="254.0" text-anchor="middle">CPU 0 / ctx</text>
+<rect class="box" x="190" y="234" width="120" height="30" rx="3"/>
+<text class="t" x="250.0" y="254.0" text-anchor="middle">CPU 1 / ctx</text>
+<rect class="box" x="340" y="234" width="120" height="30" rx="3"/>
+<text class="t" x="400.0" y="254.0" text-anchor="middle">CPU 2 / ctx</text>
+<rect class="box" x="490" y="234" width="120" height="30" rx="3"/>
+<text class="t" x="550.0" y="254.0" text-anchor="middle">CPU 3 / ctx</text>
+<line class="ln" x1="100" y1="264" x2="175" y2="302" marker-end="url(#ah-02-2)"/>
+<line class="ln" x1="250" y1="264" x2="175" y2="302" marker-end="url(#ah-02-2)"/>
+<line class="ln" x1="400" y1="264" x2="475" y2="302" marker-end="url(#ah-02-2)"/>
+<line class="ln" x1="550" y1="264" x2="475" y2="302" marker-end="url(#ah-02-2)"/>
+<rect class="box" x="90" y="304" width="170" height="32" rx="3"/>
+<text class="t" x="175.0" y="325.0" text-anchor="middle">hctx 0</text>
+<rect class="box" x="390" y="304" width="170" height="32" rx="3"/>
+<text class="t" x="475.0" y="325.0" text-anchor="middle">hctx 1</text>
+<text class="ts" x="325" y="354" text-anchor="middle">2 hardware dispatch contexts in blk-mq (still kernel structures)</text>
+<rect class="k-kernel" x="10" y="394" width="630" height="62" rx="4"/>
+<text class="ts" x="24" y="413" text-anchor="start">NVMe DRIVER</text>
+<text class="t" x="24" y="438" text-anchor="start">Build commands → write to submission queues → notify controller</text>
+<line class="ln" x1="175" y1="360" x2="175" y2="392" marker-end="url(#ah-02-2)"/>
+<line class="ln" x1="475" y1="360" x2="475" y2="392" marker-end="url(#ah-02-2)"/>
+<text class="ts" x="325" y="381" text-anchor="middle">blk-mq calls the driver</text>
+<text class="ts" x="40" y="485" text-anchor="start">Device command queues (NVMe Submission Queues)</text>
+<rect class="box" x="65" y="496" width="220" height="36" rx="3"/>
+<text class="t" x="175.0" y="519.0" text-anchor="middle">NVMe SQ 0</text>
+<rect class="box" x="365" y="496" width="220" height="36" rx="3"/>
+<text class="t" x="475.0" y="519.0" text-anchor="middle">NVMe SQ 1</text>
+<line class="ln" x1="175" y1="488" x2="175" y2="494" marker-end="url(#ah-02-2)"/>
+<line class="ln" x1="175" y1="532" x2="175" y2="564" marker-end="url(#ah-02-2)"/>
+<line class="ln" x1="475" y1="488" x2="475" y2="494" marker-end="url(#ah-02-2)"/>
+<line class="ln" x1="475" y1="532" x2="475" y2="564" marker-end="url(#ah-02-2)"/>
+<rect class="k-block" x="10" y="566" width="630" height="100" rx="4"/>
+<text class="ts" x="24" y="586" text-anchor="start">NVMe CONTROLLER</text>
+<text class="t" x="24" y="610" text-anchor="start">Fetch commands → read data → DMA into memory</text>
+<text class="t" x="24" y="633" text-anchor="start">Post completions → interrupt (or CPU polling)</text>
+<text class="ts" x="24" y="654" text-anchor="start">Example: 4 CPU queues → 2 device queues; counts may differ</text>
 <line class="ln" x1="325" y1="66" x2="325" y2="104" marker-end="url(#ah-02-2)"/>
 <line class="ln" x1="325" y1="152" x2="325" y2="168" marker-end="url(#ah-02-2)"/>
-<line class="ln" x1="325" y1="206" x2="252" y2="232" marker-end="url(#ah-02-2)"/>
-<line class="ln" x1="100" y1="264" x2="100" y2="302"/>
-<line class="ln" x1="250" y1="264" x2="250" y2="302" marker-end="url(#ah-02-2)"/>
-<line class="ln" x1="400" y1="264" x2="400" y2="302"/>
-<line class="ln" x1="550" y1="264" x2="550" y2="302"/>
-<line class="ln" x1="250" y1="334" x2="250" y2="348" marker-end="url(#ah-02-2)"/>
-<line class="ln" x1="325" y1="386" x2="325" y2="412" marker-end="url(#ah-02-2)"/>
-<line class="lnd" x1="668" y1="470" x2="668" y2="132"/>
-<line class="lnd" x1="640" y1="470" x2="668" y2="470"/>
-<line class="lnd" x1="668" y1="132" x2="612" y2="132" marker-end="url(#ah-02-2)"/>
-<text class="ts" transform="translate(688,290) rotate(-90)" text-anchor="middle">completion: interrupt → bi_end_io() → page up to date → wake reader</text>
+
+<path class="lnd" d="M640 630 H668 V132 H612" fill="none" marker-end="url(#ah-02-2)"/>
+<text class="ts" transform="translate(688,390) rotate(-90)" text-anchor="middle">completion → driver → bi_end_io() → wake reader</text>
 </svg>
-<figcaption>A read leaving ext4 on CPU 1. The dashed path on the right is the completion: the device's interrupt runs the driver, which completes the request, which calls the bio's <code>bi_end_io</code>, which marks the page valid and wakes the process waiting for it.</figcaption>
+<figcaption>Example mapping: CPU 0 and 1 share hctx 0; CPU 2 and 3 share hctx 1. The number of device queues depends on the controller and driver configuration, not just the CPU count. The NVMe submission queues usually reside in host memory and are read by the controller. This shows a queued path; requests can also be dispatched directly, and an I/O scheduler may change the staging path. A read leaving ext4 on CPU 1. The dashed path on the right is the completion: the device's interrupt runs the driver, which completes the request, which calls the bio's <code>bi_end_io</code>, which marks the page valid and wakes the process waiting for it.</figcaption>
 </figure>
 <p>Step by step:</p>
 <ol>

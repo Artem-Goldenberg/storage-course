@@ -447,50 +447,64 @@ first_lba(blk)  = blk * (block_size / sector_size)</code></pre>
 <p><code>bio</code> говорит: «передай <code>bi_size</code> байт, начиная с сектора <code>bi_sector</code>, в эти куски памяти или из них, а по окончании вызови <code>bi_end_io</code>».<sup class="cite"><a href="#src-55" id="cite-55-2" title="include/linux/bvec.h, Linux v6.12 source — struct bvec_iter, строка 78">55</a><a href="#src-69" id="cite-69" title="include/linux/blk_types.h, Linux v6.12 source — struct bio, строки 214–278">69</a></sup> Память не обязана быть непрерывной: список <code>bio_vec</code> может указывать на разрозненные страницы, и DMA-движок устройства сам собирает или раскладывает их (scatter/gather).<sup class="cite"><a href="#src-42" id="cite-42-5" title="NVM Express Base Specification, Revision 2.1 — раздел 2.1, Memory-Based Transport Model (PCIe)">42</a><a href="#src-68" id="cite-68-2" title="include/linux/bvec.h, Linux v6.12 source — struct bio_vec, строки 19–35">68</a></sup> Файловая система строит <code>bio</code> и вызывает <code>submit_bio()</code>; дальше это забота блочного уровня.<sup class="cite"><a href="#src-70" id="cite-70" title="block/blk-core.c, Linux v6.12 source — submit_bio(), комментарий в строках 873–885">70</a></sup></p>
 <h3>От bio к устройству: blk-mq</h3>
 <figure class="diagram">
-<svg viewBox="0 0 700 520" width="700" role="img" aria-label="Путь чтения: ext4 строит bio, plug-список сливает его в запрос, запрос проходит через программную очередь своего процессора и аппаратную очередь к драйверу и устройству, а завершение возвращается наверх через bi_end_io.">
+<svg viewBox="0 0 700 680" width="700" role="img" aria-label="Пример NVMe: 4 очереди CPU отображаются на 2 контекста hctx блочного уровня. Драйвер записывает команды в 2 очереди NVMe; контроллер выполняет их.">
 <defs><marker id="ah-02-2" viewBox="0 0 10 10" refX="9" refY="5" markerWidth="7" markerHeight="7" orient="auto-start-reverse"><path class="ah" d="M0,0 L10,5 L0,10 z"/></marker></defs>
 <rect class="k-fs" x="10" y="10" width="630" height="56" rx="4"/>
 <text class="ts" x="24" y="28">ФАЙЛОВАЯ СИСТЕМА (урок 03)</text>
 <text class="t" x="24" y="52">ext4 нужен блок 244 → прочитать 8 секторов с 1952 в страницу</text>
-<rect class="k-kernel" x="10" y="80" width="630" height="320" rx="4"/>
+<rect class="k-kernel" x="10" y="80" width="630" height="280" rx="4"/>
 <text class="ts" x="24" y="98">БЛОЧНЫЙ УРОВЕНЬ</text>
 <rect class="box" x="40" y="106" width="570" height="46" rx="3"/>
 <text class="t" x="54" y="125">submit_bio(): struct bio { bi_sector = 1952, bi_size = 4096,</text>
 <text class="t" x="54" y="143">                        bi_io_vec → page, bi_end_io }</text>
 <rect class="box" x="40" y="170" width="570" height="36" rx="3"/>
 <text class="t" x="54" y="193">plug-список: придержать, слить соседей в struct request</text>
-<text class="ts" x="40" y="226">программные очереди, по одной на ЦП (или планировщик ввода-вывода, если задан)</text>
-<rect class="box" x="40" y="234" width="120" height="30" rx="3"/><text class="t" x="100" y="254" text-anchor="middle">ctx cpu0</text>
-<rect class="box" x="190" y="234" width="120" height="30" rx="3"/><text class="t" x="250" y="254" text-anchor="middle">ctx cpu1</text>
-<rect class="box" x="340" y="234" width="120" height="30" rx="3"/><text class="t" x="400" y="254" text-anchor="middle">ctx cpu2</text>
-<rect class="box" x="490" y="234" width="120" height="30" rx="3"/><text class="t" x="550" y="254" text-anchor="middle">ctx cpu3</text>
-<text class="ts" x="40" y="296">аппаратные очереди отправки, отображённые на собственные очереди устройства</text>
-<rect class="box" x="40" y="304" width="120" height="30" rx="3"/><text class="t" x="100" y="324" text-anchor="middle">hctx 0</text>
-<rect class="box" x="190" y="304" width="120" height="30" rx="3"/><text class="t" x="250" y="324" text-anchor="middle">hctx 1</text>
-<rect class="box" x="340" y="304" width="120" height="30" rx="3"/><text class="t" x="400" y="324" text-anchor="middle">hctx 2</text>
-<rect class="box" x="490" y="304" width="120" height="30" rx="3"/><text class="t" x="550" y="324" text-anchor="middle">hctx 3</text>
-<rect class="box" x="40" y="350" width="570" height="36" rx="3"/>
-<text class="t" x="54" y="373">драйвер (nvme; в WSL sd + storvsc): команда + запись в doorbell</text>
-<rect class="k-block" x="10" y="414" width="630" height="96" rx="4"/>
-<text class="ts" x="24" y="432">УСТРОЙСТВО</text>
-<text class="t" x="24" y="456">взять команду · прочитать флеш или пластину · DMA 4096 байт в страницу</text>
-<text class="t" x="24" y="478">записать завершение · прерывание (или опрос со стороны ЦП)</text>
-<text class="ts" x="24" y="498">кэш, FTL и носитель находятся внутри устройства; ядро видит только LBA</text>
+
+<text class="ts" x="40" y="226" text-anchor="start">4 программные очереди: по одной на логический CPU</text>
+<rect class="box" x="40" y="234" width="120" height="30" rx="3"/>
+<text class="t" x="100.0" y="254.0" text-anchor="middle">CPU 0 / ctx</text>
+<rect class="box" x="190" y="234" width="120" height="30" rx="3"/>
+<text class="t" x="250.0" y="254.0" text-anchor="middle">CPU 1 / ctx</text>
+<rect class="box" x="340" y="234" width="120" height="30" rx="3"/>
+<text class="t" x="400.0" y="254.0" text-anchor="middle">CPU 2 / ctx</text>
+<rect class="box" x="490" y="234" width="120" height="30" rx="3"/>
+<text class="t" x="550.0" y="254.0" text-anchor="middle">CPU 3 / ctx</text>
+<line class="ln" x1="100" y1="264" x2="175" y2="302" marker-end="url(#ah-02-2)"/>
+<line class="ln" x1="250" y1="264" x2="175" y2="302" marker-end="url(#ah-02-2)"/>
+<line class="ln" x1="400" y1="264" x2="475" y2="302" marker-end="url(#ah-02-2)"/>
+<line class="ln" x1="550" y1="264" x2="475" y2="302" marker-end="url(#ah-02-2)"/>
+<rect class="box" x="90" y="304" width="170" height="32" rx="3"/>
+<text class="t" x="175.0" y="325.0" text-anchor="middle">hctx 0</text>
+<rect class="box" x="390" y="304" width="170" height="32" rx="3"/>
+<text class="t" x="475.0" y="325.0" text-anchor="middle">hctx 1</text>
+<text class="ts" x="325" y="354" text-anchor="middle">2 контекста отправки blk-mq: это ещё структуры ядра</text>
+<rect class="k-kernel" x="10" y="394" width="630" height="62" rx="4"/>
+<text class="ts" x="24" y="413" text-anchor="start">ДРАЙВЕР NVMe</text>
+<text class="t" x="24" y="438" text-anchor="start">Создать команды → записать в очереди → уведомить контроллер</text>
+<line class="ln" x1="175" y1="360" x2="175" y2="392" marker-end="url(#ah-02-2)"/>
+<line class="ln" x1="475" y1="360" x2="475" y2="392" marker-end="url(#ah-02-2)"/>
+<text class="ts" x="325" y="381" text-anchor="middle">blk-mq вызывает драйвер</text>
+<text class="ts" x="40" y="485" text-anchor="start">Очереди команд устройства (NVMe Submission Queues)</text>
+<rect class="box" x="65" y="496" width="220" height="36" rx="3"/>
+<text class="t" x="175.0" y="519.0" text-anchor="middle">NVMe SQ 0</text>
+<rect class="box" x="365" y="496" width="220" height="36" rx="3"/>
+<text class="t" x="475.0" y="519.0" text-anchor="middle">NVMe SQ 1</text>
+<line class="ln" x1="175" y1="488" x2="175" y2="494" marker-end="url(#ah-02-2)"/>
+<line class="ln" x1="175" y1="532" x2="175" y2="564" marker-end="url(#ah-02-2)"/>
+<line class="ln" x1="475" y1="488" x2="475" y2="494" marker-end="url(#ah-02-2)"/>
+<line class="ln" x1="475" y1="532" x2="475" y2="564" marker-end="url(#ah-02-2)"/>
+<rect class="k-block" x="10" y="566" width="630" height="100" rx="4"/>
+<text class="ts" x="24" y="586" text-anchor="start">КОНТРОЛЛЕР NVMe</text>
+<text class="t" x="24" y="610" text-anchor="start">Забрать команды → прочитать данные → DMA в память</text>
+<text class="t" x="24" y="633" text-anchor="start">Записать завершения → прерывание (или опрос CPU)</text>
+<text class="ts" x="24" y="654" text-anchor="start">Пример: 4 очереди CPU → 2 очереди устройства; числа могут различаться</text>
 <line class="ln" x1="325" y1="66" x2="325" y2="104" marker-end="url(#ah-02-2)"/>
 <line class="ln" x1="325" y1="152" x2="325" y2="168" marker-end="url(#ah-02-2)"/>
-<line class="ln" x1="325" y1="206" x2="252" y2="232" marker-end="url(#ah-02-2)"/>
-<line class="ln" x1="100" y1="264" x2="100" y2="302"/>
-<line class="ln" x1="250" y1="264" x2="250" y2="302" marker-end="url(#ah-02-2)"/>
-<line class="ln" x1="400" y1="264" x2="400" y2="302"/>
-<line class="ln" x1="550" y1="264" x2="550" y2="302"/>
-<line class="ln" x1="250" y1="334" x2="250" y2="348" marker-end="url(#ah-02-2)"/>
-<line class="ln" x1="325" y1="386" x2="325" y2="412" marker-end="url(#ah-02-2)"/>
-<line class="lnd" x1="668" y1="470" x2="668" y2="132"/>
-<line class="lnd" x1="640" y1="470" x2="668" y2="470"/>
-<line class="lnd" x1="668" y1="132" x2="612" y2="132" marker-end="url(#ah-02-2)"/>
-<text class="ts" transform="translate(688,290) rotate(-90)" text-anchor="middle">завершение: прерывание → bi_end_io() → страница готова → пробуждение</text>
+
+<path class="lnd" d="M640 630 H668 V132 H612" fill="none" marker-end="url(#ah-02-2)"/>
+<text class="ts" transform="translate(688,390) rotate(-90)" text-anchor="middle">завершение → драйвер → bi_end_io() → пробуждение</text>
 </svg>
-<figcaption>Чтение, которое выходит из ext4 на CPU 1. Пунктирный путь справа — завершение: прерывание устройства запускает драйвер, драйвер завершает запрос, запрос вызывает <code>bi_end_io</code> у bio, а она помечает страницу актуальной и будит процесс, который её ждёт.</figcaption>
+<figcaption>Пример отображения: CPU 0 и 1 используют общий hctx 0; CPU 2 и 3 — общий hctx 1. Число очередей устройства зависит от контроллера и настройки драйвера, а не только от числа CPU. Очереди подачи команд NVMe обычно находятся в памяти компьютера, откуда их читает контроллер. Показан путь с ожиданием в очереди; возможна и прямая отправка, а планировщик ввода-вывода может менять промежуточный путь. Чтение, которое выходит из ext4 на CPU 1. Пунктирный путь справа — завершение: прерывание устройства запускает драйвер, драйвер завершает запрос, запрос вызывает <code>bi_end_io</code> у bio, а она помечает страницу актуальной и будит процесс, который её ждёт.</figcaption>
 </figure>
 <p>По шагам:</p>
 <ol>
