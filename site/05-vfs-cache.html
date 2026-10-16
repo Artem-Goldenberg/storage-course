@@ -63,7 +63,7 @@
 <b>In this lesson</b>
 <ol>
 <li><a href="#where">The VFS: a common interface and shared caches</a></li>
-<li><a href="#objects">superblock, inode, dentry, file and their operations</a></li>
+<li><a href="#objects">The four VFS objects and their operations</a></li>
 <li><a href="#mounts">Mounts: struct mount and mount points</a></li>
 <li><a href="#dcache">The dentry cache and the inode cache</a></li>
 <li><a href="#trace-read">The read() path through the kernel</a></li>
@@ -74,10 +74,10 @@
 <li><a href="#write-path">Buffered write() and dirty pages</a></li>
 <li><a href="#durability">fsync, fdatasync, syncfs and O_SYNC</a></li>
 <li><a href="#direct">O_DIRECT: bypassing the page cache</a></li>
-<li><a href="#hints">posix_fadvise, madvise and io_uring</a></li>
+<li><a href="#hints">Cache hints and asynchronous I/O</a></li>
 <li><a href="#stack">The cache stack from stdio to the drive</a></li>
 <li><a href="#one-machine">Cache coherence on a single machine</a></li>
-<li><a href="#lab">Lab 05: Page cache residency with mmap and mincore</a></li>
+<li><a href="#lab">Lab 05: Observing page cache behaviour</a></li>
 <li><a href="#check">Check yourself</a></li>
 <li><a href="#further">Further reading</a></li>
 <li><a href="#sources">Sources</a></li>
@@ -95,7 +95,7 @@
 <aside class="key"><span class="tag">Key idea</span><p>The VFS is the place where "a file" stops being the program's idea and becomes a filesystem's data structures. Everything above it is generic; everything below it is specific to one filesystem or one device.</p></aside>
 </section>
 <section id="objects">
-<h2>superblock, inode, dentry, file and their operations</h2>
+<h2>The four VFS objects and their operations</h2>
 <p>The VFS models every mounted filesystem with four kinds of in-memory object. Each has a pointer to a table of functions that the filesystem supplies. In C this is the usual way to get polymorphism: a struct full of function pointers, filled in once per filesystem type.</p>
 <div class="table-wrap"><table>
 <thead><tr><th>Object</th><th>Represents</th><th>Lives</th><th>Its operations</th></tr></thead>
@@ -333,7 +333,7 @@ reader:  ---reads-------&gt;|  touching the marker starts window 2 while window 
         ├ copy_folio_from_iter_atomic()              <span class="c">copy user bytes into the folio</span>
         └ a_ops-&gt;write_end()   = ext4_da_write_end()     <span class="c">mark the folio dirty, update i_size</span></code></pre>
 <p>The <code>da</code> stands for <b>delayed allocation</b>, from <a href="03-ondisk.html">lesson 3</a>. At this point ext4 reserves enough free space to guarantee the data will fit, so it can return <code>ENOSPC</code> now, but it does not choose disk blocks yet.<sup class="cite"><a href="#src-66" id="cite-66" title="fs/ext4/inode.c, Linux 6.18 source — lines 1617–1640, ext4_da_reserve_space()">66</a></sup> When writeback happens later, it knows how much data the file has and can allocate one long contiguous extent instead of many small ones.<sup class="cite"><a href="#src-67" id="cite-67" title="ext4 General Information, The Linux Kernel documentation — section Options: barrier, delalloc, auto_da_alloc">67</a></sup></p>
-<h3>Writeback: flusher threads and dirty_expire_centisecs</h3>
+<h3>Background writeback</h3>
 <p>Dirty folios are written to the device later, by kernel worker threads. Each block device has its own writeback work. In <code>ps</code> or <code>top</code> it appears as a <code>kworker</code> whose name includes <code>flush-8:48</code>, the device's major:minor number.<sup class="cite"><a href="#src-68" id="cite-68" title="fs/fs-writeback.c, Linux 6.18 source — line 2371, wb_workfn()">68</a><a href="#src-69" id="cite-69" title="kernel/workqueue.c, Linux 6.18 source — lines 6485–6513, wq_worker_comm()">69</a></sup> Writeback starts when any of these happens:</p>
 <ul>
 <li>dirty data exceeds the <b>background threshold</b>;</li>
@@ -425,8 +425,8 @@ close(dfd);</code></pre>
 </ul>
 </section>
 <section id="hints">
-<h2>posix_fadvise, madvise and io_uring</h2>
-<p>The caches work on guesses. A few calls replace guesses with facts:</p>
+<h2>Cache hints and asynchronous I/O</h2>
+<p>Programs can influence I/O in two ways: give the kernel hints about which data they will use, and submit requests asynchronously through io_uring. Start with cache hints: they tell the kernel which ranges to prefetch or release.</p>
 <div class="table-wrap"><table>
 <thead><tr><th>Call</th><th>Effect</th></tr></thead>
 <tbody>
@@ -518,7 +518,7 @@ close(dfd);</code></pre>
 </section>
 <section class="lab" id="lab">
 <p class="tag">Lab 05</p>
-<h2>Page cache residency with mmap and mincore</h2>
+<h2>Observing page cache behaviour</h2>
 <p class="where">~/storage-course/labs/05-cache/</p>
 <p>One C program, no root needed. It creates a test file and then fills, empties, dirties and bypasses its page cache, printing timings and the number of cached pages at each step. It counts cached pages the way <code>fincore(1)</code> does when the newer <code>cachestat(2)</code> call is unavailable: <code>mmap()</code> the file (which reads nothing), then ask <code>mincore()</code> which pages are resident.<sup class="cite"><a href="#src-118" id="cite-118" title="fincore(1), Linux manual page — section DESCRIPTION">118</a><a href="#src-119" id="cite-119" title="posix_fadvise(2), Linux manual page — section NOTES">119</a></sup></p>
 <ol>

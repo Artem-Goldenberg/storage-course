@@ -63,7 +63,7 @@
 <b>В этом уроке</b>
 <ol>
 <li><a href="#where">VFS: общий интерфейс и общие кэши</a></li>
-<li><a href="#objects">superblock, inode, dentry, file и их операции</a></li>
+<li><a href="#objects">Четыре объекта VFS и их операции</a></li>
 <li><a href="#mounts">Монтирование: struct mount и точки монтирования</a></li>
 <li><a href="#dcache">Кэш dentry и кэш inode</a></li>
 <li><a href="#trace-read">Путь read() через ядро</a></li>
@@ -74,10 +74,10 @@
 <li><a href="#write-path">Буферизованный write() и грязные страницы</a></li>
 <li><a href="#durability">fsync, fdatasync, syncfs и O_SYNC</a></li>
 <li><a href="#direct">O_DIRECT: в обход страничного кэша</a></li>
-<li><a href="#hints">posix_fadvise, madvise и io_uring</a></li>
+<li><a href="#hints">Подсказки кэшу и асинхронный ввод-вывод</a></li>
 <li><a href="#stack">Стек кэшей от stdio до накопителя</a></li>
 <li><a href="#one-machine">Согласованность кэшей на одной машине</a></li>
-<li><a href="#lab">Практика 05: Страничный кэш: замеры через mmap и mincore</a></li>
+<li><a href="#lab">Практика 05: Наблюдение за работой страничного кэша</a></li>
 <li><a href="#check">Проверьте себя</a></li>
 <li><a href="#further">Что почитать дальше</a></li>
 <li><a href="#sources">Источники</a></li>
@@ -95,7 +95,7 @@
 <aside class="key"><span class="tag">Главное</span><p>VFS — это место, где «файл» перестаёт быть представлением программы и становится структурами данных файловой системы. Всё, что выше неё, универсально; всё, что ниже, относится к одной конкретной файловой системе или одному устройству.</p></aside>
 </section>
 <section id="objects">
-<h2>superblock, inode, dentry, file и их операции</h2>
+<h2>Четыре объекта VFS и их операции</h2>
 <p>VFS описывает каждую смонтированную файловую систему четырьмя видами объектов в памяти. У каждого объекта есть указатель на таблицу функций, которую предоставляет файловая система. В C это обычный способ получить полиморфизм: структура, полная указателей на функции, которая заполняется один раз для каждого типа файловой системы.</p>
 <div class="table-wrap"><table>
 <thead><tr><th>Объект</th><th>Что представляет</th><th>Сколько живёт</th><th>Его операции</th></tr></thead>
@@ -333,7 +333,7 @@ Swap:          4.0Gi       608Ki       4.0Gi</span></code></pre>
         ├ copy_folio_from_iter_atomic()              <span class="c">скопировать байты пользователя в фолио</span>
         └ a_ops-&gt;write_end()   = ext4_da_write_end()     <span class="c">пометить фолио грязным, обновить i_size</span></code></pre>
 <p><code>da</code> означает <b>отложенное выделение</b> (delayed allocation) из <a href="03-ondisk.html">урока 3</a>. На этом шаге ext4 резервирует достаточно свободного места, чтобы данные гарантированно поместились, и поэтому может вернуть <code>ENOSPC</code> сразу, но конкретные блоки диска пока не выбирает.<sup class="cite"><a href="#src-66" id="cite-66" title="fs/ext4/inode.c, Linux 6.18 source — строки 1617–1640, ext4_da_reserve_space()">66</a></sup> Когда позже произойдёт обратная запись, ext4 уже знает, сколько в файле данных, и может выделить один длинный непрерывный экстент вместо множества маленьких.<sup class="cite"><a href="#src-67" id="cite-67" title="ext4 General Information, The Linux Kernel documentation — раздел Options: barrier, delalloc, auto_da_alloc">67</a></sup></p>
-<h3>Обратная запись: потоки flush и dirty_expire_centisecs</h3>
+<h3>Фоновая запись грязных страниц</h3>
 <p>Грязные фолио записываются на устройство позже, рабочими потоками ядра. У каждого блочного устройства своя работа по обратной записи (writeback). В <code>ps</code> или <code>top</code> она видна как <code>kworker</code>, в имени которого есть <code>flush-8:48</code> — номер major:minor устройства.<sup class="cite"><a href="#src-68" id="cite-68" title="fs/fs-writeback.c, Linux 6.18 source — строка 2371, wb_workfn()">68</a><a href="#src-69" id="cite-69" title="kernel/workqueue.c, Linux 6.18 source — строки 6485–6513, wq_worker_comm()">69</a></sup> Обратная запись начинается, когда происходит любое из следующего:</p>
 <ul>
 <li>объём грязных данных превышает <b>фоновый порог</b> (background threshold);</li>
@@ -425,8 +425,8 @@ close(dfd);</code></pre>
 </ul>
 </section>
 <section id="hints">
-<h2>posix_fadvise, madvise и io_uring</h2>
-<p>Кэши работают на догадках. Несколько вызовов заменяют догадки фактами:</p>
+<h2>Подсказки кэшу и асинхронный ввод-вывод</h2>
+<p>Программа может влиять на ввод-вывод двумя способами: подсказывать ядру, какие данные ей понадобятся, и отправлять запросы асинхронно через io_uring. Начнём с подсказок кэшу: они сообщают ядру, какие диапазоны стоит загрузить заранее или освободить.</p>
 <div class="table-wrap"><table>
 <thead><tr><th>Вызов</th><th>Эффект</th></tr></thead>
 <tbody>
@@ -518,7 +518,7 @@ close(dfd);</code></pre>
 </section>
 <section class="lab" id="lab">
 <p class="tag">Практика 05</p>
-<h2>Страничный кэш: замеры через mmap и mincore</h2>
+<h2>Наблюдение за работой страничного кэша</h2>
 <p class="where">~/storage-course/labs/05-cache/</p>
 <p>Одна программа на C, root не нужен. Она создаёт тестовый файл, а затем заполняет его страничный кэш, опустошает, загрязняет и обходит его, выводя время и число страниц в кэше на каждом шаге. Страницы в кэше она считает так же, как <code>fincore(1)</code>, когда более новый вызов <code>cachestat(2)</code> недоступен: отображает файл через <code>mmap()</code> (при этом ничего не читается), а затем спрашивает у <code>mincore()</code>, какие страницы находятся в памяти.<sup class="cite"><a href="#src-118" id="cite-118" title="fincore(1), Linux manual page — раздел DESCRIPTION">118</a><a href="#src-119" id="cite-119" title="posix_fadvise(2), Linux manual page — раздел NOTES">119</a></sup></p>
 <ol>

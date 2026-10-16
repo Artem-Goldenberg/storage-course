@@ -67,7 +67,7 @@
 <li><a href="#addressing">Bytes, blocks, sectors and LBA</a></li>
 <li><a href="#block-layer">The Linux block layer</a></li>
 <li><a href="#durability">Volatile write cache, FLUSH and FUA</a></li>
-<li><a href="#users">Filesystems, device-mapper, raw access and network block devices</a></li>
+<li><a href="#users">Who uses block devices directly</a></li>
 <li><a href="#lab">Lab 02: ext4 in a file and the superblock at byte 1024</a></li>
 <li><a href="#check">Check yourself</a></li>
 <li><a href="#further">Further reading</a></li>
@@ -85,7 +85,7 @@
 brw-rw---- 1 root disk 8,  0 Oct  8 22:18 /dev/sda
 brw-rw---- 1 root disk 8, 48 Oct  8 22:18 /dev/sdd</span></code></pre>
 <p><code>c</code> marks a character device and <code>b</code> a block device. The pair <code>8, 48</code> is the <strong>major:minor</strong> number. The major number picks the driver (8 is the SCSI disk driver, <code>sd</code>), and the minor number picks the device within it.<sup class="cite"><a href="#src-1" id="cite-1" title="Linux Device Drivers, Third Edition, Chapter 3: Char Drivers — section “Major and Minor Numbers”, pp. 43–44">1</a><a href="#src-2" id="cite-2" title="Linux allocated devices (4.x+ version), The Linux Kernel documentation — entry for block major 8, SCSI disk devices">2</a></sup> The <code>sd</code> driver reserves 16 minors per disk, one for the whole disk and fifteen for partitions, which is why <code>sda</code> is 8:0, <code>sdb</code> 8:16 and <code>sdd</code> 8:48.<sup class="cite"><a href="#src-2" id="cite-2-2" title="Linux allocated devices (4.x+ version), The Linux Kernel documentation — entry for block major 8, SCSI disk devices">2</a></sup> The file in <code>/dev</code> is only a name; the kernel finds the device by these numbers.</p>
-<h3>Device names: sda, nvme0n1, loop, dm, md</h3>
+<h3>Device names in /dev</h3>
 <div class="table-wrap"><table>
 <thead><tr><th>Name</th><th>What it is</th></tr></thead>
 <tbody>
@@ -357,7 +357,7 @@ sdd        512  4096    1     4096         4 write_back   [none] mq-deadline kyb
 <figcaption>One NVMe queue pair. The CPU never copies the data: it writes a description of the work into memory and rings a doorbell, and the device does the transfer itself by DMA.<sup class="cite"><a href="#src-41" id="cite-41-4" title="NVM Express Base Specification, Revision 2.1 — section 2.1, Memory-Based Transport Model (PCIe)">41</a></sup> Shaded SQ slots are commands waiting for the device; shaded CQ slots are completions waiting for the driver.</figcaption>
 </figure>
 <aside class="key"><span class="tag">Key idea: remember this picture</span><p>Work requests in a ring in host memory, a doorbell write to tell the hardware, DMA straight to and from application buffers, and a completion queue the host polls or gets interrupted about. This is exactly how an RDMA network card works. In <a href="08-rdma.html">lesson 08</a> the queue pair becomes a send queue and a receive queue, the completion queue keeps its name, and the device on the other end of the DMA is a network card that can reach another machine's memory.<sup class="cite"><a href="#src-46" id="cite-46" title="ibv_create_qp(3), Linux manual page — DESCRIPTION">46</a></sup></p></aside>
-<h3>Latency table: caches, RAM, SSD, network, HDD</h3>
+<h3>Comparing memory, storage and network latency</h3>
 <p>These are rough orders of magnitude for small (around 4 KiB) operations. Real figures vary by a factor of two or more with hardware, load and configuration; the ratios are what matter. The last column scales time so that one nanosecond becomes one second.</p>
 <div class="table-wrap"><table>
 <thead><tr><th>Operation</th><th>Approximate latency</th><th>If 1 ns were 1 s</th></tr></thead>
@@ -441,7 +441,7 @@ misaligned: partition starts at LBA 63 (byte 32,256)
     bio_end_io_t        *bi_end_io;   <span class="c">// called when the I/O completes</span>
 };</code></pre>
 <p>A <code>bio</code> says: "transfer <code>bi_size</code> bytes starting at sector <code>bi_sector</code>, to or from these pieces of memory, and call <code>bi_end_io</code> when done".<sup class="cite"><a href="#src-54" id="cite-54-2" title="include/linux/bvec.h, Linux v6.12 source — struct bvec_iter, line 78">54</a><a href="#src-67" id="cite-67" title="include/linux/blk_types.h, Linux v6.12 source — struct bio, lines 214–278">67</a></sup> The memory does not have to be contiguous: the <code>bio_vec</code> list can point at scattered pages, and the device's DMA engine gathers or scatters them.<sup class="cite"><a href="#src-41" id="cite-41-5" title="NVM Express Base Specification, Revision 2.1 — section 2.1, Memory-Based Transport Model (PCIe)">41</a><a href="#src-68" id="cite-68" title="include/linux/bvec.h, Linux v6.12 source — struct bio_vec, lines 19–35">68</a></sup> A filesystem builds a <code>bio</code> and calls <code>submit_bio()</code>; from then on it is the block layer's job.<sup class="cite"><a href="#src-69" id="cite-69" title="block/blk-core.c, Linux v6.12 source — submit_bio(), comment at lines 873–885">69</a></sup></p>
-<h3>blk-mq: plugging, software and hardware queues</h3>
+<h3>From bio to the device: blk-mq</h3>
 <figure class="diagram">
 <svg viewBox="0 0 700 520" width="700" role="img" aria-label="Path of a read: ext4 builds a bio, the plug list merges it into a request, it passes through a per-CPU software queue and a hardware queue to the driver and the device, and completion flows back up through bi_end_io.">
 <defs><marker id="ah-02-2" viewBox="0 0 10 10" refX="9" refY="5" markerWidth="7" markerHeight="7" orient="auto-start-reverse"><path class="ah" d="M0,0 L10,5 L0,10 z"/></marker></defs>
@@ -497,7 +497,7 @@ misaligned: partition starts at LBA 63 (byte 32,256)
 <li><strong>Driver.</strong> The driver turns the request into a device command (an NVMe command, or a SCSI CDB) and rings the device's doorbell.</li>
 <li><strong>Completion.</strong> The device signals completion by interrupt. For the fastest devices, interrupts cost more than they save, so the kernel can instead <strong>poll</strong> the completion queue in a loop;<sup class="cite"><a href="#src-75" id="cite-75" title="Block-layer I/O polling, LWN.net (Jonathan Corbet, 2015) — article text">75</a></sup> <code>io_uring</code> with <code>IORING_SETUP_IOPOLL</code> on NVMe poll queues does this.<sup class="cite"><a href="#src-73" id="cite-73-2" title="Merge tag &#x27;for-4.21/block-20181221&#x27; of git://git.kernel.dk/linux-block (Linux commit 0e9da3fb) — commit message; the merge is first contained in tag v5.0-rc1 (the 4.21 cycle was released as 5.0)">73</a><a href="#src-76" id="cite-76" title="io_uring_setup(2), Linux manual page — DESCRIPTION, IORING_SETUP_IOPOLL">76</a></sup></li>
 </ol>
-<h3>I/O schedulers: none, mq-deadline, bfq, kyber</h3>
+<h3>I/O schedulers</h3>
 <div class="table-wrap"><table>
 <thead><tr><th>Scheduler</th><th>What it does</th><th>Typical use</th></tr></thead>
 <tbody>
@@ -526,7 +526,7 @@ misaligned: partition starts at LBA 63 (byte 32,256)
 <p>Before that existed, databases protected themselves. PostgreSQL logs a full copy of a page the first time it changes after a checkpoint (<code>full_page_writes</code>),<sup class="cite"><a href="#src-100" id="cite-100" title="PostgreSQL 18 Documentation, 19.5. Write Ahead Log — full_page_writes">100</a></sup> and MySQL's InnoDB writes each page twice, first to a doublewrite buffer, so a torn page can always be repaired from an intact copy.<sup class="cite"><a href="#src-101" id="cite-101" title="MySQL 8.4 Reference Manual, 17.6.4 Doublewrite Buffer — first paragraph">101</a></sup> Filesystems face the same problem for their own metadata, and solve it with journaling or copy-on-write (<a href="03-ondisk.html">lesson 03</a>).</p>
 </section>
 <section id="users">
-<h2>Filesystems, device-mapper, raw access and network block devices</h2>
+<h2>Who uses block devices directly</h2>
 <ul>
 <li><strong>Filesystems</strong>, almost always. They turn the sector array into files, which is <a href="03-ondisk.html">lesson 03</a>.</li>
 <li><strong>Stacking drivers</strong>: device-mapper (LVM, dm-crypt, thin provisioning) and md RAID take block devices in and present new block devices out. Each layer receives bios, remaps or splits them, and submits new bios below.<sup class="cite"><a href="#src-9" id="cite-9-2" title="drivers/md/Kconfig, Linux v6.12 source — config BLK_DEV_DM, help text, lines 190–195">9</a><a href="#src-11" id="cite-11-2" title="md(4), Linux manual page — DESCRIPTION">11</a></sup></li>

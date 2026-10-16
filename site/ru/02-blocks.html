@@ -67,7 +67,7 @@
 <li><a href="#addressing">Байты, блоки, секторы и LBA</a></li>
 <li><a href="#block-layer">Блочный уровень Linux</a></li>
 <li><a href="#durability">Кэш записи накопителя, FLUSH и FUA</a></li>
-<li><a href="#users">Файловые системы, device-mapper, прямой доступ и сетевые блочные устройства</a></li>
+<li><a href="#users">Кто работает с блочными устройствами напрямую</a></li>
 <li><a href="#lab">Практика 02: ext4 в файле и суперблок на байте 1024</a></li>
 <li><a href="#check">Проверьте себя</a></li>
 <li><a href="#further">Что почитать дальше</a></li>
@@ -85,7 +85,7 @@
 brw-rw---- 1 root disk 8,  0 Oct  8 22:18 /dev/sda
 brw-rw---- 1 root disk 8, 48 Oct  8 22:18 /dev/sdd</span></code></pre>
 <p><code>c</code> обозначает символьное устройство, <code>b</code> — блочное. Пара <code>8, 48</code> — это номер <strong>major:minor</strong>. Старший номер (major) выбирает драйвер (8 — драйвер SCSI-дисков, <code>sd</code>), младший (minor) — устройство внутри него.<sup class="cite"><a href="#src-1" id="cite-1" title="Linux Device Drivers, Third Edition, Chapter 3: Char Drivers — раздел «Major and Minor Numbers», с. 43–44">1</a><a href="#src-2" id="cite-2" title="Linux allocated devices (4.x+ version), The Linux Kernel documentation — запись о блочном major 8, SCSI disk devices">2</a></sup> Драйвер <code>sd</code> резервирует по 16 младших номеров на диск: один для всего диска и пятнадцать для разделов. Поэтому <code>sda</code> — это 8:0, <code>sdb</code> — 8:16, а <code>sdd</code> — 8:48.<sup class="cite"><a href="#src-2" id="cite-2-2" title="Linux allocated devices (4.x+ version), The Linux Kernel documentation — запись о блочном major 8, SCSI disk devices">2</a></sup> Файл в <code>/dev</code> — всего лишь имя; ядро находит устройство по этим номерам.</p>
-<h3>Имена устройств: sda, nvme0n1, loop, dm, md</h3>
+<h3>Имена устройств в /dev</h3>
 <div class="table-wrap"><table>
 <thead><tr><th>Имя</th><th>Что это</th></tr></thead>
 <tbody>
@@ -357,7 +357,7 @@ sdd        512  4096    1     4096         4 write_back   [none] mq-deadline kyb
 <figcaption>Одна пара очередей NVMe. Процессор никогда не копирует данные: он записывает описание работы в память и «звонит» в doorbell, а устройство само выполняет передачу через DMA.<sup class="cite"><a href="#src-41" id="cite-41-4" title="NVM Express Base Specification, Revision 2.1 — раздел 2.1, Memory-Based Transport Model (PCIe)">41</a></sup> Закрашенные слоты SQ — команды, ждущие устройства; закрашенные слоты CQ — завершения, ждущие драйвера.</figcaption>
 </figure>
 <aside class="key"><span class="tag">Главное: запомните эту картину</span><p>Рабочие запросы в кольце в памяти хоста, запись в doorbell, чтобы сообщить оборудованию, DMA прямо в буферы приложения и из них и очередь завершений, которую хост опрашивает или о которой получает прерывание. Ровно так работает сетевая карта RDMA. В <a href="08-rdma.html">уроке 08</a> пара очередей становится очередью отправки и очередью приёма, очередь завершений сохраняет своё название, а устройство на другом конце DMA — это сетевая карта, которая может дотянуться до памяти другой машины.<sup class="cite"><a href="#src-46" id="cite-46" title="ibv_create_qp(3), Linux manual page — раздел DESCRIPTION">46</a></sup></p></aside>
-<h3>Таблица задержек: кэши, ОЗУ, SSD, сеть, HDD</h3>
+<h3>Сравнение задержек памяти, накопителей и сети</h3>
 <p>Это грубые порядки величин для небольших операций (около 4 КиБ). Реальные значения отличаются в два раза и больше в зависимости от оборудования, нагрузки и настройки; важны соотношения. Последний столбец масштабирует время так, что одна наносекунда становится одной секундой.</p>
 <div class="table-wrap"><table>
 <thead><tr><th>Операция</th><th>Примерная задержка</th><th>Если бы 1 нс была 1 с</th></tr></thead>
@@ -441,7 +441,7 @@ first_lba(blk)  = blk * (block_size / sector_size)</code></pre>
     bio_end_io_t        *bi_end_io;   <span class="c">// вызывается, когда ввод-вывод завершён</span>
 };</code></pre>
 <p><code>bio</code> говорит: «передай <code>bi_size</code> байт, начиная с сектора <code>bi_sector</code>, в эти куски памяти или из них, а по окончании вызови <code>bi_end_io</code>».<sup class="cite"><a href="#src-54" id="cite-54-2" title="include/linux/bvec.h, Linux v6.12 source — struct bvec_iter, строка 78">54</a><a href="#src-67" id="cite-67" title="include/linux/blk_types.h, Linux v6.12 source — struct bio, строки 214–278">67</a></sup> Память не обязана быть непрерывной: список <code>bio_vec</code> может указывать на разрозненные страницы, и DMA-движок устройства сам собирает или раскладывает их (scatter/gather).<sup class="cite"><a href="#src-41" id="cite-41-5" title="NVM Express Base Specification, Revision 2.1 — раздел 2.1, Memory-Based Transport Model (PCIe)">41</a><a href="#src-68" id="cite-68" title="include/linux/bvec.h, Linux v6.12 source — struct bio_vec, строки 19–35">68</a></sup> Файловая система строит <code>bio</code> и вызывает <code>submit_bio()</code>; дальше это забота блочного уровня.<sup class="cite"><a href="#src-69" id="cite-69" title="block/blk-core.c, Linux v6.12 source — submit_bio(), комментарий в строках 873–885">69</a></sup></p>
-<h3>blk-mq: plug-список, программные и аппаратные очереди</h3>
+<h3>От bio к устройству: blk-mq</h3>
 <figure class="diagram">
 <svg viewBox="0 0 700 520" width="700" role="img" aria-label="Путь чтения: ext4 строит bio, plug-список сливает его в запрос, запрос проходит через программную очередь своего процессора и аппаратную очередь к драйверу и устройству, а завершение возвращается наверх через bi_end_io.">
 <defs><marker id="ah-02-2" viewBox="0 0 10 10" refX="9" refY="5" markerWidth="7" markerHeight="7" orient="auto-start-reverse"><path class="ah" d="M0,0 L10,5 L0,10 z"/></marker></defs>
@@ -497,7 +497,7 @@ first_lba(blk)  = blk * (block_size / sector_size)</code></pre>
 <li><strong>Драйвер.</strong> Драйвер превращает запрос в команду устройства (команду NVMe или SCSI CDB) и пишет в doorbell устройства.</li>
 <li><strong>Завершение.</strong> Устройство сообщает о завершении прерыванием. Для самых быстрых устройств прерывания стоят больше, чем экономят, поэтому ядро может вместо этого в цикле <strong>опрашивать</strong> (poll) очередь завершений.<sup class="cite"><a href="#src-75" id="cite-75" title="Block-layer I/O polling, LWN.net (Jonathan Corbet, 2015) — текст статьи">75</a></sup> Так делает <code>io_uring</code> с <code>IORING_SETUP_IOPOLL</code> на poll-очередях NVMe.<sup class="cite"><a href="#src-73" id="cite-73-2" title="Merge tag &#x27;for-4.21/block-20181221&#x27; of git://git.kernel.dk/linux-block (Linux commit 0e9da3fb) — сообщение коммита; слияние впервые входит в тег v5.0-rc1 (цикл 4.21 вышел как 5.0)">73</a><a href="#src-76" id="cite-76" title="io_uring_setup(2), Linux manual page — раздел DESCRIPTION, IORING_SETUP_IOPOLL">76</a></sup></li>
 </ol>
-<h3>Планировщики ввода-вывода: none, mq-deadline, bfq, kyber</h3>
+<h3>Планировщики ввода-вывода</h3>
 <div class="table-wrap"><table>
 <thead><tr><th>Планировщик</th><th>Что делает</th><th>Где обычно применяется</th></tr></thead>
 <tbody>
@@ -526,7 +526,7 @@ first_lba(blk)  = blk * (block_size / sector_size)</code></pre>
 <p>До этого базы данных защищались сами. PostgreSQL записывает в журнал полную копию страницы при её первом изменении после контрольной точки (<code>full_page_writes</code>),<sup class="cite"><a href="#src-100" id="cite-100" title="PostgreSQL 18 Documentation, 19.5. Write Ahead Log — параметр full_page_writes">100</a></sup> а InnoDB в MySQL записывает каждую страницу дважды, сначала в буфер двойной записи (doublewrite buffer), так что рваную страницу всегда можно восстановить из целой копии.<sup class="cite"><a href="#src-101" id="cite-101" title="MySQL 8.4 Reference Manual, 17.6.4 Doublewrite Buffer — первый абзац">101</a></sup> Файловые системы сталкиваются с той же проблемой для своих метаданных и решают её журналированием или копированием при записи (<a href="03-ondisk.html">урок 03</a>).</p>
 </section>
 <section id="users">
-<h2>Файловые системы, device-mapper, прямой доступ и сетевые блочные устройства</h2>
+<h2>Кто работает с блочными устройствами напрямую</h2>
 <ul>
 <li><strong>Файловые системы</strong>, почти всегда. Они превращают массив секторов в файлы; об этом <a href="03-ondisk.html">урок 03</a>.</li>
 <li><strong>Драйверы-надстройки</strong>: device-mapper (LVM, dm-crypt, тонкое выделение) и md RAID принимают блочные устройства на входе и выдают новые блочные устройства на выходе. Каждый уровень получает bio, переадресует или разбивает их и отправляет новые bio ниже.<sup class="cite"><a href="#src-9" id="cite-9-2" title="drivers/md/Kconfig, Linux v6.12 source — config BLK_DEV_DM, текст справки, строки 190–195">9</a><a href="#src-11" id="cite-11-2" title="md(4), Linux manual page — раздел DESCRIPTION">11</a></sup></li>

@@ -66,10 +66,10 @@
 <li><a href="#file-api">open(): flags, permissions and umask</a></li>
 <li><a href="#read-write">read() and write(): short counts and errors</a></li>
 <li><a href="#offsets">lseek, sparse files and pread/pwrite</a></li>
-<li><a href="#tables">Descriptor table, open file description and inode</a></li>
+<li><a href="#tables">How a descriptor refers to a file</a></li>
 <li><a href="#everything-fd">Pipes, sockets and devices as descriptors</a></li>
-<li><a href="#metadata">stat, getdents64, link and rename</a></li>
-<li><a href="#names">Unlinking an open file: nlink and open references</a></li>
+<li><a href="#metadata">Metadata, directories and names</a></li>
+<li><a href="#names">Why an open file survives unlink</a></li>
 <li><a href="#buffers">stdio buffer, page cache and drive cache</a></li>
 <li><a href="#next-steps">From struct file to the VFS</a></li>
 <li><a href="#lab">Lab 01: Descriptors, offsets, O_APPEND and unlink in practice</a></li>
@@ -228,7 +228,7 @@ SEEK_DATA from 0 -&gt; 1073741824 (everything before is a hole)</span></code></p
 <aside class="note"><span class="tag">Aside: a documented Linux quirk</span><p>POSIX says <code>pwrite</code> writes at the offset you give it, even on a descriptor opened with <code>O_APPEND</code>. Linux instead appends to the end of the file. The <code>pwrite(2)</code> man page lists this under BUGS.<sup class="cite"><a href="#src-49" id="cite-49" title="pread(2), Linux manual page — BUGS">49</a></sup></p></aside>
 </section>
 <section id="tables">
-<h2>Descriptor table, open file description and inode</h2>
+<h2>How a descriptor refers to a file</h2>
 <p>The descriptor number is an index. Following it takes you through three kernel structures, and knowing which state lives in which one explains most surprising behaviour around files.</p>
 <ol>
 <li><strong>The per-process descriptor table.</strong> An array owned by each process (<code>struct files_struct</code> in the kernel). Slot <em>n</em> holds a pointer to an open file description, plus one per-descriptor flag: close-on-exec (<code>FD_CLOEXEC</code>).<sup class="cite"><a href="#src-50" id="cite-50" title="Linux kernel v6.12 source: include/linux/fdtable.h — lines 26–56, struct fdtable and struct files_struct">50</a></sup></li>
@@ -314,12 +314,12 @@ fd 5   -&gt; pipe:[81567245]
   mnt_id: 81
   ino:    2826040</span></code></pre>
 <p>The flags are in octal: <code>02000000</code> is <code>O_CLOEXEC</code>, <code>0100000</code> is <code>O_LARGEFILE</code> (set automatically on 64-bit), and the access mode in the low bits is 0, <code>O_RDONLY</code>.<sup class="cite"><a href="#src-65" id="cite-65" title="Linux kernel v6.12 source: include/uapi/asm-generic/fcntl.h — lines 20–63, O_* flag values">65</a><a href="#src-66" id="cite-66" title="Linux kernel v6.12 source: fs/open.c — lines 1434–1446, open() and openat() system calls">66</a><a href="#src-67" id="cite-67" title="Linux kernel v6.12 source: include/linux/fcntl.h — lines 24–25, force_o_largefile()">67</a></sup> Both ends of the pipe show the same inode number in brackets. <code>ls -l /proc/$$/fd</code> shows your shell's own descriptors, and <code>lsof -p PID</code> shows the same information for any process you are allowed to inspect.<sup class="cite"><a href="#src-68" id="cite-68" title="lsof(8), Arch manual pages — OPTIONS">68</a></sup></p>
-<h3>RLIMIT_NOFILE, EMFILE and O_CLOEXEC</h3>
+<h3>Descriptor limits and leaks</h3>
 <p>Each process has a limit on open descriptors, <code>RLIMIT_NOFILE</code>, which the shell shows with <code>ulimit -n</code> and a program reads with <code>getrlimit</code>.<sup class="cite"><a href="#src-69" id="cite-69" title="getrlimit(2), Linux manual page — DESCRIPTION, RLIMIT_NOFILE">69</a></sup> Many distributions default the soft limit to 1024;<sup class="cite"><a href="#src-70" id="cite-70" title="systemd-system.conf(5), Linux manual page — RESOURCE MANAGEMENT, DefaultLimitNOFILE=">70</a><a href="#src-71" id="cite-71" title="Linux kernel v6.12 source: include/uapi/linux/fs.h — lines 37–38, INR_OPEN_CUR">71</a></sup> this WSL session reports 1048576. When a process hits it, <code>open</code>, <code>socket</code> and <code>accept</code> fail with <code>EMFILE</code>.<sup class="cite"><a href="#src-69" id="cite-69-2" title="getrlimit(2), Linux manual page — DESCRIPTION, RLIMIT_NOFILE">69</a><a href="#src-72" id="cite-72" title="socket(2), Linux manual page — ERRORS">72</a><a href="#src-73" id="cite-73" title="accept(2), Linux manual page — ERRORS">73</a></sup> A server that never closes descriptors eventually hits the limit, so "too many open files" in a log is almost always a leak.</p>
 <p>Descriptors are inherited across <code>execve</code> unless marked close-on-exec.<sup class="cite"><a href="#src-27" id="cite-27-2" title="execve(2), Linux manual page — DESCRIPTION">27</a></sup> Setting it later with <code>fcntl</code> leaves a window in which another thread can <code>fork</code> and <code>exec</code>, carrying your descriptor into an unrelated program. Passing <code>O_CLOEXEC</code> to <code>open</code> closes that window, which is why careful code passes it everywhere.<sup class="cite"><a href="#src-22" id="cite-22-17" title="open(2), Linux manual page — DESCRIPTION">22</a></sup></p>
 </section>
 <section id="metadata">
-<h2>stat, getdents64, link and rename</h2>
+<h2>Metadata, directories and names</h2>
 <h3>stat and struct stat</h3>
 <pre><code class="language-c">int stat(const char *path, struct stat *st);   <span class="c">// follows symlinks</span>
 int lstat(const char *path, struct stat *st);  <span class="c">// does not</span>
@@ -357,7 +357,7 @@ int fstat(int fd, struct stat *st);            <span class="c">// by descriptor<
 </ul>
 </section>
 <section id="names">
-<h2>Unlinking an open file: nlink and open references</h2>
+<h2>Why an open file survives unlink</h2>
 <p>The kernel frees a file's inode and data only when two counts reach zero: the link count (names in directories) and the number of open references (open file descriptions, plus memory mappings). <code>unlink</code> only affects the first.<sup class="cite"><a href="#src-90" id="cite-90-2" title="unlink(2), Linux manual page — DESCRIPTION">90</a><a href="#src-93" id="cite-93" title="mmap(2), Linux manual page — DESCRIPTION">93</a></sup></p>
 <p>So a program can open a file, have its name removed, and keep reading and writing it.<sup class="cite"><a href="#src-22" id="cite-22-18" title="open(2), Linux manual page — DESCRIPTION">22</a></sup> From the lab:</p>
 <pre><code><span class="o">before unlink: inode 2826042, nlink 1

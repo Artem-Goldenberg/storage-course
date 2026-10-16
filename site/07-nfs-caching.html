@@ -63,7 +63,7 @@
 <b>In this lesson</b>
 <ol>
 <li><a href="#problem">Cache coherence across NFS clients</a></li>
-<li><a href="#caches">NFS client caches: data, attributes, names, access, readdir</a></li>
+<li><a href="#caches">What the NFS client caches</a></li>
 <li><a href="#attr">The attribute cache</a></li>
 <li><a href="#change">mtime, ctime and the change attribute</a></li>
 <li><a href="#cto">Close-to-open consistency</a></li>
@@ -71,11 +71,11 @@
 <li><a href="#writes">NFS write path: UNSTABLE writes and COMMIT</a></li>
 <li><a href="#delegations">NFSv4 delegations</a></li>
 <li><a href="#newer">Delegated timestamps and directory delegations</a></li>
-<li><a href="#compare">Cache coherence in AFS, SMB, CephFS, Lustre and GPFS</a></li>
+<li><a href="#compare">How other filesystems keep caches coherent</a></li>
 <li><a href="#fscache">FS-Cache: a disk cache under NFS</a></li>
-<li><a href="#failures">Failures: hard and soft mounts, ESTALE, leases, clocks</a></li>
+<li><a href="#failures">Failures and edge cases in NFS</a></li>
 <li><a href="#diagnose">Diagnosing stale data, step by step</a></li>
-<li><a href="#lab">Lab 06 · Part B: Attribute cache, close-to-open and locks in mountstats</a></li>
+<li><a href="#lab">Lab 06 · Part B: Observing NFS cache behaviour</a></li>
 <li><a href="#check">Check yourself</a></li>
 <li><a href="#further">Further reading</a></li>
 <li><a href="#sources">Sources</a></li>
@@ -94,7 +94,7 @@
 <p>NFS chose polling as its base and added promises later.<sup class="cite"><a href="#src-1" id="cite-1" title="nfs(5), Linux manual page — DATA AND METADATA COHERENCE, NFS version 4 caching features">1</a></sup> The rest of this lesson follows that order: what is cached, how polling works and what it guarantees, then delegations, then how other systems made different choices.</p>
 </section>
 <section id="caches">
-<h2>NFS client caches: data, attributes, names, access, readdir</h2>
+<h2>What the NFS client caches</h2>
 <p>"The NFS cache" is really several caches with different lifetimes. All of them live in the client's RAM unless you add FS-Cache.</p>
 <div class="table-wrap"><table>
 <thead><tr><th>Cache</th><th>Holds</th><th>Becomes invalid when</th></tr></thead>
@@ -350,7 +350,7 @@ COMMIT       ──▶  server calls fsync on the range  ──▶  reply carrie
 <p><b>Directory delegations</b> (NFSv4.1, GET_DIR_DELEGATION) do for directories what file delegations do for files. A client holding one can trust its cached listing and, more valuably, its negative dentries: "no file named <code>config.local</code> here" stays true until the server says otherwise.<sup class="cite"><a href="#src-87" id="cite-87" title="RFC 8881: Network File System (NFS) Version 4 Minor Version 1 Protocol — Section 10.9.2, Directory Delegation Design">87</a></sup> Build tools and language runtimes that probe dozens of non-existent paths for every import benefit most.<sup class="cite"><a href="#src-88" id="cite-88" title="RFC 8881: Network File System (NFS) Version 4 Minor Version 1 Protocol — Section 10.9.1, Introduction to Directory Delegations">88</a></sup> Notifications (CB_NOTIFY) can tell the holder exactly which entries changed instead of recalling the whole delegation.<sup class="cite"><a href="#src-87" id="cite-87-2" title="RFC 8881: Network File System (NFS) Version 4 Minor Version 1 Protocol — Section 10.9.2, Directory Delegation Design">87</a></sup> Linux 6.19 added initial client support, used for ACCESS, CREATE, UNLINK and RENAME, with a module option to disable it.<sup class="cite"><a href="#src-89" id="cite-89" title="Linux kernel commit 6bb34aff1ebd, Merge tag &#x27;nfs-for-6.19-1&#x27; — commit message">89</a></sup></p>
 </section>
 <section id="compare">
-<h2>Cache coherence in AFS, SMB, CephFS, Lustre and GPFS</h2>
+<h2>How other filesystems keep caches coherent</h2>
 <p>NFS is the odd one out: its base protocol polls, and promises are an optimisation. Most other distributed filesystems were designed around promises from the start. <a href="09-distributed.html">Lesson 9</a> covers their architectures; here is how each one answers "may this client use its cached copy?".</p>
 <div class="table-wrap"><table>
 <thead><tr><th>System</th><th>What the client holds</th><th>How it is taken back</th><th>What applications see</th></tr></thead>
@@ -380,7 +380,7 @@ COMMIT       ──▶  server calls fsync on the range  ──▶  reply carrie
 <aside class="note"><span class="tag">This machine</span><p>The WSL kernel used here has <code>CONFIG_FSCACHE=y</code> and <code>CONFIG_NFS_FSCACHE=y</code>, but <code>CONFIG_CACHEFILES</code> is not set. Without a backend, <code>fsc</code> is accepted and caches nothing, so the lab has no FS-Cache experiment.</p></aside>
 </section>
 <section id="failures">
-<h2>Failures: hard and soft mounts, ESTALE, leases, clocks</h2>
+<h2>Failures and edge cases in NFS</h2>
 <h3>Hard and soft mounts</h3>
 <p>When the server stops answering, a <code>hard</code> mount (the default) retries forever. The kernel logs <code>nfs: server X not responding, still trying</code>, and every process touching the mount waits in state D until the server comes back, then continues as if nothing happened.<sup class="cite"><a href="#src-109" id="cite-109" title="nfs(5), Linux manual page — MOUNT OPTIONS, soft / softerr / hard, softreval, intr">109</a><a href="#src-110" id="cite-110" title="Linux kernel source, net/sunrpc/clnt.c (v6.12) — rpc_check_timeout()">110</a></sup> The old <code>intr</code> option has been ignored since Linux 2.6.25; instead the waits are killable, so <code>kill -9</code> ends a stuck process.<sup class="cite"><a href="#src-109" id="cite-109-2" title="nfs(5), Linux manual page — MOUNT OPTIONS, soft / softerr / hard, softreval, intr">109</a><a href="#src-111" id="cite-111" title="TASK_KILLABLE, LWN.net (2008) — whole article">111</a></sup></p>
 <p>A <code>soft</code> mount gives up after <code>retrans</code> retries and returns <code>EIO</code> (<code>softerr</code> returns <code>ETIMEDOUT</code> instead). That sounds friendlier, but nfs(5) warns that it can silently corrupt data.<sup class="cite"><a href="#src-109" id="cite-109-3" title="nfs(5), Linux manual page — MOUNT OPTIONS, soft / softerr / hard, softreval, intr">109</a></sup> A timed-out WRITE during background writeback has no system call to return an error to. The page is marked with an error, the data is lost, and only a later <code>fsync</code> or <code>close</code> might report it. Use <code>soft</code> only for read-only data where an error is better than a hang. The <code>softreval</code> option lets a soft mount keep serving cached attributes and names while the server is down.<sup class="cite"><a href="#src-109" id="cite-109-4" title="nfs(5), Linux manual page — MOUNT OPTIONS, soft / softerr / hard, softreval, intr">109</a></sup></p>
@@ -419,7 +419,7 @@ The server side adds <code>-e nfsd</code>. <code>trace-cmd list -e nfs</code> li
 </section>
 <section class="lab" id="lab">
 <p class="tag">Lab 06 · Part B</p>
-<h2>Attribute cache, close-to-open and locks in mountstats</h2>
+<h2>Observing NFS cache behaviour</h2>
 <p class="where">~/storage-course/labs/06-nfs/   (README.md, Part B)</p>
 <aside class="pitfall"><span class="tag">Untested here</span><p>Part B needs the NFS server and mounts from Part A, which need root. None of the NFS steps were run on the machine this course was written on. <code>events.sh</code> and <code>attrwatch.sh</code> were tested against hand-made files in the mountstats format, and <code>lockread.py</code> on a local file. The expected results come from the Linux client's documented behaviour and source.</p></aside>
 <p>The lab uses two NFSv3 mounts of the same export with separate caches: <code>/mnt/nfs3</code> with default options, and <code>/mnt/nfs3-lazy</code> with <code>nocto,actimeo=60,nosharecache</code>. Writing directly into <code>/srv/nfslab</code> on the server plays the part of a second client. NFSv3 is used for most steps because it has no delegations, which makes the results repeatable.</p>

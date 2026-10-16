@@ -62,19 +62,19 @@
 <nav class="toc" aria-label="Содержание урока">
 <b>В этом уроке</b>
 <ol>
-<li><a href="#why">Пределы одного сервера: ёмкость, пропускная способность, метаданные, доступность</a></li>
+<li><a href="#why">Зачем распределять хранение и какие задачи возникают</a></li>
 <li><a href="#taxonomy">Шесть архитектур распределённых файловых систем</a></li>
 <li><a href="#nas">Один NAS-сервер и кластеры с общими дисками</a></li>
 <li><a href="#mds">Сервер метаданных и серверы данных</a></li>
 <li><a href="#ceph">Ceph: вычисляемое размещение</a></li>
 <li><a href="#more">GlusterFS, JuiceFS и Colossus</a></li>
-<li><a href="#placement">Размещение: таблицы, хеширование, rendezvous и CRUSH</a></li>
+<li><a href="#placement">Сравнение стратегий размещения данных</a></li>
 <li><a href="#redundancy">Репликация и помехоустойчивое кодирование</a></li>
-<li><a href="#consistency">Согласованность POSIX в масштабе: блокировки, capabilities, делегирование</a></li>
+<li><a href="#consistency">Как поддерживать согласованность между клиентами</a></li>
 <li><a href="#failure">Обнаружение отказов, кворум и изоляция узлов</a></li>
 <li><a href="#performance">Производительность: страйпинг, метаданные и хвостовые задержки</a></li>
 <li><a href="#nfs-fit">Нативные клиенты и NFS: pNFS, nconnect и RDMA</a></li>
-<li><a href="#lab">Практика 08: Моделирование размещения: mod N, consistent hashing, straw2</a></li>
+<li><a href="#lab">Практика 08: Моделирование размещения и отказа стойки</a></li>
 <li><a href="#check">Проверьте себя</a></li>
 <li><a href="#further">Что почитать дальше</a></li>
 <li><a href="#sources">Источники</a></li>
@@ -82,7 +82,7 @@
 </nav>
 </header>
 <section id="why">
-<h2>Пределы одного сервера: ёмкость, пропускная способность, метаданные, доступность</h2>
+<h2>Зачем распределять хранение и какие задачи возникают</h2>
 <p>Один NFS-сервер (<a href="06-nfs.html">урок 6</a>) — простейшая сетевая файловая система, и он упирается в четыре стены:</p>
 <ul>
 <li><b>Ёмкость.</b> В корпус помещается фиксированное число дисков.</li>
@@ -261,7 +261,7 @@ stripe_count = 4, stripe_size = 1 МиБ
 <section id="ceph">
 <h2>Ceph: вычисляемое размещение</h2>
 <p>Ceph полностью убирает шаг поиска для данных. Его базовый уровень, <b>RADOS</b> (Reliable Autonomic Distributed Object Store), хранит именованные объекты на <b>OSD</b> (object storage daemons, демоны хранения объектов, обычно по одному на диск).<sup class="cite"><a href="#src-49" id="cite-49" title="Ceph documentation (Tentacle): Architecture — раздел Storing Data">49</a><a href="#src-50" id="cite-50" title="Ceph documentation (Tentacle): Storage Devices — разделы Storage Devices и BlueStore">50</a></sup> Любой клиент может вычислить, где лежит объект, по небольшой общей <b>карте кластера</b>.<sup class="cite"><a href="#src-51" id="cite-51" title="Ceph documentation (Tentacle): Architecture — раздел Calculating PG IDs">51</a></sup> Блочные устройства (RBD), S3-совместимое объектное хранилище (RGW) и файловая система (CephFS) построены поверх RADOS.<sup class="cite"><a href="#src-49" id="cite-49-2" title="Ceph documentation (Tentacle): Architecture — раздел Storing Data">49</a></sup></p>
-<h3 id="ceph-parts">Демоны Ceph: MON, OSD и MDS</h3>
+<h3 id="ceph-parts">Компоненты Ceph и их роли</h3>
 <ul>
 <li><b>Мониторы</b> (MON): небольшое нечётное число, обычно 3 или 5, которые с помощью Paxos договариваются о картах кластера: какие мониторы существуют, какие OSD существуют и работают ли они, карта CRUSH и карта серверов метаданных CephFS.<sup class="cite"><a href="#src-52" id="cite-52" title="Ceph documentation (Tentacle): MON Service — раздел Deploying additional monitors">52</a><a href="#src-53" id="cite-53" title="Ceph documentation (Tentacle): Architecture — раздел High Availability Monitors">53</a><a href="#src-54" id="cite-54" title="Ceph documentation (Tentacle): Architecture — раздел Cluster Map">54</a></sup> У каждой карты есть номер эпохи, который растёт с каждым изменением.<sup class="cite"><a href="#src-55" id="cite-55" title="S. Weil et al.: RADOS: A Scalable, Reliable Storage Service for Petabyte-scale Storage Clusters (PDSW 2007) — раздел 2.1, Cluster Map">55</a></sup></li>
 <li><b>OSD</b> хранят объекты. Текущий бэкенд, <b>BlueStore</b>, пишет данные прямо на сырое блочное устройство и держит свои метаданные (имена объектов, карты экстентов, состояние выделения) в RocksDB — хранилище ключ-значение на основе LSM-дерева.<sup class="cite"><a href="#src-50" id="cite-50-2" title="Ceph documentation (Tentacle): Storage Devices — разделы Storage Devices и BlueStore">50</a><a href="#src-56" id="cite-56" title="A. Aghayev et al.: File Systems Unfit as Distributed Storage Backends: Lessons from 10 Years of Ceph Evolution (SOSP 2019) — раздел 4.2, Data Path and Space Allocation (Metadata Organization, Space Allocation)">56</a><a href="#src-57" id="cite-57" title="RocksDB wiki: RocksDB Overview — раздел 4, Features: Multi-Threaded Compactions">57</a></sup> Это оптимизированная под запись альтернатива B-деревьям из <a href="04-btrees.html">урока 4</a>.</li>
@@ -344,7 +344,7 @@ acting set [osd.6, osd.1, osd.11]        osd.6 — первичный</code></pr
 </ul>
 </section>
 <section id="placement">
-<h2>Размещение: таблицы, хеширование, rendezvous и CRUSH</h2>
+<h2>Сравнение стратегий размещения данных</h2>
 <div class="table-wrap"><table>
 <thead><tr><th>Стратегия</th><th>Как клиент находит данные</th><th>Сколько данных перемещается при добавлении сервера к N</th><th>Где используется</th></tr></thead>
 <tbody>
@@ -377,7 +377,7 @@ acting set [osd.6, osd.1, osd.11]        osd.6 — первичный</code></pr
 <p>Распределение реплик по многим серверам ещё и ускоряет восстановление. Когда отказывает один диск, его данные восстанавливаются со многих дисков на многие диски параллельно (декластеризованное восстановление, declustered recovery), а не с одного зеркала на один запасной диск.<sup class="cite"><a href="#src-105" id="cite-105" title="S. Weil et al.: CRUSH: Controlled, Scalable, Decentralized Placement of Replicated Data (SC 2006) — раздел 4.4, Reliability">105</a></sup> Практика показывает, что каждый уцелевший узел вносит почти одинаковую долю в восстановление.</p>
 </section>
 <section id="consistency">
-<h2>Согласованность POSIX в масштабе: блокировки, capabilities, делегирование</h2>
+<h2>Как поддерживать согласованность между клиентами</h2>
 <p>POSIX обещает, что <code>read()</code> после <code>write()</code> увидит новые данные, даже на другой машине, что <code>rename()</code> атомарен и что блокировки диапазонов байтов работают.<sup class="cite"><a href="#src-106" id="cite-106" title="POSIX.1-2024: write() — раздел DESCRIPTION">106</a><a href="#src-107" id="cite-107" title="POSIX.1-2024: rename() — раздел RATIONALE">107</a></sup> На одной машине эти обещания дёшевы, потому что одно ядро видит всё (урок 5). На многих машинах каждый доступ, который может привести к конфликту, требует координации. Системы различаются тем, насколько много они координируют:</p>
 <div class="table-wrap"><table>
 <thead><tr><th>Механизм</th><th>Системы</th><th>Кто отслеживает</th><th>Гарантия</th><th>Цена</th></tr></thead>
@@ -388,7 +388,7 @@ acting set [osd.6, osd.1, osd.11]        osd.6 — первичный</code></pr
 <tr><td>Однократно записываемые файлы</td><td>HDFS, объектные хранилища</td><td>никто</td><td>тривиальная: данные никогда не меняются</td><td>приложения должны быть написаны под это</td></tr>
 </tbody>
 </table></div>
-<h3 id="hotspots">Горячие точки метаданных: N-to-N и N-to-1</h3>
+<h3 id="hotspots">Узкие места при записи в отдельные и общие файлы</h3>
 <p>У параллельных задач есть два классических шаблона ввода-вывода:</p>
 <ul>
 <li><b>N-к-N</b>: каждый из N процессов пишет свой файл. С пропускной способностью данных всё просто, но N созданий файлов в одном каталоге в один и тот же момент уходят на сервер метаданных, который владеет этим каталогом, и выстраиваются в очередь на его блокировке.<sup class="cite"><a href="#src-23" id="cite-23-2" title="Lustre Operations Manual — раздел 13.10, Creating a directory striped across multiple MDTs">23</a></sup> На десятках тысяч процессов это становится узким местом.</li>
@@ -431,7 +431,7 @@ acting set [osd.6, osd.1, osd.11]        osd.6 — первичный</code></pr
 </section>
 <section class="lab" id="lab">
 <p class="tag">Практика 08</p>
-<h2>Моделирование размещения: mod N, consistent hashing, straw2</h2>
+<h2>Моделирование размещения и отказа стойки</h2>
 <p class="where">~/storage-course/labs/08-distributed/</p>
 <ol>
 <li>Запустите симулятор. Он размещает 100 000 объектов на 10 узлах четырьмя способами, затем добавляет 11-й узел и удаляет 10-й и подсчитывает, что переместилось:

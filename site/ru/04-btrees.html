@@ -108,15 +108,15 @@
 <ol>
 <li><a href="#cost-model">Ветвление, высота дерева и чтения с диска</a></li>
 <li><a href="#btree">Устройство и инварианты B-дерева</a></li>
-<li><a href="#bplus">B+-деревья: записи в листьях, связанные листья</a></li>
+<li><a href="#bplus">Чем B+-дерево отличается от B-дерева</a></li>
 <li><a href="#demo">Симулятор вставки в B+-дерево</a></li>
 <li><a href="#ext4-extents">Дерево экстентов ext4</a></li>
 <li><a href="#htree">htree в ext4: индекс каталога по хешам имён</a></li>
-<li><a href="#xfs">B+-деревья XFS: bnobt, cntbt, inobt, bmbt и другие</a></li>
+<li><a href="#xfs">Индексы XFS на B+-деревьях</a></li>
 <li><a href="#btrfs">btrfs: B-деревья с копированием при записи</a></li>
-<li><a href="#databases">B+-деревья в InnoDB, PostgreSQL и SQLite</a></li>
+<li><a href="#databases">B-деревья в базах данных</a></li>
 <li><a href="#lsm">LSM-деревья: memtable, SSTable и уплотнение</a></li>
-<li><a href="#concurrency">Параллельный доступ: latch coupling, оптимистичный спуск, B-link-деревья</a></li>
+<li><a href="#concurrency">Параллельный доступ к B-дереву</a></li>
 <li><a href="#in-memory">B-деревья в памяти и кэш-линии процессора</a></li>
 <li><a href="#lab">Практика 04: Деревья экстентов и htree ext4 в debugfs</a></li>
 <li><a href="#check">Проверьте себя</a></li>
@@ -205,7 +205,7 @@
 <p>При вставке в случайном порядке узлы в среднем оказываются заполнены примерно на 69% (ln 2, результат Эндрю Яо 1978 года).<sup class="cite"><a href="#src-15" id="cite-15" title="D. Comer: The Ubiquitous B-Tree (ACM Computing Surveys, 1979) — раздел 3, с. 133 (анализ Яо)">15</a></sup> При вставке по возрастанию, например автоинкрементных ID или временных меток, расщепление пополам оставляет каждый узел заполненным наполовину, потому что левая половина после расщепления больше не получает ни одного ключа. PostgreSQL распознаёт этот случай: расщепляя самый правый лист, он оставляет левую страницу заполненной на 90% (его fillfactor по умолчанию), а не наполовину.<sup class="cite"><a href="#src-16" id="cite-16" title="PostgreSQL 17 Documentation: CREATE INDEX — раздел Index Storage Parameters, fillfactor">16</a></sup> ext4 делает нечто похожее для файлов, в которые только дописывают, как вы увидите ниже.</p>
 </section>
 <section id="bplus">
-<h2>B+-деревья: записи в листьях, связанные листья</h2>
+<h2>Чем B+-дерево отличается от B-дерева</h2>
 <p>Исходное B-дерево хранит каждый ключ вместе со значением ровно один раз — в том узле, куда он попал. Почти все реальные системы используют вариант под названием <b>B+-дерево</b> (B+tree):</p>
 <ul>
 <li>Все записи лежат в <b>листьях</b>.<sup class="cite"><a href="#src-17" id="cite-17" title="D. Comer: The Ubiquitous B-Tree (ACM Computing Surveys, 1979) — раздел 3, B+-Trees, с. 129–130">17</a></sup></li>
@@ -574,7 +574,7 @@ Entry #4: Hash 0x39f6a802, block 5</span></code></pre>
 <aside class="pitfall"><span class="tag">Ловушка</span><p>Сборка каталога на 40 000 имён командой <code>mkfs.ext4 -d</code> заняла почти три минуты, потому что библиотека вставляла каждое имя в ещё линейный каталог и перед этим просматривала его. Стоимость квадратичная. Программы, которые создают огромные каталоги без индекса или на файловых системах без него, упираются в ту же стену.</p></aside>
 </section>
 <section id="xfs">
-<h2>B+-деревья XFS: bnobt, cntbt, inobt, bmbt и другие</h2>
+<h2>Индексы XFS на B+-деревьях</h2>
 <p>В уроке 03 вы познакомились с группами размещения XFS (allocation groups, AG). Внутри каждой AG почти на каждый вопрос отвечает своё B+-дерево.<sup class="cite"><a href="#src-19" id="cite-19-3" title="XFS Algorithms &amp; Data Structures, 3rd Edition — глава 10, Fixed Length Record B+trees, разделы 10.1–10.2, с. 33–36">19</a><a href="#src-42" id="cite-42" title="A. Sweeney et al.: Scalability in the XFS File System (USENIX 1996) — раздел 5.1, Allocation Groups">42</a></sup> Каждый блок дерева начинается с 4-байтного магического числа, так что деревья можно различить в шестнадцатеричном дампе:<sup class="cite"><a href="#src-43" id="cite-43" title="XFS Algorithms &amp; Data Structures, 3rd Edition — глава 7, Magic Numbers, с. 27–28">43</a></sup></p>
 <div class="table-wrap"><table>
 <thead><tr><th>Дерево</th><th>Магическое число</th><th>Ключ</th><th>Отвечает на вопрос</th></tr></thead>
@@ -671,7 +671,7 @@ Entry #4: Hash 0x39f6a802, block 5</span></code></pre>
 </ul>
 </section>
 <section id="databases">
-<h2>B+-деревья в InnoDB, PostgreSQL и SQLite</h2>
+<h2>B-деревья в базах данных</h2>
 <p>Базы данных называют свои узлы <b>страницами</b>, но устроено всё так, как вы только что видели. Три популярных движка делают три разных выбора:</p>
 <div class="table-wrap"><table>
 <thead><tr><th>Движок</th><th>Страница</th><th>Где лежат строки</th><th>Особенности</th></tr></thead>
@@ -727,7 +727,7 @@ get(k): memtable → каждый файл L0 → не больше одного
 <p>Последняя строка важна для <a href="09-distributed.html">урока 09</a>. BlueStore в Ceph пишет данные объектов прямо на «сырое» блочное устройство, а все свои метаданные (какой объект в каких экстентах лежит, контрольные суммы, атрибуты объектов) хранит в RocksDB — LSM-дереве, которое работает поверх маленькой внутренней файловой системы BlueFS.<sup class="cite"><a href="#src-97" id="cite-97" title="Ceph Documentation: Storage Devices — раздел BlueStore">97</a><a href="#src-98" id="cite-98" title="ceph-bluestore-tool – bluestore administrative tool — раздел Commands, bluefs-export">98</a></sup></p>
 </section>
 <section id="concurrency">
-<h2>Параллельный доступ: latch coupling, оптимистичный спуск, B-link-деревья</h2>
+<h2>Параллельный доступ к B-дереву</h2>
 <p>Расщепление меняет узел и его родителя, а возможно, и родителя родителя, и в это время другие потоки могут спускаться как раз через эти узлы. Большинству реальных систем хватает трёх приёмов.</p>
 <ul>
 <li><b>Сцепление защёлок</b> (latch coupling, или crabbing — «крабий шаг»). Кратковременная блокировка узла в памяти называется <b>защёлкой</b> (latch).<sup class="cite"><a href="#src-99" id="cite-99" title="G. Graefe: A Survey of B-Tree Locking Techniques (ACM TODS, 2010) — раздел 3.1, Locks and Latches">99</a></sup> Поток захватывает защёлку потомка, прежде чем отпустить родителя, — как краб, который переступает, не отпуская опоры. Вставляющий поток держит защёлки предков, пока не дойдёт до узла с запасом места, который не может расщепиться, и тогда отпускает всё, что выше.<sup class="cite"><a href="#src-100" id="cite-100" title="G. Graefe: A Survey of B-Tree Locking Techniques (ACM TODS, 2010) — раздел 4.2, Lock Coupling">100</a></sup></li>

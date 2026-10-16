@@ -108,15 +108,15 @@
 <ol>
 <li><a href="#cost-model">Fanout, tree height and disk reads</a></li>
 <li><a href="#btree">B-tree structure and invariants</a></li>
-<li><a href="#bplus">B+trees: records in leaves, linked leaves</a></li>
+<li><a href="#bplus">How a B+tree differs from a B-tree</a></li>
 <li><a href="#demo">B+tree insertion simulator</a></li>
 <li><a href="#ext4-extents">The ext4 extent tree</a></li>
 <li><a href="#htree">ext4 htree: a directory index over name hashes</a></li>
-<li><a href="#xfs">XFS B+trees: bnobt, cntbt, inobt, bmbt and more</a></li>
+<li><a href="#xfs">B+tree indexes in XFS</a></li>
 <li><a href="#btrfs">btrfs: copy-on-write B-trees</a></li>
-<li><a href="#databases">B+trees in InnoDB, PostgreSQL and SQLite</a></li>
+<li><a href="#databases">B-trees in databases</a></li>
 <li><a href="#lsm">LSM trees: memtable, SSTables and compaction</a></li>
-<li><a href="#concurrency">Concurrency: latch coupling, optimistic descent, B-link trees</a></li>
+<li><a href="#concurrency">Concurrent access to a B-tree</a></li>
 <li><a href="#in-memory">In-memory B-trees and CPU cache lines</a></li>
 <li><a href="#lab">Lab 04: ext4 extent trees and htree in debugfs</a></li>
 <li><a href="#check">Check yourself</a></li>
@@ -205,7 +205,7 @@
 <p>With random insertions, nodes end up about 69% full on average (ln 2, a result due to Andrew Yao in 1978).<sup class="cite"><a href="#src-15" id="cite-15" title="D. Comer: The Ubiquitous B-Tree (ACM Computing Surveys, 1979) — section 3, p. 133 (Yao&#x27;s analysis)">15</a></sup> With ascending insertions, such as auto-increment IDs or timestamps, a 50/50 split leaves every node half full, because the left half of each split never receives another key. PostgreSQL detects this case: when it splits the rightmost leaf, it leaves the left page 90% full (its default fillfactor) instead of half full.<sup class="cite"><a href="#src-16" id="cite-16" title="PostgreSQL 17 Documentation: CREATE INDEX — Index Storage Parameters, fillfactor">16</a></sup> ext4 does something similar for append-only files, as you will see below.</p>
 </section>
 <section id="bplus">
-<h2>B+trees: records in leaves, linked leaves</h2>
+<h2>How a B+tree differs from a B-tree</h2>
 <p>The original B-tree stores each key, with its value, exactly once, in whichever node it lands in. Almost every real system uses a variant called the <b>B+tree</b>:</p>
 <ul>
 <li>All records live in the <b>leaves</b>.<sup class="cite"><a href="#src-17" id="cite-17" title="D. Comer: The Ubiquitous B-Tree (ACM Computing Surveys, 1979) — section 3, B+-Trees, pp. 129–130">17</a></sup></li>
@@ -574,7 +574,7 @@ Entry #4: Hash 0x39f6a802, block 5</span></code></pre>
 <aside class="pitfall"><span class="tag">Pitfall</span><p>Building the 40,000-name directory with <code>mkfs.ext4 -d</code> took almost three minutes, because the library inserted each name into a still-linear directory and scanned it first. The cost is quadratic. Software that creates huge directories without an index, or on filesystems without one, hits the same wall.</p></aside>
 </section>
 <section id="xfs">
-<h2>XFS B+trees: bnobt, cntbt, inobt, bmbt and more</h2>
+<h2>B+tree indexes in XFS</h2>
 <p>Lesson 03 introduced XFS's allocation groups (AGs). Inside each AG almost every question is answered by its own B+tree.<sup class="cite"><a href="#src-19" id="cite-19-3" title="XFS Algorithms &amp; Data Structures, 3rd Edition — chapter 10, Fixed Length Record B+trees, sections 10.1–10.2, pp. 33–36">19</a><a href="#src-42" id="cite-42" title="A. Sweeney et al.: Scalability in the XFS File System (USENIX 1996) — section 5.1, Allocation Groups">42</a></sup> Each tree block starts with a 4-byte magic number, so you can tell them apart in a hex dump:<sup class="cite"><a href="#src-43" id="cite-43" title="XFS Algorithms &amp; Data Structures, 3rd Edition — chapter 7, Magic Numbers, pp. 27–28">43</a></sup></p>
 <div class="table-wrap"><table>
 <thead><tr><th>Tree</th><th>Magic</th><th>Keyed by</th><th>Answers</th></tr></thead>
@@ -671,7 +671,7 @@ Entry #4: Hash 0x39f6a802, block 5</span></code></pre>
 </ul>
 </section>
 <section id="databases">
-<h2>B+trees in InnoDB, PostgreSQL and SQLite</h2>
+<h2>B-trees in databases</h2>
 <p>Databases call their nodes <b>pages</b>, but the structure is the one you have just seen. Three popular engines make three different choices:</p>
 <div class="table-wrap"><table>
 <thead><tr><th>Engine</th><th>Page</th><th>Where the rows live</th><th>Notable</th></tr></thead>
@@ -727,7 +727,7 @@ get(k): memtable → each L0 file → at most one file per level,
 <p>The last row matters for <a href="09-distributed.html">lesson 09</a>. Ceph's BlueStore writes object data directly to a raw block device and keeps all of its metadata (which object lives in which extents, checksums, object attributes) in RocksDB, an LSM tree, running on a small internal filesystem called BlueFS.<sup class="cite"><a href="#src-97" id="cite-97" title="Ceph Documentation: Storage Devices — section BlueStore">97</a><a href="#src-98" id="cite-98" title="ceph-bluestore-tool – bluestore administrative tool — Commands, bluefs-export">98</a></sup></p>
 </section>
 <section id="concurrency">
-<h2>Concurrency: latch coupling, optimistic descent, B-link trees</h2>
+<h2>Concurrent access to a B-tree</h2>
 <p>A split changes a node and its parent, and possibly the parent's parent, while other threads may be descending through those very nodes. Three techniques cover most real systems.</p>
 <ul>
 <li><b>Latch coupling</b> (also called crabbing). A short-term lock on an in-memory node is called a <b>latch</b>.<sup class="cite"><a href="#src-99" id="cite-99" title="G. Graefe: A Survey of B-Tree Locking Techniques (ACM TODS, 2010) — section 3.1, Locks and Latches">99</a></sup> A thread latches the child before releasing the parent, like a crab moving hand over hand. An inserter keeps the ancestors latched until it reaches a node with room to spare, which cannot split, and then releases everything above it.<sup class="cite"><a href="#src-100" id="cite-100" title="G. Graefe: A Survey of B-Tree Locking Techniques (ACM TODS, 2010) — section 4.2, Lock Coupling">100</a></sup></li>

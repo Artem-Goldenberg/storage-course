@@ -71,8 +71,8 @@
 <li><a href="#directories">Directory entries: ext4_dir_entry_2</a></li>
 <li><a href="#walk">Resolving a path on disk</a></li>
 <li><a href="#links">Hard links, link counts and deletion</a></li>
-<li><a href="#allocation">Block allocation: Orlov, mballoc and delayed allocation</a></li>
-<li><a href="#journal">The jbd2 journal and fsck</a></li>
+<li><a href="#allocation">How ext4 chooses blocks</a></li>
+<li><a href="#journal">Crash consistency: the journal and fsck</a></li>
 <li><a href="#cow">Copy-on-write in btrfs and ZFS</a></li>
 <li><a href="#xfs">XFS: allocation groups and B+trees</a></li>
 <li><a href="#lab">Lab 03: Parsing an ext4 image with ext4walk</a></li>
@@ -415,7 +415,7 @@ offset  inode  rec_len  name_len  type     name
 <p>The file's data is not overwritten. The bits flip, and the old bytes remain in the free blocks until something else is allocated there. That is why undelete tools sometimes work and why secure deletion needs more than <code>rm</code>.<sup class="cite"><a href="#src-67" id="cite-67" title="rm(1), Linux manual page — closing paragraph of OPTIONS">67</a></sup></p>
 </section>
 <section id="allocation">
-<h2>Block allocation: Orlov, mballoc and delayed allocation</h2>
+<h2>How ext4 chooses blocks</h2>
 <p>Reading the structures is half the job. The other half is deciding where new things go, and the goal is the same at every scale: put things that are read together next to each other, in long contiguous runs.</p>
 <ul>
 <li><b>Directories are spread, files are clustered.</b> The Orlov allocator places new top-level directories in groups with many free inodes and blocks, and places files and subdirectories in or near their parent's group.<sup class="cite"><a href="#src-8" id="cite-8-2" title="ext4 Data Structures and Algorithms: Block and Inode Allocation Policy, The Linux Kernel documentation — section 2.4">8</a><a href="#src-20" id="cite-20-2" title="fs/ext4/ialloc.c, Linux v6.12 — lines 401–418, comment above find_group_orlov()">20</a></sup></li>
@@ -426,7 +426,7 @@ offset  inode  rec_len  name_len  type     name
 <p>Over time free space fragments, and new files get split into many extents. <code>filefrag -v</code> shows a file's extents, and <code>e4defrag</code> rewrites fragmented files.<sup class="cite"><a href="#src-72" id="cite-72" title="filefrag(8), Linux manual page — DESCRIPTION">72</a><a href="#src-73" id="cite-73" title="e4defrag(8), Linux manual page — DESCRIPTION">73</a></sup> Fragmentation matters less on SSDs than on spinning disks, but it never stops mattering completely, because more extents mean a deeper tree and more, smaller I/Os.</p>
 </section>
 <section id="journal">
-<h2>The jbd2 journal and fsck</h2>
+<h2>Crash consistency: the journal and fsck</h2>
 <p>Creating one file touches several blocks: the inode bitmap, the inode itself, the parent directory's block, the parent's inode (mtime), and the free counts in the group descriptor.<sup class="cite"><a href="#src-74" id="cite-74" title="Arpaci-Dusseau, Operating Systems: Three Easy Pieces, ch. 42 “Crash Consistency: FSCK and Journaling” — section 42.3, Journaling (or Write-Ahead Logging)">74</a></sup> The disk writes them one at a time and can reorder them. If the power fails after some writes and before others, the filesystem is inconsistent. A directory entry might point at an inode still marked free, or a block might be marked used with no file owning it.<sup class="cite"><a href="#src-74" id="cite-74-2" title="Arpaci-Dusseau, Operating Systems: Three Easy Pieces, ch. 42 “Crash Consistency: FSCK and Journaling” — section 42.3, Journaling (or Write-Ahead Logging)">74</a><a href="#src-75" id="cite-75" title="Arpaci-Dusseau, Operating Systems: Three Easy Pieces, ch. 42 “Crash Consistency: FSCK and Journaling” — section 42.1, A Detailed Example">75</a></sup></p>
 <p>ext2's answer was <code>fsck</code>: after an unclean shutdown, scan every inode, bitmap and directory and repair the contradictions. That takes time proportional to the size of the filesystem, which means hours on large disks.<sup class="cite"><a href="#src-76" id="cite-76" title="Arpaci-Dusseau, Operating Systems: Three Easy Pieces, ch. 42 “Crash Consistency: FSCK and Journaling” — section 42.2, The File System Checker">76</a></sup></p>
 <p>ext3 and ext4 add a <b>write-ahead journal</b>, managed by the kernel's <code>jbd2</code> layer and stored in inode 8. Before any metadata block is written to its home location, the change is first written to the journal:<sup class="cite"><a href="#src-16" id="cite-16-2" title="ext4 Data Structures and Algorithms: Journal (jbd2), The Linux Kernel documentation — section 3.6, introduction">16</a></sup></p>

@@ -61,7 +61,7 @@
 <nav class="toc" aria-label="Lesson contents">
 <b>In this lesson</b>
 <ol>
-<li><a href="#why">Network filesystems: latency, partial failure, several caches</a></li>
+<li><a href="#why">What changes when files are on a server</a></li>
 <li><a href="#history">NFS versions and their RFCs</a></li>
 <li><a href="#stack">The Linux NFS stack</a></li>
 <li><a href="#rpc">ONC RPC and XDR</a></li>
@@ -69,8 +69,8 @@
 <li><a href="#v3">NFSv3: a stateless server</a></li>
 <li><a href="#v4">NFSv4.0: state, compounds, one port</a></li>
 <li><a href="#v41">NFSv4.1: sessions, trunking and pNFS</a></li>
-<li><a href="#v42">NFSv4.2 operations</a></li>
-<li><a href="#knobs">Linux configuration: mount options, exports, nfs.conf</a></li>
+<li><a href="#v42">NFSv4.2 features</a></li>
+<li><a href="#knobs">Configuring the NFS client and server</a></li>
 <li><a href="#observe">Monitoring NFS: mountstats, nfsstat and tracepoints</a></li>
 <li><a href="#lab">Lab 06 · Part A: An NFS server and client on one machine</a></li>
 <li><a href="#check">Check yourself</a></li>
@@ -80,7 +80,7 @@
 </nav>
 </header>
 <section id="why">
-<h2>Network filesystems: latency, partial failure, several caches</h2>
+<h2>What changes when files are on a server</h2>
 <p>Lessons 1 to 5 kept the disk inside the machine. A file was an inode on a local block device, every process went through one kernel, and that kernel's page cache was the only copy of the data in RAM. A network filesystem keeps the files on a <b>server</b> and lets many <b>clients</b> use them through the ordinary file API. The application still calls <code>open</code>, <code>read</code> and <code>write</code>. The client kernel turns those calls into messages to the server.</p>
 <p>Three things change when the disk moves away:</p>
 <ul>
@@ -177,7 +177,7 @@
 <section id="rpc">
 <h2>ONC RPC and XDR</h2>
 <p>NFS is a set of remote procedures. The framework underneath is <b>ONC RPC</b> (Open Network Computing Remote Procedure Call, RFC 5531), and the encoding is <b>XDR</b> (External Data Representation, RFC 4506).<sup class="cite"><a href="#src-45" id="cite-45" title="RFC 5531: RPC: Remote Procedure Call Protocol Specification Version 2 — header and Abstract">45</a><a href="#src-46" id="cite-46" title="RFC 4506: XDR: External Data Representation Standard — header and Abstract">46</a></sup> Every NFS message is an RPC call or reply.</p>
-<h3>RPC call header: xid, program, version, procedure</h3>
+<h3>The RPC call header</h3>
 <pre><code>xid         0x5a3c91e2      <span class="c">transaction id; the reply carries the same xid</span>
 msg_type    0 (CALL)         <span class="c">1 = REPLY</span>
 rpcvers     2
@@ -193,7 +193,7 @@ verf        AUTH_NONE
 <pre><code>00 00 00 05   68 65 6c 6c   6f 00 00 00
 <span class="c">length = 5    h  e  l  l    o  padding</span></code></pre>
 <p>There are no field names or tags on the wire. Both sides know the layout from the protocol specification, which is written in XDR's own definition language.<sup class="cite"><a href="#src-53" id="cite-53" title="RFC 4506: XDR: External Data Representation Standard — section 1, Introduction">53</a></sup> That keeps messages compact and parsing cheap, and it is why Wireshark needs an NFS dissector to show anything useful.</p>
-<h3>RPC programs and ports: rpcbind, nfs, mountd, NLM, NSM</h3>
+<h3>RPC programs and ports</h3>
 <div class="table-wrap"><table>
 <thead><tr><th>Program</th><th>Number</th><th>Port</th><th>Used by</th></tr></thead>
 <tbody>
@@ -422,7 +422,7 @@ retransmit slot 3 / seq 118 after the reply was lost:
 <p>4.1 also defined <b>directory delegations</b> (GET_DIR_DELEGATION, with CB_NOTIFY for changes), so a client could cache a directory's listing and its negative lookups safely.<sup class="cite"><a href="#src-135" id="cite-135" title="RFC 8881: Network File System (NFS) Version 4 Minor Version 1 Protocol — section 10.9.1, Introduction to Directory Delegations">135</a></sup> For years almost nobody implemented them. The Linux client gained initial support in 6.19, used for ACCESS, CREATE, UNLINK and RENAME, with a module option to turn it off.<sup class="cite"><a href="#src-136" id="cite-136" title="Linux commit 6bb34aff1ebd: Merge tag &#x27;nfs-for-6.19-1&#x27; (NFS client updates) — merge message and shortlog">136</a></sup></p>
 </section>
 <section id="v42">
-<h2>NFSv4.2 operations</h2>
+<h2>NFSv4.2 features</h2>
 <p>RFC 7862 adds operations that let the client hand work to the server instead of moving data, plus a few attributes.<sup class="cite"><a href="#src-137" id="cite-137" title="RFC 7862: Network File System (NFS) Version 4 Minor Version 2 Protocol — section 1.4.1, Server-Side Clone and Copy">137</a></sup> Each one corresponds to a Linux system call you already know, which makes it easy to test (Lab 06, Part A).</p>
 <div class="table-wrap"><table>
 <thead><tr><th>Feature</th><th>Operations (number)<sup class="cite"><a href="#src-138" id="cite-138" title="RFC 7863: Network File System (NFS) Version 4 Minor Version 2 External Data Representation Standard (XDR) Description — section 2, XDR Description of NFSv4.2 (enum nfs_opnum4)">138</a></sup></th><th>Linux trigger</th><th>What changes</th></tr></thead>
@@ -465,7 +465,7 @@ retransmit slot 3 / seq 118 after the reply was lost:
 </ul>
 </section>
 <section id="knobs">
-<h2>Linux configuration: mount options, exports, nfs.conf</h2>
+<h2>Configuring the NFS client and server</h2>
 <h3>Client mount options</h3>
 <div class="table-wrap"><table>
 <thead><tr><th>Option</th><th>Default</th><th>Meaning</th></tr></thead>

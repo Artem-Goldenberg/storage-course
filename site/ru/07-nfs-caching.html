@@ -63,7 +63,7 @@
 <b>В этом уроке</b>
 <ol>
 <li><a href="#problem">Согласованность кэшей между клиентами NFS</a></li>
-<li><a href="#caches">Кэши клиента NFS: данные, атрибуты, имена, права, readdir</a></li>
+<li><a href="#caches">Что кэширует клиент NFS</a></li>
 <li><a href="#attr">Кэш атрибутов</a></li>
 <li><a href="#change">mtime, ctime и атрибут change</a></li>
 <li><a href="#cto">Согласованность close-to-open</a></li>
@@ -71,11 +71,11 @@
 <li><a href="#writes">Путь записи NFS: WRITE UNSTABLE и COMMIT</a></li>
 <li><a href="#delegations">Делегирование в NFSv4</a></li>
 <li><a href="#newer">Делегированные метки времени и делегирование каталогов</a></li>
-<li><a href="#compare">Согласованность кэшей в AFS, SMB, CephFS, Lustre и GPFS</a></li>
+<li><a href="#compare">Как другие файловые системы согласуют кэши</a></li>
 <li><a href="#fscache">FS-Cache: дисковый кэш под NFS</a></li>
-<li><a href="#failures">Отказы: hard и soft, ESTALE, аренды, часы</a></li>
+<li><a href="#failures">Отказы и особые случаи в NFS</a></li>
 <li><a href="#diagnose">Диагностика устаревших данных по шагам</a></li>
-<li><a href="#lab">Практика 06 · Часть B: Кэш атрибутов, close-to-open и блокировки в mountstats</a></li>
+<li><a href="#lab">Практика 06 · Часть B: Наблюдение за работой кэшей NFS</a></li>
 <li><a href="#check">Проверьте себя</a></li>
 <li><a href="#further">Что почитать дальше</a></li>
 <li><a href="#sources">Источники</a></li>
@@ -94,7 +94,7 @@
 <p>NFS взяла за основу опрос, а обещания добавила позже.<sup class="cite"><a href="#src-1" id="cite-1" title="nfs(5), Linux manual page — раздел DATA AND METADATA COHERENCE, NFS version 4 caching features">1</a></sup> Урок идёт в том же порядке: что кэшируется, как работает опрос и что он гарантирует, затем делегирование, затем то, как другие системы сделали иной выбор.</p>
 </section>
 <section id="caches">
-<h2>Кэши клиента NFS: данные, атрибуты, имена, права, readdir</h2>
+<h2>Что кэширует клиент NFS</h2>
 <p>«Кэш NFS» на деле состоит из нескольких кэшей с разным временем жизни. Все они живут в оперативной памяти клиента, если не подключён FS-Cache.</p>
 <div class="table-wrap"><table>
 <thead><tr><th>Кэш</th><th>Что хранит</th><th>Когда становится недействительным</th></tr></thead>
@@ -352,7 +352,7 @@ COMMIT       ──▶  сервер делает fsync диапазона  ─�
 <p><b>Делегирование каталогов</b> (directory delegations, NFSv4.1, GET_DIR_DELEGATION) делает для каталогов то же, что обычное делегирование для файлов. Клиент, у которого оно есть, может доверять закэшированному списку содержимого и, что ценнее, своим негативным dentry: «здесь нет файла <code>config.local</code>» остаётся верным, пока сервер не скажет иначе.<sup class="cite"><a href="#src-87" id="cite-87" title="RFC 8881: Network File System (NFS) Version 4 Minor Version 1 Protocol — раздел 10.9.2, Directory Delegation Design">87</a></sup> Больше всего выигрывают инструменты сборки и среды выполнения языков, которые на каждый импорт проверяют десятки несуществующих путей.<sup class="cite"><a href="#src-88" id="cite-88" title="RFC 8881: Network File System (NFS) Version 4 Minor Version 1 Protocol — раздел 10.9.1, Introduction to Directory Delegations">88</a></sup> Уведомления (CB_NOTIFY) могут сообщать держателю, какие именно записи изменились, вместо того чтобы отзывать всё делегирование.<sup class="cite"><a href="#src-87" id="cite-87-2" title="RFC 8881: Network File System (NFS) Version 4 Minor Version 1 Protocol — раздел 10.9.2, Directory Delegation Design">87</a></sup> В Linux 6.19 появилась начальная поддержка на клиенте: она используется для ACCESS, CREATE, UNLINK и RENAME, и её можно отключить параметром модуля.<sup class="cite"><a href="#src-89" id="cite-89" title="Linux kernel commit 6bb34aff1ebd, Merge tag &#x27;nfs-for-6.19-1&#x27; — сообщение коммита">89</a></sup></p>
 </section>
 <section id="compare">
-<h2>Согласованность кэшей в AFS, SMB, CephFS, Lustre и GPFS</h2>
+<h2>Как другие файловые системы согласуют кэши</h2>
 <p>NFS здесь белая ворона: её базовый протокол опрашивает, а обещания — лишь оптимизация. Большинство других распределённых файловых систем с самого начала строились вокруг обещаний. Их архитектура разобрана в <a href="09-distributed.html">уроке 9</a>; здесь — как каждая из них отвечает на вопрос «может ли этот клиент пользоваться своей закэшированной копией?».</p>
 <div class="table-wrap"><table>
 <thead><tr><th>Система</th><th>Что держит клиент</th><th>Как это забирают назад</th><th>Что видят приложения</th></tr></thead>
@@ -382,7 +382,7 @@ COMMIT       ──▶  сервер делает fsync диапазона  ─�
 <aside class="note"><span class="tag">Эта машина</span><p>Ядро WSL, используемое здесь, собрано с <code>CONFIG_FSCACHE=y</code> и <code>CONFIG_NFS_FSCACHE=y</code>, но <code>CONFIG_CACHEFILES</code> не задан. Без бэкенда опция <code>fsc</code> принимается, но ничего не кэширует, поэтому эксперимента с FS-Cache в практике нет.</p></aside>
 </section>
 <section id="failures">
-<h2>Отказы: hard и soft, ESTALE, аренды, часы</h2>
+<h2>Отказы и особые случаи в NFS</h2>
 <h3>Жёсткое и мягкое монтирование</h3>
 <p>Когда сервер перестаёт отвечать, монтирование <code>hard</code> (по умолчанию) повторяет запросы бесконечно. Ядро пишет в журнал <code>nfs: server X not responding, still trying</code>, и каждый процесс, обратившийся к точке монтирования, ждёт в состоянии D, пока сервер не вернётся, а затем продолжает работу, как будто ничего не случилось.<sup class="cite"><a href="#src-109" id="cite-109" title="nfs(5), Linux manual page — раздел MOUNT OPTIONS, soft / softerr / hard, softreval, intr">109</a><a href="#src-110" id="cite-110" title="Linux kernel source, net/sunrpc/clnt.c (v6.12) — rpc_check_timeout()">110</a></sup> Старая опция <code>intr</code> игнорируется начиная с Linux 2.6.25; вместо неё ожидания сделаны прерываемыми сигналом KILL, так что <code>kill -9</code> завершит зависший процесс.<sup class="cite"><a href="#src-109" id="cite-109-2" title="nfs(5), Linux manual page — раздел MOUNT OPTIONS, soft / softerr / hard, softreval, intr">109</a><a href="#src-111" id="cite-111" title="TASK_KILLABLE, LWN.net (2008) — статья целиком">111</a></sup></p>
 <p>Монтирование <code>soft</code> сдаётся после <code>retrans</code> повторов и возвращает <code>EIO</code> (с <code>softerr</code> — <code>ETIMEDOUT</code>). Звучит дружелюбнее, но nfs(5) предупреждает, что так можно незаметно испортить данные.<sup class="cite"><a href="#src-109" id="cite-109-3" title="nfs(5), Linux manual page — раздел MOUNT OPTIONS, soft / softerr / hard, softreval, intr">109</a></sup> Если WRITE во время фоновой обратной записи завершился по таймауту, вернуть ошибку некуда: нет системного вызова, который её ждёт. Страница помечается ошибкой, данные теряются, и сообщить об этом может только более поздний <code>fsync</code> или <code>close</code>. Используйте <code>soft</code> только для данных только для чтения, где ошибка лучше зависания. Опция <code>softreval</code> позволяет мягкому монтированию продолжать отдавать закэшированные атрибуты и имена, пока сервер недоступен.<sup class="cite"><a href="#src-109" id="cite-109-4" title="nfs(5), Linux manual page — раздел MOUNT OPTIONS, soft / softerr / hard, softreval, intr">109</a></sup></p>
@@ -421,7 +421,7 @@ COMMIT       ──▶  сервер делает fsync диапазона  ─�
 </section>
 <section class="lab" id="lab">
 <p class="tag">Практика 06 · Часть B</p>
-<h2>Кэш атрибутов, close-to-open и блокировки в mountstats</h2>
+<h2>Наблюдение за работой кэшей NFS</h2>
 <p class="where">~/storage-course/labs/06-nfs/   (README.md, часть B)</p>
 <aside class="pitfall"><span class="tag">Здесь не проверялось</span><p>Части B нужны сервер NFS и точки монтирования из части A, а для них нужны права root. Ни один шаг с NFS на машине, где писался курс, не выполнялся. <code>events.sh</code> и <code>attrwatch.sh</code> проверены на вручную подготовленных файлах в формате mountstats, а <code>lockread.py</code> — на локальном файле. Ожидаемые результаты взяты из документированного поведения клиента Linux и его исходного кода.</p></aside>
 <p>В практике используются два монтирования NFSv3 одного и того же экспорта с раздельными кэшами: <code>/mnt/nfs3</code> с параметрами по умолчанию и <code>/mnt/nfs3-lazy</code> с <code>nocto,actimeo=60,nosharecache</code>. Запись прямо в <code>/srv/nfslab</code> на сервере играет роль второго клиента. Для большинства шагов взят NFSv3, потому что в нём нет делегирования, и результаты воспроизводимы.</p>

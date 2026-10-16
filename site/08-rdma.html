@@ -63,13 +63,13 @@
 <b>In this lesson</b>
 <ol>
 <li><a href="#tcp-cost">CPU cost of a read over TCP</a></li>
-<li><a href="#idea">RDMA: transport on the NIC, registered memory, kernel bypass</a></li>
+<li><a href="#idea">How RDMA moves data</a></li>
 <li><a href="#fabrics">Fabrics: InfiniBand, RoCE and iWARP</a></li>
 <li><a href="#verbs">Verbs objects: PD, MR, QP and CQ</a></li>
 <li><a href="#qp">QP states: RESET, INIT, RTR, RTS</a></li>
 <li><a href="#ops">RDMA operations</a></li>
-<li><a href="#costs">RDMA pitfalls: registration, rkeys, credits, scaling</a></li>
-<li><a href="#storage">Storage protocols over RDMA: iSER, SRP, NVMe-oF, NFS, SMB Direct</a></li>
+<li><a href="#costs">RDMA costs and limitations</a></li>
+<li><a href="#storage">Storage protocols over RDMA</a></li>
 <li><a href="#nfs-rdma">RPC-over-RDMA version 1 (RFC 8166)</a></li>
 <li><a href="#lab">Lab 07: Soft-RoCE, a verbs program, and NFS over RDMA</a></li>
 <li><a href="#check">Check yourself</a></li>
@@ -136,7 +136,7 @@
 </figure>
 </section>
 <section id="idea">
-<h2>RDMA: transport on the NIC, registered memory, kernel bypass</h2>
+<h2>How RDMA moves data</h2>
 <p><b>Remote Direct Memory Access</b> extends DMA across the network. Your NIC can write into, or read from, memory on another machine, and the other machine's NIC does the work on its side. Three ideas make that possible.</p>
 <ul>
 <li><b>The transport runs on the NIC.</b> Segmentation, acknowledgements, retransmission and ordering are done in NIC hardware.<sup class="cite"><a href="#src-6" id="cite-6" title="RDMA Aware Networks Programming User Manual, Rev 1.7 (NVIDIA) — section 2.4, Comparison of RDMA Technologies">6</a></sup> The CPU posts a request ("send these 1 MiB") and later reads one completion.</li>
@@ -327,7 +327,7 @@
 <p>That last point leads to the classic pattern in <code>rc_hello.c</code>: RDMA WRITE the data, then SEND a small message. On a reliable connected QP operations are delivered in order, so by the time the target sees the SEND's completion, the bytes of the earlier WRITE are already in its memory.<sup class="cite"><a href="#src-56" id="cite-56-3" title="RFC 8166: Remote Direct Memory Access Transport for Remote Procedure Call Version 1 — section 2.3.2, RDMA Transport Requirements">56</a><a href="#src-60" id="cite-60" title="RFC 5040: A Remote Direct Memory Access Protocol Specification — section 5.5, Ordering and Completions">60</a></sup> (RDMA READs are an exception to the simple ordering story. A later operation can overtake a READ unless you set <code>IBV_SEND_FENCE</code>.)<sup class="cite"><a href="#src-35" id="cite-35-5" title="ibv_post_send(3), rdma-core manual page — DESCRIPTION">35</a><a href="#src-60" id="cite-60-2" title="RFC 5040: A Remote Direct Memory Access Protocol Specification — section 5.5, Ordering and Completions">60</a></sup></p>
 </section>
 <section id="costs">
-<h2>RDMA pitfalls: registration, rkeys, credits, scaling</h2>
+<h2>RDMA costs and limitations</h2>
 <h3>Memory registration cost and pinning</h3>
 <p><code>ibv_reg_mr</code> pins every page (the kernel walks the page tables and takes references) and loads the translations into the NIC. That takes tens of microseconds even for a small buffer and much longer for a large one, which is far too slow to do for each I/O.<sup class="cite"><a href="#src-7" id="cite-7-4" title="RDMA Aware Networks Programming User Manual, Rev 1.7 (NVIDIA) — section 3.3.4, Memory Registration">7</a><a href="#src-61" id="cite-61" title="Shen et al., NP-RDMA: Using Commodity RDMA without Pinning Memory (arXiv 2310.11062) — section 2, Background (Memory Pinning in RDMA; Traditional Memory Management)">61</a><a href="#src-62" id="cite-62" title="RFC 8166: Remote Direct Memory Access Transport for Remote Procedure Call Version 1 — section 4.4, Memory Registration">62</a></sup> Programs avoid it in three ways:</p>
 <ul>
@@ -348,7 +348,7 @@
 <aside class="pitfall"><span class="tag">Pitfall</span><p>Raw verbs are rarely the right level for an application. Most user-space software uses a library that hides registration, connection management and protocol choice: UCX, libfabric, MPI, or NCCL for GPUs. Kernel code uses the in-kernel verbs through subsystems like NFS, NVMe-oF and iSER. Learn verbs to understand those systems, not to replace them.</p></aside>
 </section>
 <section id="storage">
-<h2>Storage protocols over RDMA: iSER, SRP, NVMe-oF, NFS, SMB Direct</h2>
+<h2>Storage protocols over RDMA</h2>
 <p>Nearly every storage protocol on RDMA follows one pattern. Small control messages (commands, RPC headers, replies) travel by SEND/RECV. Bulk data moves by RDMA READ or WRITE, which the <b>server or target</b> initiates against buffers the client described in its request.<sup class="cite"><a href="#src-40" id="cite-40-2" title="NVM Express RDMA Transport Specification, Revision 1.0c — section 3.3, Data Transfer Model">40</a><a href="#src-76" id="cite-76" title="RFC 8166: Remote Direct Memory Access Transport for Remote Procedure Call Version 1 — section 4.5.3, Responder RDMA Operational Errors">76</a></sup></p>
 <div class="table-wrap"><table>
 <thead><tr><th>Protocol</th><th>Level</th><th>Notes</th></tr></thead>

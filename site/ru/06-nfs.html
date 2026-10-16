@@ -61,7 +61,7 @@
 <nav class="toc" aria-label="Содержание урока">
 <b>В этом уроке</b>
 <ol>
-<li><a href="#why">Сетевые файловые системы: задержка, частичные отказы, несколько кэшей</a></li>
+<li><a href="#why">Что меняется, когда файлы лежат на сервере</a></li>
 <li><a href="#history">Версии NFS и их RFC</a></li>
 <li><a href="#stack">Стек NFS в Linux</a></li>
 <li><a href="#rpc">ONC RPC и XDR</a></li>
@@ -69,8 +69,8 @@
 <li><a href="#v3">NFSv3: сервер без состояния</a></li>
 <li><a href="#v4">NFSv4.0: состояние, составные запросы, один порт</a></li>
 <li><a href="#v41">NFSv4.1: сессии, транкинг и pNFS</a></li>
-<li><a href="#v42">Операции NFSv4.2</a></li>
-<li><a href="#knobs">Настройка в Linux: опции монтирования, exports, nfs.conf</a></li>
+<li><a href="#v42">Возможности NFSv4.2</a></li>
+<li><a href="#knobs">Настройка клиента и сервера NFS</a></li>
 <li><a href="#observe">Наблюдение за NFS: mountstats, nfsstat и точки трассировки</a></li>
 <li><a href="#lab">Практика 06 · Часть A: Сервер и клиент NFS на одной машине</a></li>
 <li><a href="#check">Проверьте себя</a></li>
@@ -80,7 +80,7 @@
 </nav>
 </header>
 <section id="why">
-<h2>Сетевые файловые системы: задержка, частичные отказы, несколько кэшей</h2>
+<h2>Что меняется, когда файлы лежат на сервере</h2>
 <p>В уроках 1–5 диск находился внутри машины. Файл был inode на локальном блочном устройстве, все процессы работали через одно ядро, и страничный кэш этого ядра был единственной копией данных в RAM. Сетевая файловая система хранит файлы на <b>сервере</b> и позволяет многим <b>клиентам</b> работать с ними через обычный файловый API. Приложение по-прежнему вызывает <code>open</code>, <code>read</code> и <code>write</code>. Ядро клиента превращает эти вызовы в сообщения серверу.</p>
 <p>Когда диск уезжает на другую машину, меняются три вещи:</p>
 <ul>
@@ -177,7 +177,7 @@
 <section id="rpc">
 <h2>ONC RPC и XDR</h2>
 <p>NFS — это набор удалённых процедур. Под ним лежит фреймворк <b>ONC RPC</b> (Open Network Computing Remote Procedure Call, RFC 5531), а кодировка называется <b>XDR</b> (External Data Representation, RFC 4506).<sup class="cite"><a href="#src-45" id="cite-45" title="RFC 5531: RPC: Remote Procedure Call Protocol Specification Version 2 — заголовок и аннотация">45</a><a href="#src-46" id="cite-46" title="RFC 4506: XDR: External Data Representation Standard — заголовок и аннотация">46</a></sup> Каждое сообщение NFS — это RPC-вызов или ответ на него.</p>
-<h3>Заголовок вызова RPC: xid, программа, версия, процедура</h3>
+<h3>Заголовок вызова RPC</h3>
 <pre><code>xid         0x5a3c91e2      <span class="c">идентификатор транзакции; ответ несёт тот же xid</span>
 msg_type    0 (CALL)         <span class="c">1 = REPLY</span>
 rpcvers     2
@@ -193,7 +193,7 @@ verf        AUTH_NONE
 <pre><code>00 00 00 05   68 65 6c 6c   6f 00 00 00
 <span class="c">длина = 5     h  e  l  l    o  дополнение</span></code></pre>
 <p>В передаваемых данных нет ни имён полей, ни тегов. Обе стороны знают раскладку из спецификации протокола, написанной на собственном языке описаний XDR.<sup class="cite"><a href="#src-53" id="cite-53" title="RFC 4506: XDR: External Data Representation Standard — раздел 1, Introduction">53</a></sup> Благодаря этому сообщения компактны, а разбор дёшев, и поэтому же Wireshark нужен диссектор NFS, чтобы показать что-то осмысленное.</p>
-<h3>RPC-программы и порты: rpcbind, nfs, mountd, NLM, NSM</h3>
+<h3>RPC-программы и порты</h3>
 <div class="table-wrap"><table>
 <thead><tr><th>Программа</th><th>Номер</th><th>Порт</th><th>Кто использует</th></tr></thead>
 <tbody>
@@ -422,7 +422,7 @@ verf        AUTH_NONE
 <p>Версия 4.1 также определила <b>делегирование каталогов</b> (directory delegations: GET_DIR_DELEGATION, а для уведомлений об изменениях — CB_NOTIFY), чтобы клиент мог безопасно кэшировать содержимое каталога и отрицательные результаты поиска.<sup class="cite"><a href="#src-135" id="cite-135" title="RFC 8881: Network File System (NFS) Version 4 Minor Version 1 Protocol — раздел 10.9.1, Introduction to Directory Delegations">135</a></sup> Годами их почти никто не реализовывал. Клиент Linux получил начальную поддержку в версии 6.19: она используется для ACCESS, CREATE, UNLINK и RENAME, и её можно отключить параметром модуля.<sup class="cite"><a href="#src-136" id="cite-136" title="Linux commit 6bb34aff1ebd: Merge tag &#x27;nfs-for-6.19-1&#x27; (NFS client updates) — сообщение слияния и список коммитов">136</a></sup></p>
 </section>
 <section id="v42">
-<h2>Операции NFSv4.2</h2>
+<h2>Возможности NFSv4.2</h2>
 <p>RFC 7862 добавляет операции, которые позволяют клиенту поручить работу серверу, а не гонять данные туда и обратно, и несколько атрибутов.<sup class="cite"><a href="#src-137" id="cite-137" title="RFC 7862: Network File System (NFS) Version 4 Minor Version 2 Protocol — раздел 1.4.1, Server-Side Clone and Copy">137</a></sup> Каждая операция соответствует знакомому вам системному вызову Linux, поэтому их легко проверить (практика 06, часть A).</p>
 <div class="table-wrap"><table>
 <thead><tr><th>Возможность</th><th>Операции (номер)<sup class="cite"><a href="#src-138" id="cite-138" title="RFC 7863: Network File System (NFS) Version 4 Minor Version 2 External Data Representation Standard (XDR) Description — раздел 2, XDR-описание NFSv4.2 (enum nfs_opnum4)">138</a></sup></th><th>Что её вызывает в Linux</th><th>Что меняется</th></tr></thead>
@@ -465,7 +465,7 @@ verf        AUTH_NONE
 </ul>
 </section>
 <section id="knobs">
-<h2>Настройка в Linux: опции монтирования, exports, nfs.conf</h2>
+<h2>Настройка клиента и сервера NFS</h2>
 <h3>Опции монтирования на клиенте</h3>
 <div class="table-wrap"><table>
 <thead><tr><th>Опция</th><th>По умолчанию</th><th>Смысл</th></tr></thead>

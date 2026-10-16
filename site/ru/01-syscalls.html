@@ -66,10 +66,10 @@
 <li><a href="#file-api">open(): флаги, права и umask</a></li>
 <li><a href="#read-write">read() и write(): неполные передачи и ошибки</a></li>
 <li><a href="#offsets">lseek, разреженные файлы и pread/pwrite</a></li>
-<li><a href="#tables">Таблица дескрипторов, описание открытого файла и inode</a></li>
+<li><a href="#tables">Как дескриптор связан с файлом</a></li>
 <li><a href="#everything-fd">Каналы, сокеты и устройства как дескрипторы</a></li>
-<li><a href="#metadata">stat, getdents64, link и rename</a></li>
-<li><a href="#names">unlink открытого файла: nlink и открытые ссылки</a></li>
+<li><a href="#metadata">Метаданные, каталоги и имена</a></li>
+<li><a href="#names">Почему открытый файл живёт после unlink</a></li>
 <li><a href="#buffers">Буфер stdio, страничный кэш и кэш накопителя</a></li>
 <li><a href="#next-steps">От struct file к VFS</a></li>
 <li><a href="#lab">Практика 01: Дескрипторы, смещения, O_APPEND и unlink на практике</a></li>
@@ -228,7 +228,7 @@ SEEK_DATA from 0 -&gt; 1073741824 (everything before is a hole)</span></code></p
 <aside class="note"><span class="tag">Отступление: документированная причуда Linux</span><p>POSIX говорит, что <code>pwrite</code> пишет по указанному вами смещению, даже если дескриптор открыт с <code>O_APPEND</code>. Linux же дописывает данные в конец файла. Страница man <code>pwrite(2)</code> упоминает это в разделе BUGS.<sup class="cite"><a href="#src-49" id="cite-49" title="pread(2), Linux manual page — раздел BUGS">49</a></sup></p></aside>
 </section>
 <section id="tables">
-<h2>Таблица дескрипторов, описание открытого файла и inode</h2>
+<h2>Как дескриптор связан с файлом</h2>
 <p>Номер дескриптора — это индекс. Пройдя по нему, вы проходите через три структуры ядра, и если знать, какое состояние в какой из них живёт, становится понятно большинство неожиданностей при работе с файлами.</p>
 <ol>
 <li><strong>Таблица дескрипторов процесса.</strong> Массив, который есть у каждого процесса (в ядре это <code>struct files_struct</code>). Ячейка <em>n</em> хранит указатель на описание открытого файла и ещё один флаг на уровне самого дескриптора: close-on-exec (<code>FD_CLOEXEC</code>).<sup class="cite"><a href="#src-50" id="cite-50" title="Linux kernel v6.12 source: include/linux/fdtable.h — строки 26–56, struct fdtable и struct files_struct">50</a></sup></li>
@@ -314,12 +314,12 @@ fd 5   -&gt; pipe:[81567245]
   mnt_id: 81
   ino:    2826040</span></code></pre>
 <p>Флаги записаны в восьмеричном виде: <code>02000000</code> — это <code>O_CLOEXEC</code>, <code>0100000</code> — <code>O_LARGEFILE</code> (на 64-битных системах ставится автоматически), а режим доступа в младших битах равен 0, то есть <code>O_RDONLY</code>.<sup class="cite"><a href="#src-65" id="cite-65" title="Linux kernel v6.12 source: include/uapi/asm-generic/fcntl.h — строки 20–63, значения флагов O_*">65</a><a href="#src-66" id="cite-66" title="Linux kernel v6.12 source: fs/open.c — строки 1434–1446, системные вызовы open() и openat()">66</a><a href="#src-67" id="cite-67" title="Linux kernel v6.12 source: include/linux/fcntl.h — строки 24–25, force_o_largefile()">67</a></sup> Оба конца канала показывают в скобках один и тот же номер inode. <code>ls -l /proc/$$/fd</code> показывает дескрипторы вашей командной оболочки, а <code>lsof -p PID</code> показывает то же самое для любого процесса, который вам разрешено просматривать.<sup class="cite"><a href="#src-68" id="cite-68" title="lsof(8), Arch manual pages — раздел OPTIONS">68</a></sup></p>
-<h3>RLIMIT_NOFILE, EMFILE и O_CLOEXEC</h3>
+<h3>Лимиты и утечки дескрипторов</h3>
 <p>У каждого процесса есть ограничение на число открытых дескрипторов, <code>RLIMIT_NOFILE</code>; оболочка показывает его командой <code>ulimit -n</code>, а программа читает вызовом <code>getrlimit</code>.<sup class="cite"><a href="#src-69" id="cite-69" title="getrlimit(2), Linux manual page — раздел DESCRIPTION, RLIMIT_NOFILE">69</a></sup> Во многих дистрибутивах мягкий лимит по умолчанию равен 1024;<sup class="cite"><a href="#src-70" id="cite-70" title="systemd-system.conf(5), Linux manual page — раздел RESOURCE MANAGEMENT, DefaultLimitNOFILE=">70</a><a href="#src-71" id="cite-71" title="Linux kernel v6.12 source: include/uapi/linux/fs.h — строки 37–38, INR_OPEN_CUR">71</a></sup> в этой сессии WSL он равен 1048576. Когда процесс упирается в лимит, <code>open</code>, <code>socket</code> и <code>accept</code> завершаются с <code>EMFILE</code>.<sup class="cite"><a href="#src-69" id="cite-69-2" title="getrlimit(2), Linux manual page — раздел DESCRIPTION, RLIMIT_NOFILE">69</a><a href="#src-72" id="cite-72" title="socket(2), Linux manual page — раздел ERRORS">72</a><a href="#src-73" id="cite-73" title="accept(2), Linux manual page — раздел ERRORS">73</a></sup> Сервер, который никогда не закрывает дескрипторы, рано или поздно упрётся в лимит, поэтому «too many open files» в журнале почти всегда означает утечку.</p>
 <p>Дескрипторы наследуются через <code>execve</code>, если не помечены как close-on-exec.<sup class="cite"><a href="#src-27" id="cite-27-2" title="execve(2), Linux manual page — раздел DESCRIPTION">27</a></sup> Если установить этот флаг позже через <code>fcntl</code>, остаётся окно, в котором другой поток может выполнить <code>fork</code> и <code>exec</code> и унести ваш дескриптор в постороннюю программу. Передача <code>O_CLOEXEC</code> в <code>open</code> закрывает это окно, поэтому аккуратный код передаёт его везде.<sup class="cite"><a href="#src-22" id="cite-22-17" title="open(2), Linux manual page — раздел DESCRIPTION">22</a></sup></p>
 </section>
 <section id="metadata">
-<h2>stat, getdents64, link и rename</h2>
+<h2>Метаданные, каталоги и имена</h2>
 <h3>stat и struct stat</h3>
 <pre><code class="language-c">int stat(const char *path, struct stat *st);   <span class="c">// следует по символическим ссылкам</span>
 int lstat(const char *path, struct stat *st);  <span class="c">// не следует</span>
@@ -357,7 +357,7 @@ int fstat(int fd, struct stat *st);            <span class="c">// по деск�
 </ul>
 </section>
 <section id="names">
-<h2>unlink открытого файла: nlink и открытые ссылки</h2>
+<h2>Почему открытый файл живёт после unlink</h2>
 <p>Ядро освобождает inode и данные файла, только когда до нуля доходят два счётчика: счётчик ссылок (имён в каталогах) и число открытых ссылок (описаний открытых файлов плюс отображений в память). <code>unlink</code> влияет только на первый.<sup class="cite"><a href="#src-90" id="cite-90-2" title="unlink(2), Linux manual page — раздел DESCRIPTION">90</a><a href="#src-93" id="cite-93" title="mmap(2), Linux manual page — раздел DESCRIPTION">93</a></sup></p>
 <p>Поэтому программа может открыть файл, лишиться его имени и продолжать читать и писать его.<sup class="cite"><a href="#src-22" id="cite-22-18" title="open(2), Linux manual page — раздел DESCRIPTION">22</a></sup> Из практики:</p>
 <pre><code><span class="o">before unlink: inode 2826042, nlink 1

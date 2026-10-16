@@ -62,19 +62,19 @@
 <nav class="toc" aria-label="Lesson contents">
 <b>In this lesson</b>
 <ol>
-<li><a href="#why">Limits of one server: capacity, bandwidth, metadata, availability</a></li>
+<li><a href="#why">Why distribute, and what gets hard</a></li>
 <li><a href="#taxonomy">Six architectures of distributed filesystems</a></li>
 <li><a href="#nas">Scale-up NAS and shared-disk clusters</a></li>
 <li><a href="#mds">Metadata server and data servers</a></li>
 <li><a href="#ceph">Ceph: computed placement</a></li>
 <li><a href="#more">GlusterFS, JuiceFS and Colossus</a></li>
-<li><a href="#placement">Placement: tables, hashing, rendezvous and CRUSH</a></li>
+<li><a href="#placement">Comparing data placement strategies</a></li>
 <li><a href="#redundancy">Replication vs erasure coding</a></li>
-<li><a href="#consistency">POSIX consistency at scale: locks, capabilities, delegations</a></li>
+<li><a href="#consistency">Maintaining consistency across clients</a></li>
 <li><a href="#failure">Failure detection, quorum and fencing</a></li>
 <li><a href="#performance">Performance: striping, metadata and tail latency</a></li>
 <li><a href="#nfs-fit">Native clients vs NFS: pNFS, nconnect and RDMA</a></li>
-<li><a href="#lab">Lab 08: Simulating placement: mod N, consistent hashing, straw2</a></li>
+<li><a href="#lab">Lab 08: Simulating placement and rack failure</a></li>
 <li><a href="#check">Check yourself</a></li>
 <li><a href="#further">Further reading</a></li>
 <li><a href="#sources">Sources</a></li>
@@ -82,7 +82,7 @@
 </nav>
 </header>
 <section id="why">
-<h2>Limits of one server: capacity, bandwidth, metadata, availability</h2>
+<h2>Why distribute, and what gets hard</h2>
 <p>A single NFS server (<a href="06-nfs.html">lesson 6</a>) is the simplest network filesystem, and it hits four walls:</p>
 <ul>
 <li><b>Capacity.</b> A chassis holds a fixed number of drives.</li>
@@ -261,7 +261,7 @@ stripe_count = 4, stripe_size = 1 MiB
 <section id="ceph">
 <h2>Ceph: computed placement</h2>
 <p>Ceph removes the lookup step for data altogether. Its base layer, <b>RADOS</b> (Reliable Autonomic Distributed Object Store), stores named objects on <b>OSDs</b> (object storage daemons, usually one per disk).<sup class="cite"><a href="#src-49" id="cite-49" title="Ceph documentation (Tentacle): Architecture — Storing Data">49</a><a href="#src-50" id="cite-50" title="Ceph documentation (Tentacle): Storage Devices — Storage Devices and BlueStore">50</a></sup> Any client can compute where an object lives from a small, shared <b>cluster map</b>.<sup class="cite"><a href="#src-51" id="cite-51" title="Ceph documentation (Tentacle): Architecture — Calculating PG IDs">51</a></sup> Block devices (RBD), S3-compatible object storage (RGW) and the filesystem (CephFS) are all built on RADOS.<sup class="cite"><a href="#src-49" id="cite-49-2" title="Ceph documentation (Tentacle): Architecture — Storing Data">49</a></sup></p>
-<h3 id="ceph-parts">Ceph daemons: MON, OSD and MDS</h3>
+<h3 id="ceph-parts">Ceph components and their roles</h3>
 <ul>
 <li><b>Monitors</b> (MONs): a small odd number, typically 3 or 5, that use Paxos to agree on the cluster maps: which monitors exist, which OSDs exist and whether they are up, the CRUSH map, and the CephFS metadata server map.<sup class="cite"><a href="#src-52" id="cite-52" title="Ceph documentation (Tentacle): MON Service — Deploying additional monitors">52</a><a href="#src-53" id="cite-53" title="Ceph documentation (Tentacle): Architecture — High Availability Monitors">53</a><a href="#src-54" id="cite-54" title="Ceph documentation (Tentacle): Architecture — Cluster Map">54</a></sup> Every map has an epoch number that increases with each change.<sup class="cite"><a href="#src-55" id="cite-55" title="S. Weil et al.: RADOS: A Scalable, Reliable Storage Service for Petabyte-scale Storage Clusters (PDSW 2007) — section 2.1, Cluster Map">55</a></sup></li>
 <li><b>OSDs</b> store objects. The current backend, <b>BlueStore</b>, writes data directly to the raw block device and keeps its own metadata (object names, extent maps, allocation state) in RocksDB, an LSM-tree key-value store.<sup class="cite"><a href="#src-50" id="cite-50-2" title="Ceph documentation (Tentacle): Storage Devices — Storage Devices and BlueStore">50</a><a href="#src-56" id="cite-56" title="A. Aghayev et al.: File Systems Unfit as Distributed Storage Backends: Lessons from 10 Years of Ceph Evolution (SOSP 2019) — section 4.2, Data Path and Space Allocation (Metadata Organization, Space Allocation)">56</a><a href="#src-57" id="cite-57" title="RocksDB wiki: RocksDB Overview — section 4, Features: Multi-Threaded Compactions">57</a></sup> That is the write-optimised alternative to the B-trees of <a href="04-btrees.html">lesson 4</a>.</li>
@@ -344,7 +344,7 @@ acting set [osd.6, osd.1, osd.11]        osd.6 is the primary</code></pre>
 </ul>
 </section>
 <section id="placement">
-<h2>Placement: tables, hashing, rendezvous and CRUSH</h2>
+<h2>Comparing data placement strategies</h2>
 <div class="table-wrap"><table>
 <thead><tr><th>Strategy</th><th>How a client finds data</th><th>Data moved when one of N servers is added</th><th>Used by</th></tr></thead>
 <tbody>
@@ -377,7 +377,7 @@ acting set [osd.6, osd.1, osd.11]        osd.6 is the primary</code></pre>
 <p>Spreading replicas over many servers also speeds up recovery. When one disk fails, its data is rebuilt from many disks onto many disks in parallel (declustered recovery), instead of from one mirror onto one spare.<sup class="cite"><a href="#src-105" id="cite-105" title="S. Weil et al.: CRUSH: Controlled, Scalable, Decentralized Placement of Replicated Data (SC 2006) — section 4.4, Reliability">105</a></sup> The lab shows each surviving node contributing an almost equal share of the rebuild.</p>
 </section>
 <section id="consistency">
-<h2>POSIX consistency at scale: locks, capabilities, delegations</h2>
+<h2>Maintaining consistency across clients</h2>
 <p>POSIX promises that a <code>read()</code> after a <code>write()</code> sees the new data, even on another machine, that <code>rename()</code> is atomic, and that byte-range locks work.<sup class="cite"><a href="#src-106" id="cite-106" title="POSIX.1-2024: write() — DESCRIPTION">106</a><a href="#src-107" id="cite-107" title="POSIX.1-2024: rename() — RATIONALE">107</a></sup> On one machine these promises are cheap because one kernel sees everything (lesson 5). Across many machines, every access that might conflict requires coordination. The systems differ in how much they coordinate:</p>
 <div class="table-wrap"><table>
 <thead><tr><th>Mechanism</th><th>Systems</th><th>Who tracks it</th><th>Guarantee</th><th>Cost</th></tr></thead>
@@ -388,7 +388,7 @@ acting set [osd.6, osd.1, osd.11]        osd.6 is the primary</code></pre>
 <tr><td>Write-once files</td><td>HDFS, object stores</td><td>nobody</td><td>trivial: data never changes</td><td>applications must be written for it</td></tr>
 </tbody>
 </table></div>
-<h3 id="hotspots">Metadata hot spots: N-to-N and N-to-1</h3>
+<h3 id="hotspots">Bottlenecks with separate and shared files</h3>
 <p>Parallel jobs have two classic I/O patterns:</p>
 <ul>
 <li><b>N-to-N</b>: each of N processes writes its own file. Data bandwidth is easy, but N creates in one directory at the same instant all go to the metadata server that owns that directory and serialise on its lock.<sup class="cite"><a href="#src-23" id="cite-23-2" title="Lustre Operations Manual — section 13.10, Creating a directory striped across multiple MDTs">23</a></sup> At tens of thousands of processes that becomes the bottleneck.</li>
@@ -431,7 +431,7 @@ acting set [osd.6, osd.1, osd.11]        osd.6 is the primary</code></pre>
 </section>
 <section class="lab" id="lab">
 <p class="tag">Lab 08</p>
-<h2>Simulating placement: mod N, consistent hashing, straw2</h2>
+<h2>Simulating placement and rack failure</h2>
 <p class="where">~/storage-course/labs/08-distributed/</p>
 <ol>
 <li>Run the simulator. It places 100,000 objects on 10 nodes four ways, then adds an 11th node and removes the 10th, and counts what moves:

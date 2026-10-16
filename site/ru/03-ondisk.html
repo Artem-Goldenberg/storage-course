@@ -71,8 +71,8 @@
 <li><a href="#directories">Записи каталогов: ext4_dir_entry_2</a></li>
 <li><a href="#walk">Разрешение пути на диске</a></li>
 <li><a href="#links">Жёсткие ссылки, счётчики ссылок и удаление</a></li>
-<li><a href="#allocation">Выделение блоков: Orlov, mballoc и отложенное выделение</a></li>
-<li><a href="#journal">Журнал jbd2 и fsck</a></li>
+<li><a href="#allocation">Как ext4 выбирает блоки</a></li>
+<li><a href="#journal">Устойчивость к сбоям: журнал и fsck</a></li>
 <li><a href="#cow">Копирование при записи в btrfs и ZFS</a></li>
 <li><a href="#xfs">XFS: группы выделения и B+-деревья</a></li>
 <li><a href="#lab">Практика 03: Разбор образа ext4 программой ext4walk</a></li>
@@ -418,7 +418,7 @@ ext4: i_block = заголовок экстентов + до 4 экстенто�
 <p>Сами данные файла не перезаписываются. Биты переключаются, а старые байты остаются в свободных блоках, пока там не разместится что-то другое. Поэтому утилиты восстановления удалённых файлов иногда срабатывают, и поэтому для надёжного удаления одного <code>rm</code> мало.<sup class="cite"><a href="#src-67" id="cite-67" title="rm(1), Linux manual page — последний абзац раздела OPTIONS">67</a></sup></p>
 </section>
 <section id="allocation">
-<h2>Выделение блоков: Orlov, mballoc и отложенное выделение</h2>
+<h2>Как ext4 выбирает блоки</h2>
 <p>Прочитать структуры — половина дела. Вторая половина — решить, куда класть новое, и цель на любом масштабе одна: класть рядом то, что читается вместе, длинными непрерывными участками.</p>
 <ul>
 <li><b>Каталоги разносятся, файлы группируются.</b> Распределитель Орлова (Orlov allocator) помещает новые каталоги верхнего уровня в группы с большим числом свободных inode и блоков, а файлы и подкаталоги — в группу родителя или рядом с ней.<sup class="cite"><a href="#src-8" id="cite-8-2" title="ext4 Data Structures and Algorithms: Block and Inode Allocation Policy, The Linux Kernel documentation — раздел 2.4">8</a><a href="#src-20" id="cite-20-2" title="fs/ext4/ialloc.c, Linux v6.12 — строки 401–418, комментарий над find_group_orlov()">20</a></sup></li>
@@ -429,7 +429,7 @@ ext4: i_block = заголовок экстентов + до 4 экстенто�
 <p>Со временем свободное место фрагментируется, и новые файлы дробятся на множество экстентов. <code>filefrag -v</code> показывает экстенты файла, а <code>e4defrag</code> переписывает фрагментированные файлы.<sup class="cite"><a href="#src-72" id="cite-72" title="filefrag(8), Linux manual page — раздел DESCRIPTION">72</a><a href="#src-73" id="cite-73" title="e4defrag(8), Linux manual page — раздел DESCRIPTION">73</a></sup> На SSD фрагментация значит меньше, чем на вращающихся дисках, но совсем значение не теряет: больше экстентов — значит, глубже дерево и больше мелких операций ввода-вывода.</p>
 </section>
 <section id="journal">
-<h2>Журнал jbd2 и fsck</h2>
+<h2>Устойчивость к сбоям: журнал и fsck</h2>
 <p>Создание одного файла затрагивает несколько блоков: битовую карту inode, сам inode, блок родительского каталога, inode родителя (mtime) и счётчики свободного места в дескрипторе группы.<sup class="cite"><a href="#src-74" id="cite-74" title="Arpaci-Dusseau, Operating Systems: Three Easy Pieces, ch. 42 “Crash Consistency: FSCK and Journaling” — раздел 42.3, Journaling (or Write-Ahead Logging)">74</a></sup> Диск записывает их по одному и может менять их порядок. Если питание пропадёт после одних записей и до других, файловая система окажется несогласованной. Запись каталога может указывать на inode, который всё ещё помечен свободным, или блок может быть помечен занятым, хотя ни один файл им не владеет.<sup class="cite"><a href="#src-74" id="cite-74-2" title="Arpaci-Dusseau, Operating Systems: Three Easy Pieces, ch. 42 “Crash Consistency: FSCK and Journaling” — раздел 42.3, Journaling (or Write-Ahead Logging)">74</a><a href="#src-75" id="cite-75" title="Arpaci-Dusseau, Operating Systems: Three Easy Pieces, ch. 42 “Crash Consistency: FSCK and Journaling” — раздел 42.1, A Detailed Example">75</a></sup></p>
 <p>Ответом ext2 был <code>fsck</code>: после некорректного завершения работы просканировать каждый inode, каждую битовую карту и каждый каталог и исправить противоречия. Это занимает время, пропорциональное размеру файловой системы, то есть часы на больших дисках.<sup class="cite"><a href="#src-76" id="cite-76" title="Arpaci-Dusseau, Operating Systems: Three Easy Pieces, ch. 42 “Crash Consistency: FSCK and Journaling” — раздел 42.2, The File System Checker">76</a></sup></p>
 <p>ext3 и ext4 добавляют <b>журнал упреждающей записи</b> (write-ahead journal), которым управляет уровень ядра <code>jbd2</code> и который хранится в inode 8. Прежде чем какой-либо блок метаданных будет записан на своё постоянное место, изменение сначала записывается в журнал:<sup class="cite"><a href="#src-16" id="cite-16-2" title="ext4 Data Structures and Algorithms: Journal (jbd2), The Linux Kernel documentation — раздел 3.6, введение">16</a></sup></p>

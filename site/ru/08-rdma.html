@@ -63,13 +63,13 @@
 <b>В этом уроке</b>
 <ol>
 <li><a href="#tcp-cost">Стоимость чтения по TCP для процессора</a></li>
-<li><a href="#idea">RDMA: транспорт на NIC, зарегистрированная память, обход ядра</a></li>
+<li><a href="#idea">Как RDMA передаёт данные</a></li>
 <li><a href="#fabrics">Сети: InfiniBand, RoCE и iWARP</a></li>
 <li><a href="#verbs">Объекты verbs: PD, MR, QP и CQ</a></li>
 <li><a href="#qp">Состояния QP: RESET, INIT, RTR, RTS</a></li>
 <li><a href="#ops">Операции RDMA</a></li>
-<li><a href="#costs">Подводные камни RDMA: регистрация, rkey, кредиты, масштаб</a></li>
-<li><a href="#storage">Протоколы хранения поверх RDMA: iSER, SRP, NVMe-oF, NFS, SMB Direct</a></li>
+<li><a href="#costs">Затраты и ограничения RDMA</a></li>
+<li><a href="#storage">Протоколы хранения поверх RDMA</a></li>
 <li><a href="#nfs-rdma">RPC-over-RDMA версии 1 (RFC 8166)</a></li>
 <li><a href="#lab">Практика 07: Soft-RoCE, программа на verbs и NFS поверх RDMA</a></li>
 <li><a href="#check">Проверьте себя</a></li>
@@ -136,7 +136,7 @@
 </figure>
 </section>
 <section id="idea">
-<h2>RDMA: транспорт на NIC, зарегистрированная память, обход ядра</h2>
+<h2>Как RDMA передаёт данные</h2>
 <p><b>Удалённый прямой доступ к памяти</b> (Remote Direct Memory Access, RDMA) переносит DMA через сеть. Ваша сетевая карта может писать в память другой машины или читать из неё, а на той стороне работу выполняет её карта. Это возможно благодаря трём идеям.</p>
 <ul>
 <li><b>Транспорт работает на карте.</b> Разбиение на сегменты, подтверждения, повторная передача и упорядочивание выполняются в железе карты.<sup class="cite"><a href="#src-6" id="cite-6" title="RDMA Aware Networks Programming User Manual, Rev 1.7 (NVIDIA) — раздел 2.4, Comparison of RDMA Technologies">6</a></sup> Процессор ставит запрос («отправь этот 1 МиБ») и позже читает одно завершение.</li>
@@ -327,7 +327,7 @@
 <p>Последний пункт приводит к классическому шаблону из <code>rc_hello.c</code>: сначала RDMA WRITE с данными, затем SEND с коротким сообщением. В надёжной QP с соединением (RC) операции доставляются по порядку, поэтому к моменту, когда получатель видит завершение SEND, байты предыдущего WRITE уже лежат в его памяти.<sup class="cite"><a href="#src-56" id="cite-56-3" title="RFC 8166: Remote Direct Memory Access Transport for Remote Procedure Call Version 1 — раздел 2.3.2, RDMA Transport Requirements">56</a><a href="#src-60" id="cite-60" title="RFC 5040: A Remote Direct Memory Access Protocol Specification — раздел 5.5, Ordering and Completions">60</a></sup> (RDMA READ выбивается из этой простой картины порядка: последующая операция может обогнать READ, если не установить <code>IBV_SEND_FENCE</code>.)<sup class="cite"><a href="#src-35" id="cite-35-5" title="ibv_post_send(3), rdma-core manual page — раздел DESCRIPTION">35</a><a href="#src-60" id="cite-60-2" title="RFC 5040: A Remote Direct Memory Access Protocol Specification — раздел 5.5, Ordering and Completions">60</a></sup></p>
 </section>
 <section id="costs">
-<h2>Подводные камни RDMA: регистрация, rkey, кредиты, масштаб</h2>
+<h2>Затраты и ограничения RDMA</h2>
 <h3>Цена регистрации памяти и закрепление страниц</h3>
 <p><code>ibv_reg_mr</code> закрепляет каждую страницу (ядро обходит таблицы страниц и берёт на них ссылки) и загружает трансляции в карту. Даже для небольшого буфера это занимает десятки микросекунд, а для большого намного дольше, что слишком долго для каждой операции ввода-вывода.<sup class="cite"><a href="#src-7" id="cite-7-4" title="RDMA Aware Networks Programming User Manual, Rev 1.7 (NVIDIA) — раздел 3.3.4, Memory Registration">7</a><a href="#src-61" id="cite-61" title="Shen et al., NP-RDMA: Using Commodity RDMA without Pinning Memory (arXiv 2310.11062) — раздел 2, Background (Memory Pinning in RDMA; Traditional Memory Management)">61</a><a href="#src-62" id="cite-62" title="RFC 8166: Remote Direct Memory Access Transport for Remote Procedure Call Version 1 — раздел 4.4, Memory Registration">62</a></sup> Программы обходят это тремя способами:</p>
 <ul>
@@ -348,7 +348,7 @@
 <aside class="pitfall"><span class="tag">Ловушка</span><p>Голые verbs редко подходят приложению как уровень абстракции. Большинство программ в пространстве пользователя работают через библиотеку, которая скрывает регистрацию, управление соединениями и выбор протокола: UCX, libfabric, MPI или NCCL для GPU. Код ядра использует verbs ядра через подсистемы вроде NFS, NVMe-oF и iSER. Изучайте verbs, чтобы понимать эти системы, а не чтобы их заменять.</p></aside>
 </section>
 <section id="storage">
-<h2>Протоколы хранения поверх RDMA: iSER, SRP, NVMe-oF, NFS, SMB Direct</h2>
+<h2>Протоколы хранения поверх RDMA</h2>
 <p>Почти все протоколы хранения поверх RDMA следуют одному шаблону. Небольшие управляющие сообщения (команды, заголовки RPC, ответы) идут через SEND/RECV. Объёмные данные передаются через RDMA READ или WRITE, которые инициирует <b>сервер или цель</b> (target) над буферами, описанными клиентом в запросе.<sup class="cite"><a href="#src-40" id="cite-40-2" title="NVM Express RDMA Transport Specification, Revision 1.0c — раздел 3.3, Data Transfer Model">40</a><a href="#src-76" id="cite-76" title="RFC 8166: Remote Direct Memory Access Transport for Remote Procedure Call Version 1 — раздел 4.5.3, Responder RDMA Operational Errors">76</a></sup></p>
 <div class="table-wrap"><table>
 <thead><tr><th>Протокол</th><th>Уровень</th><th>Примечания</th></tr></thead>
