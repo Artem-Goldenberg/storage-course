@@ -136,9 +136,9 @@
 <dt>balance_dirty_pages</dt>
 <dd>Throttling that makes writers sleep when dirty memory exceeds its limit. <a class="layer-chip kernel" href="05-vfs-cache.html#write-path" title="The VFS and the page cache">05</a></dd>
 </div>
-<div class="entry" id="g-bio" data-text="bio / struct bio (block i/o) a block input/output descriptor in linux. in c, struct bio means the structure type named bio: it describes a device, starting sector, memory segments and a completion callback. 02">
+<div class="entry" id="g-bio" data-text="bio / struct bio (block i/o) describes a block i/o operation in the linux kernel. for a read or write, it specifies the device, the range of sectors, the memory buffers to transfer data to or from, and the function to call when the operation completes. 02">
 <dt>bio / struct bio (block I/O)</dt>
-<dd>A block input/output descriptor in Linux. In C, struct bio means the structure type named bio: it describes a device, starting sector, memory segments and a completion callback. <a class="layer-chip block" href="02-blocks.html#block-layer" title="Block devices &amp;amp; addressing">02</a></dd>
+<dd>Describes a block I/O operation in the Linux kernel. For a read or write, it specifies the device, the range of sectors, the memory buffers to transfer data to or from, and the function to call when the operation completes. <a class="layer-chip block" href="02-blocks.html#block-layer" title="Block devices &amp;amp; addressing">02</a></dd>
 </div>
 <div class="entry" id="g-bio-vec" data-text="bio_vec a linux c structure describing one memory segment of a block i/o operation: its starting page, byte offset and length. a bio refers to a list of these segments. 02">
 <dt>bio_vec</dt>
