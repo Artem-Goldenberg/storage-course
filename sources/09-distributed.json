@@ -1,0 +1,1867 @@
+{
+  "page": "09-distributed.html",
+  "sources": {
+    "sc25-lustre": {
+      "url": "https://sc25.supercomputing.org/proceedings/bof/bof_pages/bof197.html",
+      "title": "SC25 Birds of a Feather: Lustre Community BoF: Lustre in HPC, AI, and the Cloud",
+      "where": {
+        "en": "abstract",
+        "ru": "аннотация (Abstract)"
+      }
+    },
+    "rfc8881-reclaim": {
+      "url": "https://www.rfc-editor.org/rfc/rfc8881#section-8.4.2.1",
+      "title": "RFC 8881: Network File System (NFS) Version 4 Minor Version 1 Protocol",
+      "where": {
+        "en": "section 8.4.2.1, State Reclaim",
+        "ru": "раздел 8.4.2.1, State Reclaim"
+      }
+    },
+    "rfc8881-lease": {
+      "url": "https://www.rfc-editor.org/rfc/rfc8881#section-8.3",
+      "title": "RFC 8881: Network File System (NFS) Version 4 Minor Version 1 Protocol",
+      "where": {
+        "en": "section 8.3, Lease Renewal",
+        "ru": "раздел 8.3, Lease Renewal"
+      }
+    },
+    "rfc8881-pnfs": {
+      "url": "https://www.rfc-editor.org/rfc/rfc8881#section-12.1",
+      "title": "RFC 8881: Network File System (NFS) Version 4 Minor Version 1 Protocol",
+      "where": {
+        "en": "section 12.1, Introduction (Parallel NFS)",
+        "ru": "раздел 12.1, Introduction (Parallel NFS)"
+      }
+    },
+    "gfs2-overview": {
+      "url": "https://docs.kernel.org/filesystems/gfs2/index.html#overview",
+      "title": "Linux kernel documentation: Global File System 2",
+      "where": {
+        "en": "Overview",
+        "ru": "раздел Overview"
+      }
+    },
+    "gfs2-glocks": {
+      "url": "https://docs.kernel.org/filesystems/gfs2/glocks.html",
+      "title": "Linux kernel documentation: Glock internal locking rules",
+      "where": {
+        "en": "lock modes and the table of glock operations",
+        "ru": "режимы блокировок и таблица операций glock"
+      }
+    },
+    "ocfs2-dlmfs": {
+      "url": "https://docs.kernel.org/filesystems/dlmfs.html",
+      "title": "Linux kernel documentation: DLMFS",
+      "where": {
+        "en": "introduction",
+        "ru": "введение"
+      }
+    },
+    "gpfs-abstract": {
+      "url": "https://www.usenix.org/legacy/events/fast02/full_papers/schmuck/schmuck.pdf",
+      "title": "F. Schmuck, R. Haskin: GPFS: A Shared-Disk File System for Large Computing Clusters (FAST 2002)",
+      "where": {
+        "en": "Abstract",
+        "ru": "аннотация (Abstract)"
+      }
+    },
+    "gpfs-tokens": {
+      "url": "https://www.usenix.org/legacy/events/fast02/full_papers/schmuck/schmuck.pdf",
+      "title": "F. Schmuck, R. Haskin: GPFS: A Shared-Disk File System for Large Computing Clusters (FAST 2002)",
+      "where": {
+        "en": "section 3.2, The GPFS Distributed Lock Manager",
+        "ru": "раздел 3.2, The GPFS Distributed Lock Manager"
+      }
+    },
+    "gpfs-byterange": {
+      "url": "https://www.usenix.org/legacy/events/fast02/full_papers/schmuck/schmuck.pdf",
+      "title": "F. Schmuck, R. Haskin: GPFS: A Shared-Disk File System for Large Computing Clusters (FAST 2002)",
+      "where": {
+        "en": "section 3.3, Parallel Data Access",
+        "ru": "раздел 3.3, Parallel Data Access"
+      }
+    },
+    "gpfs-metanode": {
+      "url": "https://www.usenix.org/legacy/events/fast02/full_papers/schmuck/schmuck.pdf",
+      "title": "F. Schmuck, R. Haskin: GPFS: A Shared-Disk File System for Large Computing Clusters (FAST 2002)",
+      "where": {
+        "en": "section 3.4, Synchronizing Access to File Metadata",
+        "ru": "раздел 3.4, Synchronizing Access to File Metadata"
+      }
+    },
+    "ibm-ss-abstract": {
+      "url": "https://ibm.com/downloads/cas/2Q3XBRPQ",
+      "title": "IBM: Getting started with IBM Storage Scale on Linux on IBM Z mainframe",
+      "where": {
+        "en": "section 1, Abstract",
+        "ru": "раздел 1, Abstract"
+      }
+    },
+    "ibm-ss-nsd": {
+      "url": "https://ibm.com/downloads/cas/2Q3XBRPQ",
+      "title": "IBM: Getting started with IBM Storage Scale on Linux on IBM Z mainframe",
+      "where": {
+        "en": "section 2.3, Network shared disk (NSD) client/server model",
+        "ru": "раздел 2.3, Network shared disk (NSD) client/server model"
+      }
+    },
+    "jsc-jupiter": {
+      "url": "https://www.hpcuserforum.com/wp-content/uploads/2025/10/Benedikt-von-St.-Vieth_Jupiter-State-Of-Matters_Oct-2025-HPC-UF.pdf",
+      "title": "B. von St. Vieth (Jülich Supercomputing Centre): JUPITER – State of Matters (HPC User Forum, October 2025)",
+      "where": {
+        "en": "slide “JUPITER – ExaSTORE (Home/Data)”",
+        "ru": "слайд «JUPITER – ExaSTORE (Home/Data)»"
+      }
+    },
+    "kleppmann-pause": {
+      "url": "https://martin.kleppmann.com/2016/02/08/how-to-do-distributed-locking.html#protecting-a-resource-with-a-lock",
+      "title": "M. Kleppmann: How to do distributed locking (2016)",
+      "where": {
+        "en": "section “Protecting a resource with a lock”",
+        "ru": "раздел «Protecting a resource with a lock»"
+      }
+    },
+    "kleppmann-fencing": {
+      "url": "https://martin.kleppmann.com/2016/02/08/how-to-do-distributed-locking.html#making-the-lock-safe-with-fencing",
+      "title": "M. Kleppmann: How to do distributed locking (2016)",
+      "where": {
+        "en": "section “Making the lock safe with fencing”",
+        "ru": "раздел «Making the lock safe with fencing»"
+      }
+    },
+    "pcmk-what": {
+      "url": "https://clusterlabs.org/projects/pacemaker/doc/3.0/Pacemaker_Explained/html/fencing.html#what-is-fencing",
+      "title": "Pacemaker 3.0 documentation, Pacemaker Explained: Fencing",
+      "where": {
+        "en": "section 8.1, What Is Fencing?",
+        "ru": "раздел 8.1, What Is Fencing?"
+      }
+    },
+    "pcmk-why": {
+      "url": "https://clusterlabs.org/projects/pacemaker/doc/3.0/Pacemaker_Explained/html/fencing.html#why-is-fencing-necessary",
+      "title": "Pacemaker 3.0 documentation, Pacemaker Explained: Fencing",
+      "where": {
+        "en": "section 8.2, Why Is Fencing Necessary?",
+        "ru": "раздел 8.2, Why Is Fencing Necessary?"
+      }
+    },
+    "pcmk-devices": {
+      "url": "https://clusterlabs.org/projects/pacemaker/doc/3.0/Pacemaker_Explained/html/fencing.html#fence-devices",
+      "title": "Pacemaker 3.0 documentation, Pacemaker Explained: Fencing",
+      "where": {
+        "en": "section 8.3, Fence Devices",
+        "ru": "раздел 8.3, Fence Devices"
+      }
+    },
+    "lustre-whatis": {
+      "url": "https://doc.lustre.org/lustre_manual.xhtml#understandinglustre.whatislustre",
+      "title": "Lustre Operations Manual",
+      "where": {
+        "en": "section 1.1, What a Lustre File System Is (and What It Isn't)",
+        "ru": "раздел 1.1, What a Lustre File System Is (and What It Isn't)"
+      }
+    },
+    "lustre-features": {
+      "url": "https://doc.lustre.org/lustre_manual.xhtml#understandinglustre.whatislustre",
+      "title": "Lustre Operations Manual",
+      "where": {
+        "en": "section 1.1.1, Lustre Features",
+        "ru": "раздел 1.1.1, Lustre Features"
+      }
+    },
+    "lustre-components": {
+      "url": "https://doc.lustre.org/lustre_manual.xhtml#understandinglustre.components",
+      "title": "Lustre Operations Manual",
+      "where": {
+        "en": "section 1.2, Lustre Components",
+        "ru": "раздел 1.2, Lustre Components"
+      }
+    },
+    "lustre-storageio": {
+      "url": "https://doc.lustre.org/lustre_manual.xhtml#understandinglustre.storageio",
+      "title": "Lustre Operations Manual",
+      "where": {
+        "en": "section 1.3, Lustre File System Storage and I/O",
+        "ru": "раздел 1.3, Lustre File System Storage and I/O"
+      }
+    },
+    "lustre-striping": {
+      "url": "https://doc.lustre.org/lustre_manual.xhtml#lustre_striping",
+      "title": "Lustre Operations Manual",
+      "where": {
+        "en": "section 1.3.1, Lustre File System and Striping",
+        "ru": "раздел 1.3.1, Lustre File System and Striping"
+      }
+    },
+    "lustre-pfl": {
+      "url": "https://doc.lustre.org/lustre_manual.xhtml#pfl",
+      "title": "Lustre Operations Manual",
+      "where": {
+        "en": "section 19.5, Progressive File Layout (PFL), marked “Introduced in Lustre 2.10”",
+        "ru": "раздел 19.5, Progressive File Layout (PFL), с пометкой «Introduced in Lustre 2.10»"
+      }
+    },
+    "lustre-stripeconsider": {
+      "url": "https://doc.lustre.org/lustre_manual.xhtml#file_striping.considerations",
+      "title": "Lustre Operations Manual",
+      "where": {
+        "en": "section 19.2, Lustre File Layout (Striping) Considerations",
+        "ru": "раздел 19.2, Lustre File Layout (Striping) Considerations"
+      }
+    },
+    "lustre-dne-remote": {
+      "url": "https://doc.lustre.org/lustre_manual.xhtml#lfsmkdir",
+      "title": "Lustre Operations Manual",
+      "where": {
+        "en": "section 13.9, Creating a sub-directory on a specific MDT",
+        "ru": "раздел 13.9, Creating a sub-directory on a specific MDT"
+      }
+    },
+    "lustre-dne-striped": {
+      "url": "https://doc.lustre.org/lustre_manual.xhtml#lfsmkdirdne2",
+      "title": "Lustre Operations Manual",
+      "where": {
+        "en": "section 13.10, Creating a directory striped across multiple MDTs",
+        "ru": "раздел 13.10, Creating a directory striped across multiple MDTs"
+      }
+    },
+    "lustre-commit": {
+      "url": "https://doc.lustre.org/lustre_manual.xhtml#went_back_in_time",
+      "title": "Lustre Operations Manual",
+      "where": {
+        "en": "section 35.3.9, Handling/Debugging “LustreError: xxx went back in time”",
+        "ru": "раздел 35.3.9, Handling/Debugging «LustreError: xxx went back in time»"
+      }
+    },
+    "lustre-replay": {
+      "url": "https://doc.lustre.org/lustre_manual.xhtml#metadatereplay",
+      "title": "Lustre Operations Manual",
+      "where": {
+        "en": "section 38.2, Metadata Replay (38.2.6, Request Replay)",
+        "ru": "раздел 38.2, Metadata Replay (38.2.6, Request Replay)"
+      }
+    },
+    "lustre-failover": {
+      "url": "https://doc.lustre.org/lustre_manual.xhtml#what_is_failover",
+      "title": "Lustre Operations Manual",
+      "where": {
+        "en": "section 3.1, What is Failover?",
+        "ru": "раздел 3.1, What is Failover?"
+      }
+    },
+    "lustre-flr": {
+      "url": "https://doc.lustre.org/lustre_manual.xhtml#flr.intro",
+      "title": "Lustre Operations Manual",
+      "where": {
+        "en": "section 22.1, File Level Redundancy: Introduction",
+        "ru": "раздел 22.1, File Level Redundancy: Introduction"
+      }
+    },
+    "lustre-flr-resync": {
+      "url": "https://doc.lustre.org/lustre_manual.xhtml#flr.operations.resyncmirror",
+      "title": "Lustre Operations Manual",
+      "where": {
+        "en": "section 22.2.4, Resynchronizing out-of-sync Mirrored File(s)",
+        "ru": "раздел 22.2.4, Resynchronizing out-of-sync Mirrored File(s)"
+      }
+    },
+    "lnet-wiki": {
+      "url": "https://wiki.lustre.org/Lustre_Networking_(LNET)_Overview",
+      "title": "Lustre Wiki: Lustre Networking (LNet) Overview",
+      "where": {
+        "en": "overview",
+        "ru": "обзор"
+      }
+    },
+    "uli-locks": {
+      "url": "https://wiki.lustre.org/images/d/da/Understanding_Lustre_Filesystem_Internals.pdf",
+      "title": "F. Wang et al.: Understanding Lustre Filesystem Internals (ORNL/TM-2009/117)",
+      "where": {
+        "en": "sections 4.3, Lock Type and Mode, and 4.4, Callbacks",
+        "ru": "разделы 4.3, Lock Type and Mode, и 4.4, Callbacks"
+      }
+    },
+    "uli-cancel": {
+      "url": "https://wiki.lustre.org/images/d/da/Understanding_Lustre_Filesystem_Internals.pdf",
+      "title": "F. Wang et al.: Understanding Lustre Filesystem Internals (ORNL/TM-2009/117)",
+      "where": {
+        "en": "section 4.6.2, Canceling a Lock",
+        "ru": "раздел 4.6.2, Canceling a Lock"
+      }
+    },
+    "beegfs-overview": {
+      "url": "https://doc.beegfs.io/latest/architecture/overview.html#overview",
+      "title": "BeeGFS documentation: Architecture",
+      "where": {
+        "en": "Overview",
+        "ru": "раздел Overview"
+      }
+    },
+    "beegfs-metadata": {
+      "url": "https://doc.beegfs.io/latest/architecture/overview.html#metadata-distribution",
+      "title": "BeeGFS documentation: Architecture",
+      "where": {
+        "en": "Metadata Distribution",
+        "ru": "раздел Metadata Distribution"
+      }
+    },
+    "beegfs-mirroring": {
+      "url": "https://doc.beegfs.io/latest/architecture/overview.html#mirroring",
+      "title": "BeeGFS documentation: Architecture",
+      "where": {
+        "en": "Mirroring",
+        "ru": "раздел Mirroring"
+      }
+    },
+    "beegfs-rdma": {
+      "url": "https://doc.beegfs.io/latest/advanced_topics/rdma_support.html",
+      "title": "BeeGFS documentation: RDMA Support",
+      "where": {
+        "en": "introduction",
+        "ru": "введение"
+      }
+    },
+    "hadoop-wiki": {
+      "url": "https://cwiki.apache.org/confluence/display/HADOOP2/ProjectDescription#ProjectDescription-HadoopDFS",
+      "title": "Apache Hadoop wiki: Project Description",
+      "where": {
+        "en": "Hadoop DFS",
+        "ru": "раздел Hadoop DFS"
+      }
+    },
+    "hdfs-intro": {
+      "url": "https://hadoop.apache.org/docs/stable/hadoop-project-dist/hadoop-hdfs/HdfsDesign.html#Introduction",
+      "title": "Apache Hadoop documentation: HDFS Architecture",
+      "where": {
+        "en": "Introduction",
+        "ru": "раздел Introduction"
+      }
+    },
+    "hdfs-coherency": {
+      "url": "https://hadoop.apache.org/docs/stable/hadoop-project-dist/hadoop-hdfs/HdfsDesign.html#Simple_Coherency_Model",
+      "title": "Apache Hadoop documentation: HDFS Architecture",
+      "where": {
+        "en": "Simple Coherency Model",
+        "ru": "раздел Simple Coherency Model"
+      }
+    },
+    "hdfs-replication": {
+      "url": "https://hadoop.apache.org/docs/stable/hadoop-project-dist/hadoop-hdfs/HdfsDesign.html#Data_Replication",
+      "title": "Apache Hadoop documentation: HDFS Architecture",
+      "where": {
+        "en": "Data Replication",
+        "ru": "раздел Data Replication"
+      }
+    },
+    "hdfs-placement": {
+      "url": "https://hadoop.apache.org/docs/stable/hadoop-project-dist/hadoop-hdfs/HdfsDesign.html#Replica_Placement:_The_First_Baby_Steps",
+      "title": "Apache Hadoop documentation: HDFS Architecture",
+      "where": {
+        "en": "Replica Placement: The First Baby Steps",
+        "ru": "раздел Replica Placement: The First Baby Steps"
+      }
+    },
+    "hdfs-persistence": {
+      "url": "https://hadoop.apache.org/docs/stable/hadoop-project-dist/hadoop-hdfs/HdfsDesign.html#The_Persistence_of_File_System_Metadata",
+      "title": "Apache Hadoop documentation: HDFS Architecture",
+      "where": {
+        "en": "The Persistence of File System Metadata",
+        "ru": "раздел The Persistence of File System Metadata"
+      }
+    },
+    "hdfs-blocks": {
+      "url": "https://hadoop.apache.org/docs/stable/hadoop-project-dist/hadoop-hdfs/HdfsDesign.html#Data_Blocks",
+      "title": "Apache Hadoop documentation: HDFS Architecture",
+      "where": {
+        "en": "Data Blocks",
+        "ru": "раздел Data Blocks"
+      }
+    },
+    "hdfs-access": {
+      "url": "https://hadoop.apache.org/docs/stable/hadoop-project-dist/hadoop-hdfs/HdfsDesign.html#Accessibility",
+      "title": "Apache Hadoop documentation: HDFS Architecture",
+      "where": {
+        "en": "Accessibility",
+        "ru": "раздел Accessibility"
+      }
+    },
+    "hdfs-paper-client": {
+      "url": "https://pages.cs.wisc.edu/~akella/CS838/F15/838-CloudPapers/hdfs.pdf",
+      "title": "K. Shvachko, H. Kuang, S. Radia, R. Chansler: The Hadoop Distributed File System (MSST 2010)",
+      "where": {
+        "en": "section II.C, HDFS Client",
+        "ru": "раздел II.C, HDFS Client"
+      }
+    },
+    "hdfs-paper-future": {
+      "url": "https://pages.cs.wisc.edu/~akella/CS838/F15/838-CloudPapers/hdfs.pdf",
+      "title": "K. Shvachko, H. Kuang, S. Radia, R. Chansler: The Hadoop Distributed File System (MSST 2010)",
+      "where": {
+        "en": "section V, Future Work",
+        "ru": "раздел V, Future Work"
+      }
+    },
+    "hdfs-ha-arch": {
+      "url": "https://hadoop.apache.org/docs/stable/hadoop-project-dist/hadoop-hdfs/HDFSHighAvailabilityWithQJM.html#Architecture",
+      "title": "Apache Hadoop documentation: HDFS High Availability Using the Quorum Journal Manager",
+      "where": {
+        "en": "Architecture",
+        "ru": "раздел Architecture"
+      }
+    },
+    "hdfs-ha-zk": {
+      "url": "https://hadoop.apache.org/docs/stable/hadoop-project-dist/hadoop-hdfs/HDFSHighAvailabilityWithQJM.html#Components",
+      "title": "Apache Hadoop documentation: HDFS High Availability Using the Quorum Journal Manager",
+      "where": {
+        "en": "Automatic Failover: Components",
+        "ru": "раздел Automatic Failover: Components"
+      }
+    },
+    "iana-pnfs": {
+      "url": "https://www.iana.org/assignments/pnfs-layout-types/pnfs-layout-types.xhtml",
+      "title": "IANA: pNFS Layout Types registry",
+      "where": {
+        "en": "registry table",
+        "ru": "таблица реестра"
+      }
+    },
+    "rfc8435": {
+      "url": "https://www.rfc-editor.org/rfc/rfc8435#section-1",
+      "title": "RFC 8435: Parallel NFS (pNFS) Flexible File Layout",
+      "where": {
+        "en": "section 1, Introduction",
+        "ru": "раздел 1, Introduction"
+      }
+    },
+    "kernel-pnfs": {
+      "url": "https://docs.kernel.org/filesystems/nfs/pnfs.html#layout-drivers",
+      "title": "Linux kernel documentation: Reference counting in pnfs",
+      "where": {
+        "en": "layout drivers",
+        "ru": "раздел layout drivers"
+      }
+    },
+    "ceph-arch-cluster": {
+      "url": "https://docs.ceph.com/en/tentacle/architecture/#the-ceph-storage-cluster",
+      "title": "Ceph documentation (Tentacle): Architecture",
+      "where": {
+        "en": "The Ceph Storage Cluster",
+        "ru": "раздел The Ceph Storage Cluster"
+      }
+    },
+    "ceph-arch-storing": {
+      "url": "https://docs.ceph.com/en/tentacle/architecture/#storing-data",
+      "title": "Ceph documentation (Tentacle): Architecture",
+      "where": {
+        "en": "Storing Data",
+        "ru": "раздел Storing Data"
+      }
+    },
+    "ceph-arch-clustermap": {
+      "url": "https://docs.ceph.com/en/tentacle/architecture/#cluster-map",
+      "title": "Ceph documentation (Tentacle): Architecture",
+      "where": {
+        "en": "Cluster Map",
+        "ru": "раздел Cluster Map"
+      }
+    },
+    "ceph-arch-monitors": {
+      "url": "https://docs.ceph.com/en/tentacle/architecture/#high-availability-monitors",
+      "title": "Ceph documentation (Tentacle): Architecture",
+      "where": {
+        "en": "High Availability Monitors",
+        "ru": "раздел High Availability Monitors"
+      }
+    },
+    "ceph-arch-smart": {
+      "url": "https://docs.ceph.com/en/tentacle/architecture/#smart-daemons-enable-hyperscale",
+      "title": "Ceph documentation (Tentacle): Architecture",
+      "where": {
+        "en": "Smart Daemons Enable Hyperscale (Replication)",
+        "ru": "раздел Smart Daemons Enable Hyperscale (Replication)"
+      }
+    },
+    "ceph-arch-mapping": {
+      "url": "https://docs.ceph.com/en/tentacle/architecture/#mapping-pgs-to-osds",
+      "title": "Ceph documentation (Tentacle): Architecture",
+      "where": {
+        "en": "Mapping PGs to OSDs",
+        "ru": "раздел Mapping PGs to OSDs"
+      }
+    },
+    "ceph-arch-pgids": {
+      "url": "https://docs.ceph.com/en/tentacle/architecture/#calculating-pg-ids",
+      "title": "Ceph documentation (Tentacle): Architecture",
+      "where": {
+        "en": "Calculating PG IDs",
+        "ru": "раздел Calculating PG IDs"
+      }
+    },
+    "ceph-arch-peering": {
+      "url": "https://docs.ceph.com/en/tentacle/architecture/#peering-and-sets",
+      "title": "Ceph documentation (Tentacle): Architecture",
+      "where": {
+        "en": "Peering and Sets",
+        "ru": "раздел Peering and Sets"
+      }
+    },
+    "ceph-arch-ec": {
+      "url": "https://docs.ceph.com/en/tentacle/architecture/#erasure-coding",
+      "title": "Ceph documentation (Tentacle): Architecture",
+      "where": {
+        "en": "Erasure Coding",
+        "ru": "раздел Erasure Coding"
+      }
+    },
+    "ceph-arch-cephfs": {
+      "url": "https://docs.ceph.com/en/tentacle/architecture/#ceph-file-system",
+      "title": "Ceph documentation (Tentacle): Architecture",
+      "where": {
+        "en": "Ceph File System",
+        "ru": "раздел Ceph File System"
+      }
+    },
+    "ceph-devices": {
+      "url": "https://docs.ceph.com/en/tentacle/rados/configuration/storage-devices/#storage-devices",
+      "title": "Ceph documentation (Tentacle): Storage Devices",
+      "where": {
+        "en": "Storage Devices and BlueStore",
+        "ru": "разделы Storage Devices и BlueStore"
+      }
+    },
+    "bluestore-paper": {
+      "url": "https://pdl.cmu.edu/PDL-FTP/Storage/ceph-exp-sosp19.pdf",
+      "title": "A. Aghayev et al.: File Systems Unfit as Distributed Storage Backends: Lessons from 10 Years of Ceph Evolution (SOSP 2019)",
+      "where": {
+        "en": "section 4.2, Data Path and Space Allocation (Metadata Organization, Space Allocation)",
+        "ru": "раздел 4.2, Data Path and Space Allocation (Metadata Organization, Space Allocation)"
+      }
+    },
+    "rocksdb": {
+      "url": "https://github.com/facebook/rocksdb/wiki/RocksDB-Overview#multi-threaded-compactions",
+      "title": "RocksDB wiki: RocksDB Overview",
+      "where": {
+        "en": "section 4, Features: Multi-Threaded Compactions",
+        "ru": "раздел 4, Features: Multi-Threaded Compactions"
+      }
+    },
+    "cephadm-mon": {
+      "url": "https://docs.ceph.com/en/tentacle/cephadm/services/mon/#deploy-additional-monitors",
+      "title": "Ceph documentation (Tentacle): MON Service",
+      "where": {
+        "en": "Deploying additional monitors",
+        "ru": "раздел Deploying additional monitors"
+      }
+    },
+    "rados-map": {
+      "url": "https://ceph.io/assets/pdfs/weil-rados-pdsw07.pdf",
+      "title": "S. Weil et al.: RADOS: A Scalable, Reliable Storage Service for Petabyte-scale Storage Clusters (PDSW 2007)",
+      "where": {
+        "en": "section 2.1, Cluster Map",
+        "ru": "раздел 2.1, Cluster Map"
+      }
+    },
+    "ceph-pg-use": {
+      "url": "https://docs.ceph.com/en/tentacle/rados/operations/placement-groups/#use-of-placement-groups",
+      "title": "Ceph documentation (Tentacle): Placement Groups",
+      "where": {
+        "en": "Use of Placement Groups",
+        "ru": "раздел Use of Placement Groups"
+      }
+    },
+    "ceph-pg-auto": {
+      "url": "https://docs.ceph.com/en/tentacle/rados/operations/placement-groups/#automated-scaling",
+      "title": "Ceph documentation (Tentacle): Placement Groups",
+      "where": {
+        "en": "Automated scaling",
+        "ru": "раздел Automated scaling"
+      }
+    },
+    "ceph-crush-intro": {
+      "url": "https://docs.ceph.com/en/tentacle/rados/operations/crush-map/#crush-maps",
+      "title": "Ceph documentation (Tentacle): CRUSH Maps",
+      "where": {
+        "en": "introduction",
+        "ru": "введение"
+      }
+    },
+    "ceph-crush-types": {
+      "url": "https://docs.ceph.com/en/tentacle/rados/operations/crush-map/#types-and-buckets",
+      "title": "Ceph documentation (Tentacle): CRUSH Maps",
+      "where": {
+        "en": "Types and Buckets",
+        "ru": "раздел Types and Buckets"
+      }
+    },
+    "ceph-crush-straw2": {
+      "url": "https://docs.ceph.com/en/tentacle/rados/operations/crush-map/#hammer-crush-v4",
+      "title": "Ceph documentation (Tentacle): CRUSH Maps",
+      "where": {
+        "en": "Tunables, hammer (CRUSH_V4)",
+        "ru": "раздел Tunables, hammer (CRUSH_V4)"
+      }
+    },
+    "crush-movement": {
+      "url": "https://ceph.io/assets/pdfs/weil-crush-sc06.pdf",
+      "title": "S. Weil et al.: CRUSH: Controlled, Scalable, Decentralized Placement of Replicated Data (SC 2006)",
+      "where": {
+        "en": "section 3.3, Map Changes and Data Movement",
+        "ru": "раздел 3.3, Map Changes and Data Movement"
+      }
+    },
+    "crush-straw": {
+      "url": "https://ceph.io/assets/pdfs/weil-crush-sc06.pdf",
+      "title": "S. Weil et al.: CRUSH: Controlled, Scalable, Decentralized Placement of Replicated Data (SC 2006)",
+      "where": {
+        "en": "section 3.4.4, Straw Buckets",
+        "ru": "раздел 3.4.4, Straw Buckets"
+      }
+    },
+    "crush-reliability": {
+      "url": "https://ceph.io/assets/pdfs/weil-crush-sc06.pdf",
+      "title": "S. Weil et al.: CRUSH: Controlled, Scalable, Decentralized Placement of Replicated Data (SC 2006)",
+      "where": {
+        "en": "section 4.4, Reliability",
+        "ru": "раздел 4.4, Reliability"
+      }
+    },
+    "ceph-ec-intro": {
+      "url": "https://docs.ceph.com/en/tentacle/rados/operations/erasure-code/#erasure-code",
+      "title": "Ceph documentation (Tentacle): Erasure code",
+      "where": {
+        "en": "introduction",
+        "ru": "введение"
+      }
+    },
+    "ceph-ec-opt": {
+      "url": "https://docs.ceph.com/en/tentacle/rados/operations/erasure-code/#erasure-coding-optimizations",
+      "title": "Ceph documentation (Tentacle): Erasure code",
+      "where": {
+        "en": "Erasure Coding Optimizations",
+        "ru": "раздел Erasure Coding Optimizations"
+      }
+    },
+    "ceph-ec-overwrites": {
+      "url": "https://docs.ceph.com/en/tentacle/rados/operations/erasure-code/#erasure-coding-with-overwrites",
+      "title": "Ceph documentation (Tentacle): Erasure code",
+      "where": {
+        "en": "Erasure Coding with Overwrites",
+        "ru": "раздел Erasure Coding with Overwrites"
+      }
+    },
+    "ceph-ec-overhead": {
+      "url": "https://docs.ceph.com/en/tentacle/rados/operations/erasure-code/#erasure-coded-pool-overhead",
+      "title": "Ceph documentation (Tentacle): Erasure code",
+      "where": {
+        "en": "Erasure-coded pool overhead",
+        "ru": "раздел Erasure-coded pool overhead"
+      }
+    },
+    "ceph-downout": {
+      "url": "https://docs.ceph.com/en/tentacle/rados/configuration/mon-osd-interaction/#confval-mon_osd_down_out_interval",
+      "title": "Ceph documentation (Tentacle): Configuring Monitor/OSD Interaction",
+      "where": {
+        "en": "mon_osd_down_out_interval",
+        "ru": "параметр mon_osd_down_out_interval"
+      }
+    },
+    "ceph-layout": {
+      "url": "https://docs.ceph.com/en/tentacle/cephfs/file-layouts/#layout-fields",
+      "title": "Ceph documentation (Tentacle): File layouts",
+      "where": {
+        "en": "Layout fields",
+        "ru": "раздел Layout fields"
+      }
+    },
+    "ceph-osdi-io": {
+      "url": "https://www.usenix.org/legacy/event/osdi06/tech/full_papers/weil/weil.pdf",
+      "title": "S. Weil et al.: Ceph: A Scalable, High-Performance Distributed File System (OSDI 2006)",
+      "where": {
+        "en": "section 3.1, File I/O and Capabilities",
+        "ru": "раздел 3.1, File I/O and Capabilities"
+      }
+    },
+    "ceph-osdi-sync": {
+      "url": "https://www.usenix.org/legacy/event/osdi06/tech/full_papers/weil/weil.pdf",
+      "title": "S. Weil et al.: Ceph: A Scalable, High-Performance Distributed File System (OSDI 2006)",
+      "where": {
+        "en": "section 3.2, Client Synchronization",
+        "ru": "раздел 3.2, Client Synchronization"
+      }
+    },
+    "ceph-createfs": {
+      "url": "https://docs.ceph.com/en/tentacle/cephfs/createfs/#creating-pools",
+      "title": "Ceph documentation (Tentacle): Create a Ceph file system",
+      "where": {
+        "en": "Creating pools",
+        "ru": "раздел Creating pools"
+      }
+    },
+    "ceph-mds-ranks": {
+      "url": "https://docs.ceph.com/en/tentacle/cephfs/multimds/#increasing-the-mds-active-cluster-size",
+      "title": "Ceph documentation (Tentacle): Configuring multiple active MDS daemons",
+      "where": {
+        "en": "Increasing the MDS active cluster size",
+        "ru": "раздел Increasing the MDS active cluster size"
+      }
+    },
+    "ceph-mds-balancer": {
+      "url": "https://docs.ceph.com/en/tentacle/cephfs/multimds/#dynamic-subtree-partitioning",
+      "title": "Ceph documentation (Tentacle): Configuring multiple active MDS daemons",
+      "where": {
+        "en": "Dynamic Subtree Partitioning",
+        "ru": "раздел Dynamic Subtree Partitioning"
+      }
+    },
+    "ceph-mds-pin": {
+      "url": "https://docs.ceph.com/en/tentacle/cephfs/multimds/#manually-pinning-directory-trees-to-a-particular-rank",
+      "title": "Ceph documentation (Tentacle): Configuring multiple active MDS daemons",
+      "where": {
+        "en": "Manually pinning directory trees to a particular rank",
+        "ru": "раздел Manually pinning directory trees to a particular rank"
+      }
+    },
+    "ceph-mds-standby": {
+      "url": "https://docs.ceph.com/en/tentacle/cephfs/multimds/#standby-daemons",
+      "title": "Ceph documentation (Tentacle): Configuring multiple active MDS daemons",
+      "where": {
+        "en": "Standby daemons",
+        "ru": "раздел Standby daemons"
+      }
+    },
+    "ceph-caps": {
+      "url": "https://docs.ceph.com/en/tentacle/cephfs/capabilities/#capabilities-in-cephfs",
+      "title": "Ceph documentation (Tentacle): Capabilities in CephFS",
+      "where": {
+        "en": "introduction",
+        "ru": "введение"
+      }
+    },
+    "ceph-kclient": {
+      "url": "https://docs.ceph.com/en/tentacle/cephfs/mount-using-kernel-driver/",
+      "title": "Ceph documentation (Tentacle): Mount CephFS using Kernel Driver",
+      "where": {
+        "en": "introduction",
+        "ru": "введение"
+      }
+    },
+    "ceph-whichclient": {
+      "url": "https://docs.ceph.com/en/tentacle/cephfs/mount-prerequisites/#which-cephfs-client",
+      "title": "Ceph documentation (Tentacle): Mount CephFS: Prerequisites",
+      "where": {
+        "en": "Which CephFS Client?",
+        "ru": "раздел Which CephFS Client?"
+      }
+    },
+    "ceph-evict-intro": {
+      "url": "https://docs.ceph.com/en/tentacle/cephfs/eviction/#ceph-file-system-client-eviction",
+      "title": "Ceph documentation (Tentacle): Ceph file system client eviction",
+      "where": {
+        "en": "introduction",
+        "ru": "введение"
+      }
+    },
+    "ceph-evict-auto": {
+      "url": "https://docs.ceph.com/en/tentacle/cephfs/eviction/#automatic-client-eviction",
+      "title": "Ceph documentation (Tentacle): Ceph file system client eviction",
+      "where": {
+        "en": "Automatic client eviction",
+        "ru": "раздел Automatic client eviction"
+      }
+    },
+    "ceph-evict-blocklist": {
+      "url": "https://docs.ceph.com/en/tentacle/cephfs/eviction/#advanced-un-blocklisting-a-client",
+      "title": "Ceph documentation (Tentacle): Ceph file system client eviction",
+      "where": {
+        "en": "Advanced: Un-blocklisting a client",
+        "ru": "раздел Advanced: Un-blocklisting a client"
+      }
+    },
+    "ceph-posix": {
+      "url": "https://docs.ceph.com/en/tentacle/cephfs/posix/#differences-from-posix",
+      "title": "Ceph documentation (Tentacle): Differences from POSIX",
+      "where": {
+        "en": "introduction",
+        "ru": "введение"
+      }
+    },
+    "ceph-dirfrags": {
+      "url": "https://docs.ceph.com/en/tentacle/cephfs/dirfrags/#configuring-directory-fragmentation",
+      "title": "Ceph documentation (Tentacle): Configuring Directory fragmentation",
+      "where": {
+        "en": "introduction",
+        "ru": "введение"
+      }
+    },
+    "ceph-peering": {
+      "url": "https://docs.ceph.com/en/tentacle/dev/peering/#description-of-the-peering-process",
+      "title": "Ceph documentation (Tentacle), internals: Peering",
+      "where": {
+        "en": "Description of the Peering Process",
+        "ru": "раздел Description of the Peering Process"
+      }
+    },
+    "gluster-dht": {
+      "url": "https://docs.gluster.org/en/latest/Quick-Start-Guide/Architecture/#dhtdistributed-hash-table-translator",
+      "title": "GlusterFS documentation: Architecture",
+      "where": {
+        "en": "DHT (Distributed Hash Table) Translator",
+        "ru": "раздел DHT (Distributed Hash Table) Translator"
+      }
+    },
+    "gluster-xlators": {
+      "url": "https://docs.gluster.org/en/latest/Quick-Start-Guide/Architecture/#translators",
+      "title": "GlusterFS documentation: Architecture",
+      "where": {
+        "en": "Translators; Types of Volumes (Dispersed Glusterfs Volume)",
+        "ru": "разделы Translators и Types of Volumes (Dispersed Glusterfs Volume)"
+      }
+    },
+    "gluster-rename": {
+      "url": "https://gluster-documentations.readthedocs.io/en/latest/Features/dht/#rename-optimizations",
+      "title": "GlusterFS documentation: How GlusterFS Distribution Works",
+      "where": {
+        "en": "Rename Optimizations",
+        "ru": "раздел Rename Optimizations"
+      }
+    },
+    "rh-gluster": {
+      "url": "https://access.redhat.com/support/policy/updates/rhs",
+      "title": "Red Hat: Red Hat Gluster Storage Life Cycle",
+      "where": {
+        "en": "Life Cycle Dates",
+        "ru": "раздел Life Cycle Dates"
+      }
+    },
+    "juicefs-arch": {
+      "url": "https://juicefs.com/docs/community/architecture/",
+      "title": "JuiceFS documentation: Architecture",
+      "where": {
+        "en": "introduction (JuiceFS Client, Metadata Engine)",
+        "ru": "введение (JuiceFS Client, Metadata Engine)"
+      }
+    },
+    "juicefs-store": {
+      "url": "https://juicefs.com/docs/community/architecture/#how-juicefs-store-files",
+      "title": "JuiceFS documentation: Architecture",
+      "where": {
+        "en": "How JuiceFS stores files",
+        "ru": "раздел How JuiceFS stores files"
+      }
+    },
+    "colossus": {
+      "url": "https://cloud.google.com/blog/products/storage-data-transfer/a-peek-behind-colossus-googles-file-system",
+      "title": "Google Cloud blog: A peek behind Colossus, Google’s file system (2021)",
+      "where": {
+        "en": "sections Colossus Control Plane, Metadata database, D File Servers",
+        "ru": "разделы Colossus Control Plane, Metadata database, D File Servers"
+      }
+    },
+    "gfs-master": {
+      "url": "https://static.googleusercontent.com/media/research.google.com/en//archive/gfs-sosp2003.pdf",
+      "title": "S. Ghemawat, H. Gobioff, S.-T. Leung: The Google File System (SOSP 2003)",
+      "where": {
+        "en": "section 2.3, Architecture",
+        "ru": "раздел 2.3, Architecture"
+      }
+    },
+    "karger-ch": {
+      "url": "https://www.cs.princeton.edu/courses/archive/fall09/cos518/papers/chash.pdf",
+      "title": "D. Karger et al.: Consistent Hashing and Random Trees (STOC 1997)",
+      "where": {
+        "en": "section 4, Consistent Hashing",
+        "ru": "раздел 4, Consistent Hashing"
+      }
+    },
+    "karger-construction": {
+      "url": "https://www.cs.princeton.edu/courses/archive/fall09/cos518/papers/chash.pdf",
+      "title": "D. Karger et al.: Consistent Hashing and Random Trees (STOC 1997)",
+      "where": {
+        "en": "section 4.2, Construction",
+        "ru": "раздел 4.2, Construction"
+      }
+    },
+    "dynamo-part": {
+      "url": "https://www.allthingsdistributed.com/files/amazon-dynamo-sosp2007.pdf",
+      "title": "G. DeCandia et al.: Dynamo: Amazon’s Highly Available Key-value Store (SOSP 2007)",
+      "where": {
+        "en": "section 4.2, Partitioning Algorithm",
+        "ru": "раздел 4.2, Partitioning Algorithm"
+      }
+    },
+    "swift-ring": {
+      "url": "https://docs.openstack.org/swift/latest/overview_ring.html#partition-replica-terminology",
+      "title": "OpenStack Swift documentation: The Rings",
+      "where": {
+        "en": "Partition & Replica Terminology",
+        "ru": "раздел Partition & Replica Terminology"
+      }
+    },
+    "hrw-def": {
+      "url": "https://www.cs.ucr.edu/~ravi/Papers/Jrnl/HRW98.pdf",
+      "title": "D. Thaler, C. Ravishankar: Using Name-Based Mappings to Increase Hit Rates (IEEE/ACM Transactions on Networking, 1998)",
+      "where": {
+        "en": "section IV.A, HRW Hashing, and section V.D, Minimal Disruption",
+        "ru": "раздел IV.A, HRW Hashing, и раздел V.D, Minimal Disruption"
+      }
+    },
+    "azure-ec": {
+      "url": "https://www.usenix.org/system/files/conference/atc12/atc12-final181_0.pdf",
+      "title": "C. Huang et al.: Erasure Coding in Windows Azure Storage (USENIX ATC 2012)",
+      "where": {
+        "en": "section 1, Introduction",
+        "ru": "раздел 1, Introduction"
+      }
+    },
+    "posix-write": {
+      "url": "https://pubs.opengroup.org/onlinepubs/9799919799/functions/write.html#tag_17_699_03",
+      "title": "POSIX.1-2024: write()",
+      "where": {
+        "en": "DESCRIPTION",
+        "ru": "раздел DESCRIPTION"
+      }
+    },
+    "posix-rename": {
+      "url": "https://pubs.opengroup.org/onlinepubs/9799919799/functions/rename.html#tag_17_489_08",
+      "title": "POSIX.1-2024: rename()",
+      "where": {
+        "en": "RATIONALE",
+        "ru": "раздел RATIONALE"
+      }
+    },
+    "leases": {
+      "url": "https://pages.cs.wisc.edu/~remzi/Classes/739/Fall2015/Papers/leases89.pdf",
+      "title": "C. Gray, D. Cheriton: Leases: An Efficient Fault-Tolerant Mechanism for Distributed File Cache Consistency (SOSP 1989)",
+      "where": {
+        "en": "section 2, Leases and Cache Consistency",
+        "ru": "раздел 2, Leases and Cache Consistency"
+      }
+    },
+    "etcd-faq": {
+      "url": "https://etcd.io/docs/v3.6/faq/",
+      "title": "etcd documentation v3.6: Frequently Asked Questions",
+      "where": {
+        "en": "What is failure tolerance?",
+        "ru": "вопрос What is failure tolerance?"
+      }
+    },
+    "io500": {
+      "url": "https://io500.org/about",
+      "title": "IO500: About",
+      "where": {
+        "en": "introduction and Workloads",
+        "ru": "введение и раздел Workloads"
+      }
+    },
+    "elbencho": {
+      "url": "https://github.com/breuner/elbencho",
+      "title": "elbencho (GitHub repository)",
+      "where": {
+        "en": "README",
+        "ru": "README"
+      }
+    },
+    "nfs5": {
+      "url": "https://man7.org/linux/man-pages/man5/nfs.5.html#MOUNT_OPTIONS",
+      "title": "nfs(5), Linux manual page",
+      "where": {
+        "en": "MOUNT OPTIONS: nconnect, max_connect, trunkdiscovery",
+        "ru": "раздел MOUNT OPTIONS: nconnect, max_connect, trunkdiscovery"
+      }
+    }
+  },
+  "cites": [
+    {
+      "src": "rfc8881-reclaim",
+      "en": "clients reclaim their state during the NFSv4 grace period.",
+      "ru": "клиенты восстанавливают своё состояние в период отсрочки (grace period) NFSv4.",
+      "quote": "Because each client must have an opportunity to reclaim all of the locks that it has without the possibility that some other client will be granted a conflicting lock, a \"grace period\" is devoted to the reclaim process."
+    },
+    {
+      "src": "gfs2-overview",
+      "en": "from <a href=\"03-ondisk.html\">lesson 3</a> directly.",
+      "ru": "каталоги на диске из <a href=\"03-ondisk.html\">урока 3</a>.",
+      "quote": "GFS2 is a cluster file system. It allows a cluster of computers to simultaneously use a block device that is shared between them (with FC, iSCSI, NBD, etc). GFS2 reads and writes to the block device like a local file system"
+    },
+    {
+      "src": [
+        "gfs2-overview",
+        "gfs2-glocks",
+        "ocfs2-dlmfs"
+      ],
+      "en": "before changing it an exclusive one.",
+      "ru": "прежде чем изменить — исключительную.",
+      "quote": {
+        "gfs2-overview": "lock_dlm uses the distributed lock manager (dlm) for inter-node locking. The dlm is found at linux/fs/dlm/",
+        "gfs2-glocks": "There are three lock states that users of the glock layer can request, namely shared (SH), deferred (DF) and exclusive (EX).",
+        "ocfs2-dlmfs": "dlmfs is built with OCFS2 as it requires most of its infrastructure. … Right now it only works with the OCFS2 DLM"
+      }
+    },
+    {
+      "src": "gfs2-glocks",
+      "en": "drop its cached copy, and release.",
+      "ru": "выбросить закэшированную копию и освободить блокировку.",
+      "quote": "go_sync Called before remote state change (e.g. to sync dirty data) … go_inval Called if remote state change requires invalidating the cache … go_callback Called if the DLM sends a callback to drop this lock"
+    },
+    {
+      "src": [
+        "ibm-ss-abstract",
+        "gpfs-abstract"
+      ],
+      "en": "is the large-scale member of this family.",
+      "ru": "— крупномасштабный представитель этого семейства.",
+      "quote": {
+        "ibm-ss-abstract": "IBM Storage Scale provides superior resiliency, scalability, high-performance data and file management - built on IBM General Parallel File System (GPFS).",
+        "gpfs-abstract": "GPFS is IBM’s parallel, shared-disk file system for cluster computers, available on the RS/6000 SP parallel supercomputer and on Linux clusters. GPFS is used on many of the largest supercomputers in the world."
+      }
+    },
+    {
+      "src": "ibm-ss-nsd",
+      "en": "while keeping the shared-disk design inside.",
+      "ru": "сохраняя внутри устройство с общими дисками.",
+      "quote": "In the Network Shared Disk (NSD) client/server model, the shared-disk model is extended by mixing direct SAN access with network-attached cluster nodes. … Network-attached cluster nodes access storage over a network connection."
+    },
+    {
+      "src": "gpfs-tokens",
+      "en": "</b> hands out tokens.",
+      "ru": "(token manager) раздаёт токены.",
+      "quote": "The global lock manager coordinates locks between local lock managers by handing out lock tokens [9], which convey the right to grant distributed locks without the need for a separate message exchange each time a lock is acquired or released."
+    },
+    {
+      "src": "gpfs-byterange",
+      "en": "while another node works on a different range of the same file.",
+      "ru": "пока другой узел работает с другим диапазоном того же файла.",
+      "quote": "GPFS uses byte-range locking to synchronize reads and writes to file data. This approach allows parallel applications to write concurrently to different parts of the same file, while maintaining POSIX read/write atomicity semantics."
+    },
+    {
+      "src": "gpfs-metanode",
+      "en": "is the only one that updates that file's inode and block map.",
+      "ru": "и только он обновляет inode и карту блоков этого файла.",
+      "quote": "One of the nodes accessing the file is designated as the metanode for the file; only the metanode reads or writes the inode from or to disk. … Periodically or on revocation of a byte-range token, the new data block addresses are sent to the metanode"
+    },
+    {
+      "src": [
+        "gpfs-metanode",
+        "jsc-jupiter"
+      ],
+      "en": "GPFS is fully POSIX-coherent and runs some of the largest HPC filesystems.",
+      "ru": "GPFS полностью согласована по POSIX и обслуживает одни из крупнейших файловых систем в HPC.",
+      "quote": {
+        "gpfs-metanode": "Thus, GPFS uses distributed locking to guarantee POSIX semantics",
+        "jsc-jupiter": "JUPITER – EXASTORE (HOME/DATA) … Gross Capacity: 308 PB; Net Capacity: 210 PB … IBM Storage Scale (aka Spectrum Scale/GPFS)"
+      }
+    },
+    {
+      "src": "kleppmann-pause",
+      "en": "its delayed writes corrupt the shared disks.",
+      "ru": "запоздалые записи этого узла испортят общие диски.",
+      "quote": "the client that acquired the lock is paused for an extended period of time while holding the lock – for example because the garbage collector (GC) kicked in. … the client doesn’t realise that it has expired, it may go ahead and make some unsafe change."
+    },
+    {
+      "src": "pcmk-what",
+      "en": "before handing its locks out.",
+      "ru": "прежде чем раздавать его блокировки.",
+      "quote": "Fencing is the ability to make a node unable to run resources, even when that node is unresponsive to cluster commands. … the most common fencing method is cutting power to the node. Another method is “fabric fencing”, cutting the node’s access to some capability required to run resources"
+    },
+    {
+      "src": "rfc8881-pnfs",
+      "en": "and performs I/O against data servers.",
+      "ru": "получает раскладку от MDS и выполняет ввод-вывод с серверами данных.",
+      "quote": "pNFS is an OPTIONAL feature within NFSv4.1; the pNFS feature set allows direct client access to the storage devices containing file data. … When a client holds a layout, it is granted the ability to directly access the byte-range at the storage location specified in the layout."
+    },
+    {
+      "src": "sc25-lustre",
+      "en": "Lustre is the dominant open-source parallel filesystem in HPC.",
+      "ru": "Lustre — основная параллельная файловая система с открытым кодом в HPC.",
+      "quote": "Lustre is the leading open-source and open-development file system for HPC. Eight of the top 10 and 64% of the top 100 systems on the most recent Top500 list use Lustre."
+    },
+    {
+      "src": "lustre-components",
+      "en": "clients and servers fetch it at mount time",
+      "ru": "клиенты и серверы получают её при монтировании",
+      "quote": "The MGS stores configuration information for all the Lustre file systems in a cluster and provides this information to other Lustre components. Each Lustre target contacts the MGS to provide information, and Lustre clients contact the MGS to retrieve information."
+    },
+    {
+      "src": [
+        "lustre-features",
+        "lustre-storageio"
+      ],
+      "en": "each file's layout is stored as an extended attribute of its inode",
+      "ru": "раскладка каждого файла хранится как расширенный атрибут его inode",
+      "quote": {
+        "lustre-features": "The Lustre file system uses an improved version of the ext4 journaling file system to store data and metadata. This version, called ldiskfs … It is also possible to use ZFS as the backing filesystem for Lustre for the MDT, OST, and MGS storage.",
+        "lustre-storageio": "Information about where file data is located on the OST(s) is stored as an extended attribute called layout EA in an MDT object identified by the FID for the file"
+      }
+    },
+    {
+      "src": "lustre-components",
+      "en": "A file's data lives in one or more objects on OSTs",
+      "ru": "Данные файла лежат в одном или нескольких объектах на OST",
+      "quote": "Object Storage Target (OST): User file data is stored in one or more objects, each object on a separate OST in a Lustre file system."
+    },
+    {
+      "src": [
+        "lustre-components",
+        "lustre-features"
+      ],
+      "en": "a kernel filesystem module. Presents POSIX to applications",
+      "ru": "модуль файловой системы в ядре. Предоставляет приложениям POSIX",
+      "quote": {
+        "lustre-components": "The Lustre client software provides an interface between the Linux virtual file system and the Lustre servers.",
+        "lustre-features": "The full POSIX test suite passes in an identical manner to a local ext4 file system, with limited exceptions on Lustre clients."
+      }
+    },
+    {
+      "src": "lnet-wiki",
+      "en": "LNet routers can join different fabrics",
+      "ru": "Маршрутизаторы LNet могут соединять разные сети",
+      "quote": "the ksocklnd.ko module for TCP/IP networks, and the ko2iblnd.ko module for RDMA networks … supports fabrics running InfiniBand, Omni-Path, and RDMA over Converged Ethernet (RoCE). … Dedicated computers called LNet routers can direct traffic between multiple LNets."
+    },
+    {
+      "src": "lustre-striping",
+      "en": "and let users raise the count for big files.",
+      "ru": "и позволяют пользователям увеличить их число для больших файлов.",
+      "quote": "a RAID 0 pattern is used in which data is \"striped\" across a certain number of objects. … The default value for stripe_count is 1 stripe for file and the default value for stripe_size is 1MB. The user may change these values on a per directory or per file basis."
+    },
+    {
+      "src": "lustre-pfl",
+      "en": "and the rest use every OST (<code>-c -1</code>).",
+      "ru": "а остаток — все OST (<code>-c -1</code>).",
+      "quote": "Introduced in Lustre 2.10 … the first component has 1 stripe and covers [0, 4M), the second component has 4 stripes and covers [4M, 64M), and the last component stripes start at OST4, cross over all available OSTs and covers [64M, EOF)"
+    },
+    {
+      "src": [
+        "lustre-components",
+        "lustre-dne-remote"
+      ],
+      "en": "(<code>lfs mkdir -i 1 dir</code>).",
+      "ru": "(<code>lfs mkdir -i 1 dir</code>).",
+      "quote": {
+        "lustre-components": "Multiple MDTs are supported with the Distributed Namespace Environment (Distributed Namespace Environment (DNE)).",
+        "lustre-dne-remote": "It is possible to create individual directories, along with its files and sub-directories, to be stored on specific MDTs. To create a sub-directory on a given MDT use the command: client$ lfs mkdir -i mdt_index /mount_point/remote_dir"
+      }
+    },
+    {
+      "src": "lustre-dne-striped",
+      "en": "which helps when thousands of clients create files in the same directory.",
+      "ru": "что помогает, когда тысячи клиентов создают файлы в одном каталоге.",
+      "quote": "The Lustre 2.8 DNE feature enables files in a single large directory to be distributed across multiple MDTs (a striped directory) … metadata service load is distributed over all the MDTs that service a given directory."
+    },
+    {
+      "src": "lustre-features",
+      "en": "Each MDT and OST runs a lock server for its own resources.",
+      "ru": "Каждый MDT и OST запускает сервер блокировок для своих ресурсов.",
+      "quote": "The Lustre distributed lock manager (LDLM) ensures that files are coherent between all clients and servers in the file system. The MDT LDLM manages locks on inode permissions and pathnames. Each OST has its own LDLM for locks on file stripes stored thereon"
+    },
+    {
+      "src": "uli-locks",
+      "en": "reads take shared locks and writes take exclusive ones.",
+      "ru": "чтение берёт разделяемые блокировки, запись — исключительные.",
+      "quote": "PW Protective Write (normal write) mode When a client requests a write lock from an OST, a lock with PW mode will be issued. PR Protective Read (normal read) mode When a client requests a read from an OST, a lock with PR mode will be issued. … extent lock for protecting OST data"
+    },
+    {
+      "src": "uli-cancel",
+      "en": "drops the cached pages in that range, and releases the lock.",
+      "ru": "выбрасывает закэшированные страницы этого диапазона и освобождает блокировку.",
+      "quote": "the owner will hold it as long as possible until: someone is asking for a conflicting lock, LDLM sends out a blocking AST … the client flushes all dirty buffers, probably through one or more bulk writes. Then it releases the lock (lock reference count is now zero) by sending a cancel RPC"
+    },
+    {
+      "src": "uli-locks",
+      "en": "<b>inodebits</b> locks on the MDT.",
+      "ru": "<b>inodebits</b> на MDT.",
+      "quote": "inode bit lock for protecting metadata attributes, defined by struct ldlm_inodebits."
+    },
+    {
+      "src": "uli-locks",
+      "en": "may have to ask the OSTs that hold the file's objects.",
+      "ru": "может потребовать запроса к OST, на которых лежат объекты файла.",
+      "quote": "glimpse callback This callback is used to provide certain information about underlying properties without actually releasing the lock. For example, an OST can provide such a callback to provide information on file size since only the OSTs know exactly the size of a file object."
+    },
+    {
+      "src": "lustre-commit",
+      "en": "(the <code>last_committed</code> transaction number).",
+      "ru": "(номер транзакции <code>last_committed</code>).",
+      "quote": "it records a per-target increasing transaction number … Periodically, when the server commits these transactions to disk, the last_committed transaction number is returned to the client to allow it to discard pending operations from memory"
+    },
+    {
+      "src": "lustre-replay",
+      "en": "<b>replay</b> their uncommitted requests in order.",
+      "ru": "<b>повторяют</b> (replay) свои незафиксированные запросы.",
+      "quote": "When a client detects an MDS failure, it connects to the new MDS and uses the metadata replay protocol to replay its requests. … It replays any newer requests to the server in transaction number order, one at a time, waiting for a reply from the server before replaying the next request."
+    },
+    {
+      "src": "lustre-failover",
+      "en": "so a partner can mount the target if its server dies.",
+      "ru": "так что напарник может смонтировать целевое устройство, если его сервер умер.",
+      "quote": "A failover hardware setup requires a pair of servers with a shared resource … The Lustre software does not provide redundancy for data; it depends exclusively on redundancy of backing storage devices. The backing OST storage should be RAID 5 or, preferably, RAID 6 storage."
+    },
+    {
+      "src": "lustre-flr",
+      "en": "adds optional mirroring of a file across OSTs.",
+      "ru": "добавляет необязательное зеркалирование файла по нескольким OST.",
+      "quote": "With the File Level Redundancy (FLR) feature introduced in Lustre Release 2.11, any Lustre file can store the same data on multiple OSTs in order for the system to be robust in the event of storage failures or other outages."
+    },
+    {
+      "src": [
+        "beegfs-overview",
+        "beegfs-metadata"
+      ],
+      "en": "storage services with storage targets, and a kernel client.",
+      "ru": "службы хранения с целевыми устройствами хранения и клиент в ядре.",
+      "quote": {
+        "beegfs-overview": "The BeeGFS client is implemented as a Linux kernel module … Besides the three basic roles in BeeGFS (clients, metadata service, storage service) there are two additional system services that are part of BeeGFS: The management service",
+        "beegfs-metadata": "Metadata is distributed across the metadata nodes on a per directory basis. The content of a directory is always stored on one metadata node."
+      }
+    },
+    {
+      "src": [
+        "beegfs-rdma",
+        "beegfs-mirroring"
+      ],
+      "en": "which it calls <b>buddy mirroring</b>.",
+      "ru": "в BeeGFS это называется <b>buddy mirroring</b>.",
+      "quote": {
+        "beegfs-rdma": "RDMA support for InfiniBand, RoCE (RDMA over Converged Ethernet), and Omni-Path in BeeGFS are based on the Open Fabrics Enterprise Distribution ibverbs API",
+        "beegfs-mirroring": "BeeGFS provides support for metadata and file contents mirroring. … Storage and metadata mirroring with high availability is based on so-called buddy groups. In general, a buddy group is a pair of two targets"
+      }
+    },
+    {
+      "src": "hadoop-wiki",
+      "en": "modelled on the Google File System paper,",
+      "ru": "построенная по образцу статьи о Google File System,",
+      "quote": "Hadoop's Distributed File System is designed to reliably store very large files across machines in a large cluster. It is inspired by the Google File System."
+    },
+    {
+      "src": "hdfs-persistence",
+      "en": "keeps the whole namespace and the block map in RAM.",
+      "ru": "держит всё пространство имён и карту блоков в оперативной памяти.",
+      "quote": "The NameNode keeps an image of the entire file system namespace and file Blockmap in memory."
+    },
+    {
+      "src": "hdfs-paper-future",
+      "en": "so millions of small files hurt.",
+      "ru": "поэтому миллионы маленьких файлов вредят.",
+      "quote": "Because the NameNode keeps all the namespace and block locations in memory, the size of the NameNode heap has limited the number of files and also the number of blocks addressable."
+    },
+    {
+      "src": [
+        "hdfs-blocks",
+        "hdfs-persistence"
+      ],
+      "en": "typically 128 MB each, as ordinary files on their local disks.",
+      "ru": "обычно по 128 МБ, как обычные файлы на своих локальных дисках.",
+      "quote": {
+        "hdfs-blocks": "A typical block size used by HDFS is 128 MB.",
+        "hdfs-persistence": "The DataNode stores HDFS data in files in its local file system. The DataNode has no knowledge about HDFS files. It stores each block of HDFS data in a separate file in its local file system."
+      }
+    },
+    {
+      "src": [
+        "hdfs-placement",
+        "hdfs-paper-client"
+      ],
+      "en": "the third on a different node in that same remote rack.",
+      "ru": "третья на другом узле в той же удалённой стойке.",
+      "quote": {
+        "hdfs-placement": "HDFS’s placement policy is to put one replica on the local machine if the writer is on a datanode, otherwise on a random datanode in the same rack as that of the writer, another replica on a node in a different (remote) rack, and the last on a different node in the same remote rack.",
+        "hdfs-paper-client": "By default a file’s replication factor is three."
+      }
+    },
+    {
+      "src": "hdfs-replication",
+      "en": "</b>: one writer, then only appends and truncates.",
+      "ru": "(write-once): один писатель, затем только дописывание в конец и усечение.",
+      "quote": "Files in HDFS are write-once (except for appends and truncates) and have strictly one writer at any time."
+    },
+    {
+      "src": "hdfs-coherency",
+      "en": "That single rule removes almost the whole cache-coherence problem.",
+      "ru": "Одно это правило снимает почти всю проблему согласованности кэшей.",
+      "quote": "A file once created, written, and closed need not be changed except for appends and truncates. Appending the content to the end of the files is supported but cannot be updated at arbitrary point. This assumption simplifies data coherency issues and enables high throughput data access."
+    },
+    {
+      "src": [
+        "hdfs-ha-arch",
+        "hdfs-ha-zk"
+      ],
+      "en": "with ZooKeeper deciding which one is active.",
+      "ru": "а ZooKeeper решает, какой из них активен.",
+      "quote": {
+        "hdfs-ha-arch": "both nodes communicate with a group of separate daemons called “JournalNodes” (JNs). When any namespace modification is performed by the Active node, it durably logs a record of the modification to a majority of these JNs.",
+        "hdfs-ha-zk": "Active NameNode election - ZooKeeper provides a simple mechanism to exclusively elect a node as active."
+      }
+    },
+    {
+      "src": [
+        "hdfs-intro",
+        "hdfs-access"
+      ],
+      "en": "through a client library rather than a kernel mount.",
+      "ru": "а не через монтирование в ядре.",
+      "quote": {
+        "hdfs-intro": "HDFS relaxes a few POSIX requirements to enable streaming access to file system data.",
+        "hdfs-access": "Natively, HDFS provides a FileSystem Java API for applications to use. A C language wrapper for this Java API and REST API is also available."
+      }
+    },
+    {
+      "src": "iana-pnfs",
+      "en": "SCSI and <b>flexible files</b> (RFC 8435).",
+      "ru": "SCSI и <b>flexible files</b> (RFC 8435).",
+      "quote": "LAYOUT4_NFSV4_1_FILES 0x00000001 RFC 8881 … LAYOUT4_OSD2_OBJECTS 0x00000002 RFC 5664 … LAYOUT4_BLOCK_VOLUME 0x00000003 RFC 5663 … LAYOUT4_FLEX_FILES 0x00000004 RFC 8435 … LAYOUT4_SCSI 0x00000005 RFC 8154"
+    },
+    {
+      "src": "rfc8435",
+      "en": "<b>mirror</b> writes to several data servers itself.",
+      "ru": "<b>зеркалировать</b> записи на несколько серверов данных.",
+      "quote": "This document defines the flexible file layout type used with file-based data servers that are accessed using the NFS protocols: NFSv3 [RFC1813], NFSv4.0 [RFC7530], NFSv4.1 [RFC5661], and NFSv4.2 [RFC7862]. … The client then picks a mirror to read from and ensures that all writes go to all mirrors."
+    },
+    {
+      "src": "kernel-pnfs",
+      "en": "without any special client software.",
+      "ru": "безо всякого специального клиентского ПО.",
+      "quote": "The STD defines 4 basic layout types: “files”, “objects”, “blocks”, and “flexfiles”. For each of these types there is a layout-driver … Flexfiles-layout-driver code is in: fs/nfs/flexfilelayout/.. directory"
+    },
+    {
+      "src": [
+        "ceph-arch-storing",
+        "ceph-devices"
+      ],
+      "en": "(object storage daemons, usually one per disk).",
+      "ru": "(object storage daemons, демоны хранения объектов, обычно по одному на диск).",
+      "quote": {
+        "ceph-arch-storing": "The data received by the Ceph Storage Cluster is stored as RADOS objects. Each object is stored on an Object Storage Device (this is also called an “OSD”).",
+        "ceph-devices": "Ceph OSDs (Object Storage Daemons) store most of the data in Ceph. Usually each OSD is backed by a single storage device."
+      }
+    },
+    {
+      "src": "ceph-arch-pgids",
+      "en": "small, shared <b>cluster map</b>.",
+      "ru": "по небольшой общей <b>карте кластера</b>.",
+      "quote": "When a client has been equipped with a copy of the cluster map, it is aware of all the monitors, OSDs, and metadata servers in the cluster. … The client requires only the object ID and the name of the pool in order to compute the object location."
+    },
+    {
+      "src": "ceph-arch-storing",
+      "en": "are all built on RADOS.",
+      "ru": "построены поверх RADOS.",
+      "quote": "The Ceph Storage Cluster receives data from Ceph Clients--whether it comes through a Ceph Block Device, Ceph Object Storage, the Ceph File System, or a custom implementation that you create by using librados. The data received by the Ceph Storage Cluster is stored as RADOS objects."
+    },
+    {
+      "src": [
+        "cephadm-mon",
+        "ceph-arch-monitors",
+        "ceph-arch-clustermap"
+      ],
+      "en": "and the CephFS metadata server map.",
+      "ru": "карта CRUSH и карта серверов метаданных CephFS.",
+      "quote": {
+        "cephadm-mon": "A typical Ceph cluster has three or five monitor daemons that are spread across different hosts.",
+        "ceph-arch-monitors": "To establish consensus among the monitors regarding the state of the cluster, Ceph uses the Paxos algorithm and a majority of monitors",
+        "ceph-arch-clustermap": "The Monitor Map: Contains the cluster fsid, the position, the name, the address, and the TCP port of each monitor. … a list of OSDs and their statuses (for example, up, in). … The MDS Map: Contains the current MDS map epoch"
+      }
+    },
+    {
+      "src": "rados-map",
+      "en": "Every map has an epoch number that increases with each change.",
+      "ru": "У каждой карты есть номер эпохи, который растёт с каждым изменением.",
+      "quote": "Each time the cluster map changes due to an OSD status change (e. g., device failure) or other event effecting data layout, the map epoch is incremented."
+    },
+    {
+      "src": [
+        "ceph-devices",
+        "bluestore-paper",
+        "rocksdb"
+      ],
+      "en": "in RocksDB, an LSM-tree key-value store.",
+      "ru": "в RocksDB — хранилище ключ-значение на основе LSM-дерева.",
+      "quote": {
+        "ceph-devices": "BlueStore consumes raw block devices or partitions. … RocksDB’s key/value database is embedded in order to manage internal metadata, including the mapping of object names to block locations on disk.",
+        "bluestore-paper": "object information is stored in the O namespace (that is, RocksDB keys start with O and their values represent object metadata), block allocation metadata is stored in the B namespace",
+        "rocksdb": "When a memtable is full, its content is written out to a file in Level-0 (L0) of the LSM tree."
+      }
+    },
+    {
+      "src": "ceph-arch-cluster",
+      "en": "daemons exist only for CephFS, to serve the namespace.",
+      "ru": "нужны только CephFS, чтобы обслуживать пространство имён.",
+      "quote": "A Ceph Manager serves as an endpoint for monitoring, orchestration, and plug-in modules. A Ceph Metadata Server (MDS) manages file metadata when CephFS is used to provide file services."
+    },
+    {
+      "src": "ceph-arch-mapping",
+      "en": "and CRUSH maps each PG to a list of OSDs.",
+      "ru": "а CRUSH отображает каждую PG в список OSD.",
+      "quote": "Each pool has a number of placement groups (PGs) within it. CRUSH dynamically maps PGs to OSDs. When a Ceph Client stores objects, CRUSH maps each RADOS object to a PG."
+    },
+    {
+      "src": "ceph-pg-use",
+      "en": "so it deals with thousands of PGs rather than billions of objects.",
+      "ru": "так что имеет дело с тысячами PG, а не с миллиардами объектов.",
+      "quote": "A placement group aggregates objects within a pool. The tracking of RADOS object placement and object metadata on a per-object basis is computationally expensive. It would be infeasible for a system with millions of RADOS objects to efficiently track placement on a per-object basis."
+    },
+    {
+      "src": "ceph-pg-auto",
+      "en": "and the PG autoscaler adjusts pools toward it.",
+      "ru": "и автомасштабировщик PG (PG autoscaler) подстраивает под неё пулы.",
+      "quote": "Ceph considers the total available storage, the target number of PG replicas for each OSD, and how much data is stored in each pool, then apportions PGs accordingly. … The target number of PGs per OSD is determined by the mon_target_pg_per_osd parameter (default: 100)"
+    },
+    {
+      "src": "ceph-arch-smart",
+      "en": "acknowledges the client only when all of them have persisted it.",
+      "ru": "только когда все они её сохранили.",
+      "quote": "the client writes the object to the identified placement group’s primary OSD. The primary OSD then consults its own copy of the CRUSH map to identify secondary OSDS, replicates the object … confirms that the object was stored successfully in the secondary OSDs, and reports to the client"
+    },
+    {
+      "src": "ceph-crush-types",
+      "en": "each with a weight (usually its capacity in TiB).",
+      "ru": "у каждого свой вес (обычно ёмкость в ТиБ).",
+      "quote": "Default types include: osd (or device) host chassis rack row pdu pod room datacenter zone region root … Weights are set at the leaves, indicating the size of the device. … Weights are typically measured in tebibytes (TiB)."
+    },
+    {
+      "src": "ceph-crush-intro",
+      "en": "losing a rack loses at most one copy of anything.",
+      "ru": "потеря стойки уносит не больше одной копии чего угодно.",
+      "quote": "CRUSH placement policies distribute object replicas across failure domains while maintaining the desired distribution. … For example, distributing replicas across racks is typical for mid- to large-sized clusters."
+    },
+    {
+      "src": "crush-straw",
+      "en": "and the longest straw wins.",
+      "ru": "и побеждает самая длинная.",
+      "quote": "To place a replica, a straw of random length is drawn for each item in the bucket. The item with the longest straw wins. … based on a hash of the CRUSH input x, replica number r, and bucket item i. Each straw length is scaled by a factor f (wi )"
+    },
+    {
+      "src": "ceph-crush-straw2",
+      "en": "so adding or removing a disk only moves data to or from that disk.",
+      "ru": "перемещает данные только на этот диск или с него.",
+      "quote": "the old straw buckets would change some mappings that should not have changed when a weight was adjusted, while straw2 achieves the original goal of changing mappings only to or from the bucket item whose weight has changed."
+    },
+    {
+      "src": "ceph-arch-peering",
+      "en": "while at least <code>min_size</code> (typically 2) are available.",
+      "ru": "пока доступно хотя бы <code>min_size</code> (обычно 2).",
+      "quote": "For high availability, a Ceph Storage Cluster should store more than two copies of an object (that is, size = 3 and min size = 2) so that it can continue to run in a degraded state while maintaining data safety."
+    },
+    {
+      "src": "ceph-arch-ec",
+      "en": "and survives the loss of any <i>m</i>.",
+      "ru": "и переживает потерю любых <i>m</i>.",
+      "quote": "An erasure coded pool stores each object as K+M chunks. It is divided into K data chunks and M coding chunks. … For instance an erasure coded pool can be created to use five OSDs (K+M = 5) and sustain the loss of two of them (M = 2)."
+    },
+    {
+      "src": [
+        "ceph-ec-intro",
+        "ceph-ec-opt"
+      ],
+      "en": "Erasure coding saves capacity and costs CPU, latency and small-write performance.",
+      "ru": "но стоит процессорного времени, задержки и производительности мелких записей.",
+      "quote": {
+        "ceph-ec-intro": "At scale, erasure coding saves space relative to replication.",
+        "ceph-ec-opt": "Since Tentacle, an erasure-coded pool may have optimizations enabled with a per-pool setting. This improves performance for smaller I/Os and eliminates padding which can save capacity"
+      }
+    },
+    {
+      "src": "ceph-ec-overwrites",
+      "en": "when overwrites are enabled on the pool.",
+      "ru": "если в пуле разрешена перезапись (overwrites).",
+      "quote": "By default, erasure-coded pools work only with operations that perform full object writes and appends (for example, RGW). Since Luminous, partial writes for an erasure-coded pool may be enabled with a per-pool setting. This lets RBD and CephFS store their data in an erasure-coded pool"
+    },
+    {
+      "src": "ceph-downout",
+      "en": "from the surviving replicas spread across the whole cluster.",
+      "ru": "с уцелевших реплик, распределённых по всему кластеру.",
+      "quote": "mon_osd_down_out_interval The number of seconds Ceph waits before marking a Ceph OSD Daemon down and out if it doesn’t respond. … default: 10 minutes"
+    },
+    {
+      "src": [
+        "ceph-layout",
+        "ceph-osdi-io"
+      ],
+      "en": "so clients compute data locations exactly as above.",
+      "ru": "так что клиенты вычисляют расположение данных ровно так же, как выше.",
+      "quote": {
+        "ceph-layout": "object_size Integer. The size of the object in bytes. File data is chunked into RADOS objects of this size. … {\"stripe_unit\": 4194304, \"stripe_count\": 1, \"object_size\": 4194304, … \"inheritance\": \"@default\"}",
+        "ceph-osdi-io": "To avoid any need for file allocation metadata, object names simply combine the file inode number and the stripe number."
+      }
+    },
+    {
+      "src": [
+        "ceph-createfs",
+        "ceph-arch-cephfs"
+      ],
+      "en": "</b> daemons that journal their changes into RADOS too.",
+      "ru": "которые тоже журналируют свои изменения в RADOS.",
+      "quote": {
+        "ceph-createfs": "A Ceph file system requires at least two RADOS pools, one for data and one for metadata.",
+        "ceph-arch-cephfs": "The extra ceph-mds instances can be standby, ready to take over the duties of any failed ceph-mds that was active. This is easy because all the data, including the journal, is stored on RADOS."
+      }
+    },
+    {
+      "src": "ceph-mds-ranks",
+      "en": "each owning a <b>rank</b>.",
+      "ru": "каждый владеет своим <b>рангом</b> (rank).",
+      "quote": "Each CephFS file system has a max_mds setting, which controls how many ranks will be created."
+    },
+    {
+      "src": "ceph-mds-balancer",
+      "en": "although recent releases turn this balancer off by default.",
+      "ru": "хотя в последних выпусках этот балансировщик по умолчанию выключен.",
+      "quote": "CephFS has long had a dynamic metadata balancer (sometimes called the “default balancer”) which can split or merge subtrees while placing them on “colder” MDS ranks. … However, the balancer is sometimes inefficient or slow, so by default it is turned off."
+    },
+    {
+      "src": "ceph-mds-pin",
+      "en": "with the <code>ceph.dir.pin</code> extended attribute.",
+      "ru": "расширенным атрибутом <code>ceph.dir.pin</code>.",
+      "quote": "The mechanism provided for this purpose is called an export pin, an extended attribute of directories. The name of this extended attribute is ceph.dir.pin. … The value of the extended attribute is the rank to assign the directory subtree to."
+    },
+    {
+      "src": "ceph-mds-standby",
+      "en": "Standby daemons take over a failed rank.",
+      "ru": "Резервные демоны подхватывают отказавший ранг.",
+      "quote": "Even with multiple active MDS daemons, a highly available system still requires standby daemons to take over if any of the servers running an active daemon fail."
+    },
+    {
+      "src": [
+        "ceph-caps",
+        "ceph-osdi-sync"
+      ],
+      "en": "the MDS revokes caps, and the holder flushes and gives them back.",
+      "ru": "MDS отзывает caps, а владелец сбрасывает данные и возвращает их.",
+      "quote": {
+        "ceph-caps": "When a client wants to operate on an inode, it will query the MDS in various ways, which will then grant the client a set of capabilities.",
+        "ceph-osdi-sync": "When a file is opened by multiple clients with either multiple writers or a mix of readers and writers, the MDS will revoke any previously issued read caching and write buffering capabilities"
+      }
+    },
+    {
+      "src": [
+        "ceph-kclient",
+        "ceph-whichclient"
+      ],
+      "en": "which is slower but can be upgraded without touching the kernel.",
+      "ru": "который медленнее, но обновляется без изменения ядра.",
+      "quote": {
+        "ceph-kclient": "The CephFS kernel driver is part of the Linux kernel.",
+        "ceph-whichclient": "The FUSE client is the most accessible and the easiest to upgrade to the version of Ceph used by the storage cluster, while the kernel client will always gives better performance."
+      }
+    },
+    {
+      "src": [
+        "ceph-evict-auto",
+        "ceph-evict-blocklist",
+        "ceph-evict-intro"
+      ],
+      "en": "even if it comes back to life.",
+      "ru": "даже если тот оживёт.",
+      "quote": {
+        "ceph-evict-auto": "if a client has not communicated with the MDS for over session_autoclose (a file system variable) seconds (300 seconds by default), then it will be evicted automatically. … if a client has not responded to cap revoke messages for over mds_cap_revoke_eviction_timeout … This is disabled by default.",
+        "ceph-evict-blocklist": "Because CephFS uses the RADOS OSD blocklist to control client eviction, CephFS clients can be permitted to reconnect by removing them from the blocklist",
+        "ceph-evict-intro": "Evicting a CephFS client prevents it from communicating further with MDS daemons and OSD daemons."
+      }
+    },
+    {
+      "src": "gluster-dht",
+      "en": "A client hashes a file's name to find its brick.",
+      "ru": "Клиент хеширует имя файла, чтобы найти его brick.",
+      "quote": "Each subvolume (brick) is assigned a range within a 32-bit hash space … Then each file is also assigned a value in that same space, by hashing its name. … The assignment of hash ranges to bricks is determined by extended attributes stored on directories"
+    },
+    {
+      "src": "gluster-xlators",
+      "en": "replication and dispersal (erasure coding) on top.",
+      "ru": "(dispersal, то есть помехоустойчивое кодирование).",
+      "quote": "A translator converts requests from users into requests for storage. … Dispersed volumes are based on erasure codes. It stripes the encoded data of files, with some redundancy added, across multiple bricks in the volume."
+    },
+    {
+      "src": "gluster-rename",
+      "en": "needs a pointer file.",
+      "ru": "и нужен файл-указатель.",
+      "quote": "it's not necessary to move a file from one brick to another when it's renamed - even across directories. It will still be found, albeit a little less efficiently. The first client to look for it after the rename will add a linkfile, which every other client will follow from then on."
+    },
+    {
+      "src": "rh-gluster",
+      "en": "so check the state of the upstream project before choosing it.",
+      "ru": "проверьте состояние upstream-проекта.",
+      "quote": "Note that the Red Hat Gluster Storage product has a defined support lifecycle through to 31-Dec-24, after which the Red Hat Gluster Storage product will have reached its EOL."
+    },
+    {
+      "src": [
+        "juicefs-arch",
+        "juicefs-store"
+      ],
+      "en": "with a local cache.",
+      "ru": "с локальным кэшем.",
+      "quote": {
+        "juicefs-arch": "FUSE: JuiceFS file system can be mounted on a host in a POSIX-compatible manner … JuiceFS supports a variety of common databases as the metadata engine, like Redis, TiKV, MySQL/MariaDB, PostgreSQL, and SQLite",
+        "juicefs-store": "each file is composed of one or more chunks. Each chunk has a maximum size of 64 MB. … slices are further split into individual blocks (default maximum size of 4 MB) … the smallest storage unit for the object storage and disk cache."
+      }
+    },
+    {
+      "src": "colossus",
+      "en": "between clients and file servers called D servers.",
+      "ru": "которые называются D-серверами.",
+      "quote": "Colossus is our cluster-level file system, successor to the Google File System (GFS). … Curators store file system metadata in Google’s high-performance NoSQL database, BigTable. … Data flows directly between clients and “D” file servers (our network attached disks)."
+    },
+    {
+      "src": [
+        "colossus",
+        "gfs-master"
+      ],
+      "en": "the single GFS master could not.",
+      "ru": "которую не мог решить единственный мастер GFS.",
+      "quote": {
+        "colossus": "The original motivation for building Colossus was to solve scaling limits we experienced with Google File System (GFS) when trying to accommodate metadata related to Search. Storing file metadata in BigTable allowed Colossus to scale up by over 100x over the largest GFS clusters.",
+        "gfs-master": "A GFS cluster consists of a single master and multiple chunkservers and is accessed by multiple clients"
+      }
+    },
+    {
+      "src": "karger-ch",
+      "en": "<td>almost everything",
+      "ru": "<td>почти всё",
+      "quote": "If the distribution was done with a classical hash function … When the range of the hash function (p in the example) changed, almost every item would be hashed to a new location."
+    },
+    {
+      "src": "karger-ch",
+      "en": "clockwise</td><td>about 1/(N+1)",
+      "ru": "по часовой стрелке</td><td>около 1/(N+1)",
+      "quote": "First, there is a “smoothness” property. When a machine is added to or removed from the set of caches, the expected fraction of objects that must be moved to a new cache is the minimum needed to maintain a balanced load across the caches."
+    },
+    {
+      "src": [
+        "dynamo-part",
+        "swift-ring"
+      ],
+      "en": "Dynamo-style stores, OpenStack Swift's ring",
+      "ru": "хранилища в стиле Dynamo, кольцо OpenStack Swift",
+      "quote": {
+        "dynamo-part": "Dynamo’s partitioning scheme relies on consistent hashing to distribute the load across multiple storage hosts. … walking the ring clockwise to find the first node with a position larger than the item’s position.",
+        "swift-ring": "All descriptions of consistent hashing describe the process of breaking the keyspace up into multiple ranges (vnodes, buckets, etc.) - many more than the number of “nodes” to which keys in the keyspace must be assigned. Swift calls these ranges partitions"
+      }
+    },
+    {
+      "src": "hrw-def",
+      "en": "about 1/(N+1), only onto the new server",
+      "ru": "около 1/(N+1), и только на новый сервер",
+      "quote": "An object name and server address together are used to assign a random “weight” to each server. The servers are then ordered by weight, and a request is sent to the active server with the highest weight. … All other objects will be unaffected, and so the optimum disruption bound is achieved."
+    },
+    {
+      "src": "ceph-crush-straw2",
+      "en": "<td>CRUSH buckets",
+      "ru": "корзины (buckets) CRUSH",
+      "quote": "There is a new bucket algorithm supported: straw2. … The straw2 type is the default type for any newly created buckets."
+    },
+    {
+      "src": "crush-movement",
+      "en": "about 1/(N+1), respecting failure domains",
+      "ru": "около 1/(N+1) с учётом доменов отказа",
+      "quote": "The amount of data movement in a hierarchy has a lower bound of ∆w/W, the fraction of data that would reside on a newly added device with weight ∆w. Data movement increases with the height h of the hierarchy"
+    },
+    {
+      "src": [
+        "dynamo-part",
+        "karger-construction"
+      ],
+      "en": "per server to balance well;",
+      "ru": "(virtual nodes) на сервер;",
+      "quote": {
+        "dynamo-part": "First, the random position assignment of each node on the ring leads to non-uniform data and load distribution. … instead of mapping a node to a single point in the circle, each node gets assigned to multiple points in the ring. To this end, Dynamo uses the concept of “virtual nodes”.",
+        "karger-construction": "we will need κ log(C) points for each bucket for some constant κ. The easiest way to view this is that each bucket is replicated κ log(C) times"
+      }
+    },
+    {
+      "src": "azure-ec",
+      "en": "<td>8 chunks",
+      "ru": "<td>8 фрагментов",
+      "quote": "the standard approach of Reed-Solomon codes [13] where we would have (12, 4), which is 12 data fragments and 4 code fragments. This means that to do the reconstruction we would need to read from a set of 12 fragments."
+    },
+    {
+      "src": "ceph-ec-overhead",
+      "en": "at the price of more network and disk traffic during rebuilds and slower small writes.",
+      "ru": "ценой большего сетевого и дискового трафика при восстановлении и более медленных мелких записей.",
+      "quote": "For a 4,2 profile, the overhead is thus 1.5 … Contrast with default replication with size-3, with which the overhead factor is 3.0. Do not mistake erasure coding for a free lunch: there is a significant performance tradeoff"
+    },
+    {
+      "src": "ceph-ec-overwrites",
+      "en": "replicate hot or metadata-heavy data and erasure-code the bulk.",
+      "ru": "а основной объём кодируют.",
+      "quote": "Erasure-coded pools do not support omap, so to use them with RBD and CephFS you must instruct them to store their data in an EC pool and their metadata in a replicated pool."
+    },
+    {
+      "src": [
+        "lustre-flr",
+        "lustre-flr-resync"
+      ],
+      "en": "copies the data to them.",
+      "ru": "не скопирует в них данные.",
+      "quote": {
+        "lustre-flr": "While writing to a mirrored file, only one primary or preferred mirror will be updated directly during the write, while other mirrors will be simply marked as stale.",
+        "lustre-flr-resync": "it will copy data from synced mirror to the stale mirror(s), and mark all successfully copied mirror(s) as SYNC."
+      }
+    },
+    {
+      "src": "crush-reliability",
+      "en": "instead of from one mirror onto one spare.",
+      "ru": "а не с одного зеркала на один запасной диск.",
+      "quote": "recovery after a failure can proceed in parallel because smaller bits of replicated data are spread across a larger set of peers, reducing recovery times and shrinking the window of vulnerability to additional failures."
+    },
+    {
+      "src": [
+        "posix-write",
+        "posix-rename"
+      ],
+      "en": "and that byte-range locks work.",
+      "ru": "и что блокировки диапазонов байтов работают.",
+      "quote": {
+        "posix-write": "After a write() to a regular file has successfully returned: Any successful read() from each byte position in the file that was modified by that write shall return the data specified by the write() for that position until such byte positions are again modified.",
+        "posix-rename": "That specification requires that the action of the function be atomic."
+      }
+    },
+    {
+      "src": [
+        "ceph-posix",
+        "ceph-osdi-sync"
+      ],
+      "en": "POSIX, with some relaxed options",
+      "ru": "POSIX, с некоторыми ослабленными режимами",
+      "quote": {
+        "ceph-posix": "CephFS aims to adhere to POSIX semantics wherever possible. … However, there are a few places where CephFS diverges from strict POSIX semantics for various reasons",
+        "ceph-osdi-sync": "these include an O LAZY flag for open that allows applications to explicitly relax the usual coherency requirements for a shared-write file."
+      }
+    },
+    {
+      "src": "lustre-dne-striped",
+      "en": "all go to the metadata server that owns that directory and serialise on its lock.",
+      "ru": "и выстраиваются в очередь на его блокировке.",
+      "quote": "Normally, all files in a directory must be created on a single MDT."
+    },
+    {
+      "src": "lustre-stripeconsider",
+      "en": "Aligning each process's region to the stripe size avoids it.",
+      "ru": "Выравнивание области каждого процесса по размеру полосы это устраняет.",
+      "quote": "having more than one client writing to a stripe can lead to issues with lock exchange, where clients contend over writing to that stripe, even if their I/Os do not overlap. This can be avoided if I/O can be stripe aligned so that each stripe is accessed by only one client."
+    },
+    {
+      "src": "ceph-dirfrags",
+      "en": "CephFS directory fragmentation and pinning)",
+      "ru": "фрагментация и закрепление каталогов в CephFS)",
+      "quote": "In CephFS, directories are fragmented when they become very large or very busy. This splits up the metadata so that it can be shared between multiple MDS daemons, and between multiple objects in the metadata pool."
+    },
+    {
+      "src": [
+        "pcmk-devices",
+        "kleppmann-pause"
+      ],
+      "en": "or one paused for a long garbage collection or a kernel hang.",
+      "ru": "или замершего из-за долгой сборки мусора или зависания ядра.",
+      "quote": {
+        "pcmk-devices": "Since loss of a node due to power outage is indistinguishable from loss of network connectivity to that node",
+        "kleppmann-pause": "Normally, GC pauses are quite short, but “stop-the-world” GC pauses have sometimes been known to last for several minutes [5] – certainly long enough for a lease to expire."
+      }
+    },
+    {
+      "src": "leases",
+      "en": "before giving the rights to someone else.",
+      "ru": "прежде чем отдать права кому-то ещё.",
+      "quote": "When a client writes a datum, the server must defer the request until each leaseholder has granted approval or the term of its lease has expired. … If some host holding a lease for this file is unreachable, the delay continues until the lease expires."
+    },
+    {
+      "src": [
+        "rfc8881-lease",
+        "uli-cancel",
+        "ceph-evict-auto"
+      ],
+      "en": "Lustre lock callbacks and CephFS client sessions all work this way.",
+      "ru": "и клиентские сессии CephFS.",
+      "quote": {
+        "rfc8881-lease": "This arrangement allows the server to remove stale locking-related objects that are held by a client that has crashed or is otherwise unreachable, once the relevant lease expires.",
+        "uli-cancel": "If one client doesn’t play nice and doesn’t cooperate in releasing its lock, then a timer is started the moment it was sent a blocking AST. If the client doesn’t release the lock and there is no ongoing I/O under that lock for the duration of the timeout, then the client is evicted.",
+        "ceph-evict-auto": "if a client has not communicated with the MDS for over session_autoclose (a file system variable) seconds (300 seconds by default), then it will be evicted automatically."
+      }
+    },
+    {
+      "src": [
+        "ceph-arch-monitors",
+        "etcd-faq",
+        "hdfs-ha-zk"
+      ],
+      "en": "ZooKeeper for HDFS failover.",
+      "ru": "ZooKeeper для переключения HDFS.",
+      "quote": {
+        "ceph-arch-monitors": "To establish consensus among the monitors regarding the state of the cluster, Ceph uses the Paxos algorithm and a majority of monitors",
+        "etcd-faq": "An etcd cluster operates so long as a member quorum can be established. If quorum is lost through transient network failures (e.g., partitions), etcd automatically and safely resumes once the network recovers and restores quorum; Raft enforces cluster consistency.",
+        "hdfs-ha-zk": "Active NameNode election - ZooKeeper provides a simple mechanism to exclusively elect a node as active."
+      }
+    },
+    {
+      "src": "etcd-faq",
+      "en": "Three members survive one failure; five survive two.",
+      "ru": "Три участника переживают один отказ, пять — два.",
+      "quote": "It is recommended to have an odd number of members in a cluster. … Cluster Size | Majority | Failure Tolerance … 3 | 2 | 1 … 5 | 3 | 2"
+    },
+    {
+      "src": "pcmk-why",
+      "en": "where two halves each believe they are in charge.",
+      "ru": "когда обе половины считают себя главными.",
+      "quote": "Fencing protects against the “split brain” failure scenario, where cluster nodes have lost the ability to reliably communicate with each other but are still able to run resources."
+    },
+    {
+      "src": [
+        "pcmk-what",
+        "pcmk-devices"
+      ],
+      "en": "or blocklist it (Ceph).",
+      "ru": "или вносят в чёрный список (Ceph).",
+      "quote": {
+        "pcmk-what": "Fencing is also known as STONITH, an acronym for “Shoot The Other Node In The Head”, since the most common fencing method is cutting power to the node.",
+        "pcmk-devices": "Examples of fencing devices include intelligent power switches and IPMI devices that accept SNMP commands to cut power to a node, and iSCSI controllers that allow SCSI reservations to be used to cut a node’s access to a shared disk."
+      }
+    },
+    {
+      "src": "kleppmann-fencing",
+      "en": "and servers reject requests stamped with an old one.",
+      "ru": "и серверы отвергают запросы со старым номером.",
+      "quote": "a fencing token is simply a number that increases (e.g. incremented by the lock service) every time a client acquires the lock. … the storage server remembers that it has already processed a write with a higher token number (34), and so it rejects the request with token 33."
+    },
+    {
+      "src": [
+        "lustre-replay",
+        "rfc8881-reclaim",
+        "ceph-peering",
+        "hdfs-persistence"
+      ],
+      "en": "and HDFS DataNodes send block reports to the NameNode.",
+      "ru": "а DataNode в HDFS отправляют NameNode отчёты о блоках.",
+      "quote": {
+        "lustre-replay": "When a client detects an MDS failure, it connects to the new MDS and uses the metadata replay protocol to replay its requests.",
+        "rfc8881-reclaim": "Once a session is established using the new client ID, the client will use reclaim-type locking requests … to re-establish its locking state.",
+        "ceph-peering": "for each member of the current acting set: ask it for copies of all PG log entries since last epoch start so that I can verify that they agree with mine",
+        "hdfs-persistence": "When a DataNode starts up, it scans through its local file system, generates a list of all HDFS data blocks that correspond to each of these local files, and sends this report to the NameNode. The report is called the Blockreport."
+      }
+    },
+    {
+      "src": "lustre-whatis",
+      "en": "files are striped widely enough.",
+      "ru": "а файлы распределены по достаточному числу полос.",
+      "quote": "In addition to aggregating storage capacity of many servers, the I/O throughput is also aggregated and scales with additional servers."
+    },
+    {
+      "src": "lustre-stripeconsider",
+      "en": "One file's bandwidth is limited by its stripe count.",
+      "ru": "Пропускная способность одного файла ограничена числом его полос.",
+      "quote": "a file can be striped over as many OSSs as it takes to achieve the required peak aggregate bandwidth for that file."
+    },
+    {
+      "src": [
+        "io500",
+        "elbencho"
+      ],
+      "en": "combines bandwidth and metadata results into one ranking.",
+      "ru": "сводит результаты по пропускной способности и метаданным в один список.",
+      "quote": {
+        "io500": "The benchmark covers various workloads and computes a single score for comparison. … ior-easy-write: Each process creates and writes to one file … ior-hard-write: Create one shared file … mdtest-easy-write: Each process creates a unique directory and creates zero-byte files",
+        "elbencho": "A distributed storage benchmark for file systems, object stores & block devices with support for GPUs"
+      }
+    },
+    {
+      "src": "nfs5",
+      "en": "over several TCP connections or server addresses;",
+      "ru": "по нескольким TCP-соединениям или адресам сервера;",
+      "quote": "the nconnect option allows the user to specify the number of connections that should be established … max_connect option allows the user to specify maximum number of connections to different server IPs that belong to the same NFSv4.1+ server (session trunkable connections)"
+    }
+  ]
+}

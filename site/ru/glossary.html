@@ -7,7 +7,7 @@
 <link rel="preconnect" href="https://fonts.googleapis.com">
 <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
 <link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=IBM+Plex+Mono:wght@400;600&family=IBM+Plex+Sans+Condensed:wght@500;600;700&family=PT+Sans+Narrow:wght@400;700&family=Source+Serif+4:ital,opsz,wght@0,8..60,400;0,8..60,600;1,8..60,400&display=swap">
-<link rel="stylesheet" href="../course.css?v=11">
+<link rel="stylesheet" href="../course.css?v=12">
 <style>
   .gl-tools { display: flex; flex-wrap: wrap; gap: 0.75rem 1.25rem; align-items: center; }
   .gl-tools label { font-family: var(--display); font-size: 0.85rem; color: var(--ink-2); text-transform: uppercase; letter-spacing: 0.08em; }
@@ -49,11 +49,11 @@
 <ol>
 <li class="user"><a href="01-syscalls.html"><span class="n">01</span><span>Системные вызовы и дескрипторы</span></a></li>
 <li class="block"><a href="02-blocks.html"><span class="n">02</span><span>Блочные устройства и адресация</span></a></li>
-<li class="fs"><a href="03-ondisk.html"><span class="n">03</span><span>Внутри образа ext4</span></a></li>
-<li class="fs"><a href="04-btrees.html"><span class="n">04</span><span>B-деревья на практике</span></a></li>
-<li class="kernel"><a href="05-vfs-cache.html"><span class="n">05</span><span>VFS и кэши</span></a></li>
+<li class="fs"><a href="03-ondisk.html"><span class="n">03</span><span>Формат ext4 на диске</span></a></li>
+<li class="fs"><a href="04-btrees.html"><span class="n">04</span><span>B-деревья в файловых системах и базах данных</span></a></li>
+<li class="kernel"><a href="05-vfs-cache.html"><span class="n">05</span><span>VFS и страничный кэш</span></a></li>
 <li class="net"><a href="06-nfs.html"><span class="n">06</span><span>NFS от v3 до 4.2</span></a></li>
-<li class="net"><a href="07-nfs-caching.html"><span class="n">07</span><span>Кэширование по сети</span></a></li>
+<li class="net"><a href="07-nfs-caching.html"><span class="n">07</span><span>Кэширование и согласованность в клиенте NFS</span></a></li>
 <li class="net"><a href="08-rdma.html"><span class="n">08</span><span>RDMA и NFS поверх RDMA</span></a></li>
 <li class="net"><a href="09-distributed.html"><span class="n">09</span><span>Распределённые файловые системы</span></a></li>
 <li class="extra"><a href="glossary.html" aria-current="page"><span class="n">··</span><span>Глоссарий</span></a></li>
@@ -93,7 +93,7 @@
 <dl>
 <div class="entry" id="g-address-space" data-text="address_space страничный кэш одного файла: xarray фолио плюс его address_space_operations.">
 <dt>address_space</dt>
-<dd>Страничный кэш одного файла: XArray фолио плюс его <code>address_space_operations</code>. <a class="layer-chip kernel" href="05-vfs-cache.html#page-cache" title="VFS и кэши">05</a></dd>
+<dd>Страничный кэш одного файла: XArray фолио плюс его <code>address_space_operations</code>. <a class="layer-chip kernel" href="05-vfs-cache.html#page-cache" title="VFS и страничный кэш">05</a></dd>
 </div>
 <div class="entry" id="g-auth-sys" data-text="auth_sys учётные данные rpc: числовые uid, gid и до 16 групп, которым сервер просто верит.">
 <dt>AUTH_SYS</dt>
@@ -106,7 +106,7 @@
 <dl>
 <div class="entry" id="g-balance-dirty-pages" data-text="balance_dirty_pages торможение пишущих процессов: они засыпают, когда объём грязной памяти превышает лимит.">
 <dt>balance_dirty_pages</dt>
-<dd>Торможение пишущих процессов: они засыпают, когда объём грязной памяти превышает лимит. <a class="layer-chip kernel" href="05-vfs-cache.html#write-path" title="VFS и кэши">05</a></dd>
+<dd>Торможение пишущих процессов: они засыпают, когда объём грязной памяти превышает лимит. <a class="layer-chip kernel" href="05-vfs-cache.html#write-path" title="VFS и страничный кэш">05</a></dd>
 </div>
 <div class="entry" id="g-bio" data-text="bio описатель ввода-вывода блочного уровня: устройство, начальный сектор, сегменты памяти и функция обратного вызова (callback) по завершении.">
 <dt>bio</dt>
@@ -114,7 +114,7 @@
 </div>
 <div class="entry" id="g-b-link-tree" data-text="b-link-дерево (b-link tree) вариант b+-дерева со ссылками на правого соседа, благодаря которым читатели могут продолжать работу, пока узел расщепляется.">
 <dt>B-link-дерево (B-link tree)</dt>
-<dd>Вариант B+-дерева со ссылками на правого соседа, благодаря которым читатели могут продолжать работу, пока узел расщепляется. <a class="layer-chip fs" href="04-btrees.html#concurrency" title="B-деревья на практике">04</a></dd>
+<dd>Вариант B+-дерева со ссылками на правого соседа, благодаря которым читатели могут продолжать работу, пока узел расщепляется. <a class="layer-chip fs" href="04-btrees.html#concurrency" title="B-деревья в файловых системах и базах данных">04</a></dd>
 </div>
 <div class="entry" id="g-blk-mq" data-text="blk-mq многоочередной блочный уровень: программные очереди на каждый процессор, отображённые на аппаратные очереди устройства.">
 <dt>blk-mq</dt>
@@ -122,11 +122,11 @@
 </div>
 <div class="entry" id="g-b-tree" data-text="b-дерево (b-tree) сбалансированное дерево поиска с множеством ключей в каждом узле, в котором все листья находятся на одной глубине.">
 <dt>B-дерево (B-tree)</dt>
-<dd>Сбалансированное дерево поиска с множеством ключей в каждом узле, в котором все листья находятся на одной глубине. <a class="layer-chip fs" href="04-btrees.html#btree" title="B-деревья на практике">04</a></dd>
+<dd>Сбалансированное дерево поиска с множеством ключей в каждом узле, в котором все листья находятся на одной глубине. <a class="layer-chip fs" href="04-btrees.html#btree" title="B-деревья в файловых системах и базах данных">04</a></dd>
 </div>
 <div class="entry" id="g-bplustree" data-text="b+-дерево (b+tree) b-дерево, в котором все записи хранятся в листьях, а во внутренних узлах лежат только разделительные ключи; листья связаны между собой для обхода диапазонов.">
 <dt>B+-дерево (B+tree)</dt>
-<dd>B-дерево, в котором все записи хранятся в листьях, а во внутренних узлах лежат только разделительные ключи; листья связаны между собой для обхода диапазонов. <a class="layer-chip fs" href="04-btrees.html#bplus" title="B-деревья на практике">04</a></dd>
+<dd>B-дерево, в котором все записи хранятся в листьях, а во внутренних узлах лежат только разделительные ключи; листья связаны между собой для обхода диапазонов. <a class="layer-chip fs" href="04-btrees.html#bplus" title="B-деревья в файловых системах и базах данных">04</a></dd>
 </div>
 </dl>
 </section>
@@ -148,7 +148,7 @@
 <dl>
 <div class="entry" id="g-dentry" data-text="dentry кэшированная связь пары (родительский каталог, имя) с inode или с отсутствием файла.">
 <dt>Dentry</dt>
-<dd>Кэшированная связь пары (родительский каталог, имя) с inode или с отсутствием файла. <a class="layer-chip kernel" href="05-vfs-cache.html#dcache" title="VFS и кэши">05</a></dd>
+<dd>Кэшированная связь пары (родительский каталог, имя) с inode или с отсутствием файла. <a class="layer-chip kernel" href="05-vfs-cache.html#dcache" title="VFS и страничный кэш">05</a></dd>
 </div>
 <div class="entry" id="g-discard-trim" data-text="discard / trim команда, которая сообщает устройству, что диапазон lba больше не содержит нужных данных.">
 <dt>Discard / TRIM</dt>
@@ -173,7 +173,7 @@
 </div>
 <div class="entry" id="g-errseq-t" data-text="errseq_t счётчик ошибок обратной записи на уровне файла. благодаря ему fsync сообщает о каждой ошибке один раз для каждого открытого файла.">
 <dt>errseq_t</dt>
-<dd>Счётчик ошибок обратной записи на уровне файла. Благодаря ему <code>fsync</code> сообщает о каждой ошибке один раз для каждого открытого файла. <a class="layer-chip kernel" href="05-vfs-cache.html#durability" title="VFS и кэши">05</a></dd>
+<dd>Счётчик ошибок обратной записи на уровне файла. Благодаря ему <code>fsync</code> сообщает о каждой ошибке один раз для каждого открытого файла. <a class="layer-chip kernel" href="05-vfs-cache.html#durability" title="VFS и страничный кэш">05</a></dd>
 </div>
 <div class="entry" id="g-estale" data-text="estale устаревший хэндл файла (stale file handle): сервер больше не узнаёт хэндл, обычно потому, что файл удалён или заменён.">
 <dt>ESTALE</dt>
@@ -194,7 +194,7 @@
 </div>
 <div class="entry" id="g-fsync-fdatasync" data-text="fsync / fdatasync дождаться, пока данные файла и все его метаданные (или только необходимые) окажутся на стабильном носителе, включая сброс кэша устройства.">
 <dt>fsync / fdatasync</dt>
-<dd>Дождаться, пока данные файла и все его метаданные (или только необходимые) окажутся на стабильном носителе, включая сброс кэша устройства. <a class="layer-chip kernel" href="05-vfs-cache.html#durability" title="VFS и кэши">05</a></dd>
+<dd>Дождаться, пока данные файла и все его метаданные (или только необходимые) окажутся на стабильном носителе, включая сброс кэша устройства. <a class="layer-chip kernel" href="05-vfs-cache.html#durability" title="VFS и страничный кэш">05</a></dd>
 </div>
 <div class="entry" id="g-ftl-flash-translation-layer" data-text="ftl (flash translation layer) прошивка ssd, которая отображает lba на страницы флеш-памяти и никогда не перезаписывает данные на месте.">
 <dt>FTL (flash translation layer)</dt>
@@ -207,7 +207,7 @@
 <dl>
 <div class="entry" id="g-htree" data-text="htree индекс каталога в ext4: b-дерево по хешу имени, корень которого (dx_root) лежит в блоке 0 каталога.">
 <dt>htree</dt>
-<dd>Индекс каталога в ext4: B-дерево по хешу имени, корень которого (<code>dx_root</code>) лежит в блоке 0 каталога. <a class="layer-chip fs" href="04-btrees.html#htree" title="B-деревья на практике">04</a></dd>
+<dd>Индекс каталога в ext4: B-дерево по хешу имени, корень которого (<code>dx_root</code>) лежит в блоке 0 каталога. <a class="layer-chip fs" href="04-btrees.html#htree" title="B-деревья в файловых системах и базах данных">04</a></dd>
 </div>
 </dl>
 </section>
@@ -216,7 +216,7 @@
 <dl>
 <div class="entry" id="g-inode" data-text="inode (индексный дескриптор) запись фиксированного размера с типом файла, правами доступа, размером, временными метками, счётчиком ссылок и картой блоков.">
 <dt>Inode (индексный дескриптор)</dt>
-<dd>Запись фиксированного размера с типом файла, правами доступа, размером, временными метками, счётчиком ссылок и картой блоков. <a class="layer-chip fs" href="03-ondisk.html#inode" title="Внутри образа ext4">03</a></dd>
+<dd>Запись фиксированного размера с типом файла, правами доступа, размером, временными метками, счётчиком ссылок и картой блоков. <a class="layer-chip fs" href="03-ondisk.html#inode" title="Формат ext4 на диске">03</a></dd>
 </div>
 </dl>
 </section>
@@ -233,7 +233,7 @@
 </div>
 <div class="entry" id="g-lsm-tree" data-text="lsm-дерево (lsm tree) копит записи в памяти и сливает отсортированные файлы в фоне вместо того, чтобы обновлять дерево на месте (rocksdb, метаданные bluestore).">
 <dt>LSM-дерево (LSM tree)</dt>
-<dd>Копит записи в памяти и сливает отсортированные файлы в фоне вместо того, чтобы обновлять дерево на месте (RocksDB, метаданные BlueStore). <a class="layer-chip fs" href="04-btrees.html#lsm" title="B-деревья на практике">04</a></dd>
+<dd>Копит записи в памяти и сливает отсортированные файлы в фоне вместо того, чтобы обновлять дерево на месте (RocksDB, метаданные BlueStore). <a class="layer-chip fs" href="04-btrees.html#lsm" title="B-деревья в файловых системах и базах данных">04</a></dd>
 </div>
 </dl>
 </section>
@@ -242,7 +242,7 @@
 <dl>
 <div class="entry" id="g-maple-tree" data-text="maple tree b-дерево диапазонов адресов в памяти ядра linux; на нём построена карта памяти процесса.">
 <dt>Maple tree</dt>
-<dd>B-дерево диапазонов адресов в памяти ядра Linux; на нём построена карта памяти процесса. <a class="layer-chip fs" href="04-btrees.html#in-memory" title="B-деревья на практике">04</a></dd>
+<dd>B-дерево диапазонов адресов в памяти ядра Linux; на нём построена карта памяти процесса. <a class="layer-chip fs" href="04-btrees.html#in-memory" title="B-деревья в файловых системах и базах данных">04</a></dd>
 </div>
 </dl>
 </section>
@@ -259,7 +259,7 @@
 </div>
 <div class="entry" id="g-o-direct" data-text="o_direct флаг открытия для dma между буфером пользователя и устройством в обход страничного кэша. требует выровненных буферов и смещений.">
 <dt>O_DIRECT</dt>
-<dd>Флаг открытия для DMA между буфером пользователя и устройством в обход страничного кэша. Требует выровненных буферов и смещений. <a class="layer-chip kernel" href="05-vfs-cache.html#direct" title="VFS и кэши">05</a></dd>
+<dd>Флаг открытия для DMA между буфером пользователя и устройством в обход страничного кэша. Требует выровненных буферов и смещений. <a class="layer-chip kernel" href="05-vfs-cache.html#direct" title="VFS и страничный кэш">05</a></dd>
 </div>
 <div class="entry" id="g-onc-rpc" data-text="onc rpc механизм удалённого вызова процедур (rfc 5531), на котором построено каждое сообщение nfs. ответы сопоставляются с вызовами по xid.">
 <dt>ONC RPC</dt>
@@ -281,7 +281,7 @@
 <dl>
 <div class="entry" id="g-rcu-walk" data-text="rcu-обход (rcu walk) поиск пути по dcache без блокировок. если что-то меняется, он откатывается к обходу со счётчиками ссылок.">
 <dt>RCU-обход (RCU walk)</dt>
-<dd>Поиск пути по dcache без блокировок. Если что-то меняется, он откатывается к обходу со счётчиками ссылок. <a class="layer-chip kernel" href="05-vfs-cache.html#dcache" title="VFS и кэши">05</a></dd>
+<dd>Поиск пути по dcache без блокировок. Если что-то меняется, он откатывается к обходу со счётчиками ссылок. <a class="layer-chip kernel" href="05-vfs-cache.html#dcache" title="VFS и страничный кэш">05</a></dd>
 </div>
 <div class="entry" id="g-rdma" data-text="rdma сетевая карта читает или пишет зарегистрированную память другой машины напрямую, без участия удалённого процессора и ядра на пути данных.">
 <dt>RDMA</dt>
@@ -314,7 +314,7 @@
 </div>
 <div class="entry" id="g-super-block" data-text="super_block объект в памяти для одного смонтированного экземпляра файловой системы; содержит её super_operations.">
 <dt>super_block</dt>
-<dd>Объект в памяти для одного смонтированного экземпляра файловой системы; содержит её <code>super_operations</code>. <a class="layer-chip kernel" href="05-vfs-cache.html#objects" title="VFS и кэши">05</a></dd>
+<dd>Объект в памяти для одного смонтированного экземпляра файловой системы; содержит её <code>super_operations</code>. <a class="layer-chip kernel" href="05-vfs-cache.html#objects" title="VFS и страничный кэш">05</a></dd>
 </div>
 </dl>
 </section>
@@ -323,7 +323,7 @@
 <dl>
 <div class="entry" id="g-vfs-virtual-file-system" data-text="vfs (virtual file system) виртуальная файловая система: уровень ядра, который превращает файловые системные вызовы в вызовы таблиц операций конкретной файловой системы.">
 <dt>VFS (virtual file system)</dt>
-<dd>Виртуальная файловая система: уровень ядра, который превращает файловые системные вызовы в вызовы таблиц операций конкретной файловой системы. <a class="layer-chip kernel" href="05-vfs-cache.html#where" title="VFS и кэши">05</a></dd>
+<dd>Виртуальная файловая система: уровень ядра, который превращает файловые системные вызовы в вызовы таблиц операций конкретной файловой системы. <a class="layer-chip kernel" href="05-vfs-cache.html#where" title="VFS и страничный кэш">05</a></dd>
 </div>
 </dl>
 </section>
@@ -332,7 +332,7 @@
 <dl>
 <div class="entry" id="g-xarray" data-text="xarray корневое дерево (radix tree), которое индексирует фолио файла по номеру страницы.">
 <dt>XArray</dt>
-<dd>Корневое дерево (radix tree), которое индексирует фолио файла по номеру страницы. <a class="layer-chip kernel" href="05-vfs-cache.html#page-cache" title="VFS и кэши">05</a></dd>
+<dd>Корневое дерево (radix tree), которое индексирует фолио файла по номеру страницы. <a class="layer-chip kernel" href="05-vfs-cache.html#page-cache" title="VFS и страничный кэш">05</a></dd>
 </div>
 <div class="entry" id="g-xdr" data-text="xdr кодирование аргументов rpc в порядке big-endian с выравниванием по 4 байта, без меток полей в передаваемых данных (rfc 4506).">
 <dt>XDR</dt>
@@ -345,7 +345,7 @@
 <dl>
 <div class="entry" id="g-inode-number-arithmetic" data-text="адрес inode по номеру (inode number arithmetic) группа = (ino − 1) / inodes_per_group; смещение в байтах получается из блока таблицы inode этой группы и размера inode.">
 <dt>Адрес inode по номеру (inode number arithmetic)</dt>
-<dd>группа = (ino − 1) / inodes_per_group; смещение в байтах получается из блока таблицы inode этой группы и размера inode. <a class="layer-chip fs" href="03-ondisk.html#inode-address" title="Внутри образа ext4">03</a></dd>
+<dd>группа = (ino − 1) / inodes_per_group; смещение в байтах получается из блока таблицы inode этой группы и размера inode. <a class="layer-chip fs" href="03-ondisk.html#inode-address" title="Формат ext4 на диске">03</a></dd>
 </div>
 <div class="entry" id="g-lease" data-text="аренда (lease) срок (в linux по умолчанию 90 с), в течение которого состояние клиента nfsv4 остаётся действительным без продления.">
 <dt>Аренда (lease)</dt>
@@ -353,11 +353,11 @@
 </div>
 <div class="entry" id="g-atomic-replace-pattern" data-text="атомарная замена файла (atomic replace) записать временный файл, сделать ему fsync, вызовом rename поставить его на место целевого и сделать fsync каталогу.">
 <dt>Атомарная замена файла (atomic replace)</dt>
-<dd>Записать временный файл, сделать ему <code>fsync</code>, вызовом <code>rename</code> поставить его на место целевого и сделать <code>fsync</code> каталогу. <a class="layer-chip kernel" href="05-vfs-cache.html#durability" title="VFS и кэши">05</a></dd>
+<dd>Записать временный файл, сделать ему <code>fsync</code>, вызовом <code>rename</code> поставить его на место целевого и сделать <code>fsync</code> каталогу. <a class="layer-chip kernel" href="05-vfs-cache.html#durability" title="VFS и страничный кэш">05</a></dd>
 </div>
 <div class="entry" id="g-change-attribute" data-text="атрибут изменения (change attribute) значение nfsv4, которое сервер обязан менять при каждом изменении файла. в linux за ним стоит i_version.">
 <dt>Атрибут изменения (change attribute)</dt>
-<dd>Значение NFSv4, которое сервер обязан менять при каждом изменении файла. В Linux за ним стоит <code>i_version</code>. <a class="layer-chip net" href="07-nfs-caching.html#change" title="Кэширование по сети">07</a></dd>
+<dd>Значение NFSv4, которое сервер обязан менять при каждом изменении файла. В Linux за ним стоит <code>i_version</code>. <a class="layer-chip net" href="07-nfs-caching.html#change" title="Кэширование и согласованность в клиенте NFS">07</a></dd>
 </div>
 </dl>
 </section>
@@ -384,11 +384,11 @@
 <dl>
 <div class="entry" id="g-silly-rename" data-text="глупое переименование (silly rename) nfs-клиент переименовывает удалённый файл, который у него ещё открыт, в .nfsxxxx и удаляет его при последнем закрытии.">
 <dt>Глупое переименование (silly rename)</dt>
-<dd>NFS-клиент переименовывает удалённый файл, который у него ещё открыт, в <code>.nfsXXXX</code> и удаляет его при последнем закрытии. <a class="layer-chip net" href="07-nfs-caching.html#failures" title="Кэширование по сети">07</a></dd>
+<dd>NFS-клиент переименовывает удалённый файл, который у него ещё открыт, в <code>.nfsXXXX</code> и удаляет его при последнем закрытии. <a class="layer-chip net" href="07-nfs-caching.html#failures" title="Кэширование и согласованность в клиенте NFS">07</a></dd>
 </div>
 <div class="entry" id="g-block-group" data-text="группа блоков (block group) срез файловой системы ext4 фиксированного размера со своими битовыми картами и своей частью таблицы inode.">
 <dt>Группа блоков (block group)</dt>
-<dd>Срез файловой системы ext4 фиксированного размера со своими битовыми картами и своей частью таблицы inode. <a class="layer-chip fs" href="03-ondisk.html#layout" title="Внутри образа ext4">03</a></dd>
+<dd>Срез файловой системы ext4 фиксированного размера со своими битовыми картами и своей частью таблицы inode. <a class="layer-chip fs" href="03-ondisk.html#layout" title="Формат ext4 на диске">03</a></dd>
 </div>
 <div class="entry" id="g-placement-group-pg" data-text="группа размещения (pg) хеш-корзина объектов ceph внутри пула. crush отображает на osd группы размещения, а не отдельные объекты.">
 <dt>Группа размещения (PG)</dt>
@@ -396,7 +396,7 @@
 </div>
 <div class="entry" id="g-dirty-page" data-text="грязная страница (dirty page) кэшированные данные, изменённые в озу и ещё не записанные на устройство.">
 <dt>Грязная страница (dirty page)</dt>
-<dd>Кэшированные данные, изменённые в ОЗУ и ещё не записанные на устройство. <a class="layer-chip kernel" href="05-vfs-cache.html#write-path" title="VFS и кэши">05</a></dd>
+<dd>Кэшированные данные, изменённые в ОЗУ и ещё не записанные на устройство. <a class="layer-chip kernel" href="05-vfs-cache.html#write-path" title="VFS и страничный кэш">05</a></dd>
 </div>
 </dl>
 </section>
@@ -405,19 +405,19 @@
 <dl>
 <div class="entry" id="g-delegation" data-text="делегирование (delegation) обещание сервера, которое позволяет клиенту открывать и кэшировать файл, не спрашивая сервер снова, пока тот не пришлёт cb_recall.">
 <dt>Делегирование (delegation)</dt>
-<dd>Обещание сервера, которое позволяет клиенту открывать и кэшировать файл, не спрашивая сервер снова, пока тот не пришлёт CB_RECALL. <a class="layer-chip net" href="07-nfs-caching.html#delegations" title="Кэширование по сети">07</a></dd>
+<dd>Обещание сервера, которое позволяет клиенту открывать и кэшировать файл, не спрашивая сервер снова, пока тот не пришлёт CB_RECALL. <a class="layer-chip net" href="07-nfs-caching.html#delegations" title="Кэширование и согласованность в клиенте NFS">07</a></dd>
 </div>
 <div class="entry" id="g-extent-tree" data-text="дерево экстентов (extent tree) b+-дерево экстентов в ext4, корень которого лежит в 60-байтовом поле i_block inode.">
 <dt>Дерево экстентов (extent tree)</dt>
-<dd>B+-дерево экстентов в ext4, корень которого лежит в 60-байтовом поле <code>i_block</code> inode. <a class="layer-chip fs" href="04-btrees.html#ext4-extents" title="B-деревья на практике">04</a></dd>
+<dd>B+-дерево экстентов в ext4, корень которого лежит в 60-байтовом поле <code>i_block</code> inode. <a class="layer-chip fs" href="04-btrees.html#ext4-extents" title="B-деревья в файловых системах и базах данных">04</a></dd>
 </div>
 <div class="entry" id="g-group-descriptor" data-text="дескриптор группы (group descriptor) запись о группе блоков: номера блоков её битовых карт и её таблицы inode.">
 <dt>Дескриптор группы (group descriptor)</dt>
-<dd>Запись о группе блоков: номера блоков её битовых карт и её таблицы inode. <a class="layer-chip fs" href="03-ondisk.html#descriptors" title="Внутри образа ext4">03</a></dd>
+<dd>Запись о группе блоков: номера блоков её битовых карт и её таблицы inode. <a class="layer-chip fs" href="03-ondisk.html#descriptors" title="Формат ext4 на диске">03</a></dd>
 </div>
 <div class="entry" id="g-hole" data-text="дыра (hole) диапазон блоков файла, не покрытый ни одним экстентом; при чтении он возвращает нули.">
 <dt>Дыра (hole)</dt>
-<dd>Диапазон блоков файла, не покрытый ни одним экстентом; при чтении он возвращает нули. <a class="layer-chip fs" href="03-ondisk.html#extents" title="Внутри образа ext4">03</a></dd>
+<dd>Диапазон блоков файла, не покрытый ни одним экстентом; при чтении он возвращает нули. <a class="layer-chip fs" href="03-ondisk.html#extents" title="Формат ext4 на диске">03</a></dd>
 </div>
 </dl>
 </section>
@@ -426,11 +426,11 @@
 <dl>
 <div class="entry" id="g-hard-link" data-text="жёсткая ссылка (hard link) ещё одна запись каталога для того же inode; число таких записей хранится в i_links_count.">
 <dt>Жёсткая ссылка (hard link)</dt>
-<dd>Ещё одна запись каталога для того же inode; число таких записей хранится в <code>i_links_count</code>. <a class="layer-chip fs" href="03-ondisk.html#links" title="Внутри образа ext4">03</a></dd>
+<dd>Ещё одна запись каталога для того же inode; число таких записей хранится в <code>i_links_count</code>. <a class="layer-chip fs" href="03-ondisk.html#links" title="Формат ext4 на диске">03</a></dd>
 </div>
 <div class="entry" id="g-jbd2-journal" data-text="журнал jbd2 (jbd2 journal) журнал упреждающей записи ext4: изменения метаданных фиксируются транзакциями и после сбоя воспроизводятся заново.">
 <dt>Журнал jbd2 (jbd2 journal)</dt>
-<dd>Журнал упреждающей записи ext4: изменения метаданных фиксируются транзакциями и после сбоя воспроизводятся заново. <a class="layer-chip fs" href="03-ondisk.html#journal" title="Внутри образа ext4">03</a></dd>
+<dd>Журнал упреждающей записи ext4: изменения метаданных фиксируются транзакциями и после сбоя воспроизводятся заново. <a class="layer-chip fs" href="03-ondisk.html#journal" title="Формат ext4 на диске">03</a></dd>
 </div>
 </dl>
 </section>
@@ -439,7 +439,7 @@
 <dl>
 <div class="entry" id="g-directory-entry" data-text="запись каталога (directory entry) запись переменной длины в блоке каталога, связывающая имя с номером inode.">
 <dt>Запись каталога (directory entry)</dt>
-<dd>Запись переменной длины в блоке каталога, связывающая имя с номером inode. <a class="layer-chip fs" href="03-ondisk.html#directories" title="Внутри образа ext4">03</a></dd>
+<dd>Запись переменной длины в блоке каталога, связывающая имя с номером inode. <a class="layer-chip fs" href="03-ondisk.html#directories" title="Формат ext4 на диске">03</a></dd>
 </div>
 </dl>
 </section>
@@ -465,15 +465,15 @@
 </div>
 <div class="entry" id="g-copy-on-write-cow" data-text="копирование при записи (cow) блок никогда не перезаписывается на месте: новая версия пишется в другое место, и указатели на неё обновляются вплоть до корня.">
 <dt>Копирование при записи (COW)</dt>
-<dd>Блок никогда не перезаписывается на месте: новая версия пишется в другое место, и указатели на неё обновляются вплоть до корня. <a class="layer-chip fs" href="03-ondisk.html#cow" title="Внутри образа ext4">03</a></dd>
+<dd>Блок никогда не перезаписывается на месте: новая версия пишется в другое место, и указатели на неё обновляются вплоть до корня. <a class="layer-chip fs" href="03-ondisk.html#cow" title="Формат ext4 на диске">03</a></dd>
 </div>
 <div class="entry" id="g-fanout" data-text="коэффициент ветвления (fanout) сколько потомков может быть у одного узла дерева: размер узла, делённый на размер записи.">
 <dt>Коэффициент ветвления (fanout)</dt>
-<dd>Сколько потомков может быть у одного узла дерева: размер узла, делённый на размер записи. <a class="layer-chip fs" href="04-btrees.html#cost-model" title="B-деревья на практике">04</a></dd>
+<dd>Сколько потомков может быть у одного узла дерева: размер узла, делённый на размер записи. <a class="layer-chip fs" href="04-btrees.html#cost-model" title="B-деревья в файловых системах и базах данных">04</a></dd>
 </div>
 <div class="entry" id="g-attribute-cache" data-text="кэш атрибутов (attribute cache) кэш атрибутов файлов в nfs-клиенте. ему доверяют в течение тайм-аута, который подстраивается между acregmin и acregmax (от 3 до 60 с).">
 <dt>Кэш атрибутов (attribute cache)</dt>
-<dd>Кэш атрибутов файлов в NFS-клиенте. Ему доверяют в течение тайм-аута, который подстраивается между acregmin и acregmax (от 3 до 60 с). <a class="layer-chip net" href="07-nfs-caching.html#attr" title="Кэширование по сети">07</a></dd>
+<dd>Кэш атрибутов файлов в NFS-клиенте. Ему доверяют в течение тайм-аута, который подстраивается между acregmin и acregmax (от 3 до 60 с). <a class="layer-chip net" href="07-nfs-caching.html#attr" title="Кэширование и согласованность в клиенте NFS">07</a></dd>
 </div>
 <div class="entry" id="g-duplicate-request-cache-drc" data-text="кэш повторных запросов (duplicate request cache, drc) кэш недавних ответов на сервере. с его помощью сервер отвечает на повторно отправленные неидемпотентные запросы.">
 <dt>Кэш повторных запросов (duplicate request cache, DRC)</dt>
@@ -486,7 +486,7 @@
 <dl>
 <div class="entry" id="g-negative-dentry" data-text="негативный dentry (negative dentry) кэшированная запись о том, что имени не существует, чтобы повторные промахи не доходили до файловой системы.">
 <dt>Негативный dentry (negative dentry)</dt>
-<dd>Кэшированная запись о том, что имени не существует, чтобы повторные промахи не доходили до файловой системы. <a class="layer-chip kernel" href="05-vfs-cache.html#dcache" title="VFS и кэши">05</a></dd>
+<dd>Кэшированная запись о том, что имени не существует, чтобы повторные промахи не доходили до файловой системы. <a class="layer-chip kernel" href="05-vfs-cache.html#dcache" title="VFS и страничный кэш">05</a></dd>
 </div>
 </dl>
 </section>
@@ -495,7 +495,7 @@
 <dl>
 <div class="entry" id="g-writeback" data-text="обратная запись (writeback) потоки сброса (flusher) записывают грязные фолио на устройство при достижении порогов, по возрасту или по fsync.">
 <dt>Обратная запись (writeback)</dt>
-<dd>Потоки сброса (flusher) записывают грязные фолио на устройство при достижении порогов, по возрасту или по <code>fsync</code>. <a class="layer-chip kernel" href="05-vfs-cache.html#write-path" title="VFS и кэши">05</a></dd>
+<dd>Потоки сброса (flusher) записывают грязные фолио на устройство при достижении порогов, по возрасту или по <code>fsync</code>. <a class="layer-chip kernel" href="05-vfs-cache.html#write-path" title="VFS и страничный кэш">05</a></dd>
 </div>
 <div class="entry" id="g-open-file-description" data-text="описание открытого файла (open file description) объект ядра (struct file), который создаёт open(). хранит смещение и флаги состояния; после dup и fork становится общим.">
 <dt>Описание открытого файла (open file description)</dt>
@@ -503,11 +503,11 @@
 </div>
 <div class="entry" id="g-reclaim-kswapd" data-text="освобождение памяти (reclaim) / kswapd освобождение памяти: чистые страницы отбрасываются, грязные записываются, анонимные уходят в swap.">
 <dt>Освобождение памяти (reclaim) / kswapd</dt>
-<dd>Освобождение памяти: чистые страницы отбрасываются, грязные записываются, анонимные уходят в swap. <a class="layer-chip kernel" href="05-vfs-cache.html#reclaim" title="VFS и кэши">05</a></dd>
+<dd>Освобождение памяти: чистые страницы отбрасываются, грязные записываются, анонимные уходят в swap. <a class="layer-chip kernel" href="05-vfs-cache.html#reclaim" title="VFS и страничный кэш">05</a></dd>
 </div>
 <div class="entry" id="g-delayed-allocation" data-text="отложенное выделение (delayed allocation) выбор блоков диска во время обратной записи, а не в момент write(), чтобы распределитель видел более длинные участки.">
 <dt>Отложенное выделение (delayed allocation)</dt>
-<dd>Выбор блоков диска во время обратной записи, а не в момент <code>write()</code>, чтобы распределитель видел более длинные участки. <a class="layer-chip fs" href="03-ondisk.html#allocation" title="Внутри образа ext4">03</a></dd>
+<dd>Выбор блоков диска во время обратной записи, а не в момент <code>write()</code>, чтобы распределитель видел более длинные участки. <a class="layer-chip fs" href="03-ondisk.html#allocation" title="Формат ext4 на диске">03</a></dd>
 </div>
 <div class="entry" id="g-completion-queue-cq" data-text="очередь завершений (cq) очередь, в которую сетевая карта помещает запись о завершении каждого выполненного рабочего запроса.">
 <dt>Очередь завершений (CQ)</dt>
@@ -566,15 +566,15 @@
 </div>
 <div class="entry" id="g-close-to-open-consistency" data-text="согласованность close-to-open (close-to-open consistency) открытие, сделанное после того, как другой клиент закрыл файл, видит записи этого клиента. это контракт nfs.">
 <dt>Согласованность close-to-open (close-to-open consistency)</dt>
-<dd>Открытие, сделанное после того, как другой клиент закрыл файл, видит записи этого клиента. Это контракт NFS. <a class="layer-chip net" href="07-nfs-caching.html#cto" title="Кэширование по сети">07</a></dd>
+<dd>Открытие, сделанное после того, как другой клиент закрыл файл, видит записи этого клиента. Это контракт NFS. <a class="layer-chip net" href="07-nfs-caching.html#cto" title="Кэширование и согласованность в клиенте NFS">07</a></dd>
 </div>
 <div class="entry" id="g-page-cache" data-text="страничный кэш (page cache) копия содержимого файлов в озу ядра, общая для read, write и mmap.">
 <dt>Страничный кэш (page cache)</dt>
-<dd>Копия содержимого файлов в ОЗУ ядра, общая для <code>read</code>, <code>write</code> и <code>mmap</code>. <a class="layer-chip kernel" href="05-vfs-cache.html#page-cache" title="VFS и кэши">05</a></dd>
+<dd>Копия содержимого файлов в ОЗУ ядра, общая для <code>read</code>, <code>write</code> и <code>mmap</code>. <a class="layer-chip kernel" href="05-vfs-cache.html#page-cache" title="VFS и страничный кэш">05</a></dd>
 </div>
 <div class="entry" id="g-superblock" data-text="суперблок (superblock) запись размером 1 киб с байта 1024: размеры, счётчики и возможности файловой системы, а также магическое число 0xef53.">
 <dt>Суперблок (superblock)</dt>
-<dd>Запись размером 1 КиБ с байта 1024: размеры, счётчики и возможности файловой системы, а также магическое число <code>0xEF53</code>. <a class="layer-chip fs" href="03-ondisk.html#superblock" title="Внутри образа ext4">03</a></dd>
+<dd>Запись размером 1 КиБ с байта 1024: размеры, счётчики и возможности файловой системы, а также магическое число <code>0xEF53</code>. <a class="layer-chip fs" href="03-ondisk.html#superblock" title="Формат ext4 на диске">03</a></dd>
 </div>
 </dl>
 </section>
@@ -583,7 +583,7 @@
 <dl>
 <div class="entry" id="g-operation-table" data-text="таблица операций (operation table) структура указателей на функции, которую заполняет файловая система, чтобы vfs могла её вызывать.">
 <dt>Таблица операций (operation table)</dt>
-<dd>Структура указателей на функции, которую заполняет файловая система, чтобы VFS могла её вызывать. <a class="layer-chip kernel" href="05-vfs-cache.html#objects" title="VFS и кэши">05</a></dd>
+<dd>Структура указателей на функции, которую заполняет файловая система, чтобы VFS могла её вызывать. <a class="layer-chip kernel" href="05-vfs-cache.html#objects" title="VFS и страничный кэш">05</a></dd>
 </div>
 <div class="entry" id="g-session-slot-table" data-text="таблица слотов сессии (session slot table) порядковые номера и кэшированные ответы для каждого слота в nfsv4.1, которые дают семантику «ровно один раз» (exactly-once).">
 <dt>Таблица слотов сессии (session slot table)</dt>
@@ -600,7 +600,7 @@
 </div>
 <div class="entry" id="g-readahead" data-text="упреждающее чтение (readahead) чтение данных файла до того, как их запросили. запускается последовательным доступом.">
 <dt>Упреждающее чтение (readahead)</dt>
-<dd>Чтение данных файла до того, как их запросили. Запускается последовательным доступом. <a class="layer-chip kernel" href="05-vfs-cache.html#readahead" title="VFS и кэши">05</a></dd>
+<dd>Чтение данных файла до того, как их запросили. Запускается последовательным доступом. <a class="layer-chip kernel" href="05-vfs-cache.html#readahead" title="VFS и страничный кэш">05</a></dd>
 </div>
 <div class="entry" id="g-write-amplification" data-text="усиление записи (write amplification) отношение объёма записей во флеш-память к объёму записей хоста. растёт из-за сборки мусора.">
 <dt>Усиление записи (write amplification)</dt>
@@ -617,7 +617,7 @@
 </div>
 <div class="entry" id="g-folio" data-text="фолио (folio) непрерывная последовательность страниц длиной в степень двойки, которой управляют как единым целым (linux 5.16 и новее).">
 <dt>Фолио (folio)</dt>
-<dd>Непрерывная последовательность страниц длиной в степень двойки, которой управляют как единым целым (Linux 5.16 и новее). <a class="layer-chip kernel" href="05-vfs-cache.html#page-cache" title="VFS и кэши">05</a></dd>
+<dd>Непрерывная последовательность страниц длиной в степень двойки, которой управляют как единым целым (Linux 5.16 и новее). <a class="layer-chip kernel" href="05-vfs-cache.html#page-cache" title="VFS и страничный кэш">05</a></dd>
 </div>
 </dl>
 </section>
@@ -652,7 +652,7 @@
 <dl>
 <div class="entry" id="g-extent" data-text="экстент (extent) непрерывный участок блоков, описанный тройкой (блок файла, длина, блок диска).">
 <dt>Экстент (extent)</dt>
-<dd>Непрерывный участок блоков, описанный тройкой (блок файла, длина, блок диска). <a class="layer-chip fs" href="03-ondisk.html#extents" title="Внутри образа ext4">03</a></dd>
+<dd>Непрерывный участок блоков, описанный тройкой (блок файла, длина, блок диска). <a class="layer-chip fs" href="03-ondisk.html#extents" title="Формат ext4 на диске">03</a></dd>
 </div>
 </dl>
 </section>

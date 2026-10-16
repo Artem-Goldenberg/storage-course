@@ -1,0 +1,1899 @@
+{
+ "page": "05-vfs-cache.html",
+ "sources": {
+  "vfs-intro": {
+   "url": "https://docs.kernel.org/filesystems/vfs.html#introduction",
+   "title": "Overview of the Linux Virtual File System, The Linux Kernel documentation",
+   "where": {
+    "en": "section Introduction",
+    "ru": "раздел Introduction"
+   }
+  },
+  "vfs-dcache": {
+   "url": "https://docs.kernel.org/filesystems/vfs.html#directory-entry-cache-dcache",
+   "title": "Overview of the Linux Virtual File System, The Linux Kernel documentation",
+   "where": {
+    "en": "section Directory Entry Cache (dcache)",
+    "ru": "раздел Directory Entry Cache (dcache)"
+   }
+  },
+  "vfs-fileobj": {
+   "url": "https://docs.kernel.org/filesystems/vfs.html#the-file-object",
+   "title": "Overview of the Linux Virtual File System, The Linux Kernel documentation",
+   "where": {
+    "en": "section The File Object",
+    "ru": "раздел The File Object"
+   }
+  },
+  "vfs-superops": {
+   "url": "https://docs.kernel.org/filesystems/vfs.html#struct-super-operations",
+   "title": "Overview of the Linux Virtual File System, The Linux Kernel documentation",
+   "where": {
+    "en": "section struct super_operations",
+    "ru": "раздел struct super_operations"
+   }
+  },
+  "vfs-inodeops": {
+   "url": "https://docs.kernel.org/filesystems/vfs.html#struct-inode-operations",
+   "title": "Overview of the Linux Virtual File System, The Linux Kernel documentation",
+   "where": {
+    "en": "section struct inode_operations",
+    "ru": "раздел struct inode_operations"
+   }
+  },
+  "vfs-dentryops": {
+   "url": "https://docs.kernel.org/filesystems/vfs.html#struct-dentry-operations",
+   "title": "Overview of the Linux Virtual File System, The Linux Kernel documentation",
+   "where": {
+    "en": "section struct dentry_operations",
+    "ru": "раздел struct dentry_operations"
+   }
+  },
+  "vfs-fileops": {
+   "url": "https://docs.kernel.org/filesystems/vfs.html#struct-file-operations",
+   "title": "Overview of the Linux Virtual File System, The Linux Kernel documentation",
+   "where": {
+    "en": "section struct file_operations",
+    "ru": "раздел struct file_operations"
+   }
+  },
+  "vfs-aops": {
+   "url": "https://docs.kernel.org/filesystems/vfs.html#struct-address-space-operations",
+   "title": "Overview of the Linux Virtual File System, The Linux Kernel documentation",
+   "where": {
+    "en": "section struct address_space_operations",
+    "ru": "раздел struct address_space_operations"
+   }
+  },
+  "vfs-wberr": {
+   "url": "https://docs.kernel.org/filesystems/vfs.html#handling-errors-during-writeback",
+   "title": "Overview of the Linux Virtual File System, The Linux Kernel documentation",
+   "where": {
+    "en": "section Handling errors during writeback",
+    "ru": "раздел Handling errors during writeback"
+   }
+  },
+  "k-fs-file": {
+   "url": "https://elixir.bootlin.com/linux/v6.18/source/include/linux/fs.h#L1184",
+   "title": "include/linux/fs.h, Linux 6.18 source",
+   "where": {
+    "en": "lines 1184–1238, struct file",
+    "ru": "строки 1184–1238, struct file"
+   }
+  },
+  "k-fs-as": {
+   "url": "https://elixir.bootlin.com/linux/v6.18/source/include/linux/fs.h#L485",
+   "title": "include/linux/fs.h, Linux 6.18 source",
+   "where": {
+    "en": "lines 485–521, struct address_space",
+    "ru": "строки 485–521, struct address_space"
+   }
+  },
+  "k-ext4-i": {
+   "url": "https://elixir.bootlin.com/linux/v6.18/source/fs/ext4/ext4.h#L1789",
+   "title": "fs/ext4/ext4.h, Linux 6.18 source",
+   "where": {
+    "en": "lines 1789–1792, EXT4_I()",
+    "ru": "строки 1789–1792, EXT4_I()"
+   }
+  },
+  "k-ext4-fops": {
+   "url": "https://elixir.bootlin.com/linux/v6.18/source/fs/ext4/file.c#L963",
+   "title": "fs/ext4/file.c, Linux 6.18 source",
+   "where": {
+    "en": "lines 963–983, ext4_file_operations",
+    "ru": "строки 963–983, ext4_file_operations"
+   }
+  },
+  "k-ext4-dio": {
+   "url": "https://elixir.bootlin.com/linux/v6.18/source/fs/ext4/file.c#L69",
+   "title": "fs/ext4/file.c, Linux 6.18 source",
+   "where": {
+    "en": "lines 69–94, ext4_dio_read_iter()",
+    "ru": "строки 69–94, ext4_dio_read_iter()"
+   }
+  },
+  "k-ext4-readiter": {
+   "url": "https://elixir.bootlin.com/linux/v6.18/source/fs/ext4/file.c#L130",
+   "title": "fs/ext4/file.c, Linux 6.18 source",
+   "where": {
+    "en": "lines 130–148, ext4_file_read_iter()",
+    "ru": "строки 130–148, ext4_file_read_iter()"
+   }
+  },
+  "k-nfs-fops": {
+   "url": "https://elixir.bootlin.com/linux/v6.18/source/fs/nfs/file.c#L951",
+   "title": "fs/nfs/file.c, Linux 6.18 source",
+   "where": {
+    "en": "line 951, nfs_file_operations",
+    "ru": "строка 951, nfs_file_operations"
+   }
+  },
+  "k-mount": {
+   "url": "https://elixir.bootlin.com/linux/v6.18/source/fs/mount.h#L43",
+   "title": "fs/mount.h, Linux 6.18 source",
+   "where": {
+    "en": "lines 43–47, struct mount",
+    "ru": "строки 43–47, struct mount"
+   }
+  },
+  "k-dlookup": {
+   "url": "https://elixir.bootlin.com/linux/v6.18/source/fs/dcache.c#L2362",
+   "title": "fs/dcache.c, Linux 6.18 source",
+   "where": {
+    "en": "lines 2362–2400, __d_lookup()",
+    "ru": "строки 2362–2400, __d_lookup()"
+   }
+  },
+  "k-ihash": {
+   "url": "https://elixir.bootlin.com/linux/v6.18/source/fs/inode.c#L645",
+   "title": "fs/inode.c, Linux 6.18 source",
+   "where": {
+    "en": "lines 645–653, hash()",
+    "ru": "строки 645–653, hash()"
+   }
+  },
+  "k-vfsread": {
+   "url": "https://elixir.bootlin.com/linux/v6.18/source/fs/read_write.c#L552",
+   "title": "fs/read_write.c, Linux 6.18 source",
+   "where": {
+    "en": "lines 552–572, vfs_read()",
+    "ru": "строки 552–572, vfs_read()"
+   }
+  },
+  "k-getpages": {
+   "url": "https://elixir.bootlin.com/linux/v6.18/source/mm/filemap.c#L2596",
+   "title": "mm/filemap.c, Linux 6.18 source",
+   "where": {
+    "en": "lines 2596–2670, filemap_readahead() and filemap_get_pages()",
+    "ru": "строки 2596–2670, filemap_readahead() и filemap_get_pages()"
+   }
+  },
+  "k-endread": {
+   "url": "https://elixir.bootlin.com/linux/v6.18/source/mm/filemap.c#L1518",
+   "title": "mm/filemap.c, Linux 6.18 source",
+   "where": {
+    "en": "lines 1518–1530, folio_end_read()",
+    "ru": "строки 1518–1530, folio_end_read()"
+   }
+  },
+  "k-fault": {
+   "url": "https://elixir.bootlin.com/linux/v6.18/source/mm/filemap.c#L3424",
+   "title": "mm/filemap.c, Linux 6.18 source",
+   "where": {
+    "en": "lines 3424–3433, filemap_fault()",
+    "ru": "строки 3424–3433, filemap_fault()"
+   }
+  },
+  "k-mkwrite": {
+   "url": "https://elixir.bootlin.com/linux/v6.18/source/mm/filemap.c#L3886",
+   "title": "mm/filemap.c, Linux 6.18 source",
+   "where": {
+    "en": "lines 3886–3905, filemap_page_mkwrite()",
+    "ru": "строки 3886–3905, filemap_page_mkwrite()"
+   }
+  },
+  "k-perform-write": {
+   "url": "https://elixir.bootlin.com/linux/v6.18/source/mm/filemap.c#L4227",
+   "title": "mm/filemap.c, Linux 6.18 source",
+   "where": {
+    "en": "lines 4227–4280, generic_perform_write()",
+    "ru": "строки 4227–4280, generic_perform_write()"
+   }
+  },
+  "k-ext4-readahead": {
+   "url": "https://elixir.bootlin.com/linux/v6.18/source/fs/ext4/inode.c#L3398",
+   "title": "fs/ext4/inode.c, Linux 6.18 source",
+   "where": {
+    "en": "lines 3398–3407, ext4_readahead()",
+    "ru": "строки 3398–3407, ext4_readahead()"
+   }
+  },
+  "k-ext4-readpage": {
+   "url": "https://elixir.bootlin.com/linux/v6.18/source/fs/ext4/readpage.c#L287",
+   "title": "fs/ext4/readpage.c, Linux 6.18 source",
+   "where": {
+    "en": "lines 287–295, ext4_mpage_readpages()",
+    "ru": "строки 287–295, ext4_mpage_readpages()"
+   }
+  },
+  "k-ext4-da-aops": {
+   "url": "https://elixir.bootlin.com/linux/v6.18/source/fs/ext4/inode.c#L4008",
+   "title": "fs/ext4/inode.c, Linux 6.18 source",
+   "where": {
+    "en": "lines 4008–4013, ext4_da_aops",
+    "ru": "строки 4008–4013, ext4_da_aops"
+   }
+  },
+  "k-ext4-reserve": {
+   "url": "https://elixir.bootlin.com/linux/v6.18/source/fs/ext4/inode.c#L1617",
+   "title": "fs/ext4/inode.c, Linux 6.18 source",
+   "where": {
+    "en": "lines 1617–1640, ext4_da_reserve_space()",
+    "ru": "строки 1617–1640, ext4_da_reserve_space()"
+   }
+  },
+  "k-ext4-mapext": {
+   "url": "https://elixir.bootlin.com/linux/v6.18/source/fs/ext4/inode.c#L2354",
+   "title": "fs/ext4/inode.c, Linux 6.18 source",
+   "where": {
+    "en": "lines 2354–2360, mpage_map_one_extent()",
+    "ru": "строки 2354–2360, mpage_map_one_extent()"
+   }
+  },
+  "k-folio": {
+   "url": "https://elixir.bootlin.com/linux/v6.18/source/include/linux/mm_types.h#L367",
+   "title": "include/linux/mm_types.h, Linux 6.18 source",
+   "where": {
+    "en": "lines 367–370, comment on struct folio",
+    "ru": "строки 367–370, комментарий к struct folio"
+   }
+  },
+  "k-xachunk": {
+   "url": "https://elixir.bootlin.com/linux/v6.18/source/include/linux/xarray.h#L1144",
+   "title": "include/linux/xarray.h, Linux 6.18 source",
+   "where": {
+    "en": "lines 1144–1156, XA_CHUNK_SHIFT",
+    "ru": "строки 1144–1156, XA_CHUNK_SHIFT"
+   }
+  },
+  "k-pageflags": {
+   "url": "https://elixir.bootlin.com/linux/v6.18/source/include/linux/page-flags.h#L51",
+   "title": "include/linux/page-flags.h, Linux 6.18 source",
+   "where": {
+    "en": "lines 51–66, page flags comment",
+    "ru": "строки 51–66, комментарий о флагах страниц"
+   }
+  },
+  "k-ra-doc": {
+   "url": "https://elixir.bootlin.com/linux/v6.18/source/mm/readahead.c#L11",
+   "title": "mm/readahead.c, Linux 6.18 source",
+   "where": {
+    "en": "lines 11–33, DOC: Readahead Overview",
+    "ru": "строки 11–33, DOC: Readahead Overview"
+   }
+  },
+  "k-ra-init": {
+   "url": "https://elixir.bootlin.com/linux/v6.18/source/mm/readahead.c#L373",
+   "title": "mm/readahead.c, Linux 6.18 source",
+   "where": {
+    "en": "lines 373–385, get_init_ra_size()",
+    "ru": "строки 373–385, get_init_ra_size()"
+   }
+  },
+  "k-ra-next": {
+   "url": "https://elixir.bootlin.com/linux/v6.18/source/mm/readahead.c#L391",
+   "title": "mm/readahead.c, Linux 6.18 source",
+   "where": {
+    "en": "lines 391–401, get_next_ra_size()",
+    "ru": "строки 391–401, get_next_ra_size()"
+   }
+  },
+  "k-ra-sync": {
+   "url": "https://elixir.bootlin.com/linux/v6.18/source/mm/readahead.c#L606",
+   "title": "mm/readahead.c, Linux 6.18 source",
+   "where": {
+    "en": "lines 606–613, page_cache_sync_ra()",
+    "ru": "строки 606–613, page_cache_sync_ra()"
+   }
+  },
+  "k-ra-default": {
+   "url": "https://elixir.bootlin.com/linux/v6.18/source/include/linux/pagemap.h#L1350",
+   "title": "include/linux/pagemap.h, Linux 6.18 source",
+   "where": {
+    "en": "line 1350, VM_READAHEAD_PAGES",
+    "ru": "строка 1350, VM_READAHEAD_PAGES"
+   }
+  },
+  "k-blk-ra": {
+   "url": "https://elixir.bootlin.com/linux/v6.18/source/block/blk-settings.c#L63",
+   "title": "block/blk-settings.c, Linux 6.18 source",
+   "where": {
+    "en": "lines 63–86, blk_apply_bdi_limits()",
+    "ru": "строки 63–86, blk_apply_bdi_limits()"
+   }
+  },
+  "k-lrulist": {
+   "url": "https://elixir.bootlin.com/linux/v6.18/source/include/linux/mmzone.h#L316",
+   "title": "include/linux/mmzone.h, Linux 6.18 source",
+   "where": {
+    "en": "lines 316–323, enum lru_list",
+    "ru": "строки 316–323, enum lru_list"
+   }
+  },
+  "k-memcg-lruvec": {
+   "url": "https://elixir.bootlin.com/linux/v6.18/source/include/linux/memcontrol.h#L697",
+   "title": "include/linux/memcontrol.h, Linux 6.18 source",
+   "where": {
+    "en": "lines 697–704, mem_cgroup_lruvec()",
+    "ru": "строки 697–704, mem_cgroup_lruvec()"
+   }
+  },
+  "k-workingset": {
+   "url": "https://elixir.bootlin.com/linux/v6.18/source/mm/workingset.c#L22",
+   "title": "mm/workingset.c, Linux 6.18 source",
+   "where": {
+    "en": "lines 22–30, “Double CLOCK lists” comment",
+    "ru": "строки 22–30, комментарий «Double CLOCK lists»"
+   }
+  },
+  "k-kconfig-lrugen": {
+   "url": "https://elixir.bootlin.com/linux/v6.18/source/mm/Kconfig#L1305",
+   "title": "mm/Kconfig, Linux 6.18 source",
+   "where": {
+    "en": "lines 1305–1309, LRU_GEN_ENABLED",
+    "ru": "строки 1305–1309, LRU_GEN_ENABLED"
+   }
+  },
+  "k-wb-desc": {
+   "url": "https://elixir.bootlin.com/linux/v6.18/source/fs/fs-writeback.c#L2371",
+   "title": "fs/fs-writeback.c, Linux 6.18 source",
+   "where": {
+    "en": "line 2371, wb_workfn()",
+    "ru": "строка 2371, wb_workfn()"
+   }
+  },
+  "k-wq-comm": {
+   "url": "https://elixir.bootlin.com/linux/v6.18/source/kernel/workqueue.c#L6485",
+   "title": "kernel/workqueue.c, Linux 6.18 source",
+   "where": {
+    "en": "lines 6485–6513, wq_worker_comm()",
+    "ru": "строки 6485–6513, wq_worker_comm()"
+   }
+  },
+  "k-vmscan-flush": {
+   "url": "https://elixir.bootlin.com/linux/v6.18/source/mm/vmscan.c#L2070",
+   "title": "mm/vmscan.c, Linux 6.18 source",
+   "where": {
+    "en": "lines 2070–2081, shrink_inactive_list()",
+    "ru": "строки 2070–2081, shrink_inactive_list()"
+   }
+  },
+  "k-pw-defaults": {
+   "url": "https://elixir.bootlin.com/linux/v6.18/source/mm/page-writeback.c#L70",
+   "title": "mm/page-writeback.c, Linux 6.18 source",
+   "where": {
+    "en": "lines 70–110, writeback tunables",
+    "ru": "строки 70–110, параметры обратной записи"
+   }
+  },
+  "k-pw-balance": {
+   "url": "https://elixir.bootlin.com/linux/v6.18/source/mm/page-writeback.c#L1803",
+   "title": "mm/page-writeback.c, Linux 6.18 source",
+   "where": {
+    "en": "lines 1803–1809, comment on balance_dirty_pages()",
+    "ru": "строки 1803–1809, комментарий к balance_dirty_pages()"
+   }
+  },
+  "k-vmstat": {
+   "url": "https://elixir.bootlin.com/linux/v6.18/source/mm/vmstat.c#L1299",
+   "title": "mm/vmstat.c, Linux 6.18 source",
+   "where": {
+    "en": "lines 1299–1300, vmstat_text",
+    "ru": "строки 1299–1300, vmstat_text"
+   }
+  },
+  "k-jbd2": {
+   "url": "https://elixir.bootlin.com/linux/v6.18/source/fs/jbd2/commit.c#L152",
+   "title": "fs/jbd2/commit.c, Linux 6.18 source",
+   "where": {
+    "en": "lines 152–154, journal_submit_commit_record()",
+    "ru": "строки 152–154, journal_submit_commit_record()"
+   }
+  },
+  "k-iomap-dio": {
+   "url": "https://elixir.bootlin.com/linux/v6.18/source/fs/iomap/direct-io.c#L642",
+   "title": "fs/iomap/direct-io.c, Linux 6.18 source",
+   "where": {
+    "en": "lines 642–702, __iomap_dio_rw()",
+    "ru": "строки 642–702, __iomap_dio_rw()"
+   }
+  },
+  "k-fadvise": {
+   "url": "https://elixir.bootlin.com/linux/v6.18/source/mm/fadvise.c#L113",
+   "title": "mm/fadvise.c, Linux 6.18 source",
+   "where": {
+    "en": "lines 113–115, POSIX_FADV_DONTNEED",
+    "ru": "строки 113–115, POSIX_FADV_DONTNEED"
+   }
+  },
+  "k-showmem": {
+   "url": "https://elixir.bootlin.com/linux/v6.18/source/mm/show_mem.c#L80",
+   "title": "mm/show_mem.c, Linux 6.18 source",
+   "where": {
+    "en": "line 80, si_meminfo()",
+    "ru": "строка 80, si_meminfo()"
+   }
+  },
+  "k-bdev": {
+   "url": "https://elixir.bootlin.com/linux/v6.18/source/block/bdev.c#L516",
+   "title": "block/bdev.c, Linux 6.18 source",
+   "where": {
+    "en": "lines 516–527, nr_blockdev_pages()",
+    "ru": "строки 516–527, nr_blockdev_pages()"
+   }
+  },
+  "pl-mounted": {
+   "url": "https://docs.kernel.org/filesystems/path-lookup.html#dcache-mounted",
+   "title": "Pathname lookup, The Linux Kernel documentation",
+   "where": {
+    "en": "section DCACHE_MOUNTED",
+    "ru": "раздел DCACHE_MOUNTED"
+   }
+  },
+  "pl-cache": {
+   "url": "https://docs.kernel.org/filesystems/path-lookup.html#more-than-just-a-cache",
+   "title": "Pathname lookup, The Linux Kernel documentation",
+   "where": {
+    "en": "section More than just a cache",
+    "ru": "раздел More than just a cache"
+   }
+  },
+  "pl-rcu": {
+   "url": "https://docs.kernel.org/filesystems/path-lookup.html#rcu-walk-faster-pathname-lookup-in-linux",
+   "title": "Pathname lookup, The Linux Kernel documentation",
+   "where": {
+    "en": "section RCU-walk - faster pathname lookup in Linux",
+    "ru": "раздел RCU-walk - faster pathname lookup in Linux"
+   }
+  },
+  "ext4-datamode": {
+   "url": "https://docs.kernel.org/admin-guide/ext4.html#data-mode",
+   "title": "ext4 General Information, The Linux Kernel documentation",
+   "where": {
+    "en": "section Data Mode, ordered mode",
+    "ru": "раздел Data Mode, ordered mode"
+   }
+  },
+  "ext4-options": {
+   "url": "https://docs.kernel.org/admin-guide/ext4.html#options",
+   "title": "ext4 General Information, The Linux Kernel documentation",
+   "where": {
+    "en": "section Options: barrier, delalloc, auto_da_alloc",
+    "ru": "раздел Options: barrier, delalloc, auto_da_alloc"
+   }
+  },
+  "fs-dentry": {
+   "url": "https://docs.kernel.org/admin-guide/sysctl/fs.html#dentry-state",
+   "title": "Documentation for /proc/sys/fs/, The Linux Kernel documentation",
+   "where": {
+    "en": "section dentry-state",
+    "ru": "раздел dentry-state"
+   }
+  },
+  "xa-doc": {
+   "url": "https://docs.kernel.org/core-api/xarray.html#overview",
+   "title": "XArray, The Linux Kernel documentation",
+   "where": {
+    "en": "section Overview",
+    "ru": "раздел Overview"
+   }
+  },
+  "abi-ra": {
+   "url": "https://docs.kernel.org/admin-guide/abi-stable.html#abi-sys-block-disk-queue-read-ahead-kb",
+   "title": "ABI stable symbols, The Linux Kernel documentation",
+   "where": {
+    "en": "entry /sys/block/<disk>/queue/read_ahead_kb",
+    "ru": "запись /sys/block/<disk>/queue/read_ahead_kb"
+   }
+  },
+  "mm-reclaim": {
+   "url": "https://docs.kernel.org/admin-guide/mm/concepts.html#reclaim",
+   "title": "Concepts overview, The Linux Kernel documentation",
+   "where": {
+    "en": "section Reclaim",
+    "ru": "раздел Reclaim"
+   }
+  },
+  "mglru": {
+   "url": "https://docs.kernel.org/mm/multigen_lru.html#workflow-overview",
+   "title": "Multi-Gen LRU, The Linux Kernel documentation",
+   "where": {
+    "en": "section Workflow overview",
+    "ru": "раздел Workflow overview"
+   }
+  },
+  "vm-drop": {
+   "url": "https://docs.kernel.org/admin-guide/sysctl/vm.html#drop-caches",
+   "title": "Documentation for /proc/sys/vm/, The Linux Kernel documentation",
+   "where": {
+    "en": "section drop_caches",
+    "ru": "раздел drop_caches"
+   }
+  },
+  "vm-bgratio": {
+   "url": "https://docs.kernel.org/admin-guide/sysctl/vm.html#dirty-background-ratio",
+   "title": "Documentation for /proc/sys/vm/, The Linux Kernel documentation",
+   "where": {
+    "en": "section dirty_background_ratio",
+    "ru": "раздел dirty_background_ratio"
+   }
+  },
+  "vm-bytes": {
+   "url": "https://docs.kernel.org/admin-guide/sysctl/vm.html#dirty-bytes",
+   "title": "Documentation for /proc/sys/vm/, The Linux Kernel documentation",
+   "where": {
+    "en": "section dirty_bytes",
+    "ru": "раздел dirty_bytes"
+   }
+  },
+  "vm-expire": {
+   "url": "https://docs.kernel.org/admin-guide/sysctl/vm.html#dirty-expire-centisecs",
+   "title": "Documentation for /proc/sys/vm/, The Linux Kernel documentation",
+   "where": {
+    "en": "section dirty_expire_centisecs",
+    "ru": "раздел dirty_expire_centisecs"
+   }
+  },
+  "vm-wbcs": {
+   "url": "https://docs.kernel.org/admin-guide/sysctl/vm.html#dirty-writeback-centisecs",
+   "title": "Documentation for /proc/sys/vm/, The Linux Kernel documentation",
+   "where": {
+    "en": "section dirty_writeback_centisecs",
+    "ru": "раздел dirty_writeback_centisecs"
+   }
+  },
+  "locking-vm": {
+   "url": "https://docs.kernel.org/filesystems/locking.html#vm-operations-struct",
+   "title": "Locking, The Linux Kernel documentation",
+   "where": {
+    "en": "section vm_operations_struct",
+    "ru": "раздел vm_operations_struct"
+   }
+  },
+  "wbc-intro": {
+   "url": "https://docs.kernel.org/block/writeback_cache_control.html#introduction",
+   "title": "Explicit volatile write back cache control, The Linux Kernel documentation",
+   "where": {
+    "en": "section Introduction",
+    "ru": "раздел Introduction"
+   }
+  },
+  "wbc-flush": {
+   "url": "https://docs.kernel.org/block/writeback_cache_control.html#explicit-cache-flushes",
+   "title": "Explicit volatile write back cache control, The Linux Kernel documentation",
+   "where": {
+    "en": "section Explicit cache flushes",
+    "ru": "раздел Explicit cache flushes"
+   }
+  },
+  "wbc-fua": {
+   "url": "https://docs.kernel.org/block/writeback_cache_control.html#forced-unit-access",
+   "title": "Explicit volatile write back cache control, The Linux Kernel documentation",
+   "where": {
+    "en": "section Forced Unit Access",
+    "ru": "раздел Forced Unit Access"
+   }
+  },
+  "errseq": {
+   "url": "https://docs.kernel.org/core-api/errseq.html#the-errseq-t-datatype",
+   "title": "The errseq_t datatype, The Linux Kernel documentation",
+   "where": {
+    "en": "introduction",
+    "ru": "вводная часть"
+   }
+  },
+  "proc-meminfo": {
+   "url": "https://docs.kernel.org/filesystems/proc.html#meminfo",
+   "title": "The /proc Filesystem, The Linux Kernel documentation",
+   "where": {
+    "en": "section meminfo, MemAvailable",
+    "ru": "раздел meminfo, MemAvailable"
+   }
+  },
+  "m-mountns": {
+   "url": "https://man7.org/linux/man-pages/man7/mount_namespaces.7.html#DESCRIPTION",
+   "title": "mount_namespaces(7), Linux manual page",
+   "where": {
+    "en": "section DESCRIPTION",
+    "ru": "раздел DESCRIPTION"
+   }
+  },
+  "m-mountinfo": {
+   "url": "https://man7.org/linux/man-pages/man5/proc_pid_mountinfo.5.html#DESCRIPTION",
+   "title": "proc_pid_mountinfo(5), Linux manual page",
+   "where": {
+    "en": "section DESCRIPTION",
+    "ru": "раздел DESCRIPTION"
+   }
+  },
+  "m-mount8": {
+   "url": "https://man7.org/linux/man-pages/man8/mount.8.html#FILESYSTEM-INDEPENDENT_MOUNT_OPTIONS",
+   "title": "mount(8), Linux manual page",
+   "where": {
+    "en": "section FILESYSTEM-INDEPENDENT MOUNT OPTIONS, relatime",
+    "ru": "раздел FILESYSTEM-INDEPENDENT MOUNT OPTIONS, relatime"
+   }
+  },
+  "m-fadv-desc": {
+   "url": "https://man7.org/linux/man-pages/man2/posix_fadvise.2.html#DESCRIPTION",
+   "title": "posix_fadvise(2), Linux manual page",
+   "where": {
+    "en": "section DESCRIPTION",
+    "ru": "раздел DESCRIPTION"
+   }
+  },
+  "m-fadv-ver": {
+   "url": "https://man7.org/linux/man-pages/man2/posix_fadvise.2.html#VERSIONS",
+   "title": "posix_fadvise(2), Linux manual page",
+   "where": {
+    "en": "section VERSIONS",
+    "ru": "раздел VERSIONS"
+   }
+  },
+  "m-fadv-notes": {
+   "url": "https://man7.org/linux/man-pages/man2/posix_fadvise.2.html#NOTES",
+   "title": "posix_fadvise(2), Linux manual page",
+   "where": {
+    "en": "section NOTES",
+    "ru": "раздел NOTES"
+   }
+  },
+  "m-mmap": {
+   "url": "https://man7.org/linux/man-pages/man2/mmap.2.html#DESCRIPTION",
+   "title": "mmap(2), Linux manual page",
+   "where": {
+    "en": "section DESCRIPTION, MAP_SHARED and MAP_PRIVATE",
+    "ru": "раздел DESCRIPTION, MAP_SHARED и MAP_PRIVATE"
+   }
+  },
+  "m-msync": {
+   "url": "https://man7.org/linux/man-pages/man2/msync.2.html#DESCRIPTION",
+   "title": "msync(2), Linux manual page",
+   "where": {
+    "en": "section DESCRIPTION",
+    "ru": "раздел DESCRIPTION"
+   }
+  },
+  "m-fsync": {
+   "url": "https://man7.org/linux/man-pages/man2/fsync.2.html#DESCRIPTION",
+   "title": "fsync(2), Linux manual page",
+   "where": {
+    "en": "section DESCRIPTION",
+    "ru": "раздел DESCRIPTION"
+   }
+  },
+  "m-open-desc": {
+   "url": "https://man7.org/linux/man-pages/man2/open.2.html#DESCRIPTION",
+   "title": "open(2), Linux manual page",
+   "where": {
+    "en": "section DESCRIPTION, O_APPEND, O_DIRECT, O_DSYNC, O_SYNC",
+    "ru": "раздел DESCRIPTION, O_APPEND, O_DIRECT, O_DSYNC, O_SYNC"
+   }
+  },
+  "m-open-notes": {
+   "url": "https://man7.org/linux/man-pages/man2/open.2.html#NOTES",
+   "title": "open(2), Linux manual page",
+   "where": {
+    "en": "section NOTES, O_DIRECT",
+    "ru": "раздел NOTES, O_DIRECT"
+   }
+  },
+  "m-sync": {
+   "url": "https://man7.org/linux/man-pages/man2/sync.2.html#DESCRIPTION",
+   "title": "sync(2), Linux manual page",
+   "where": {
+    "en": "section DESCRIPTION",
+    "ru": "раздел DESCRIPTION"
+   }
+  },
+  "m-sfr": {
+   "url": "https://man7.org/linux/man-pages/man2/sync_file_range.2.html#DESCRIPTION",
+   "title": "sync_file_range(2), Linux manual page",
+   "where": {
+    "en": "section DESCRIPTION, Warning",
+    "ru": "раздел DESCRIPTION, Warning"
+   }
+  },
+  "m-rename": {
+   "url": "https://man7.org/linux/man-pages/man2/rename.2.html#DESCRIPTION",
+   "title": "rename(2), Linux manual page",
+   "where": {
+    "en": "section DESCRIPTION",
+    "ru": "раздел DESCRIPTION"
+   }
+  },
+  "m-close": {
+   "url": "https://man7.org/linux/man-pages/man2/close.2.html#CAVEATS",
+   "title": "close(2), Linux manual page",
+   "where": {
+    "en": "section CAVEATS, Dealing with error returns from close()",
+    "ru": "раздел CAVEATS, Dealing with error returns from close()"
+   }
+  },
+  "m-readahead": {
+   "url": "https://man7.org/linux/man-pages/man2/readahead.2.html#DESCRIPTION",
+   "title": "readahead(2), Linux manual page",
+   "where": {
+    "en": "section DESCRIPTION",
+    "ru": "раздел DESCRIPTION"
+   }
+  },
+  "m-madvise": {
+   "url": "https://man7.org/linux/man-pages/man2/madvise.2.html#DESCRIPTION",
+   "title": "madvise(2), Linux manual page",
+   "where": {
+    "en": "section DESCRIPTION",
+    "ru": "раздел DESCRIPTION"
+   }
+  },
+  "m-iouring": {
+   "url": "https://man7.org/linux/man-pages/man7/io_uring.7.html#DESCRIPTION",
+   "title": "io_uring(7), Linux manual page",
+   "where": {
+    "en": "section DESCRIPTION",
+    "ru": "раздел DESCRIPTION"
+   }
+  },
+  "m-iouring-setup": {
+   "url": "https://man7.org/linux/man-pages/man2/io_uring_setup.2.html#DESCRIPTION",
+   "title": "io_uring_setup(2), Linux manual page",
+   "where": {
+    "en": "section DESCRIPTION, IORING_SETUP_SQPOLL",
+    "ru": "раздел DESCRIPTION, IORING_SETUP_SQPOLL"
+   }
+  },
+  "m-setbuf": {
+   "url": "https://man7.org/linux/man-pages/man3/setbuf.3.html#DESCRIPTION",
+   "title": "setbuf(3), Linux manual page",
+   "where": {
+    "en": "section DESCRIPTION",
+    "ru": "раздел DESCRIPTION"
+   }
+  },
+  "m-abort": {
+   "url": "https://man7.org/linux/man-pages/man3/abort.3.html#HISTORY",
+   "title": "abort(3), Linux manual page",
+   "where": {
+    "en": "section HISTORY",
+    "ru": "раздел HISTORY"
+   }
+  },
+  "m-exit2": {
+   "url": "https://man7.org/linux/man-pages/man2/_exit.2.html#DESCRIPTION",
+   "title": "_exit(2), Linux manual page",
+   "where": {
+    "en": "section DESCRIPTION",
+    "ru": "раздел DESCRIPTION"
+   }
+  },
+  "m-errno": {
+   "url": "https://man7.org/linux/man-pages/man3/errno.3.html#DESCRIPTION",
+   "title": "errno(3), Linux manual page",
+   "where": {
+    "en": "section DESCRIPTION, ESTALE",
+    "ru": "раздел DESCRIPTION, ESTALE"
+   }
+  },
+  "m-fincore": {
+   "url": "https://man7.org/linux/man-pages/man1/fincore.1.html#DESCRIPTION",
+   "title": "fincore(1), Linux manual page",
+   "where": {
+    "en": "section DESCRIPTION",
+    "ru": "раздел DESCRIPTION"
+   }
+  },
+  "m-vmstat": {
+   "url": "https://man7.org/linux/man-pages/man8/vmstat.8.html#FIELD_DESCRIPTION_FOR_VM_MODE",
+   "title": "vmstat(8), Linux manual page",
+   "where": {
+    "en": "section FIELD DESCRIPTION FOR VM MODE",
+    "ru": "раздел FIELD DESCRIPTION FOR VM MODE"
+   }
+  },
+  "m-free": {
+   "url": "https://man7.org/linux/man-pages/man1/free.1.html#DESCRIPTION",
+   "title": "free(1), Linux manual page",
+   "where": {
+    "en": "section DESCRIPTION, available",
+    "ru": "раздел DESCRIPTION, available"
+   }
+  },
+  "kn-3.2": {
+   "url": "https://kernelnewbies.org/Linux_3.2#I.2FO-less_dirty_throttling.2C_reduce_filesystem_writeback_from_page_reclaim",
+   "title": "Linux_3.2 - Linux Kernel Newbies",
+   "where": {
+    "en": "section I/O-less dirty throttling, reduce filesystem writeback from page reclaim",
+    "ru": "раздел I/O-less dirty throttling, reduce filesystem writeback from page reclaim"
+   }
+  },
+  "kn-4.13": {
+   "url": "https://kernelnewbies.org/Linux_4.13#Improved_block_layer_and_background_writes_error_handling",
+   "title": "Linux_4.13 - Linux Kernel Newbies",
+   "where": {
+    "en": "section Improved block layer and background writes error handling",
+    "ru": "раздел Improved block layer and background writes error handling"
+   }
+  },
+  "kn-5.1": {
+   "url": "https://kernelnewbies.org/Linux_5.1#High-performance_asynchronous_I.2FO_with_io_uring",
+   "title": "Linux_5.1 - Linux Kernel Newbies",
+   "where": {
+    "en": "section High-performance asynchronous I/O with io_uring",
+    "ru": "раздел High-performance asynchronous I/O with io_uring"
+   }
+  },
+  "kn-5.16": {
+   "url": "https://kernelnewbies.org/Linux_5.16#Memory_folios_infrastructure_for_a_faster_memory_management",
+   "title": "Linux_5.16 - Linux Kernel Newbies",
+   "where": {
+    "en": "section Memory folios infrastructure for a faster memory management",
+    "ru": "раздел Memory folios infrastructure for a faster memory management"
+   }
+  },
+  "kn-6.1": {
+   "url": "https://kernelnewbies.org/Linux_6.1#Multi-generational_LRU_for_better_memory_management",
+   "title": "Linux_6.1 - Linux Kernel Newbies",
+   "where": {
+    "en": "section Multi-generational LRU for better memory management",
+    "ru": "раздел Multi-generational LRU for better memory management"
+   }
+  },
+  "lwn-ioless": {
+   "url": "https://lwn.net/Articles/456904/",
+   "title": "No-I/O dirty throttling, LWN.net",
+   "where": {
+    "en": "whole article (2011)",
+    "ru": "статья целиком (2011)"
+   }
+  },
+  "lwn-fsync": {
+   "url": "https://lwn.net/Articles/752063/",
+   "title": "PostgreSQL's fsync() surprise, LWN.net",
+   "where": {
+    "en": "opening section (April 2018)",
+    "ru": "начало статьи (апрель 2018)"
+   }
+  },
+  "lwn-pagecache": {
+   "url": "https://lwn.net/Articles/712467/",
+   "title": "The future of the page cache, LWN.net",
+   "where": {
+    "en": "section The page cache",
+    "ru": "раздел The page cache"
+   }
+  },
+  "pg-retry": {
+   "url": "https://www.postgresql.org/docs/current/runtime-config-error-handling.html#GUC-DATA-SYNC-RETRY",
+   "title": "19.14. Error Handling, PostgreSQL documentation",
+   "where": {
+    "en": "parameter data_sync_retry",
+    "ru": "параметр data_sync_retry"
+   }
+  },
+  "pgwiki-top": {
+   "url": "https://wiki.postgresql.org/wiki/Fsync_Errors",
+   "title": "Fsync Errors, PostgreSQL wiki",
+   "where": {
+    "en": "introduction",
+    "ru": "вводная часть"
+   }
+  },
+  "pgwiki-current": {
+   "url": "https://wiki.postgresql.org/wiki/Fsync_Errors#Current_status",
+   "title": "Fsync Errors, PostgreSQL wiki",
+   "where": {
+    "en": "section Current status",
+    "ru": "раздел Current status"
+   }
+  },
+  "pgwiki-os": {
+   "url": "https://wiki.postgresql.org/wiki/Fsync_Errors#Open_source_kernels",
+   "title": "Fsync Errors, PostgreSQL wiki",
+   "where": {
+    "en": "section Open source kernels, Linux entries",
+    "ru": "раздел Open source kernels, записи о Linux"
+   }
+  },
+  "mysql-flush": {
+   "url": "https://dev.mysql.com/doc/refman/8.4/en/innodb-parameters.html#sysvar_innodb_flush_method",
+   "title": "17.14 InnoDB Startup Options and System Variables, MySQL 8.4 Reference Manual",
+   "where": {
+    "en": "variable innodb_flush_method",
+    "ru": "переменная innodb_flush_method"
+   }
+  },
+  "oracle-fsio": {
+   "url": "https://docs.oracle.com/en/database/oracle/oracle-database/19/refrn/FILESYSTEMIO_OPTIONS.html",
+   "title": "FILESYSTEMIO_OPTIONS, Oracle Database Reference 19c",
+   "where": {
+    "en": "Values",
+    "ru": "раздел Values"
+   }
+  },
+  "scylla": {
+   "url": "https://www.scylladb.com/2017/10/05/io-access-methods-scylla/",
+   "title": "Learn about different I/O Access Methods and what we chose for ScyllaDB, ScyllaDB blog",
+   "where": {
+    "en": "sections Direct I/O, ScyllaDB and AIO/DIO",
+    "ru": "разделы Direct I/O, ScyllaDB and AIO/DIO"
+   }
+  },
+  "wsl-disk": {
+   "url": "https://learn.microsoft.com/en-us/windows/wsl/disk-space",
+   "title": "How to manage WSL disk space, Microsoft Learn",
+   "where": {
+    "en": "introduction",
+    "ru": "вводная часть"
+   }
+  },
+  "tk-pagecache": {
+   "url": "https://www.thomas-krenn.com/en/wiki/Linux_Page_Cache_Basics",
+   "title": "Linux Page Cache Basics, Thomas-Krenn-Wiki",
+   "where": {
+    "en": "introduction",
+    "ru": "вводная часть"
+   }
+  },
+  "norvig": {
+   "url": "https://norvig.com/21-days.html#answers",
+   "title": "Teach Yourself Programming in Ten Years, Peter Norvig",
+   "where": {
+    "en": "section Answers, timing table",
+    "ru": "раздел Answers, таблица задержек"
+   }
+  },
+  "arch-config": {
+   "url": "https://gitlab.archlinux.org/archlinux/packaging/packages/linux/-/blob/main/config.x86_64#L1348",
+   "title": "config.x86_64, Arch Linux linux package",
+   "where": {
+    "en": "line 1348, CONFIG_LRU_GEN_ENABLED",
+    "ru": "строка 1348, CONFIG_LRU_GEN_ENABLED"
+   }
+  }
+ },
+ "cites": [
+  {
+   "src": "vfs-intro",
+   "en": "<b>Virtual File System</b>, or VFS.",
+   "ru": "(Virtual File System, VFS).",
+   "quote": "The Virtual File System (also known as the Virtual Filesystem Switch) is the software layer in the kernel that provides the filesystem interface to userspace programs."
+  },
+  {
+   "src": "vfs-fileobj",
+   "en": "it calls that filesystem through a table of function pointers.",
+   "ru": "она вызывает эту файловую систему через таблицу указателей на функции.",
+   "quote": "The freshly allocated file structure is initialized with a pointer to the dentry and a set of file operation member functions. These are taken from the inode data. [...] You can see that this is another switch performed by the VFS."
+  },
+  {
+   "src": [
+    "vfs-dcache",
+    "lwn-pagecache"
+   ],
+   "en": "On a hit, the driver is often not called at all.",
+   "ru": "При попадании драйвер часто вообще не вызывается.",
+   "quote": {
+    "vfs-dcache": "This provides a very fast look-up mechanism to translate a pathname (filename) into a specific dentry. Dentries live in RAM and are never saved to disc: they exist only for performance.",
+    "lwn-pagecache": "With the page cache, there is no need to call into filesystem code at all if the desired page is present already."
+   }
+  },
+  {
+   "src": "norvig",
+   "en": "a trip to the device that can be a thousand times slower.",
+   "ru": "требует обращения к устройству, которое может быть в тысячу раз медленнее.",
+   "quote": "read 1MB sequentially from memory 250,000 nanosec [...] fetch from new disk location (seek) 8,000,000 nanosec"
+  },
+  {
+   "src": "vfs-superops",
+   "en": "<code>statfs</code>, <code>put_super</code>",
+   "ru": "<code>statfs</code>, <code>put_super</code>",
+   "quote": "struct super_operations { struct inode *(*alloc_inode)(struct super_block *sb); ... int (*write_inode) ... void (*evict_inode) (struct inode *); void (*put_super) (struct super_block *); int (*sync_fs)(struct super_block *sb, int wait); ... int (*statfs) (struct dentry *, struct kstatfs *);"
+  },
+  {
+   "src": "vfs-inodeops",
+   "en": "<code>getattr</code>, <code>permission</code>",
+   "ru": "<code>getattr</code>, <code>permission</code>",
+   "quote": "struct inode_operations { int (*create) ... struct dentry * (*lookup) ... int (*unlink) ... struct dentry *(*mkdir) ... int (*rename) ... int (*permission) ... int (*setattr) ... int (*getattr) ..."
+  },
+  {
+   "src": "vfs-dentryops",
+   "en": "<code>d_compare</code>, <code>d_release</code>",
+   "ru": "<code>d_compare</code>, <code>d_release</code>",
+   "quote": "struct dentry_operations { int (*d_revalidate)(...); ... int (*d_hash)(const struct dentry *, struct qstr *); int (*d_compare)(...); ... void (*d_release)(struct dentry *);"
+  },
+  {
+   "src": [
+    "vfs-fileops",
+    "k-fs-file"
+   ],
+   "en": "<code>unlocked_ioctl</code>, <code>fallocate</code>",
+   "ru": "<code>unlocked_ioctl</code>, <code>fallocate</code>",
+   "quote": {
+    "vfs-fileops": "loff_t (*llseek) ... ssize_t (*read_iter) (struct kiocb *, struct iov_iter *); ssize_t (*write_iter) ... long (*unlocked_ioctl) ... int (*open) ... int (*release) ... int (*fsync) ... long (*fallocate)(struct file *file, int mode, loff_t offset, loff_t len);",
+    "k-fs-file": "struct file - Represents a file ... @f_mode: FMODE_* flags often used in hotpaths ... @f_op: file operations ... @f_flags: file flags ... @f_pos: file position"
+   }
+  },
+  {
+   "src": [
+    "k-fs-as",
+    "vfs-aops"
+   ],
+   "en": "<code>direct_IO</code>, <code>release_folio</code>.",
+   "ru": "<code>direct_IO</code>, <code>release_folio</code>.",
+   "quote": {
+    "k-fs-as": "struct address_space - Contents of a cacheable, mappable object. @host: Owner, either the inode or the block_device. @i_pages: Cached pages. ... @a_ops: Methods.",
+    "vfs-aops": "int (*read_folio)(struct file *, struct folio *); int (*writepages)(...); bool (*dirty_folio)(...); void (*readahead)(...); int (*write_begin)(...); int (*write_end)(...); ... bool (*release_folio)(struct folio *, gfp_t); ... ssize_t (*direct_IO)(...);"
+   }
+  },
+  {
+   "src": "k-ext4-i",
+   "en": "which is <code>container_of()</code> underneath.",
+   "ru": "внутри которого работает <code>container_of()</code>.",
+   "quote": "static inline struct ext4_inode_info *EXT4_I(struct inode *inode) { return container_of(inode, struct ext4_inode_info, vfs_inode); }"
+  },
+  {
+   "src": "k-ext4-fops",
+   "en": "(one <code>#ifdef</code> removed):",
+   "ru": "(убран один <code>#ifdef</code>):",
+   "quote": "const struct file_operations ext4_file_operations = { .llseek = ext4_llseek, .read_iter = ext4_file_read_iter, .write_iter = ext4_file_write_iter, .iopoll = iocb_bio_iopoll, .unlocked_ioctl = ext4_ioctl, #ifdef CONFIG_COMPAT .compat_ioctl = ext4_compat_ioctl, #endif"
+  },
+  {
+   "src": "k-nfs-fops",
+   "en": "and the same call reaches the NFS client.",
+   "ru": "и тот же вызов попадает в клиент NFS.",
+   "quote": "const struct file_operations nfs_file_operations = {"
+  },
+  {
+   "src": "k-mount",
+   "en": "continue in this other <code>super_block</code>.",
+   "ru": "продолжай в другом <code>super_block</code>.",
+   "quote": "struct mount { struct hlist_node mnt_hash; struct mount *mnt_parent; struct dentry *mnt_mountpoint; struct vfsmount mnt;"
+  },
+  {
+   "src": "pl-mounted",
+   "en": "jumps to the root of the mounted filesystem.",
+   "ru": "переходит к корню смонтированной файловой системы.",
+   "quote": "This flag is set on every dentry that is mounted on. [...] If this flag is set, and d_manage() didn’t return -EISDIR, lookup_mnt() is called to examine the mount hash table (honoring the mount_lock described earlier) and possibly return a new vfsmount and a new dentry"
+  },
+  {
+   "src": "m-mountns",
+   "en": "which is why a container can have a different <code>/</code>.",
+   "ru": "поэтому у контейнера может быть другой <code>/</code>.",
+   "quote": "Mount namespaces provide isolation of the list of mounts seen by the processes in each namespace instance. Thus, the processes in each of the mount namespace instances will see distinct single-directory hierarchies."
+  },
+  {
+   "src": "m-mountinfo",
+   "en": "or more readably with <code>findmnt</code>:",
+   "ru": "в более удобном виде командой <code>findmnt</code>:",
+   "quote": "/proc/pid/mountinfo (since Linux 2.6.26) This file contains information about mounts in the process's mount namespace (see mount_namespaces(7))."
+  },
+  {
+   "src": "ext4-datamode",
+   "en": "<code>data=ordered</code> is the ext4 journaling mode from lesson 3.",
+   "ru": "<code>data=ordered</code> — режим журналирования ext4 из урока 3.",
+   "quote": "In data=ordered mode, ext4 only officially journals metadata, but it logically groups metadata information related to data changes with the data blocks into a single unit called a transaction."
+  },
+  {
+   "src": "m-mount8",
+   "en": "because every access-time update is a metadata write.",
+   "ru": "потому что каждое такое обновление — это запись метаданных.",
+   "quote": "relatime Update inode access times relative to modify or change time. Access time is only updated if the previous access time was earlier than or equal to the current modify or change time."
+  },
+  {
+   "src": "vfs-dcache",
+   "en": "The kernel avoids it with the <b>dentry cache</b> (dcache).",
+   "ru": "Ядро избегает этого с помощью <b>кэша dentry</b> (dcache).",
+   "quote": "The pathname argument that is passed to them is used by the VFS to search through the directory entry cache (also known as the dentry cache or dcache). This provides a very fast look-up mechanism to translate a pathname (filename) into a specific dentry."
+  },
+  {
+   "src": "k-dlookup",
+   "en": "The dcache is a hash table keyed by the pair (pointer to the parent dentry, hash of the name).",
+   "ru": "ключ в которой — пара (указатель на родительский dentry, хеш имени).",
+   "quote": "unsigned int hash = name->hash; struct hlist_bl_head *b = d_hash(hash); [...] if (dentry->d_name.hash != hash) continue; spin_lock(&dentry->d_lock); if (dentry->d_parent != parent) goto next;"
+  },
+  {
+   "src": "vfs-inodeops",
+   "en": "which reads the directory from disk and adds a new dentry.",
+   "ru": "который читает каталог с диска и добавляет новый dentry.",
+   "quote": "lookup called when the VFS needs to look up an inode in a parent directory. The name to look for is found in the dentry. This method must call d_add() to insert the found inode into the dentry."
+  },
+  {
+   "src": "fs-dentry",
+   "en": "Negative dentries make the second failure free.",
+   "ru": "Благодаря отрицательным dentry вторая неудача ничего не стоит.",
+   "quote": "nr_negative shows the number of unused dentries that are also negative dentries which do not map to any files. Instead, they help speeding up rejection of non-existing files provided by the users."
+  },
+  {
+   "src": [
+    "fs-dentry",
+    "vfs-dcache"
+   ],
+   "en": "so dropping one is always safe.",
+   "ru": "поэтому выбросить его всегда безопасно.",
+   "quote": {
+    "fs-dentry": "nr_unused shows the number of dentries that are not actively used, but are saved in the LRU list for future reuse.",
+    "vfs-dcache": "Dentries live in RAM and are never saved to disc: they exist only for performance."
+   }
+  },
+  {
+   "src": "pl-rcu",
+   "en": "which takes references step by step.",
+   "ru": "который берёт ссылки шаг за шагом.",
+   "quote": "Pathname lookup always starts in RCU-walk mode but only remains there as long as what it is looking for is in the cache and is stable. [...] If it notices that something has changed or is changing, or if something isn’t in the cache, then it tries to stop gracefully and switch to REF-walk."
+  },
+  {
+   "src": "k-ihash",
+   "en": "hashed by (super_block, inode number).",
+   "ru": "с хешированием по паре (super_block, номер inode).",
+   "quote": "static unsigned long hash(struct super_block *sb, unsigned long hashval) { unsigned long tmp; tmp = (hashval * (unsigned long)sb) ^ (GOLDEN_RATIO_PRIME + hashval) / L1_CACHE_BYTES;"
+  },
+  {
+   "src": "vfs-inodeops",
+   "en": "so a cached name keeps its inode cached too.",
+   "ru": "поэтому закэшированное имя удерживает в кэше и свой inode.",
+   "quote": "This method must call d_add() to insert the found inode into the dentry. The “i_count” field in the inode structure should be incremented."
+  },
+  {
+   "src": "fs-dentry",
+   "en": "only because the memory is otherwise idle.",
+   "ru": "иначе эта память простаивала бы.",
+   "quote": "nr_unused shows the number of dentries that are not actively used, but are saved in the LRU list for future reuse. [...] nr_negative shows the number of unused dentries that are also negative dentries which do not map to any files."
+  },
+  {
+   "src": [
+    "k-vfsread",
+    "k-getpages"
+   ],
+   "en": "These are the function names in Linux 6.18.",
+   "ru": "Ниже имена функций из Linux 6.18.",
+   "quote": {
+    "k-vfsread": "ssize_t vfs_read(struct file *file, char __user *buf, size_t count, loff_t *pos) [...] ret = new_sync_read(file, buf, count, pos);",
+    "k-getpages": "filemap_get_read_batch(mapping, index, last_index - 1, fbatch); [...] page_cache_sync_ra(&ractl, last_index - index); [...] if (folio_test_readahead(folio)) { err = filemap_readahead(iocb, filp, mapping, folio, last_index); [...] err = filemap_update_page(iocb, mapping, count, folio,"
+   }
+  },
+  {
+   "src": "kn-5.16",
+   "en": "so check the source of the kernel you run.",
+   "ru": "так что сверяйтесь с исходниками ядра, которое у вас запущено.",
+   "quote": "This release introduces the concept of page folios, which are like compound pages, but with better semantics. [...] This release will include the core infrastructure of page folios and converts some parts of the core memory management subsystem and the page cache."
+  },
+  {
+   "src": [
+    "k-ext4-readahead",
+    "k-ext4-readpage"
+   ],
+   "en": "to turn file block numbers into disk block numbers).",
+   "ru": "переводит номера блоков файла в номера блоков диска).",
+   "quote": {
+    "k-ext4-readahead": "static void ext4_readahead(struct readahead_control *rac) { [...] ext4_mpage_readpages(inode, rac, NULL); }",
+    "k-ext4-readpage": "Then do more ext4_map_blocks() calls until we are done with this folio. [...] map.m_lblk = block_in_file; map.m_len = last_block - block_in_file; if (ext4_map_blocks(NULL, inode, &map, 0) < 0) {"
+   }
+  },
+  {
+   "src": "k-endread",
+   "en": "and the copy proceeds as if it had been a hit.",
+   "ru": "и копирование идёт так, как будто было попадание.",
+   "quote": "When all reads against a folio have completed, filesystems should call this function to let the pagecache know that no more reads are outstanding. This will unlock the folio and wake up any thread sleeping on the lock. The folio will also be marked uptodate if all reads succeeded."
+  },
+  {
+   "src": [
+    "k-fs-as",
+    "xa-doc"
+   ],
+   "en": "(file offset divided by 4096) to a <b>folio</b>.",
+   "ru": "на <b>фолио</b> (folio).",
+   "quote": {
+    "k-fs-as": "struct address_space { struct inode *host; struct xarray i_pages;",
+    "xa-doc": "The XArray is an abstract data type which behaves like a very large array of pointers. [...] The most important user of the XArray is the page cache."
+   }
+  },
+  {
+   "src": "k-folio",
+   "en": "a power of two in count, handled as one unit.",
+   "ru": "ядро обрабатывает её как единое целое.",
+   "quote": "A folio is a physically, virtually and logically contiguous set of bytes. It is a power-of-two in size, and it is aligned to that same power-of-two. It is at least as large as %PAGE_SIZE."
+  },
+  {
+   "src": "kn-5.16",
+   "en": "Before that the cache was managed one 4 KiB <code>struct page</code> at a time.",
+   "ru": "До этого кэш управлялся по одной 4-КиБ <code>struct page</code> за раз.",
+   "quote": "To manage the system's memory, the available RAM is split into small units, called pages. [...] This release introduces the concept of page folios, which are like compound pages, but with better semantics."
+  },
+  {
+   "src": "k-xachunk",
+   "en": "so each level consumes 6 bits of the index.",
+   "ru": "поэтому каждый уровень расходует 6 бит индекса.",
+   "quote": "Generally, the larger the better; as the number of slots per level of the tree increases, the less tall the tree needs to be. [...] #define XA_CHUNK_SHIFT (IS_ENABLED(CONFIG_BASE_SMALL) ? 4 : 6)"
+  },
+  {
+   "src": "k-pageflags",
+   "en": "Each folio carries state flags.",
+   "ru": "У каждого фолио есть флаги состояния.",
+   "quote": "During initiation of disk I/O, PG_locked is set. This bit is set before I/O and cleared when writeback _starts_ or when read _completes_. PG_writeback is set before writeback starts and cleared when it finishes. [...] PG_referenced, PG_reclaim are used for page reclaim"
+  },
+  {
+   "src": [
+    "k-showmem",
+    "k-bdev"
+   ],
+   "en": "That is the <code>Buffers</code> line in <code>/proc/meminfo</code>.",
+   "ru": "Это строка <code>Buffers</code> в <code>/proc/meminfo</code>.",
+   "quote": {
+    "k-showmem": "val->bufferram = nr_blockdev_pages();",
+    "k-bdev": "list_for_each_entry(inode, &blockdev_superblock->s_inodes, i_sb_list) ret += inode->i_mapping->nrpages;"
+   }
+  },
+  {
+   "src": [
+    "lwn-pagecache",
+    "tk-pagecache"
+   ],
+   "en": "Since 2.4 the two are unified and there is one copy.",
+   "ru": "С версии 2.4 они объединены, и копия одна.",
+   "quote": {
+    "lwn-pagecache": "Initially, the page and buffer caches were entirely separate, but Ingo Molnar unified them in 1999. Now, the buffer cache still exists, but its entries point into the page cache.",
+    "tk-pagecache": "Linux kernels up to version 2.2 had both a Page Cache as well as a Buffer Cache. As of the 2.4 kernel, these two caches have been combined. Today, there is only one cache, the Page Cache."
+   }
+  },
+  {
+   "src": [
+    "m-free",
+    "proc-meminfo"
+   ],
+   "en": "by dropping clean cached pages.",
+   "ru": "выбросив чистые страницы из кэша.",
+   "quote": {
+    "m-free": "available Estimation of how much memory is available for starting new applications, without swapping. Unlike the data provided by the cache or free fields, this field takes into account page cache",
+    "proc-meminfo": "MemAvailable An estimate of how much memory is available for starting new applications, without swapping. Calculated from MemFree, SReclaimable, the size of the file LRU lists, and the low watermarks in each zone."
+   }
+  },
+  {
+   "src": "k-ra-init",
+   "en": "multiplies it by four.",
+   "ru": "умножает его на четыре.",
+   "quote": "unsigned long newsize = roundup_pow_of_two(size); if (newsize <= max / 32) newsize = newsize * 4; else if (newsize <= max / 4) newsize = newsize * 2; else newsize = max;"
+  },
+  {
+   "src": "k-ra-doc",
+   "en": "while the current one is still being consumed.",
+   "ru": "пока текущее ещё не дочитано.",
+   "quote": "Readahead is triggered when an application read request [...] finds that the requested folio [...] has the readahead flag set. This flag indicates that the folio was read as part of a previous readahead request and now that it has been accessed, it is time for the next readahead."
+  },
+  {
+   "src": "k-ra-next",
+   "en": "then doubles, up to the maximum.",
+   "ru": "вплоть до максимума.",
+   "quote": "if (cur < max / 16) return 4 * cur; if (cur <= max / 2) return 2 * cur; return max;"
+  },
+  {
+   "src": "abi-ra",
+   "en": "The maximum is the device's <code>read_ahead_kb</code>.",
+   "ru": "Максимум задаёт <code>read_ahead_kb</code> устройства.",
+   "quote": "[RW] Maximum number of kilobytes to read-ahead for filesystems on this block device."
+  },
+  {
+   "src": [
+    "k-ra-default",
+    "k-blk-ra"
+   ],
+   "en": "and drivers can raise it.",
+   "ru": "и драйверы могут его увеличить.",
+   "quote": {
+    "k-ra-default": "#define VM_READAHEAD_PAGES (SZ_128K / PAGE_SIZE)",
+    "k-blk-ra": "For read-ahead of large files to be effective, we need to read ahead at least twice the optimal I/O size. [...] bdi->ra_pages = max3(bdi->ra_pages, io_opt * 2 >> PAGE_SHIFT, VM_READAHEAD_PAGES);"
+   }
+  },
+  {
+   "src": "k-ra-sync",
+   "en": "and stops growing the window.",
+   "ru": "и перестаёт увеличивать окно.",
+   "quote": "Standalone, small random read. Read as is, and do not pollute the readahead state."
+  },
+  {
+   "src": "m-fadv-ver",
+   "en": "turns readahead off for that file.",
+   "ru": "отключает упреждающее чтение для этого файла.",
+   "quote": "Under Linux, POSIX_FADV_NORMAL sets the readahead window to the default size for the backing device; POSIX_FADV_SEQUENTIAL doubles this size, and POSIX_FADV_RANDOM disables file readahead entirely."
+  },
+  {
+   "src": [
+    "k-lrulist",
+    "k-memcg-lruvec"
+   ],
+   "en": "separately per memory cgroup and NUMA node.",
+   "ru": "и каждого узла NUMA.",
+   "quote": {
+    "k-lrulist": "enum lru_list { LRU_INACTIVE_ANON = LRU_BASE, LRU_ACTIVE_ANON = LRU_BASE + LRU_ACTIVE, LRU_INACTIVE_FILE = LRU_BASE + LRU_FILE, LRU_ACTIVE_FILE = LRU_BASE + LRU_FILE + LRU_ACTIVE,",
+    "k-memcg-lruvec": "mem_cgroup_lruvec - get the lru list vector for a memcg & node [...] Returns the lru list vector holding pages for a given @memcg & @pgdat combination."
+   }
+  },
+  {
+   "src": "k-workingset",
+   "en": "without pushing the truly hot data off the active list.",
+   "ru": "не вытесняя по-настоящему горячие данные из активного.",
+   "quote": "Freshly faulted pages start out at the head of the inactive list and page reclaim scans pages from the tail. Pages that are accessed multiple times on the inactive list are promoted to the active list, to protect them from reclaim"
+  },
+  {
+   "src": "mm-reclaim",
+   "en": "Anonymous memory must go to swap.",
+   "ru": "Анонимная память должна уйти в swap.",
+   "quote": "The pages that can be freed at any time, either because they cache the data available elsewhere, for instance, on a hard disk, or because they can be swapped out, again, to the hard disk, are called reclaimable."
+  },
+  {
+   "src": "mm-reclaim",
+   "en": "which shows up as a latency spike in that program.",
+   "ru": "и это видно как всплеск задержки в этой программе.",
+   "quote": "when it reaches a certain threshold (low watermark), an allocation request will awaken the kswapd daemon. [...] reaches another threshold - min watermark - an allocation will trigger direct reclaim. In this case allocation is stalled until enough memory pages are reclaimed to satisfy the request."
+  },
+  {
+   "src": [
+    "kn-6.1",
+    "mglru"
+   ],
+   "en": "instead of two lists.",
+   "ru": "вместо двух списков.",
+   "quote": {
+    "kn-6.1": "The multi-generation LRU is an alternative LRU implementation that optimizes page reclaim and improves performance under memory pressure.",
+    "mglru": "Evictable pages are divided into multiple generations for each lruvec."
+   }
+  },
+  {
+   "src": [
+    "k-kconfig-lrugen",
+    "arch-config"
+   ],
+   "en": "Some distributions enable it by default.",
+   "ru": "В некоторых дистрибутивах он включён по умолчанию.",
+   "quote": {
+    "k-kconfig-lrugen": "config LRU_GEN_ENABLED bool \"Enable by default\" depends on LRU_GEN help This option enables the multi-gen LRU by default.",
+    "arch-config": "CONFIG_LRU_GEN_ENABLED=y"
+   }
+  },
+  {
+   "src": "vm-drop",
+   "en": "so run <code>sync</code> first.",
+   "ru": "поэтому сначала выполните <code>sync</code>.",
+   "quote": "This is a non-destructive operation and will not free any dirty objects. To increase the number of objects freed by this operation, the user may run sync prior to writing to /proc/sys/vm/drop_caches."
+  },
+  {
+   "src": "m-fadv-desc",
+   "en": "which is what this lesson's lab does.",
+   "ru": "так и поступает практика этого урока.",
+   "quote": "POSIX_FADV_DONTNEED attempts to free cached pages associated with the specified region."
+  },
+  {
+   "src": "vm-drop",
+   "en": "Dropping caches on a production machine only makes it slower.",
+   "ru": "Сброс кэшей на рабочей машине лишь замедляет её.",
+   "quote": "Use of this file can cause performance problems. Since it discards cached objects, it may cost a significant amount of I/O and CPU to recreate the dropped objects, especially if they were under heavy use."
+  },
+  {
+   "src": "k-fault",
+   "en": "into the process's page tables.",
+   "ru": "отображает эту физическую память в таблицы страниц процесса.",
+   "quote": "filemap_fault() is invoked via the vma operations vector for a mapped memory region to read in file data during a page fault. The goto's are kind of ugly, but this streamlines the normal case of having it in the page cache"
+  },
+  {
+   "src": "m-mmap",
+   "en": "because they are the same bytes.",
+   "ru": "потому что это и есть одни и те же байты.",
+   "quote": "MAP_SHARED Share this mapping. Updates to the mapping are visible to other processes mapping the same region, and (in the case of file-backed mappings) are carried through to the underlying file."
+  },
+  {
+   "src": [
+    "locking-vm",
+    "k-mkwrite"
+   ],
+   "en": "through the filesystem's <code>page_mkwrite</code> hook on the first write.",
+   "ru": "через хук файловой системы <code>page_mkwrite</code>.",
+   "quote": {
+    "locking-vm": "->page_mkwrite() is called when a previously read-only pte is about to become writeable.",
+    "k-mkwrite": "vm_fault_t filemap_page_mkwrite(struct vm_fault *vmf) [...] folio_mark_dirty(folio);"
+   }
+  },
+  {
+   "src": "m-msync",
+   "en": "forces that write-back for a range.",
+   "ru": "принудительно запускает эту запись для диапазона.",
+   "quote": "msync() flushes changes made to the in-core copy of a file that was mapped into memory using mmap(2) back to the filesystem."
+  },
+  {
+   "src": "m-mmap",
+   "en": "and is never written to the file.",
+   "ru": "и в файл она никогда не записывается.",
+   "quote": "MAP_PRIVATE Create a private copy-on-write mapping. Updates to the mapping are not visible to other processes mapping the same file, and are not carried through to the underlying file."
+  },
+  {
+   "src": [
+    "k-perform-write",
+    "k-ext4-da-aops"
+   ],
+   "en": "In Linux 6.18 the path for ext4 is:",
+   "ru": "В Linux 6.18 путь для ext4 такой:",
+   "quote": {
+    "k-perform-write": "balance_dirty_pages_ratelimited(mapping); [...] status = a_ops->write_begin(iocb, mapping, pos, bytes, [...] copied = copy_folio_from_iter_atomic(folio, offset, bytes, i); [...] status = a_ops->write_end(iocb, mapping, pos, bytes, copied,",
+    "k-ext4-da-aops": "static const struct address_space_operations ext4_da_aops = { .read_folio = ext4_read_folio, .readahead = ext4_readahead, .writepages = ext4_writepages, .write_begin = ext4_da_write_begin, .write_end = ext4_da_write_end,"
+   }
+  },
+  {
+   "src": "k-ext4-reserve",
+   "en": "but it does not choose disk blocks yet.",
+   "ru": "но конкретные блоки диска пока не выбирает.",
+   "quote": "static int ext4_da_reserve_space(struct inode *inode, int nr_resv) [...] if (ext4_claim_free_clusters(sbi, nr_resv, 0)) { [...] return -ENOSPC; } ei->i_reserved_data_blocks += nr_resv;"
+  },
+  {
+   "src": "ext4-options",
+   "en": "instead of many small ones.",
+   "ru": "вместо множества маленьких.",
+   "quote": "delalloc (*) Defer block allocation until just before ext4 writes out the block(s) in question. This allows ext4 to better allocation decisions more efficiently."
+  },
+  {
+   "src": [
+    "k-wb-desc",
+    "k-wq-comm"
+   ],
+   "en": "the device's major:minor number.",
+   "ru": "— номер major:minor устройства.",
+   "quote": {
+    "k-wb-desc": "Handle writeback of dirty data for the device backed by this bdi. [...] set_worker_desc(\"flush-%s\", bdi_dev_name(wb->bdi));",
+    "k-wq-comm": "/* used to show worker information through /proc/PID/{comm,stat,status} */ void wq_worker_comm(char *buf, size_t size, struct task_struct *task)"
+   }
+  },
+  {
+   "src": [
+    "vm-expire",
+    "vm-wbcs"
+   ],
+   "en": "checked every <code>dirty_writeback_centisecs</code>;",
+   "ru": "это проверяется каждые <code>dirty_writeback_centisecs</code>;",
+   "quote": {
+    "vm-expire": "Data which has been dirty in-memory for longer than this interval will be written out next time a flusher thread wakes up.",
+    "vm-wbcs": "The kernel flusher threads will periodically wake up and write old data out to disk. This tunable expresses the interval between those wakeups, in 100’ths of a second."
+   }
+  },
+  {
+   "src": "k-vmscan-flush",
+   "en": "asks the flusher to clean them.",
+   "ru": "просит поток сброса (flusher) их очистить.",
+   "quote": "If dirty folios are scanned that are not queued for IO, it implies that flushers are not doing their job. [...] Nudge the flusher threads in case they are asleep. */ if (stat.nr_unqueued_dirty == nr_taken) { wakeup_flusher_threads(WB_REASON_VMSCAN);"
+  },
+  {
+   "src": "k-ext4-mapext",
+   "en": "builds bios and submits them.",
+   "ru": "собирает bio и отправляет их.",
+   "quote": "Call ext4_map_blocks() to allocate any delayed allocation blocks, or to convert an unwritten extent to be initialized"
+  },
+  {
+   "src": "k-pw-defaults",
+   "en": "which are also this machine's values:",
+   "ru": "на машине курса они такие же:",
+   "quote": "static int dirty_background_ratio = 10; [...] dirty_background_bytes starts at 0 (disabled) [...] vm_dirty_ratio = 20; [...] vm_dirty_bytes starts at 0 (disabled) [...] dirty_writeback_interval = 5 * 100; /* centiseconds */ [...] dirty_expire_interval = 30 * 100; /* centiseconds */"
+  },
+  {
+   "src": "k-pw-balance",
+   "en": "and hardest at this %",
+   "ru": "а сильнее всего — у этого предела",
+   "quote": "balance_dirty_pages() must be called by processes which are generating dirty data. It looks at the number of dirty pages in the machine and will force the caller to wait once crossing the (background_thresh + dirty_thresh) / 2."
+  },
+  {
+   "src": "vm-bytes",
+   "en": "when non-zero they replace the ratios",
+   "ru": "ненулевые значения заменяют проценты",
+   "quote": "Note: dirty_bytes is the counterpart of dirty_ratio. Only one of them may be specified at a time. When one sysctl is written it is immediately taken into account to evaluate the dirty memory limits and the other appears as 0 when read."
+  },
+  {
+   "src": "vm-bgratio",
+   "en": "not of total RAM.",
+   "ru": "а не от всего ОЗУ.",
+   "quote": "Contains, as a percentage of total available memory that contains free pages and reclaimable pages, the number of pages at which the background kernel flusher threads will start writing out dirty data. The total available memory is not equal to total system memory."
+  },
+  {
+   "src": "k-vmstat",
+   "en": "The kernel publishes the resulting limits in pages:",
+   "ru": "Получившиеся пределы ядро публикует в страницах:",
+   "quote": "[I(NR_DIRTY_THRESHOLD)] = \"nr_dirty_threshold\", [I(NR_DIRTY_BG_THRESHOLD)] = \"nr_dirty_background_threshold\","
+  },
+  {
+   "src": "k-pw-balance",
+   "en": "at about 1.7 GiB.",
+   "ru": "примерно при 1,7 ГиБ.",
+   "quote": "will force the caller to wait once crossing the (background_thresh + dirty_thresh) / 2. If we're over `background_thresh' then the writeback threads are woken to perform some writeout."
+  },
+  {
+   "src": "vm-expire",
+   "en": "can lose up to about half a minute of data.",
+   "ru": "можно потерять данные примерно за последние полминуты.",
+   "quote": "This tunable is used to define when dirty data is old enough to be eligible for writeout by the kernel flusher threads. It is expressed in 100’ths of a second."
+  },
+  {
+   "src": "lwn-ioless",
+   "en": "approaches the device's measured write bandwidth.",
+   "ru": "приблизилась к измеренной полосе пропускания устройства на запись.",
+   "quote": "In an ideal world, throttling would match the rate at which pages are being dirtied to the rate that each device can write those pages back [...] Processes exceeding their limit are simply put to sleep for a while to allow the writeback system to catch up with them."
+  },
+  {
+   "src": [
+    "kn-3.2",
+    "lwn-ioless"
+   ],
+   "en": "the flusher does the I/O.",
+   "ru": "а ввод-вывод выполняет поток сброса.",
+   "quote": {
+    "kn-3.2": "I/O-less dirty throttling, reduce filesystem writeback from page reclaim [...] In this kernel, the algorithms to make that decision have been rewritten",
+    "lwn-ioless": "In current kernels, that is done through a call to balance_dirty_pages(), which sets the offending process to work writing pages back to disk. [...] Processes exceeding their limit are simply put to sleep for a while"
+   }
+  },
+  {
+   "src": [
+    "wbc-intro",
+    "ext4-options"
+   ],
+   "en": "unless the drive has power-loss protection);",
+   "ru": "если у накопителя нет защиты от потери питания);",
+   "quote": {
+    "wbc-intro": "Many storage devices, especially in the consumer market, come with volatile write back caches. That means the devices signal I/O completion to the operating system before data actually has hit the non-volatile storage.",
+    "ext4-options": "Write barriers enforce proper on-disk ordering of journal commits, making volatile disk write caches safe to use, at some performance penalty. If your disks are battery-backed in one way or another, disabling barriers may safely improve performance."
+   }
+  },
+  {
+   "src": "m-fsync",
+   "en": "including a cache flush on the device",
+   "ru": "включая сброс кэша устройства",
+   "quote": "so that all changed information can be retrieved even if the system crashes or is rebooted. This includes writing through or flushing a disk cache if present. [...] As well as flushing the file data, fsync() also flushes the metadata information associated with the file"
+  },
+  {
+   "src": "m-fsync",
+   "en": "which saves a journal commit",
+   "ru": "что экономит фиксацию журнала",
+   "quote": "fdatasync() is similar to fsync(), but does not flush modified metadata unless that metadata is needed in order to allow a subsequent data retrieval to be correctly handled. [...] The aim of fdatasync() is to reduce disk activity"
+  },
+  {
+   "src": "m-open-desc",
+   "en": "behaves as if followed by <code>fsync</code> / <code>fdatasync</code>",
+   "ru": "будто за ним вызван <code>fsync</code> / <code>fdatasync</code>",
+   "quote": "O_DSYNC [...] (i.e., as though each write(2) was followed by a call to fdatasync(2)). [...] O_SYNC [...] (i.e., as though each write(2) was followed by a call to fsync(2))."
+  },
+  {
+   "src": "m-sync",
+   "en": "everything on that filesystem / every filesystem",
+   "ru": "всё в этой файловой системе / во всех файловых системах",
+   "quote": "sync() causes all pending modifications to filesystem metadata and cached file data to be written to the underlying filesystems. syncfs() is like sync(), but synchronizes just the filesystem containing file referred to by the open file descriptor fd."
+  },
+  {
+   "src": "m-sfr",
+   "en": "so it is not a durability guarantee",
+   "ru": "поэтому долговечности не гарантирует",
+   "quote": "None of these operations writes out the file's metadata. [...] This system call does not flush disk write caches and thus does not provide any data integrity on systems with volatile disk write caches."
+  },
+  {
+   "src": [
+    "wbc-flush",
+    "wbc-fua"
+   ],
+   "en": "so that write bypasses the cache.",
+   "ru": "чтобы эта запись прошла мимо кэша.",
+   "quote": {
+    "wbc-flush": "The REQ_PREFLUSH flag can be OR ed into the r/w flags of a bio submitted from the filesystem and will make sure the volatile cache of the storage device has been flushed before the actual I/O operation is started.",
+    "wbc-fua": "The REQ_FUA flag can be OR ed into the r/w flags of a bio submitted from the filesystem and will make sure that I/O completion for this request is only signaled after the data has been committed to non-volatile storage."
+   }
+  },
+  {
+   "src": "k-jbd2",
+   "en": "covers the device side).",
+   "ru": "описана в <a href=\"02-blocks.html\">уроке 2</a>).",
+   "quote": "if (journal->j_flags & JBD2_BARRIER && !jbd2_has_feature_async_commit(journal)) write_flags |= REQ_PREFLUSH | REQ_FUA;"
+  },
+  {
+   "src": "m-rename",
+   "en": "replaces a directory entry in one journaled step:",
+   "ru": "заменяет запись в каталоге за один журналируемый шаг:",
+   "quote": "If newpath already exists, it will be atomically replaced, so that there is no point at which another process attempting to access newpath will find it missing."
+  },
+  {
+   "src": "m-fsync",
+   "en": "never a mix.",
+   "ru": "но никогда не их смесь.",
+   "quote": "Calling fsync() does not necessarily ensure that the entry in the directory containing the file has also reached disk. For that an explicit fsync() on a file descriptor for the directory is also needed."
+  },
+  {
+   "src": "ext4-options",
+   "en": "names an empty or partly written file.",
+   "ru": "будет указывать на пустой или частично записанный файл.",
+   "quote": "This provides roughly the same level of guarantees as ext3, and avoids the “zero-length” problem that can happen when a system crashes before the delayed allocation blocks are forced to disk."
+  },
+  {
+   "src": "ext4-options",
+   "en": "because so many programs forgot step 2.",
+   "ru": "слишком многие программы забывали шаг 2.",
+   "quote": "auto_da_alloc(*), noauto_da_alloc Many broken applications don’t use fsync() when replacing existing files via patterns such as [...] If auto_da_alloc is enabled, ext4 will detect the replace-via-rename and replace-via-truncate patterns and force that any delayed allocation blocks are allocated"
+  },
+  {
+   "src": [
+    "errseq",
+    "m-close"
+   ],
+   "en": "(on some filesystems, notably NFS).",
+   "ru": "(в некоторых файловых системах, прежде всего в NFS).",
+   "quote": {
+    "errseq": "The initial use case for this is tracking errors for file synchronization syscalls (fsync, fdatasync, msync and sync_file_range), but it may be usable in other situations.",
+    "m-close": "it is quite possible that errors on a previous write(2) operation are reported only on the final close() that releases the open file description. Failing to check the return value when closing a file may lead to silent loss of data. This can especially be observed with NFS and with disk quota."
+   }
+  },
+  {
+   "src": [
+    "kn-4.13",
+    "errseq"
+   ],
+   "en": "an error code plus a counter.",
+   "ru": "код ошибки плюс счётчик.",
+   "quote": {
+    "kn-4.13": "This release adds a new way to handle the errors during background writes, making possible to reliable report errors on fsync.",
+    "errseq": "It’s implemented as an unsigned 32-bit value. The low order bits are designated to hold an error code (between 1 and MAX_ERRNO). The upper bits are used as a counter."
+   }
+  },
+  {
+   "src": "vfs-wberr",
+   "en": "Every open file description gets told about each error once.",
+   "ru": "узнаёт о каждой ошибке ровно один раз.",
+   "quote": "After an error has been reported on one request, subsequent requests on the same file descriptor should return 0, unless further writeback errors have occurred since the previous file synchronization. [...] reporting errors to fsync on all file descriptions"
+  },
+  {
+   "src": [
+    "lwn-fsync",
+    "pg-retry"
+   ],
+   "en": "could simply be retried.",
+   "ru": "можно просто повторить.",
+   "quote": {
+    "lwn-fsync": "Craig Ringer first reported the problem to the pgsql-hackers mailing list at the end of March. In short, PostgreSQL assumes that a successful call to fsync() indicates that all data written since the last successful call made it safely to persistent storage.",
+    "pg-retry": "If set to on, PostgreSQL will instead report an error but continue to run so that the data flushing operation can be retried in a later checkpoint."
+   }
+  },
+  {
+   "src": "lwn-fsync",
+   "en": "depending on the filesystem.",
+   "ru": "ядро пометило их чистыми или выбросило.",
+   "quote": "When a buffered I/O write fails due to a hardware-level error, filesystems will respond differently, but that behavior usually includes discarding the data in the affected pages and marking them as being clean."
+  },
+  {
+   "src": "pgwiki-os",
+   "en": "while the data never reached the disk.",
+   "ru": "хотя данные так и не дошли до диска.",
+   "quote": "Linux < 4.13: fsync() errors can be lost in various ways; also buffers are marked clean after errors, so retrying fsync() can falsely report success and the modified buffer can be thrown away at any time due to memory pressure"
+  },
+  {
+   "src": [
+    "pg-retry",
+    "pgwiki-current"
+   ],
+   "en": "crash, then replay its WAL.",
+   "ru": "а затем воспроизводит свой WAL.",
+   "quote": {
+    "pg-retry": "When set to off, which is the default, PostgreSQL will raise a PANIC-level error on failure to flush modified data files to the file system. This causes the database server to crash. [...] the only way to avoid data loss is to recover from the WAL after any failure is reported",
+    "pgwiki-current": "As of this PostgreSQL 12 commit, PostgreSQL will now PANIC on fsync() failure. It was backpatched to PostgreSQL 11, 10, 9.6, 9.5 and 9.4."
+   }
+  },
+  {
+   "src": "pgwiki-top",
+   "en": "known as \"fsyncgate\".",
+   "ru": "известна как «fsyncgate».",
+   "quote": "This article covers the current status, history, and OS and OS version differences relating to the circa 2018 fsync() reliability issues discussed on the PostgreSQL mailing list and elsewhere. It has sometimes been referred to as \"fsyncgate 2018\"."
+  },
+  {
+   "src": "m-open-desc",
+   "en": "skipping the page cache.",
+   "ru": "минуя страничный кэш.",
+   "quote": "O_DIRECT (since Linux 2.4.10) Try to minimize cache effects of the I/O to and from this file. [...] File I/O is done directly to/from user-space buffers."
+  },
+  {
+   "src": [
+    "k-ext4-readiter",
+    "k-ext4-dio"
+   ],
+   "en": "instead of <code>filemap_read()</code>.",
+   "ru": "вместо <code>filemap_read()</code>.",
+   "quote": {
+    "k-ext4-readiter": "if (iocb->ki_flags & IOCB_DIRECT) return ext4_dio_read_iter(iocb, to); return generic_file_read_iter(iocb, to);",
+    "k-ext4-dio": "ret = iomap_dio_rw(iocb, to, &ext4_iomap_ops, NULL, 0, NULL, 0);"
+   }
+  },
+  {
+   "src": [
+    "mysql-flush",
+    "oracle-fsio",
+    "scylla"
+   ],
+   "en": "once in the database and once in the page cache.",
+   "ru": "в базе данных и в страничном кэше.",
+   "quote": {
+    "mysql-flush": "O_DIRECT can help to avoid double buffering between the InnoDB buffer pool and the operating system file system cache.",
+    "oracle-fsio": "DIRECTIO - Enable direct I/O on file system files, which bypasses the buffer cache.",
+    "scylla": "With ScyllaDB, we have chosen the highest performing option, AIO/DIO. [...] Placing the responsibility of cache management on the application means it can make better choices than the kernel and make those choices with less overhead."
+   }
+  },
+  {
+   "src": "scylla",
+   "en": "No copy between the page cache and user memory.",
+   "ru": "Нет копирования между страничным кэшем и памятью пользователя.",
+   "quote": "instead of accessing the cache, the disk is accessed directly which means that the calling thread will be put to sleep unconditionally. Furthermore, the disk controller will copy the data directly to userspace, bypassing the kernel."
+  },
+  {
+   "src": "m-open-notes",
+   "en": "reports the exact requirements for a file.",
+   "ru": "сообщает точные требования для файла.",
+   "quote": "Since Linux 6.1, O_DIRECT support and alignment restrictions for a file can be queried using statx(2), using the STATX_DIOALIGN flag. [...] In Linux 2.6.0, this was relaxed to the logical block size of the block device (typically 512 bytes)."
+  },
+  {
+   "src": "m-open-notes",
+   "en": "may fall back to buffered I/O instead.",
+   "ru": "могут вместо этого перейти на буферизованный ввод-вывод.",
+   "quote": "In Linux alignment restrictions vary by filesystem and kernel version and might be absent entirely. The handling of misaligned O_DIRECT I/Os also varies; they can either fail with EINVAL or fall back to buffered I/O."
+  },
+  {
+   "src": "scylla",
+   "en": "to get good throughput.",
+   "ru": "(потоки, <code>io_uring</code> или AIO).",
+   "quote": "the disk is accessed directly which means that the calling thread will be put to sleep unconditionally. [...] Compaction uses application-level read-ahead and write-behind to ensure high throughout"
+  },
+  {
+   "src": "m-open-desc",
+   "en": "still need <code>fsync()</code> or <code>O_DSYNC</code>.",
+   "ru": "всё равно нужен <code>fsync()</code> или <code>O_DSYNC</code>.",
+   "quote": "The O_DIRECT flag on its own makes an effort to transfer data synchronously, but does not give the guarantees of the O_SYNC flag that data and necessary metadata are transferred. To guarantee synchronous I/O, O_SYNC must be used in addition to O_DIRECT."
+  },
+  {
+   "src": [
+    "m-open-notes",
+    "k-iomap-dio"
+   ],
+   "en": "it also drops them from the cache.",
+   "ru": "ещё и выбрасывает их из кэша.",
+   "quote": {
+    "m-open-notes": "Even when the filesystem correctly handles the coherency issues in this situation, overall I/O throughput is likely to be slower than using either mode alone.",
+    "k-iomap-dio": "if (iov_iter_rw(iter) == READ) { [...] ret = kiocb_write_and_wait(iocb, iomi.len); [...] } else { [...] Try to invalidate cache pages for the range we are writing. [...] ret = kiocb_invalidate_pages(iocb, iomi.len);"
+   }
+  },
+  {
+   "src": [
+    "m-fadv-desc",
+    "m-readahead"
+   ],
+   "en": "start reading this range into the cache now",
+   "ru": "начать читать этот диапазон в кэш прямо сейчас",
+   "quote": {
+    "m-fadv-desc": "POSIX_FADV_WILLNEED initiates a nonblocking read of the specified region into the page cache.",
+    "m-readahead": "readahead() initiates readahead on a file so that subsequent reads from that file will be satisfied from the cache, and not block on disk I/O"
+   }
+  },
+  {
+   "src": "k-fadvise",
+   "en": "start writeback of dirty pages in the range and drop the clean ones",
+   "ru": "запустить обратную запись грязных страниц диапазона и выбросить чистые",
+   "quote": "case POSIX_FADV_DONTNEED: __filemap_fdatawrite_range(mapping, offset, endbyte, WB_SYNC_NONE);"
+  },
+  {
+   "src": "m-madvise",
+   "en": "the same hints for an <code>mmap</code>'d range",
+   "ru": "те же подсказки для диапазона, отображённого через <code>mmap</code>",
+   "quote": "MADV_RANDOM Expect page references in random order. [...] MADV_SEQUENTIAL Expect page references in sequential order. [...] MADV_WILLNEED Expect access in the near future."
+  },
+  {
+   "src": "kn-5.1",
+   "en": "rather than how they are cached.",
+   "ru": "а то, как они отправляются.",
+   "quote": "Linux 5.1 released on 5 May 2019 Summary: This release includes io_uring, an high-performance interface for asynchronous I/O"
+  },
+  {
+   "src": "m-iouring",
+   "en": "where the kernel places results.",
+   "ru": "куда ядро кладёт результаты.",
+   "quote": "Set up shared buffers with io_uring_setup(2) and mmap(2), mapping into user space shared buffers for the submission queue (SQ) and the completion queue (CQ). You place I/O requests you want to make on the SQ, while the kernel places the results of those operations on the CQ."
+  },
+  {
+   "src": [
+    "m-iouring",
+    "m-iouring-setup"
+   ],
+   "en": "no system call is needed at all.",
+   "ru": "системные вызовы вообще не нужны.",
+   "quote": {
+    "m-iouring": "you can batch several requests in one go, simply by queueing up multiple SQEs, each describing an I/O operation you want and make a single call to io_uring_enter(2).",
+    "m-iouring-setup": "the application can submit and reap I/Os without doing a single system call."
+   }
+  },
+  {
+   "src": "kn-5.1",
+   "en": "It works with buffered and direct I/O.",
+   "ru": "io_uring работает и с буферизованным, и с прямым вводом-выводом.",
+   "quote": "A new asynchronous interface, io_uring, has been created and merged in the release, with the purpose of finally adding fast, scalable asynchronous I/O to Linux, both buffered and unbuffered."
+  },
+  {
+   "src": "m-setbuf",
+   "en": "but not yet passed to <code>write()</code>",
+   "ru": "но ещё не передала в <code>write()</code>",
+   "quote": "when it is block buffered, many characters are saved up and written as a block [...] The function fflush(3) may be used to force the block out early."
+  },
+  {
+   "src": [
+    "m-abort",
+    "m-exit2"
+   ],
+   "en": "<code>SIGKILL</code>, <code>_exit()</code>)",
+   "ru": "<code>SIGKILL</code>, <code>_exit()</code>)",
+   "quote": {
+    "m-abort": "starting with glibc 2.27, abort() terminates the process without flushing streams.",
+    "m-exit2": "The function _exit() is like exit(3), but does not call any functions registered with atexit(3) or on_exit(3). Open stdio(3) streams are not flushed."
+   }
+  },
+  {
+   "src": "wsl-disk",
+   "en": "WSL's root filesystem is ext4 inside a virtual disk file on Windows",
+   "ru": "это ext4 внутри файла виртуального диска в Windows",
+   "quote": "creating a Virtual Hard Disk (VHD) to store files for each of the Linux distributions that you install. These VHDs use the ext4 file system type and are represented on your Windows hard drive as an ext4.vhdx file."
+  },
+  {
+   "src": "pl-cache",
+   "en": "so the dcache can never disagree with the disk.",
+   "ru": "поэтому dcache никогда не расходится с диском.",
+   "quote": "Some filesystems ensure that the information in the dcache is always completely accurate (though not necessarily complete). [...] These are typically “local” filesystems such as ext3, XFS, and Btrfs."
+  },
+  {
+   "src": "m-open-desc",
+   "en": "overwrites someone else's append",
+   "ru": "и затирает то, что дописал кто-то другой",
+   "quote": "O_APPEND may lead to corrupted files on NFS filesystems if more than one process appends data to a file at once. This is because NFS does not support appending to a file, so the client kernel has to simulate it, which can't be done without a race condition."
+  },
+  {
+   "src": "m-errno",
+   "en": "the next operation fails with <code>ESTALE</code>",
+   "ru": "следующая операция завершается ошибкой <code>ESTALE</code>",
+   "quote": "ESTALE Stale file handle (POSIX.1-2001). This error can occur for NFS and for other filesystems."
+  },
+  {
+   "src": "m-close",
+   "en": "at <code>fsync()</code> or <code>close()</code>",
+   "ru": "в <code>fsync()</code> или <code>close()</code>",
+   "quote": "errors on a previous write(2) operation are reported only on the final close() that releases the open file description. [...] This can especially be observed with NFS and with disk quota. [...] A careful programmer who wants to know about I/O errors may precede close() with a call to fsync(2)."
+  },
+  {
+   "src": "pl-cache",
+   "en": "when to trust it and when to ask the server again.",
+   "ru": "когда ему доверять, а когда снова спросить сервер.",
+   "quote": "Other filesystems don’t provide that guarantee because they cannot. These are typically filesystems that are shared across a network, whether remote filesystems like NFS and 9P, or cluster filesystems like ocfs2 or cephfs. These filesystems allow the VFS to revalidate cached information"
+  },
+  {
+   "src": [
+    "m-fincore",
+    "m-fadv-notes"
+   ],
+   "en": "then ask <code>mincore()</code> which pages are resident.",
+   "ru": "спрашивает у <code>mincore()</code>, какие страницы находятся в памяти.",
+   "quote": {
+    "m-fincore": "fincore uses the cachestat(2) syscall to count resident pages. If the cachestat(2) syscall is not available and cachestat usage is not forced with the --cachestat option, then fincore uses the mincore(2) syscall as a fallback.",
+    "m-fadv-notes": "One can obtain a snapshot of which pages of a file are resident in the buffer cache by opening a file, mapping it with mmap(2), and then applying mincore(2) to the mapping."
+   }
+  },
+  {
+   "src": "m-vmstat",
+   "en": "was idle while waiting for I/O.",
+   "ru": "простаивал в ожидании ввода-вывода.",
+   "quote": "bi: Kibibyte received from a block device (KiB/s). bo: Kibibyte sent to a block device (KiB/s). [...] CPU These are percentages of total CPU time. [...] wa: Time spent waiting for IO."
+  },
+  {
+   "src": "k-getpages",
+   "en": "while the program is still consuming the current one.",
+   "ru": "пока программа ещё дочитывает текущее.",
+   "quote": "folio = fbatch->folios[folio_batch_count(fbatch) - 1]; if (folio_test_readahead(folio)) { err = filemap_readahead(iocb, filp, mapping, folio, last_index); [...] page_cache_async_ra(&ractl, folio, last_index - folio->index);"
+  }
+ ]
+}

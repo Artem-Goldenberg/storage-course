@@ -1,0 +1,1024 @@
+{
+  "page": "01-syscalls.html",
+  "sources": {
+    "k-segment": {
+      "url": "https://elixir.bootlin.com/linux/v6.12/source/arch/x86/include/asm/segment.h#L28",
+      "title": "Linux kernel v6.12 source: arch/x86/include/asm/segment.h",
+      "where": {"en": "lines 28–48, privilege level in segment selectors", "ru": "строки 28–48, уровень привилегий в селекторах сегментов"}
+    },
+    "ostep-lde": {
+      "url": "https://pages.cs.wisc.edu/~remzi/OSTEP/cpu-mechanisms.pdf",
+      "title": "Operating Systems: Three Easy Pieces, chapter 6: Mechanism: Limited Direct Execution",
+      "where": {"en": "section 6.2, Problem #1: Restricted Operations", "ru": "раздел 6.2, Problem #1: Restricted Operations"}
+    },
+    "k-cpu-common": {
+      "url": "https://elixir.bootlin.com/linux/v6.12/source/arch/x86/kernel/cpu/common.c#L2036",
+      "title": "Linux kernel v6.12 source: arch/x86/kernel/cpu/common.c",
+      "where": {"en": "lines 2036–2038, idt_syscall_init()", "ru": "строки 2036–2038, idt_syscall_init()"}
+    },
+    "k-entry64": {
+      "url": "https://elixir.bootlin.com/linux/v6.12/source/arch/x86/entry/entry_64.S#L49",
+      "title": "Linux kernel v6.12 source: arch/x86/entry/entry_64.S",
+      "where": {"en": "lines 49–87, comment above entry_SYSCALL_64", "ru": "строки 49–87, комментарий перед entry_SYSCALL_64"}
+    },
+    "k-syscall-tbl": {
+      "url": "https://elixir.bootlin.com/linux/v6.12/source/arch/x86/entry/syscalls/syscall_64.tbl#L12",
+      "title": "Linux kernel v6.12 source: arch/x86/entry/syscalls/syscall_64.tbl",
+      "where": {"en": "lines 12–15", "ru": "строки 12–15"}
+    },
+    "syscall2-notes": {
+      "url": "https://man7.org/linux/man-pages/man2/syscall.2.html#NOTES",
+      "title": "syscall(2), Linux manual page",
+      "where": {"en": "NOTES, Architecture calling conventions", "ru": "раздел NOTES, Architecture calling conventions"}
+    },
+    "k-syscall64c": {
+      "url": "https://elixir.bootlin.com/linux/v6.12/source/arch/x86/entry/syscall_64.c#L18",
+      "title": "Linux kernel v6.12 source: arch/x86/entry/syscall_64.c",
+      "where": {"en": "lines 18–36, sys_call_table and x64_sys_call()", "ru": "строки 18–36, sys_call_table и x64_sys_call()"}
+    },
+    "k-commit-bhi": {
+      "url": "https://git.kernel.org/pub/scm/linux/kernel/git/torvalds/linux.git/commit/?id=1e3ad78334a69b36e107232e337f9d693dcc9df2",
+      "title": "Linux kernel commit 1e3ad78334a6, “x86/syscall: Don't force use of indirect calls for system calls”",
+      "where": {"en": "commit message", "ru": "описание коммита"}
+    },
+    "k-entry64-sysret": {
+      "url": "https://elixir.bootlin.com/linux/v6.12/source/arch/x86/entry/entry_64.S#L123",
+      "title": "Linux kernel v6.12 source: arch/x86/entry/entry_64.S",
+      "where": {"en": "lines 123–166, return to user space via SYSRET", "ru": "строки 123–166, возврат в пространство пользователя через SYSRET"}
+    },
+    "k-err": {
+      "url": "https://elixir.bootlin.com/linux/v6.12/source/include/linux/err.h#L18",
+      "title": "Linux kernel v6.12 source: include/linux/err.h",
+      "where": {"en": "lines 18–28, MAX_ERRNO and IS_ERR_VALUE", "ru": "строки 18–28, MAX_ERRNO и IS_ERR_VALUE"}
+    },
+    "glibc-sysdep": {
+      "url": "https://sourceware.org/git/?p=glibc.git;a=blob;f=sysdeps/unix/sysv/linux/x86_64/sysdep.h;hb=refs/tags/glibc-2.40#l38",
+      "title": "glibc 2.40 source: sysdeps/unix/sysv/linux/x86_64/sysdep.h",
+      "where": {"en": "lines 38–47, comment on syscall error returns", "ru": "строки 38–47, комментарий о возврате ошибок из системных вызовов"}
+    },
+    "vfs-file": {
+      "url": "https://docs.kernel.org/filesystems/vfs.html#the-file-object",
+      "title": "Overview of the Linux Virtual File System, The Linux Kernel documentation",
+      "where": {"en": "The File Object", "ru": "раздел The File Object"}
+    },
+    "k-vfs-read": {
+      "url": "https://elixir.bootlin.com/linux/v6.12/source/fs/read_write.c#L549",
+      "title": "Linux kernel v6.12 source: fs/read_write.c",
+      "where": {"en": "lines 549–578, vfs_read()", "ru": "строки 549–578, vfs_read()"}
+    },
+    "intro2": {
+      "url": "https://man7.org/linux/man-pages/man2/intro.2.html#RETURN_VALUE",
+      "title": "intro(2), Linux manual page",
+      "where": {"en": "RETURN VALUE", "ru": "раздел RETURN VALUE"}
+    },
+    "errno3": {
+      "url": "https://man7.org/linux/man-pages/man3/errno.3.html#DESCRIPTION",
+      "title": "errno(3), Linux manual page",
+      "where": {"en": "DESCRIPTION", "ru": "раздел DESCRIPTION"}
+    },
+    "open2-versions": {
+      "url": "https://man7.org/linux/man-pages/man2/open.2.html#VERSIONS",
+      "title": "open(2), Linux manual page",
+      "where": {"en": "VERSIONS, C library/kernel differences", "ru": "раздел VERSIONS, C library/kernel differences"}
+    },
+    "fork2-versions": {
+      "url": "https://man7.org/linux/man-pages/man2/fork.2.html#VERSIONS",
+      "title": "fork(2), Linux manual page",
+      "where": {"en": "VERSIONS, C library/kernel differences", "ru": "раздел VERSIONS, C library/kernel differences"}
+    },
+    "ren19": {
+      "url": "https://www.eecg.toronto.edu/~stumm/Papers/Ren-sosp-19.pdf",
+      "title": "An Analysis of Performance Evolution of Linux's Core Operations (SOSP '19)",
+      "where": {"en": "section 4.1.1, Remove Kernel Mappings in Userspace", "ru": "раздел 4.1.1, Remove Kernel Mappings in Userspace"}
+    },
+    "io-uring7": {
+      "url": "https://man7.org/linux/man-pages/man7/io_uring.7.html#DESCRIPTION",
+      "title": "io_uring(7), Linux manual page",
+      "where": {"en": "DESCRIPTION, io_uring performance", "ru": "раздел DESCRIPTION, io_uring performance"}
+    },
+    "vdso7": {
+      "url": "https://man7.org/linux/man-pages/man7/vdso.7.html#DESCRIPTION",
+      "title": "vdso(7), Linux manual page",
+      "where": {"en": "DESCRIPTION", "ru": "раздел DESCRIPTION"}
+    },
+    "vdso7-arch": {
+      "url": "https://man7.org/linux/man-pages/man7/vdso.7.html#ARCHITECTURE-SPECIFIC_NOTES",
+      "title": "vdso(7), Linux manual page",
+      "where": {"en": "ARCHITECTURE-SPECIFIC NOTES, x86-64 functions", "ru": "раздел ARCHITECTURE-SPECIFIC NOTES, x86-64 functions"}
+    },
+    "open2-desc": {
+      "url": "https://man7.org/linux/man-pages/man2/open.2.html#DESCRIPTION",
+      "title": "open(2), Linux manual page",
+      "where": {"en": "DESCRIPTION", "ru": "раздел DESCRIPTION"}
+    },
+    "posix-fdalloc": {
+      "url": "https://pubs.opengroup.org/onlinepubs/9799919799/functions/V2_chap02.html#tag_16_06",
+      "title": "POSIX.1-2024, System Interfaces, chapter 2: General Information",
+      "where": {"en": "section 2.6, File Descriptor Allocation", "ru": "раздел 2.6, File Descriptor Allocation"}
+    },
+    "stdin3": {
+      "url": "https://man7.org/linux/man-pages/man3/stdin.3.html#DESCRIPTION",
+      "title": "stdin(3), Linux manual page",
+      "where": {"en": "DESCRIPTION", "ru": "раздел DESCRIPTION"}
+    },
+    "ostep-impl": {
+      "url": "https://pages.cs.wisc.edu/~remzi/OSTEP/file-implementation.pdf",
+      "title": "Operating Systems: Three Easy Pieces, chapter 40: File System Implementation",
+      "where": {"en": "section 40.6, Access Paths: Reading and Writing", "ru": "раздел 40.6, Access Paths: Reading and Writing"}
+    },
+    "posix-open": {
+      "url": "https://pubs.opengroup.org/onlinepubs/9799919799/functions/open.html#tag_17_372_03",
+      "title": "POSIX.1-2024, open, openat",
+      "where": {"en": "DESCRIPTION, O_EXCL", "ru": "раздел DESCRIPTION, O_EXCL"}
+    },
+    "execve2": {
+      "url": "https://man7.org/linux/man-pages/man2/execve.2.html#DESCRIPTION",
+      "title": "execve(2), Linux manual page",
+      "where": {"en": "DESCRIPTION", "ru": "раздел DESCRIPTION"}
+    },
+    "read2-errors": {
+      "url": "https://man7.org/linux/man-pages/man2/read.2.html#ERRORS",
+      "title": "read(2), Linux manual page",
+      "where": {"en": "ERRORS", "ru": "раздел ERRORS"}
+    },
+    "open2-notes": {
+      "url": "https://man7.org/linux/man-pages/man2/open.2.html#NOTES",
+      "title": "open(2), Linux manual page",
+      "where": {"en": "NOTES", "ru": "раздел NOTES"}
+    },
+    "umask2": {
+      "url": "https://man7.org/linux/man-pages/man2/umask.2.html#DESCRIPTION",
+      "title": "umask(2), Linux manual page",
+      "where": {"en": "DESCRIPTION", "ru": "раздел DESCRIPTION"}
+    },
+    "ostep-intro": {
+      "url": "https://pages.cs.wisc.edu/~remzi/OSTEP/file-intro.pdf",
+      "title": "Operating Systems: Three Easy Pieces, chapter 39: Interlude: Files and Directories",
+      "where": {"en": "section 39.3, Creating Files", "ru": "раздел 39.3, Creating Files"}
+    },
+    "unix7": {
+      "url": "https://man7.org/linux/man-pages/man7/unix.7.html#DESCRIPTION",
+      "title": "unix(7), Linux manual page",
+      "where": {"en": "DESCRIPTION, SCM_RIGHTS", "ru": "раздел DESCRIPTION, SCM_RIGHTS"}
+    },
+    "read2-desc": {
+      "url": "https://man7.org/linux/man-pages/man2/read.2.html#DESCRIPTION",
+      "title": "read(2), Linux manual page",
+      "where": {"en": "DESCRIPTION", "ru": "раздел DESCRIPTION"}
+    },
+    "read2-retval": {
+      "url": "https://man7.org/linux/man-pages/man2/read.2.html#RETURN_VALUE",
+      "title": "read(2), Linux manual page",
+      "where": {"en": "RETURN VALUE", "ru": "раздел RETURN VALUE"}
+    },
+    "pipe7": {
+      "url": "https://man7.org/linux/man-pages/man7/pipe.7.html#DESCRIPTION",
+      "title": "pipe(7), Linux manual page",
+      "where": {"en": "DESCRIPTION", "ru": "раздел DESCRIPTION"}
+    },
+    "write2-retval": {
+      "url": "https://man7.org/linux/man-pages/man2/write.2.html#RETURN_VALUE",
+      "title": "write(2), Linux manual page",
+      "where": {"en": "RETURN VALUE", "ru": "раздел RETURN VALUE"}
+    },
+    "write2-notes": {
+      "url": "https://man7.org/linux/man-pages/man2/write.2.html#NOTES",
+      "title": "write(2), Linux manual page",
+      "where": {"en": "NOTES", "ru": "раздел NOTES"}
+    },
+    "close2-caveats": {
+      "url": "https://man7.org/linux/man-pages/man2/close.2.html#CAVEATS",
+      "title": "close(2), Linux manual page",
+      "where": {"en": "CAVEATS, Dealing with error returns from close()", "ru": "раздел CAVEATS, Dealing with error returns from close()"}
+    },
+    "open-by-handle": {
+      "url": "https://man7.org/linux/man-pages/man2/open_by_handle_at.2.html#ERRORS",
+      "title": "open_by_handle_at(2), Linux manual page",
+      "where": {"en": "ERRORS", "ru": "раздел ERRORS"}
+    },
+    "nfs5-coherence": {
+      "url": "https://man7.org/linux/man-pages/man5/nfs.5.html#DATA_AND_METADATA_COHERENCE",
+      "title": "nfs(5), Linux manual page",
+      "where": {"en": "DATA AND METADATA COHERENCE, Close-to-open cache consistency", "ru": "раздел DATA AND METADATA COHERENCE, Close-to-open cache consistency"}
+    },
+    "lseek2": {
+      "url": "https://man7.org/linux/man-pages/man2/lseek.2.html#DESCRIPTION",
+      "title": "lseek(2), Linux manual page",
+      "where": {"en": "DESCRIPTION", "ru": "раздел DESCRIPTION"}
+    },
+    "rfc7862-s6": {
+      "url": "https://www.rfc-editor.org/rfc/rfc7862.html#section-6",
+      "title": "RFC 7862: Network File System (NFS) Version 4 Minor Version 2 Protocol",
+      "where": {"en": "section 6, Sparse Files", "ru": "раздел 6, Sparse Files"}
+    },
+    "tar-sparse": {
+      "url": "https://www.gnu.org/software/tar/manual/html_node/sparse.html",
+      "title": "GNU tar manual",
+      "where": {"en": "section 8.1.2, Archiving Sparse Files", "ru": "раздел 8.1.2, Archiving Sparse Files"}
+    },
+    "coreutils-news": {
+      "url": "https://github.com/coreutils/coreutils/blob/v9.5/NEWS#L678",
+      "title": "GNU coreutils NEWS",
+      "where": {"en": "release 9.0 (2021-09-24), Changes in behavior", "ru": "выпуск 9.0 (2021-09-24), Changes in behavior"}
+    },
+    "rfc7862-seek": {
+      "url": "https://www.rfc-editor.org/rfc/rfc7862.html#section-15.11",
+      "title": "RFC 7862: Network File System (NFS) Version 4 Minor Version 2 Protocol",
+      "where": {"en": "section 15.11, Operation 69: SEEK", "ru": "раздел 15.11, Operation 69: SEEK"}
+    },
+    "pread2-desc": {
+      "url": "https://man7.org/linux/man-pages/man2/pread.2.html#DESCRIPTION",
+      "title": "pread(2), Linux manual page",
+      "where": {"en": "DESCRIPTION", "ru": "раздел DESCRIPTION"}
+    },
+    "pread2-notes": {
+      "url": "https://man7.org/linux/man-pages/man2/pread.2.html#NOTES",
+      "title": "pread(2), Linux manual page",
+      "where": {"en": "NOTES", "ru": "раздел NOTES"}
+    },
+    "pg12": {
+      "url": "https://www.postgresql.org/docs/release/12.0/",
+      "title": "PostgreSQL Release Notes: Release 12",
+      "where": {"en": "E.23.3.1.4, General Performance", "ru": "раздел E.23.3.1.4, General Performance"}
+    },
+    "pread2-bugs": {
+      "url": "https://man7.org/linux/man-pages/man2/pread.2.html#BUGS",
+      "title": "pread(2), Linux manual page",
+      "where": {"en": "BUGS", "ru": "раздел BUGS"}
+    },
+    "k-fdtable": {
+      "url": "https://elixir.bootlin.com/linux/v6.12/source/include/linux/fdtable.h#L26",
+      "title": "Linux kernel v6.12 source: include/linux/fdtable.h",
+      "where": {"en": "lines 26–56, struct fdtable and struct files_struct", "ru": "строки 26–56, struct fdtable и struct files_struct"}
+    },
+    "k-struct-file": {
+      "url": "https://elixir.bootlin.com/linux/v6.12/source/include/linux/fs.h#L1006",
+      "title": "Linux kernel v6.12 source: include/linux/fs.h",
+      "where": {"en": "lines 1006–1077, struct file", "ru": "строки 1006–1077, struct file"}
+    },
+    "k-struct-inode": {
+      "url": "https://elixir.bootlin.com/linux/v6.12/source/include/linux/fs.h#L632",
+      "title": "Linux kernel v6.12 source: include/linux/fs.h",
+      "where": {"en": "lines 632–680, struct inode", "ru": "строки 632–680, struct inode"}
+    },
+    "dup2": {
+      "url": "https://man7.org/linux/man-pages/man2/dup.2.html#DESCRIPTION",
+      "title": "dup(2), Linux manual page",
+      "where": {"en": "DESCRIPTION", "ru": "раздел DESCRIPTION"}
+    },
+    "posix-sh-out": {
+      "url": "https://pubs.opengroup.org/onlinepubs/9799919799/utilities/V3_chap02.html#tag_19_07_02",
+      "title": "POSIX.1-2024, Shell and Utilities, chapter 2: Shell Command Language",
+      "where": {"en": "section 2.7.2, Redirecting Output", "ru": "раздел 2.7.2, Redirecting Output"}
+    },
+    "posix-sh-dup": {
+      "url": "https://pubs.opengroup.org/onlinepubs/9799919799/utilities/V3_chap02.html#tag_19_07_06",
+      "title": "POSIX.1-2024, Shell and Utilities, chapter 2: Shell Command Language",
+      "where": {"en": "section 2.7.6, Duplicating an Output File Descriptor", "ru": "раздел 2.7.6, Duplicating an Output File Descriptor"}
+    },
+    "fork2-desc": {
+      "url": "https://man7.org/linux/man-pages/man2/fork.2.html#DESCRIPTION",
+      "title": "fork(2), Linux manual page",
+      "where": {"en": "DESCRIPTION", "ru": "раздел DESCRIPTION"}
+    },
+    "fgetfl": {
+      "url": "https://man7.org/linux/man-pages/man2/F_GETFL.2const.html#DESCRIPTION",
+      "title": "F_GETFL(2const), Linux manual page",
+      "where": {"en": "DESCRIPTION", "ru": "раздел DESCRIPTION"}
+    },
+    "k-filemap": {
+      "url": "https://elixir.bootlin.com/linux/v6.12/source/mm/filemap.c#L4160",
+      "title": "Linux kernel v6.12 source: mm/filemap.c",
+      "where": {"en": "lines 4160–4186, generic_file_write_iter()", "ru": "строки 4160–4186, generic_file_write_iter()"}
+    },
+    "k-write-checks": {
+      "url": "https://elixir.bootlin.com/linux/v6.12/source/fs/read_write.c#L1766",
+      "title": "Linux kernel v6.12 source: fs/read_write.c",
+      "where": {"en": "lines 1766–1787, generic_write_checks_count()", "ru": "строки 1766–1787, generic_write_checks_count()"}
+    },
+    "k-eventpoll": {
+      "url": "https://elixir.bootlin.com/linux/v6.12/source/fs/eventpoll.c#L1067",
+      "title": "Linux kernel v6.12 source: fs/eventpoll.c",
+      "where": {"en": "lines 1067–1076, eventpoll_fops", "ru": "строки 1067–1076, eventpoll_fops"}
+    },
+    "k-iouring": {
+      "url": "https://elixir.bootlin.com/linux/v6.12/source/io_uring/io_uring.c#L3411",
+      "title": "Linux kernel v6.12 source: io_uring/io_uring.c",
+      "where": {"en": "lines 3411–3422, io_uring_fops", "ru": "строки 3411–3422, io_uring_fops"}
+    },
+    "proc-pid-fd": {
+      "url": "https://man7.org/linux/man-pages/man5/proc_pid_fd.5.html#DESCRIPTION",
+      "title": "proc_pid_fd(5), Linux manual page",
+      "where": {"en": "DESCRIPTION", "ru": "раздел DESCRIPTION"}
+    },
+    "proc-pid": {
+      "url": "https://man7.org/linux/man-pages/man5/proc_pid.5.html#DESCRIPTION",
+      "title": "proc_pid(5), Linux manual page",
+      "where": {"en": "DESCRIPTION, /proc/self/", "ru": "раздел DESCRIPTION, /proc/self/"}
+    },
+    "proc-fdinfo": {
+      "url": "https://man7.org/linux/man-pages/man5/proc_pid_fdinfo.5.html#DESCRIPTION",
+      "title": "proc_pid_fdinfo(5), Linux manual page",
+      "where": {"en": "DESCRIPTION", "ru": "раздел DESCRIPTION"}
+    },
+    "k-fcntl-h": {
+      "url": "https://elixir.bootlin.com/linux/v6.12/source/include/uapi/asm-generic/fcntl.h#L20",
+      "title": "Linux kernel v6.12 source: include/uapi/asm-generic/fcntl.h",
+      "where": {"en": "lines 20–63, O_* flag values", "ru": "строки 20–63, значения флагов O_*"}
+    },
+    "k-open-c": {
+      "url": "https://elixir.bootlin.com/linux/v6.12/source/fs/open.c#L1434",
+      "title": "Linux kernel v6.12 source: fs/open.c",
+      "where": {"en": "lines 1434–1446, open() and openat() system calls", "ru": "строки 1434–1446, системные вызовы open() и openat()"}
+    },
+    "k-linux-fcntl": {
+      "url": "https://elixir.bootlin.com/linux/v6.12/source/include/linux/fcntl.h#L24",
+      "title": "Linux kernel v6.12 source: include/linux/fcntl.h",
+      "where": {"en": "lines 24–25, force_o_largefile()", "ru": "строки 24–25, force_o_largefile()"}
+    },
+    "lsof8": {
+      "url": "https://man.archlinux.org/man/lsof.8.en#OPTIONS",
+      "title": "lsof(8), Arch manual pages",
+      "where": {"en": "OPTIONS", "ru": "раздел OPTIONS"}
+    },
+    "getrlimit2": {
+      "url": "https://man7.org/linux/man-pages/man2/getrlimit.2.html#DESCRIPTION",
+      "title": "getrlimit(2), Linux manual page",
+      "where": {"en": "DESCRIPTION, RLIMIT_NOFILE", "ru": "раздел DESCRIPTION, RLIMIT_NOFILE"}
+    },
+    "systemd-conf": {
+      "url": "https://man7.org/linux/man-pages/man5/systemd-system.conf.5.html#RESOURCE_MANAGEMENT",
+      "title": "systemd-system.conf(5), Linux manual page",
+      "where": {"en": "RESOURCE MANAGEMENT, DefaultLimitNOFILE=", "ru": "раздел RESOURCE MANAGEMENT, DefaultLimitNOFILE="}
+    },
+    "k-inr-open": {
+      "url": "https://elixir.bootlin.com/linux/v6.12/source/include/uapi/linux/fs.h#L37",
+      "title": "Linux kernel v6.12 source: include/uapi/linux/fs.h",
+      "where": {"en": "lines 37–38, INR_OPEN_CUR", "ru": "строки 37–38, INR_OPEN_CUR"}
+    },
+    "accept2": {
+      "url": "https://man7.org/linux/man-pages/man2/accept.2.html#ERRORS",
+      "title": "accept(2), Linux manual page",
+      "where": {"en": "ERRORS", "ru": "раздел ERRORS"}
+    },
+    "socket2": {
+      "url": "https://man7.org/linux/man-pages/man2/socket.2.html#ERRORS",
+      "title": "socket(2), Linux manual page",
+      "where": {"en": "ERRORS", "ru": "раздел ERRORS"}
+    },
+    "posix-sys-stat": {
+      "url": "https://pubs.opengroup.org/onlinepubs/9799919799/basedefs/sys_stat.h.html#tag_14_66_03",
+      "title": "POSIX.1-2024, <sys/stat.h>",
+      "where": {"en": "DESCRIPTION", "ru": "раздел DESCRIPTION"}
+    },
+    "inode7": {
+      "url": "https://man7.org/linux/man-pages/man7/inode.7.html#DESCRIPTION",
+      "title": "inode(7), Linux manual page",
+      "where": {"en": "DESCRIPTION", "ru": "раздел DESCRIPTION"}
+    },
+    "rfc1813-fattr": {
+      "url": "https://www.rfc-editor.org/rfc/rfc1813.html#section-2.6",
+      "title": "RFC 1813: NFS Version 3 Protocol Specification",
+      "where": {"en": "section 2.6, fattr3", "ru": "раздел 2.6, fattr3"}
+    },
+    "rfc7530-owner": {
+      "url": "https://www.rfc-editor.org/rfc/rfc7530.html#section-5.9",
+      "title": "RFC 7530: Network File System (NFS) Version 4 Protocol",
+      "where": {"en": "section 5.9, Interpreting owner and owner_group", "ru": "раздел 5.9, Interpreting owner and owner_group"}
+    },
+    "coreutils-du": {
+      "url": "https://www.gnu.org/software/coreutils/manual/html_node/du-invocation.html",
+      "title": "GNU Coreutils manual",
+      "where": {"en": "section 14.2, du: Estimate file space usage, --apparent-size", "ru": "раздел 14.2, du: Estimate file space usage, --apparent-size"}
+    },
+    "k-stat": {
+      "url": "https://elixir.bootlin.com/linux/v6.12/source/fs/stat.c#L63",
+      "title": "Linux kernel v6.12 source: fs/stat.c",
+      "where": {"en": "line 63, generic_fillattr()", "ru": "строка 63, generic_fillattr()"}
+    },
+    "ext4-blocks": {
+      "url": "https://docs.kernel.org/filesystems/ext4/blocks.html#blocks",
+      "title": "ext4 Data Structures and Algorithms, The Linux Kernel documentation",
+      "where": {"en": "section 2.1, Blocks", "ru": "раздел 2.1, Blocks"}
+    },
+    "k-nfs-super": {
+      "url": "https://elixir.bootlin.com/linux/v6.12/source/fs/nfs/super.c#L1125",
+      "title": "Linux kernel v6.12 source: fs/nfs/super.c",
+      "where": {"en": "lines 1125–1127, nfs_fill_super()", "ru": "строки 1125–1127, nfs_fill_super()"}
+    },
+    "nfs5-wsize": {
+      "url": "https://man7.org/linux/man-pages/man5/nfs.5.html#MOUNT_OPTIONS",
+      "title": "nfs(5), Linux manual page",
+      "where": {"en": "MOUNT OPTIONS, wsize=n", "ru": "раздел MOUNT OPTIONS, wsize=n"}
+    },
+    "statx2": {
+      "url": "https://man7.org/linux/man-pages/man2/statx.2.html#DESCRIPTION",
+      "title": "statx(2), Linux manual page",
+      "where": {"en": "DESCRIPTION", "ru": "раздел DESCRIPTION"}
+    },
+    "getdents2": {
+      "url": "https://man7.org/linux/man-pages/man2/getdents.2.html#DESCRIPTION",
+      "title": "getdents(2), Linux manual page",
+      "where": {"en": "DESCRIPTION", "ru": "раздел DESCRIPTION"}
+    },
+    "glibc-readdir": {
+      "url": "https://sourceware.org/git/?p=glibc.git;a=blob;f=sysdeps/unix/sysv/linux/readdir64.c;hb=refs/tags/glibc-2.40#l40",
+      "title": "glibc 2.40 source: sysdeps/unix/sysv/linux/readdir64.c",
+      "where": {"en": "lines 40–47, __readdir64()", "ru": "строки 40–47, __readdir64()"}
+    },
+    "readdir3": {
+      "url": "https://man7.org/linux/man-pages/man3/readdir.3.html#DESCRIPTION",
+      "title": "readdir(3), Linux manual page",
+      "where": {"en": "DESCRIPTION", "ru": "раздел DESCRIPTION"}
+    },
+    "rfc1813-changes": {
+      "url": "https://www.rfc-editor.org/rfc/rfc1813.html#section-1.7",
+      "title": "RFC 1813: NFS Version 3 Protocol Specification",
+      "where": {"en": "section 1.7, Changes from the NFS Version 2 Protocol", "ru": "раздел 1.7, Changes from the NFS Version 2 Protocol"}
+    },
+    "rfc1813-readdir": {
+      "url": "https://www.rfc-editor.org/rfc/rfc1813.html#section-3.3.16",
+      "title": "RFC 1813: NFS Version 3 Protocol Specification",
+      "where": {"en": "section 3.3.16, READDIR", "ru": "раздел 3.3.16, READDIR"}
+    },
+    "link2": {
+      "url": "https://man7.org/linux/man-pages/man2/link.2.html#DESCRIPTION",
+      "title": "link(2), Linux manual page",
+      "where": {"en": "DESCRIPTION", "ru": "раздел DESCRIPTION"}
+    },
+    "unlink2": {
+      "url": "https://man7.org/linux/man-pages/man2/unlink.2.html#DESCRIPTION",
+      "title": "unlink(2), Linux manual page",
+      "where": {"en": "DESCRIPTION", "ru": "раздел DESCRIPTION"}
+    },
+    "rename2": {
+      "url": "https://man7.org/linux/man-pages/man2/rename.2.html#DESCRIPTION",
+      "title": "rename(2), Linux manual page",
+      "where": {"en": "DESCRIPTION", "ru": "раздел DESCRIPTION"}
+    },
+    "ostep-rename": {
+      "url": "https://pages.cs.wisc.edu/~remzi/OSTEP/file-intro.pdf",
+      "title": "Operating Systems: Three Easy Pieces, chapter 39: Interlude: Files and Directories",
+      "where": {"en": "section 39.8, Renaming Files", "ru": "раздел 39.8, Renaming Files"}
+    },
+    "mmap2": {
+      "url": "https://man7.org/linux/man-pages/man2/mmap.2.html#DESCRIPTION",
+      "title": "mmap(2), Linux manual page",
+      "where": {"en": "DESCRIPTION", "ru": "раздел DESCRIPTION"}
+    },
+    "tmpfile3": {
+      "url": "https://man7.org/linux/man-pages/man3/tmpfile.3.html#DESCRIPTION",
+      "title": "tmpfile(3), Linux manual page",
+      "where": {"en": "DESCRIPTION", "ru": "раздел DESCRIPTION"}
+    },
+    "k-nfs-unlink": {
+      "url": "https://elixir.bootlin.com/linux/v6.12/source/fs/nfs/unlink.c#L421",
+      "title": "Linux kernel v6.12 source: fs/nfs/unlink.c",
+      "where": {"en": "lines 421–441, comment on nfs_sillyrename()", "ru": "строки 421–441, комментарий к nfs_sillyrename()"}
+    },
+    "kdoc-vm": {
+      "url": "https://docs.kernel.org/admin-guide/sysctl/vm.html#dirty-expire-centisecs",
+      "title": "Documentation for /proc/sys/vm/, The Linux Kernel documentation",
+      "where": {"en": "dirty_expire_centisecs", "ru": "раздел dirty_expire_centisecs"}
+    },
+    "k-pagewb": {
+      "url": "https://elixir.bootlin.com/linux/v6.12/source/mm/page-writeback.c#L106",
+      "title": "Linux kernel v6.12 source: mm/page-writeback.c",
+      "where": {"en": "lines 106–109, dirty_expire_interval", "ru": "строки 106–109, dirty_expire_interval"}
+    },
+    "setbuf3": {
+      "url": "https://man7.org/linux/man-pages/man3/setbuf.3.html#DESCRIPTION",
+      "title": "setbuf(3), Linux manual page",
+      "where": {"en": "DESCRIPTION", "ru": "раздел DESCRIPTION"}
+    },
+    "exit3": {
+      "url": "https://man7.org/linux/man-pages/man3/exit.3.html#DESCRIPTION",
+      "title": "exit(3), Linux manual page",
+      "where": {"en": "DESCRIPTION", "ru": "раздел DESCRIPTION"}
+    },
+    "signal7": {
+      "url": "https://man7.org/linux/man-pages/man7/signal.7.html#DESCRIPTION",
+      "title": "signal(7), Linux manual page",
+      "where": {"en": "DESCRIPTION, Standard signals", "ru": "раздел DESCRIPTION, Standard signals"}
+    },
+    "posix-streams": {
+      "url": "https://pubs.opengroup.org/onlinepubs/9799919799/functions/V2_chap02.html#tag_16_05_01",
+      "title": "POSIX.1-2024, System Interfaces, chapter 2: General Information",
+      "where": {"en": "section 2.5.1, Interaction of File Descriptors and Standard I/O Streams", "ru": "раздел 2.5.1, Interaction of File Descriptors and Standard I/O Streams"}
+    },
+    "fsync2": {
+      "url": "https://man7.org/linux/man-pages/man2/fsync.2.html#DESCRIPTION",
+      "title": "fsync(2), Linux manual page",
+      "where": {"en": "DESCRIPTION", "ru": "раздел DESCRIPTION"}
+    },
+    "fast18": {
+      "url": "https://www.usenix.org/system/files/conference/fast18/fast18-won.pdf",
+      "title": "Barrier-Enabled IO Stack for Flash Storage (FAST '18)",
+      "where": {"en": "section 6.2, Table 1", "ru": "раздел 6.2, таблица 1"}
+    },
+    "vfs-aspace": {
+      "url": "https://docs.kernel.org/filesystems/vfs.html#the-address-space-object",
+      "title": "Overview of the Linux Virtual File System, The Linux Kernel documentation",
+      "where": {"en": "The Address Space Object", "ru": "раздел The Address Space Object"}
+    },
+    "msync2": {
+      "url": "https://man7.org/linux/man-pages/man2/msync.2.html#DESCRIPTION",
+      "title": "msync(2), Linux manual page",
+      "where": {"en": "DESCRIPTION", "ru": "раздел DESCRIPTION"}
+    },
+    "vfs-intro": {
+      "url": "https://docs.kernel.org/filesystems/vfs.html#introduction",
+      "title": "Overview of the Linux Virtual File System, The Linux Kernel documentation",
+      "where": {"en": "Introduction", "ru": "раздел Introduction"}
+    },
+    "vfs-dcache": {
+      "url": "https://docs.kernel.org/filesystems/vfs.html#directory-entry-cache-dcache",
+      "title": "Overview of the Linux Virtual File System, The Linux Kernel documentation",
+      "where": {"en": "Directory Entry Cache (dcache)", "ru": "раздел Directory Entry Cache (dcache)"}
+    }
+  },
+  "cites": [
+    {"src": ["k-segment", "ostep-lde"],
+     "en": "where everything is allowed.",
+     "ru": "где разрешено всё.",
+     "quote": {"k-segment": "Bottom two bits of selector give the ring privilege level ... When running on Xen PV, the actual privilege level of the kernel is 1, not 0. ... /* User mode is privilege level 3: */ #define USER_RPL 0x3",
+               "ostep-lde": "when running in user mode, a process can't issue I/O requests; doing so would result in the processor raising an exception ... In contrast to user mode is kernel mode, which the operating system (or kernel) runs in. In this mode, code that runs can do what it likes"}},
+    {"src": ["k-cpu-common", "k-entry64"],
+     "en": "instruction, and the convention is:",
+     "ru": "инструкция <code>syscall</code>, а соглашение такое:",
+     "quote": {"k-cpu-common": "static inline void idt_syscall_init(void) { wrmsrl(MSR_LSTAR, (unsigned long)entry_SYSCALL_64);",
+               "k-entry64": "This is the only entry point used for 64-bit system calls. ... 64-bit SYSCALL saves rip to rcx, clears rflags.RF, then saves rflags to r11, then loads new ss, cs, and rip from previously programmed MSRs."}},
+    {"src": ["k-syscall-tbl", "k-entry64"],
+     "en": "<code>close</code> is 3);",
+     "ru": "<code>close</code> — 3);",
+     "quote": {"k-syscall-tbl": "0 common read sys_read / 1 common write sys_write / 2 common open sys_open / 3 common close sys_close",
+               "k-entry64": "Registers on entry: rax system call number"}},
+    {"src": "syscall2-notes",
+     "en": "<code>r8</code>, <code>r9</code>;",
+     "ru": "<code>r8</code>, <code>r9</code>;",
+     "quote": "Arch/ABI arg1 arg2 arg3 arg4 arg5 arg6 arg7 ... x86-64 rdi rsi rdx r10 r8 r9 -"},
+    {"src": "k-entry64",
+     "en": "jumps to the kernel's entry point, <code>entry_SYSCALL_64</code>;",
+     "ru": "переходит в точку входа ядра, <code>entry_SYSCALL_64</code>;",
+     "quote": "64-bit SYSCALL saves rip to rcx, clears rflags.RF, then saves rflags to r11, then loads new ss, cs, and rip from previously programmed MSRs. ... rcx return address / r11 saved rflags ... SYM_CODE_START(entry_SYSCALL_64)"},
+    {"src": ["k-syscall64c", "k-commit-bhi"],
+     "en": "into a <code>switch</code> statement for security reasons)",
+     "ru": "компилируют диспетчеризацию в оператор <code>switch</code>)",
+     "quote": {"k-syscall64c": "The sys_call_table[] is no longer used for system calls, but kernel/trace/trace_syscalls.c still wants to know the system call address. ... long x64_sys_call(const struct pt_regs *regs, unsigned int nr) { switch (nr) {",
+               "k-commit-bhi": "Make <asm/syscall.h> build a switch statement instead ... it just causes speculatively running the wrong system call (harmless), rather than speculatively running possibly wrong random less controlled code gadgets."}},
+    {"src": "k-entry64-sysret",
+     "en": "and returns to ring 3 with <code>sysret</code>.",
+     "ru": "и возвращается в кольцо 3 инструкцией <code>sysret</code>.",
+     "quote": "Try to use SYSRET instead of IRET if we're returning to a completely clean 64-bit userspace context. If we're not, go to the slow exit path. ... sysretq"},
+    {"src": ["k-err", "glibc-sysdep"],
+     "en": "and its negation is the error number.",
+     "ru": "и его модуль — номер ошибки.",
+     "quote": {"k-err": "#define MAX_ERRNO 4095 ... #define IS_ERR_VALUE(x) unlikely((unsigned long)(void *)(x) >= (unsigned long)-MAX_ERRNO)",
+               "glibc-sysdep": "Linux uses a negative return value to indicate syscall errors ... Linus said he will make sure the no syscall returns a value in -1 .. -4095 as a valid result so we can safely test with -4095."}},
+    {"src": ["vfs-file", "k-vfs-read"],
+     "en": "and calls that file's own <code>read_iter</code>.",
+     "ru": "и не вызовет собственный <code>read_iter</code> этого файла.",
+     "quote": {"vfs-file": "Reading, writing and closing files (and other assorted VFS operations) is done by using the userspace file descriptor to grab the appropriate file structure, and then calling the required file structure method to do whatever is required.",
+               "k-vfs-read": "if (file->f_op->read) ret = file->f_op->read(file, buf, count, pos); else if (file->f_op->read_iter) ret = new_sync_read(file, buf, count, pos); else ret = -EINVAL;"}},
+    {"src": ["intro2", "errno3"],
+     "en": "<code>errno</code> and returns −1.",
+     "ru": "переменную <code>errno</code> и возвращает −1.",
+     "quote": {"intro2": "The C library wrapper hides this detail from the caller: when a system call returns a negative value, the wrapper copies the absolute value into the errno variable, and returns -1 as the return value of the wrapper.",
+               "errno3": "errno is thread-local; setting it in one thread does not affect its value in any other thread."}},
+    {"src": ["open2-versions", "fork2-versions"],
+     "en": "and <code>fork()</code> issues <code>clone</code>.",
+     "ru": "а <code>fork()</code> выполняет <code>clone</code>.",
+     "quote": {"open2-versions": "Since glibc 2.26, the glibc wrapper function for open() employs the openat() system call, rather than the kernel's open() system call.",
+               "fork2-versions": "Since glibc 2.3.3, rather than invoking the kernel's fork() system call, the glibc fork() wrapper that is provided as part of the NPTL threading implementation invokes clone(2) with flags that provide the same effect as the traditional system call."}},
+    {"src": ["ren19", "io-uring7"],
+     "en": "more with some CPU vulnerability mitigations turned on.",
+     "ru": "если включены некоторые защиты от уязвимостей процессора.",
+     "quote": {"ren19": "With KPTI, the lower-bound of the constant cost is on the order of 400–500 cycles, whereas without KPTI, the kernel entry and exit overhead is less than 100 cycles. ... We carried out the tests on an HP DL160 G9 server with a 2.40GHz Intel Xeon E5-2630 v3 processor",
+               "io-uring7": "some of these workarounds are around the system call interface, making system calls not as cheap as before on affected hardware."}},
+    {"src": "io-uring7",
+     "en": "all exist to make fewer crossings.",
+     "ru": "существуют именно для того, чтобы пересекать её реже.",
+     "quote": "In io_uring, on the other hand, you can batch several requests in one go, simply by queueing up multiple SQEs, each describing an I/O operation you want and make a single call to io_uring_enter(2)."},
+    {"src": ["vdso7", "vdso7-arch"],
+     "en": "with no syscall at all.",
+     "ru": "вообще без системного вызова.",
+     "quote": {"vdso7": "The \"vDSO\" (virtual dynamic shared object) is a small shared library that the kernel automatically maps into the address space of all user-space applications. ... Now a call to gettimeofday(2) changes from a system call to a normal function call and a few memory accesses.",
+               "vdso7-arch": "x86-64 functions ... __vdso_clock_gettime LINUX_2.6 / __vdso_getcpu LINUX_2.6 / __vdso_gettimeofday LINUX_2.6 / __vdso_time LINUX_2.6"}},
+    {"src": "open2-desc",
+     "en": "a small non-negative integer.",
+     "ru": "небольшое неотрицательное целое число.",
+     "quote": "The return value of open() is a file descriptor, a small, nonnegative integer that is an index to an entry in the process's table of open file descriptors."},
+    {"src": "posix-fdalloc",
+     "en": "number not currently in use in your process.",
+     "ru": "номер, не занятый в вашем процессе.",
+     "quote": "All functions that open one or more file descriptors shall, unless specified otherwise, atomically allocate the lowest numbered available (that is, not already open in the calling process) file descriptor at the time of each allocation."},
+    {"src": "stdin3",
+     "en": "so the first file you open is usually 3.",
+     "ru": "поэтому первый открытый вами файл обычно получает номер 3.",
+     "quote": "On program startup, the integer file descriptors associated with the streams stdin, stdout, and stderr are 0, 1, and 2, respectively."},
+    {"src": "open2-desc",
+     "en": "plus any number of modifiers:",
+     "ru": "плюс любое число модификаторов.",
+     "quote": "The argument flags must include one of the following access modes: O_RDONLY, O_WRONLY, or O_RDWR. ... In addition, zero or more file creation flags and file status flags can be bitwise ORed in flags."},
+    {"src": "ostep-impl",
+     "en": "Checked against the file's permissions once, at open time.",
+     "ru": "Проверяется по правам файла один раз, в момент открытия.",
+     "quote": "The final step of open() is to read bar's inode into memory; the FS then does a final permissions check, allocates a file descriptor for this process in the per-process open-file table, and returns it to the user."},
+    {"src": "open2-desc",
+     "en": "Requires the third argument, <code>mode</code>.",
+     "ru": "Требует третьего аргумента, <code>mode</code>.",
+     "quote": "The mode argument must be supplied if O_CREAT or O_TMPFILE is specified in flags; if it is not supplied, some arbitrary bytes from the stack will be applied as the file mode."},
+    {"src": ["open2-desc", "posix-open"],
+     "en": "the classic way to build a lock file.",
+     "ru": "классический способ сделать файл-блокировку.",
+     "quote": {"open2-desc": "O_EXCL Ensure that this call creates the file: if this flag is specified in conjunction with O_CREAT, and path already exists, then open() fails with the error EEXIST. ... programs that rely on it for performing locking tasks",
+               "posix-open": "The check for the existence of the file and the creation of the file if it does not exist shall be atomic with respect to other threads executing open() naming the same filename in the same directory with O_EXCL and O_CREAT set."}},
+    {"src": "open2-desc",
+     "en": "cut it to length 0.",
+     "ru": "обрезать его до длины 0.",
+     "quote": "If the file already exists and is a regular file and the access mode allows writing (i.e., is O_RDWR or O_WRONLY) it will be truncated to length 0."},
+    {"src": "open2-desc",
+     "en": "atomically with the write.",
+     "ru": "атомарно вместе с записью.",
+     "quote": "Before each write(2), the file offset is positioned at the end of the file, as if with lseek(2). The modification of the file offset and the write operation are performed as a single atomic step."},
+    {"src": ["open2-desc", "execve2"],
+     "en": "Prevents descriptors leaking into programs you launch.",
+     "ru": "Не даёт дескрипторам утекать в запускаемые вами программы.",
+     "quote": {"open2-desc": "O_CLOEXEC (since Linux 2.6.23) Enable the close-on-exec flag for the new file descriptor.",
+               "execve2": "By default, file descriptors remain open across an execve(). File descriptors that are marked close-on-exec are closed"}},
+    {"src": ["open2-desc", "read2-errors"],
+     "en": "Meaningful for pipes, sockets and terminals, not regular files.",
+     "ru": "Имеет смысл для каналов, сокетов и терминалов, но не для обычных файлов.",
+     "quote": {"open2-desc": "Note that this flag has no effect for regular files and block devices; that is, I/O operations will (briefly) block when device activity is required, regardless of whether O_NONBLOCK is set.",
+               "read2-errors": "EAGAIN The file descriptor fd refers to a file other than a socket and has been marked nonblocking (O_NONBLOCK), and the read would block."}},
+    {"src": "open2-desc",
+     "en": "<code>fdatasync</code>) after every write.",
+     "ru": "(для <code>O_DSYNC</code> — <code>fdatasync</code>).",
+     "quote": "O_DSYNC ... (i.e., as though each write(2) was followed by a call to fdatasync(2)). ... O_SYNC ... the output data and associated file metadata have been transferred to the underlying hardware (i.e., as though each write(2) was followed by a call to fsync(2))."},
+    {"src": ["open2-desc", "open2-notes"],
+     "en": "Comes with alignment rules.",
+     "ru": "Требует соблюдать правила выравнивания.",
+     "quote": {"open2-desc": "O_DIRECT (since Linux 2.4.10) Try to minimize cache effects of the I/O to and from this file. ... File I/O is done directly to/from user-space buffers.",
+               "open2-notes": "The O_DIRECT flag may impose alignment restrictions on the length and address of user-space buffers and the file offset of I/Os."}},
+    {"src": "open2-desc",
+     "en": "its permission bits are <code>mode &amp; ~umask</code>.",
+     "ru": "его биты прав равны <code>mode &amp; ~umask</code>.",
+     "quote": "The effective mode is modified by the process's umask in the usual way: in the absence of a default ACL, the mode of the created file is (mode & ~umask)."},
+    {"src": "umask2",
+     "en": "produces a file with mode <code>0644</code> (<code>rw-r--r--</code>).",
+     "ru": "создаёт файл с режимом <code>0644</code> (<code>rw-r--r--</code>).",
+     "quote": "The typical default value for the process umask is S_IWGRP | S_IWOTH (octal 022). ... (because 0666 & ~022 = 0644; i.e., rw-r--r--)."},
+    {"src": ["k-vfs-read", "open2-desc"],
+     "en": "your descriptor keeps working.",
+     "ru": "ваш дескриптор продолжит работать.",
+     "quote": {"k-vfs-read": "if (!(file->f_mode & FMODE_READ)) return -EBADF; if (!(file->f_mode & FMODE_CAN_READ)) return -EINVAL;",
+               "open2-desc": "Note that mode applies only to future accesses of the newly created file; the open() call that creates a read-only file may well return a read/write file descriptor."}},
+    {"src": ["ostep-intro", "unix7"],
+     "en": "over a Unix socket.",
+     "ru": "через Unix-сокет.",
+     "quote": {"ostep-intro": "In this way, a file descriptor is a capability [L84], i.e., an opaque handle that gives you the power to perform certain operations.",
+               "unix7": "SCM_RIGHTS Send or receive a set of open file descriptors from another process. ... what is being passed is a reference to an open file description"}},
+    {"src": "read2-desc",
+     "en": "advances the offset by the number of bytes copied.",
+     "ru": "и сдвигает смещение на число скопированных байтов.",
+     "quote": "read() attempts to read up to count bytes from file descriptor fd into the buffer starting at buf. On files that support seeking, the read operation commences at the file offset, and the file offset is incremented by the number of bytes read."},
+    {"src": ["read2-retval", "pipe7"],
+     "en": "It is not an error.",
+     "ru": "Это не ошибка.",
+     "quote": {"read2-retval": "On success, the number of bytes read is returned (zero indicates end of file), and the file position is advanced by this number.",
+               "pipe7": "If all file descriptors referring to the write end of a pipe have been closed, then an attempt to read(2) from the pipe will see end-of-file (read(2) will return 0)."}},
+    {"src": ["read2-retval", "write2-retval", "pipe7"],
+     "en": "may write part of the buffer.",
+     "ru": "может записать только часть буфера.",
+     "quote": {"read2-retval": "It is not an error if this number is smaller than the number of bytes requested; this may happen for example because fewer bytes are actually available right now (maybe because we were close to end-of-file, or because we are reading from a pipe, or from a terminal)",
+               "write2-retval": "Note that a successful write() may transfer fewer than count bytes. Such partial writes can occur for various reasons; for example, because there was insufficient space on the disk device to write all of the requested bytes",
+               "pipe7": "O_NONBLOCK enabled, n > PIPE_BUF ... If the pipe is full, then write(2) fails, with errno set to EAGAIN. Otherwise, from 1 to n bytes may be written (i.e., a \"partial write\" may occur"}},
+    {"src": "read2-errors",
+     "en": "nothing ready yet).",
+     "ru": "данных пока нет).",
+     "quote": "EAGAIN The file descriptor fd refers to a file other than a socket and has been marked nonblocking (O_NONBLOCK), and the read would block. ... EINTR The call was interrupted by a signal before any data was read; see signal(7)."},
+    {"src": "errno3",
+     "en": "Your process hit its descriptor limit.",
+     "ru": "Процесс упёрся в свой лимит дескрипторов.",
+     "quote": "EMFILE Too many open files (POSIX.1-2001). Commonly caused by exceeding the RLIMIT_NOFILE resource limit described in getrlimit(2)."},
+    {"src": ["write2-notes", "close2-caveats"],
+     "en": "at <code>close</code> or <code>fsync</code>.",
+     "ru": "на <code>close</code> или <code>fsync</code>.",
+     "quote": {"write2-notes": "On some filesystems, including NFS, it does not even guarantee that space has successfully been reserved for the data. In this case, some errors might be delayed until a future write(), fsync(2), or even close(2).",
+               "close2-caveats": "it is quite possible that errors on a previous write(2) operation are reported only on the final close() that releases the open file description. ... This can especially be observed with NFS and with disk quota."}},
+    {"src": ["errno3", "open-by-handle"],
+     "en": "Mostly NFS: the server no longer recognises the file handle.",
+     "ru": "Чаще всего NFS: сервер больше не узнаёт хэндл файла.",
+     "quote": {"errno3": "ESTALE Stale file handle (POSIX.1-2001). This error can occur for NFS and for other filesystems.",
+               "open-by-handle": "ESTALE The specified handle is not valid for opening a file. This error will occur if, for example, the file has been deleted."}},
+    {"src": ["close2-caveats", "nfs5-coherence"],
+     "en": "because the client flushes cached writes at close.",
+     "ru": "потому что клиент сбрасывает кэшированные записи при закрытии.",
+     "quote": {"close2-caveats": "A careful programmer will check the return value of close(), since it is quite possible that errors on a previous write(2) operation are reported only on the final close() that releases the open file description.",
+               "nfs5-coherence": "When the application closes the file, the NFS client writes back any pending changes to the file so that the next opener can view the changes. This also gives the NFS client an opportunity to report write errors to the application via the return code from close(2)."}},
+    {"src": "close2-caveats",
+     "en": "another thread just opened with the same number.",
+     "ru": "который другой поток только что открыл под тем же номером.",
+     "quote": "Retrying the close() after a failure return is the wrong thing to do, since this may cause a reused file descriptor from another thread to be closed. This can occur because the Linux kernel always releases the file descriptor early in the close operation, freeing it for reuse"},
+    {"src": "lseek2",
+     "en": "Reads from a hole return zeros.",
+     "ru": "Чтение из дыры возвращает нули.",
+     "quote": "lseek() allows the file offset to be set beyond the end of the file ... If data is later written at this point, subsequent reads of the data in the gap (a \"hole\") return null bytes ('\\0') ... a hole is a sequence of zeros that (normally) has not been allocated in the underlying file storage."},
+    {"src": "rfc7862-s6",
+     "en": "database files are often sparse.",
+     "ru": "файлы баз данных часто разрежены.",
+     "quote": "A sparse file is a common way of representing a large file without having to utilize all of the disk space for it. ... Common examples of sparse files include Virtual Machine (VM) OS/disk images, database files, log files"},
+    {"src": ["tar-sparse", "coreutils-news"],
+     "en": "instead of reading gigabytes of zeros.",
+     "ru": "а не читать гигабайты нулей.",
+     "quote": {"tar-sparse": "--hole-detection=seek Seeking the file for data and holes. It uses enhancement of the lseek system call (SEEK_HOLE and SEEK_DATA) which is able to reuse file system knowledge about sparse file contents - so the detection is usually very fast.",
+               "coreutils-news": "cp, install and mv now use the copy_file_range syscall if available. Also, they use lseek+SEEK_HOLE rather than ioctl+FS_IOC_FIEMAP on sparse files, as lseek is simpler and more portable."}},
+    {"src": ["rfc7862-seek", "rfc7862-s6"],
+     "en": "<code>READ_PLUS</code> operations (<a href=\"06-nfs.html\">lesson 06</a>).",
+     "ru": "<code>READ_PLUS</code> (<a href=\"06-nfs.html\">урок 06</a>).",
+     "quote": {"rfc7862-seek": "SEEK is an operation that allows a client to determine the location of the next data_content4 in a file. It allows an implementation of the emerging extension to the lseek(2) function to allow clients to determine the next hole whilst in data or the next data whilst in a hole.",
+               "rfc7862-s6": "Two new operations -- DEALLOCATE (Section 15.4) and READ_PLUS (Section 15.10) -- are introduced. ... READ_PLUS supports all the features of READ but includes an extension to support sparse files."}},
+    {"src": "pread2-desc",
+     "en": "leave the descriptor's offset untouched.",
+     "ru": "и не трогают смещение дескриптора.",
+     "quote": "pread() reads up to count bytes from file descriptor fd at offset offset (from the start of the file) into the buffer starting at buf. The file offset is not changed."},
+    {"src": "pread2-notes",
+     "en": "while each <code>pread</code> is self-contained.",
+     "ru": "а каждый <code>pread</code> самодостаточен.",
+     "quote": "The pread() and pwrite() system calls are especially useful in multithreaded applications. They allow multiple threads to perform I/O on the same file descriptor without being affected by changes to the file offset by other threads."},
+    {"src": "pg12",
+     "en": "does its random I/O with <code>pread</code>/<code>pwrite</code>.",
+     "ru": "выполняет случайный ввод-вывод через <code>pread</code>/<code>pwrite</code>.",
+     "quote": "Use pread() and pwrite() for random I/O (Oskari Saarenmaa, Thomas Munro) ... This reduces the number of system calls required for I/O."},
+    {"src": "pread2-bugs",
+     "en": "lists this under BUGS.",
+     "ru": "упоминает это в разделе BUGS.",
+     "quote": "POSIX requires that opening a file with the O_APPEND flag should have no effect on the location at which pwrite() writes data. However, on Linux, if a file is opened with O_APPEND, pwrite() appends data to the end of the file, regardless of the value of offset."},
+    {"src": "k-fdtable",
+     "en": "plus one per-descriptor flag: close-on-exec (<code>FD_CLOEXEC</code>).",
+     "ru": "флаг на уровне самого дескриптора: close-on-exec (<code>FD_CLOEXEC</code>).",
+     "quote": "struct fdtable { unsigned int max_fds; struct file __rcu **fd; /* current fd array */ unsigned long *close_on_exec; ... struct files_struct { ... struct fdtable __rcu *fdt;"},
+    {"src": "open2-desc",
+     "en": "One is created by every successful <code>open</code>.",
+     "ru": "Каждый успешный <code>open</code> создаёт новое.",
+     "quote": "A call to open() creates a new open file description, an entry in the system-wide table of open files. The open file description records the file offset and the file status flags"},
+    {"src": "k-struct-file",
+     "en": "for this kind of file (<code>f_op</code>).",
+     "ru": "для этого вида файлов (<code>f_op</code>).",
+     "quote": "struct file - Represents a file / @f_count: reference count ... @f_mode: FMODE_* flags often used in hotpaths / @f_op: file operations ... @f_flags: file flags ... @f_pos: file position"},
+    {"src": "open2-notes",
+     "en": "together form the system-wide open file table.",
+     "ru": "вместе образуют общесистемную таблицу открытых файлов.",
+     "quote": "The term open file description is the one used by POSIX to refer to the entries in the system-wide table of open files. In other contexts, this object is variously also called ... or—in kernel-developer parlance—a struct file."},
+    {"src": ["open2-notes", "k-struct-inode"],
+     "en": "and where its data lives.",
+     "ru": "и то, где лежат данные.",
+     "quote": {"open2-notes": "Each open() of a file creates a new open file description; thus, there may be multiple open file descriptions corresponding to a file inode.",
+               "k-struct-inode": "struct inode { umode_t i_mode; ... kuid_t i_uid; kgid_t i_gid; ... struct address_space *i_mapping; ... const unsigned int i_nlink; ... loff_t i_size; time64_t i_atime_sec; time64_t i_mtime_sec; time64_t i_ctime_sec;"}},
+    {"src": "dup2",
+     "en": "closing whatever was there first.",
+     "ru": "предварительно закрыв то, что там было.",
+     "quote": "The dup() system call allocates a new file descriptor that refers to the same open file description as the descriptor oldfd. ... The dup2() system call performs the same task as dup() ... If the file descriptor newfd was previously open, it is closed before being reused"},
+    {"src": ["posix-sh-out", "posix-sh-dup"],
+     "en": "and <code>2&gt;&amp;1</code> is <code>dup2(1, 2)</code>.",
+     "ru": "а <code>2&gt;&amp;1</code> — это <code>dup2(1, 2)</code>.",
+     "quote": {"posix-sh-out": "output redirection shall cause the file whose name results from the expansion of word to be opened for output on the designated file descriptor, or standard output if none is specified.",
+               "posix-sh-dup": "[n]>&word shall duplicate one output file descriptor from another ... the file descriptor denoted by n, or standard output if n is not specified, shall be made to be a copy of the file descriptor denoted by word"}},
+    {"src": "fork2-desc",
+     "en": "so parent and child share offsets.",
+     "ru": "поэтому родитель и потомок разделяют смещения.",
+     "quote": "The child inherits copies of the parent's set of open file descriptors. Each file descriptor in the child refers to the same open file description (see open(2)) as the corresponding file descriptor in the parent. This means that the two file descriptors share open file status flags, file offset"},
+    {"src": "open2-notes",
+     "en": "The two only meet at the inode.",
+     "ru": "Два открытия встречаются только на уровне inode.",
+     "quote": "Each open() of a file creates a new open file description; thus, there may be multiple open file descriptions corresponding to a file inode."},
+    {"src": "dup2",
+     "en": "and <code>dup</code> does not copy it.",
+     "ru": "и <code>dup</code> его не копирует.",
+     "quote": "The two file descriptors do not share file descriptor flags (the close-on-exec flag). The close-on-exec flag (FD_CLOEXEC; see fcntl(2)) for the duplicate descriptor is off."},
+    {"src": "fgetfl",
+     "en": "in every process, that shares that description.",
+     "ru": "во всех процессах, которые разделяют это описание.",
+     "quote": "Each open file description has certain associated status flags, initialized by open(2) and possibly modified by fcntl(2). Duplicated file descriptors (made with dup(2), F_DUPFD(2const), fork(2), etc.) refer to the same open file description, and thus share the same file status flags."},
+    {"src": "open2-desc",
+     "en": "and both offsets start at 0.",
+     "ru": "и оба смещения начинаются с 0.",
+     "quote": "A call to open() creates a new open file description ... The file offset is set to the beginning of the file (see lseek(2))."},
+    {"src": ["open2-desc", "k-filemap", "k-write-checks"],
+     "en": "can never overwrite each other.",
+     "ru": "никогда не затрут друг друга.",
+     "quote": {"open2-desc": "The modification of the file offset and the write operation are performed as a single atomic step.",
+               "k-filemap": "generic_file_write_iter ... acquires i_rwsem as needed. ... inode_lock(inode); ret = generic_write_checks(iocb, from); if (ret > 0) ret = __generic_file_write_iter(iocb, from); inode_unlock(inode);",
+               "k-write-checks": "if (iocb->ki_flags & IOCB_APPEND) iocb->ki_pos = i_size_read(inode);"}},
+    {"src": "open2-desc",
+     "en": "so their appends can overwrite each other.",
+     "ru": "поэтому их записи могут затирать друг друга.",
+     "quote": "O_APPEND may lead to corrupted files on NFS filesystems if more than one process appends data to a file at once. This is because NFS does not support appending to a file, so the client kernel has to simulate it, which can't be done without a race condition."},
+    {"src": "vfs-file",
+     "en": "<code>poll</code>, …) behind it:",
+     "ru": "<code>poll</code> и другие):",
+     "quote": "The freshly allocated file structure is initialized with a pointer to the dentry and a set of file operation member functions. These are taken from the inode data."},
+    {"src": ["k-vfs-read", "k-eventpoll", "k-iouring"],
+     "en": "and is driven by its own calls)",
+     "ru": "и управляется собственными вызовами)",
+     "quote": {"k-vfs-read": "if (!(file->f_mode & FMODE_CAN_READ)) return -EINVAL; ... else if (file->f_op->read_iter) ret = new_sync_read(file, buf, count, pos); else ret = -EINVAL;",
+               "k-eventpoll": "static const struct file_operations eventpoll_fops = { .show_fdinfo = ep_show_fdinfo, .release = ep_eventpoll_release, .poll = ep_eventpoll_poll, .llseek = noop_llseek, .unlocked_ioctl = ep_eventpoll_ioctl, .compat_ioctl = compat_ptr_ioctl, };",
+               "k-iouring": "static const struct file_operations io_uring_fops = { .release = io_uring_release, .mmap = io_uring_mmap, .get_unmapped_area = io_uring_get_unmapped_area, ... .poll = io_uring_poll, ... .show_fdinfo = io_uring_show_fdinfo, };"}},
+    {"src": "proc-pid-fd",
+     "en": "whose targets describe what each descriptor points to.",
+     "ru": "цели которых описывают, на что указывает каждый дескриптор.",
+     "quote": "This is a subdirectory containing one entry for each file which the process has open, named by its file descriptor, and which is a symbolic link to the actual file."},
+    {"src": "proc-pid",
+     "en": "is the calling process.",
+     "ru": "— это сам вызывающий процесс.",
+     "quote": "/proc/self/ This directory refers to the process accessing the /proc filesystem, and is identical to the /proc directory named by the process ID of the same process."},
+    {"src": "proc-fdinfo",
+     "en": "shows the open file description's offset and flags.",
+     "ru": "показывает смещение и флаги описания открытого файла.",
+     "quote": "pos This is a decimal number showing the file offset. flags This is an octal number that displays the file access mode and file status flags (see open(2)). If the close-on-exec file descriptor flag is set, then flags will also include the value O_CLOEXEC."},
+    {"src": ["k-fcntl-h", "k-open-c", "k-linux-fcntl"],
+     "en": "is 0, <code>O_RDONLY</code>.",
+     "ru": "равен 0, то есть <code>O_RDONLY</code>.",
+     "quote": {"k-fcntl-h": "#define O_RDONLY 00000000 ... #define O_LARGEFILE 00100000 ... #define O_CLOEXEC 02000000 /* set close_on_exec */",
+               "k-open-c": "SYSCALL_DEFINE3(open, ...) { if (force_o_largefile()) flags |= O_LARGEFILE; ... SYSCALL_DEFINE4(openat, ...) { if (force_o_largefile()) flags |= O_LARGEFILE;",
+               "k-linux-fcntl": "#define force_o_largefile() (!IS_ENABLED(CONFIG_ARCH_32BIT_OFF_T))"}},
+    {"src": "lsof8",
+     "en": "for any process you are allowed to inspect.",
+     "ru": "для любого процесса, который вам разрешено просматривать.",
+     "quote": "-p s excludes or selects the listing of files for the processes whose optional process IDentification (PID) numbers are in the comma-separated set s"},
+    {"src": "getrlimit2",
+     "en": "a program reads with <code>getrlimit</code>.",
+     "ru": "а программа читает вызовом <code>getrlimit</code>.",
+     "quote": "RLIMIT_NOFILE This specifies a value one greater than the maximum file descriptor number that can be opened by this process."},
+    {"src": ["systemd-conf", "k-inr-open"],
+     "en": "default the soft limit to 1024;",
+     "ru": "мягкий лимит по умолчанию равен 1024;",
+     "quote": {"systemd-conf": "Most of these settings are unset ... However, the following have defaults: • DefaultLimitNOFILE= defaults to 1024:524288.",
+               "k-inr-open": "#define INR_OPEN_CUR 1024 /* Initial setting for nfile rlimits */"}},
+    {"src": ["getrlimit2", "socket2", "accept2"],
+     "en": "fail with <code>EMFILE</code>.",
+     "ru": "завершаются с <code>EMFILE</code>.",
+     "quote": {"getrlimit2": "Attempts (open(2), pipe(2), dup(2), etc.) to exceed this limit yield the error EMFILE.",
+               "socket2": "EMFILE The per-process limit on the number of open file descriptors has been reached.",
+               "accept2": "EMFILE The per-process limit on the number of open file descriptors has been reached."}},
+    {"src": "execve2",
+     "en": "unless marked close-on-exec.",
+     "ru": "если не помечены как close-on-exec.",
+     "quote": "By default, file descriptors remain open across an execve(). File descriptors that are marked close-on-exec are closed; see the description of FD_CLOEXEC in fcntl(2)."},
+    {"src": "open2-desc",
+     "en": "which is why careful code passes it everywhere.",
+     "ru": "поэтому аккуратный код передаёт его везде.",
+     "quote": "using a separate fcntl(2) F_SETFD operation to set the FD_CLOEXEC flag does not suffice to avoid race conditions where one thread opens a file descriptor and attempts to set its close-on-exec flag using fcntl(2) at the same time as another thread does a fork(2) plus execve(2)."},
+    {"src": "posix-sys-stat",
+     "en": "are hard links to one file.",
+     "ru": "— жёсткие ссылки на один файл.",
+     "quote": "A file identity is uniquely determined by the combination of st_dev and st_ino. At any given time in a system, distinct files shall have distinct file identities; hard links to the same file shall have the same file identity."},
+    {"src": "inode7",
+     "en": "How many directory entries (names) point at this inode.",
+     "ru": "Сколько записей в каталогах (имён) указывают на этот inode.",
+     "quote": "Link count stat.st_nlink; statx.stx_nlink This field contains the number of hard links to the file. Additional links to an existing file are created using link(2)."},
+    {"src": ["rfc1813-fattr", "rfc7530-owner"],
+     "en": "which causes its own problems (<a href=\"06-nfs.html\">lesson 06</a>).",
+     "ru": "что порождает свои проблемы (<a href=\"06-nfs.html\">урок 06</a>).",
+     "quote": {"rfc1813-fattr": "struct fattr3 { ... uid3 uid; gid3 gid; ... Uid is the user ID of the owner of the file. Gid is the group ID of the group of the file.",
+               "rfc7530-owner": "The RECOMMENDED attributes \"owner\" and \"owner_group\" ... are represented in the form of UTF-8 strings."}},
+    {"src": ["inode7", "coreutils-du"],
+     "en": "<code>ls -l</code> reports <code>st_size</code>.",
+     "ru": "<code>ls -l</code> показывает <code>st_size</code>.",
+     "quote": {"inode7": "This field indicates the number of blocks allocated to the file, 512-byte units, (This may be smaller than st_size/512 when the file has holes.)",
+               "coreutils-du": "Print apparent sizes, rather than file system usage. The apparent size of a file is the number of bytes reported by wc -c on regular files, or more generally, ls -l --block-size=1 or stat --format=%s."}},
+    {"src": ["k-stat", "ext4-blocks", "k-nfs-super", "nfs5-wsize"],
+     "en": "often 1 MiB on NFS.",
+     "ru": "часто 1 МиБ в NFS.",
+     "quote": {"k-stat": "stat->blksize = i_blocksize(inode);",
+               "ext4-blocks": "Block size is specified at mkfs time and typically is 4KiB.",
+               "k-nfs-super": "if (sb->s_blocksize == 0) sb->s_blocksize = nfs_block_bits(server->wsize, &sb->s_blocksize_bits);",
+               "nfs5-wsize": "The largest write payload supported by the Linux NFS client is 1,048,576 bytes (one megabyte). ... If a wsize value is not specified ... the client and server negotiate the largest wsize value that they can both support."}},
+    {"src": "inode7",
+     "en": "Nanosecond resolution on modern filesystems.",
+     "ru": "На современных файловых системах — с наносекундным разрешением.",
+     "quote": "Last status change timestamp (ctime) ... It is changed by writing or by setting inode information (i.e., owner, group, link count, mode, etc.). ... Nanosecond timestamps are supported on XFS, JFS, Btrfs, and ext4 (since Linux 2.6.23)."},
+    {"src": "statx2",
+     "en": "where some attributes are expensive to fetch.",
+     "ru": "где некоторые атрибуты дорого получать.",
+     "quote": "AT_STATX_FORCE_SYNC ... This may require that a network filesystem perform a data writeback to get the timestamps correct. ... The mask argument to statx() is used to tell the kernel which fields the caller is interested in. ... stx_btime The file's creation timestamp."},
+    {"src": "read2-errors",
+     "en": "You cannot <code>read</code> it directly.",
+     "ru": "Прочитать его напрямую через <code>read</code> нельзя.",
+     "quote": "EISDIR fd refers to a directory."},
+    {"src": "getdents2",
+     "en": "which fills a buffer with records of this shape:",
+     "ru": "который заполняет буфер записями такого вида:",
+     "quote": "The system call getdents() reads several linux_dirent structures from the directory referred to by the open file descriptor fd into the buffer pointed to by dirp. ... Linux 2.4 added getdents64(), with wider types for the d_ino and d_off fields."},
+    {"src": "glibc-readdir",
+     "en": "wrap it with a buffer.",
+     "ru": "оборачивают его буфером.",
+     "quote": "if (dirp->offset >= dirp->size) { /* We've emptied out our buffer.  Refill it.  */ size_t maxread = dirp->allocation; ssize_t bytes; bytes = __getdents64 (dirp->fd, dirp->data, maxread);"},
+    {"src": "readdir3",
+     "en": "must call <code>stat</code> once per entry.",
+     "ru": "должен вызвать <code>stat</code> для каждой записи.",
+     "quote": "The only fields in the dirent structure that are mandated by POSIX.1 are .d_name and .d_ino. The other fields are unstandardized, and not present on all systems"},
+    {"src": "rfc1813-changes",
+     "en": "which returns attributes along with names.",
+     "ru": "который возвращает атрибуты вместе с именами.",
+     "quote": "READDIRPLUS This procedure was added to return file handles and attributes in an extended directory list."},
+    {"src": ["readdir3", "rfc1813-readdir"],
+     "en": "to resume a long listing across several requests.",
+     "ru": "продолжает длинный листинг в нескольких запросах.",
+     "quote": {"readdir3": "Be aware that despite its type and name, the .d_off field is seldom any kind of directory offset on modern filesystems. Applications should treat this field as an opaque value, making no assumptions about its contents",
+               "rfc1813-readdir": "cookie This should be set to 0 in the first request to read the directory. On subsequent requests, it should be a cookie as returned by the server."}},
+    {"src": "link2",
+     "en": "neither is the \"original\".",
+     "ru": "ни одно из них не «оригинал».",
+     "quote": "This new name may be used exactly as the old one for any operation; both names refer to the same file (and so have the same permissions and ownership) and it is impossible to tell which name was the \"original\"."},
+    {"src": "unlink2",
+     "en": "removes a name and decrements <code>st_nlink</code>.",
+     "ru": "удаляет имя и уменьшает <code>st_nlink</code>.",
+     "quote": "unlink() deletes a name from the filesystem. If that name was the last link to a file and no processes have the file open, the file is deleted and the space it was using is made available for reuse."},
+    {"src": "rename2",
+     "en": "never nothing and never a mix.",
+     "ru": "но никогда пустоту и никогда смесь.",
+     "quote": "If newpath already exists, it will be atomically replaced, so that there is no point at which another process attempting to access newpath will find it missing."},
+    {"src": "ostep-rename",
+     "en": "then <code>rename</code> it over the real name.",
+     "ru": "затем выполнить <code>rename</code> поверх настоящего имени.",
+     "quote": "write out the new version of the file under a temporary name (foo.txt.tmp), force it to disk with fsync(), and then, when the application is certain the new file metadata and contents are on the disk, rename the temporary file to the original file's name."},
+    {"src": ["unlink2", "mmap2"],
+     "en": "<code>unlink</code> only affects the first.",
+     "ru": "<code>unlink</code> влияет только на первый.",
+     "quote": {"unlink2": "If the name was the last link to a file but any processes still have the file open, the file will remain in existence until the last file descriptor referring to it is closed.",
+               "mmap2": "After the mmap() call has returned, the file descriptor, fd, can be closed immediately without invalidating the mapping."}},
+    {"src": "open2-desc",
+     "en": "and keep reading and writing it.",
+     "ru": "и продолжать читать и писать его.",
+     "quote": "A file descriptor is a reference to an open file description; this reference is unaffected if path is subsequently removed or modified to refer to a different file."},
+    {"src": "tmpfile3",
+     "en": "clean themselves up when the process exits.",
+     "ru": "которые сами исчезают при завершении процесса.",
+     "quote": "The tmpfile() function opens a unique temporary file in binary read/write (w+b) mode. The file will be automatically deleted when it is closed or the program terminates."},
+    {"src": "unlink2",
+     "en": "closes the file or exits.",
+     "ru": "закроет файл или завершится.",
+     "quote": "If the name was the last link to a file but any processes still have the file open, the file will remain in existence until the last file descriptor referring to it is closed."},
+    {"src": "lsof8",
+     "en": "lists open files with a link count below 1.",
+     "ru": "показывает открытые файлы со счётчиком ссылок меньше 1.",
+     "quote": "When +L is followed by a number, only files having a link count less than that number will be listed. ... A specification of the form ``+L1'' will select open files that have been unlinked."},
+    {"src": "k-nfs-unlink",
+     "en": "The Linux client still does this with NFSv4.",
+     "ru": "Клиент Linux делает так и с NFSv4.",
+     "quote": "NFSv2/3 is stateless and the server doesn't know when the client is holding a file open. ... the client performs a \"silly-rename\". That is, it renames the file to a hidden file in the same directory ... (Note: NFSv4 is stateful ... However, we may not assume a server does so."},
+    {"src": "write2-notes",
+     "en": "and marked dirty.",
+     "ru": "и помечены как грязные.",
+     "quote": "A successful return from write() does not make any guarantee that data has been committed to disk."},
+    {"src": ["kdoc-vm", "k-pagewb"],
+     "en": "typically within about 30 seconds.",
+     "ru": "как правило в течение примерно 30 секунд.",
+     "quote": {"kdoc-vm": "This tunable is used to define when dirty data is old enough to be eligible for writeout by the kernel flusher threads. It is expressed in 100'ths of a second.",
+               "k-pagewb": "The longest time for which data is allowed to remain dirty ... unsigned int dirty_expire_interval = 30 * 100; /* centiseconds */"}},
+    {"src": "setbuf3",
+     "en": "You can change it with <code>setvbuf</code>.",
+     "ru": "Изменить его можно через <code>setvbuf</code>.",
+     "quote": "Normally, all files are block buffered. If a stream refers to a terminal (as stdout normally does), it is line buffered. The standard error stream stderr is always unbuffered by default. The setvbuf() function may be used on any open stream to change its buffer."},
+    {"src": ["exit3", "signal7"],
+     "en": "survives in the page cache.",
+     "ru": "переживёт его в страничном кэше.",
+     "quote": {"exit3": "If one of these functions does not return (e.g., it calls _exit(3), or kills itself with a signal), then none of the remaining functions is called, and further exit processing (in particular, flushing of stdio(3) streams) is abandoned.",
+               "signal7": "The signals SIGKILL and SIGSTOP cannot be caught, blocked, or ignored."}},
+    {"src": "posix-streams",
+     "en": "the same output can appear twice.",
+     "ru": "один и тот же вывод может появиться дважды.",
+     "quote": "Note that after a fork(), two handles exist where one existed before. ... If it is a stream which is open for writing or appending (but not also open for reading), the application shall either perform an fflush(), or the stream shall be closed."},
+    {"src": "fsync2",
+     "en": "flush its own volatile cache.",
+     "ru": "сбросить его собственный энергозависимый кэш.",
+     "quote": "fsync() transfers (\"flushes\") all modified in-core data of ... the file referred to by the file descriptor fd to the disk device ... This includes writing through or flushing a disk cache if present. The call blocks until the device reports that the transfer has completed."},
+    {"src": "fast18",
+     "en": "which is why programs batch them.",
+     "ru": "поэтому программы их группируют.",
+     "quote": "UFS plain-SSD supercap-SSD / EXT4 BFS EXT4 BFS EXT4 BFS / µ 1.29 0.51 5.95 3.52 0.15 0.09 ... Table 1: fsync() latency statistics (msec)"},
+    {"src": "vfs-aspace",
+     "en": "with no <code>read</code> or <code>write</code> calls.",
+     "ru": "без вызовов <code>read</code> и <code>write</code>.",
+     "quote": "The address space object is used to group and manage pages in the page cache. It can be used to keep track of the pages in a file (or anything else) and also track the mapping of sections of the file into process address spaces."},
+    {"src": "mmap2",
+     "en": "that never reaches the file.",
+     "ru": "изменения в котором никогда не попадают в файл.",
+     "quote": "MAP_SHARED Share this mapping. Updates to the mapping ... are carried through to the underlying file. ... MAP_PRIVATE Create a private copy-on-write mapping. Updates to the mapping ... are not carried through to the underlying file."},
+    {"src": "msync2",
+     "en": "is the mmap version of <code>fsync</code>.",
+     "ru": "— это версия <code>fsync</code> для mmap.",
+     "quote": "msync() flushes changes made to the in-core copy of a file that was mapped into memory using mmap(2) back to the filesystem."},
+    {"src": "vfs-file",
+     "en": "That table is filled in by whichever filesystem the file lives on.",
+     "ru": "Эту таблицу заполняет та файловая система, на которой лежит файл.",
+     "quote": "a set of file operation member functions. These are taken from the inode data. The open() file method is then called so the specific filesystem implementation can do its work."},
+    {"src": ["vfs-intro", "vfs-dcache", "vfs-aspace"],
+     "en": "the page cache and the name cache live.",
+     "ru": "там же живут страничный кэш и кэш имён.",
+     "quote": {"vfs-intro": "The Virtual File System (also known as the Virtual Filesystem Switch) is the software layer in the kernel that provides the filesystem interface to userspace programs.",
+               "vfs-dcache": "The pathname argument that is passed to them is used by the VFS to search through the directory entry cache (also known as the dentry cache or dcache).",
+               "vfs-aspace": "The address space object is used to group and manage pages in the page cache."}}
+  ]
+}

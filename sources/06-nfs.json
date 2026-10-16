@@ -1,0 +1,3303 @@
+{
+ "page": "06-nfs.html",
+ "sources": {
+  "rfc1813-front": {
+   "url": "https://www.rfc-editor.org/rfc/rfc1813.html",
+   "title": "RFC 1813: NFS Version 3 Protocol Specification",
+   "where": {
+    "en": "header",
+    "ru": "заголовок"
+   }
+  },
+  "rfc3010-front": {
+   "url": "https://www.rfc-editor.org/rfc/rfc3010.html",
+   "title": "RFC 3010: NFS version 4 Protocol",
+   "where": {
+    "en": "header",
+    "ru": "заголовок"
+   }
+  },
+  "rfc3530-front": {
+   "url": "https://www.rfc-editor.org/rfc/rfc3530.html",
+   "title": "RFC 3530: Network File System (NFS) version 4 Protocol",
+   "where": {
+    "en": "header",
+    "ru": "заголовок"
+   }
+  },
+  "rfc5661-front": {
+   "url": "https://www.rfc-editor.org/rfc/rfc5661.html",
+   "title": "RFC 5661: Network File System (NFS) Version 4 Minor Version 1 Protocol",
+   "where": {
+    "en": "header and Abstract",
+    "ru": "заголовок и аннотация"
+   }
+  },
+  "rfc7862-front": {
+   "url": "https://www.rfc-editor.org/rfc/rfc7862.html",
+   "title": "RFC 7862: Network File System (NFS) Version 4 Minor Version 2 Protocol",
+   "where": {
+    "en": "header and Abstract",
+    "ru": "заголовок и аннотация"
+   }
+  },
+  "rfc8276-front": {
+   "url": "https://www.rfc-editor.org/rfc/rfc8276.html",
+   "title": "RFC 8276: File System Extended Attributes in NFSv4",
+   "where": {
+    "en": "header and Abstract",
+    "ru": "заголовок и аннотация"
+   }
+  },
+  "rfc8435-front": {
+   "url": "https://www.rfc-editor.org/rfc/rfc8435.html",
+   "title": "RFC 8435: Parallel NFS (pNFS) Flexible File Layout",
+   "where": {
+    "en": "header and Abstract",
+    "ru": "заголовок и аннотация"
+   }
+  },
+  "rfc9754-front": {
+   "url": "https://www.rfc-editor.org/rfc/rfc9754.html",
+   "title": "RFC 9754: Extensions for Opening and Delegating Files in NFSv4.2",
+   "where": {
+    "en": "header and Abstract",
+    "ru": "заголовок и аннотация"
+   }
+  },
+  "rfc7530-front": {
+   "url": "https://www.rfc-editor.org/rfc/rfc7530.html",
+   "title": "RFC 7530: Network File System (NFS) Version 4 Protocol",
+   "where": {
+    "en": "header and Abstract",
+    "ru": "заголовок и аннотация"
+   }
+  },
+  "rfc8881-front": {
+   "url": "https://www.rfc-editor.org/rfc/rfc8881.html",
+   "title": "RFC 8881: Network File System (NFS) Version 4 Minor Version 1 Protocol",
+   "where": {
+    "en": "header and Abstract",
+    "ru": "заголовок и аннотация"
+   }
+  },
+  "rfc4506-front": {
+   "url": "https://www.rfc-editor.org/rfc/rfc4506.html",
+   "title": "RFC 4506: XDR: External Data Representation Standard",
+   "where": {
+    "en": "header and Abstract",
+    "ru": "заголовок и аннотация"
+   }
+  },
+  "rfc5531-front": {
+   "url": "https://www.rfc-editor.org/rfc/rfc5531.html",
+   "title": "RFC 5531: RPC: Remote Procedure Call Protocol Specification Version 2",
+   "where": {
+    "en": "header and Abstract",
+    "ru": "заголовок и аннотация"
+   }
+  },
+  "rfc1094-front": {
+   "url": "https://www.rfc-editor.org/rfc/rfc1094.html",
+   "title": "RFC 1094: NFS: Network File System Protocol Specification",
+   "where": {
+    "en": "header",
+    "ru": "заголовок"
+   }
+  },
+  "rfc1094-1.3": {
+   "url": "https://www.rfc-editor.org/rfc/rfc1094.html#section-1.3",
+   "title": "RFC 1094: NFS: Network File System Protocol Specification",
+   "where": {
+    "en": "section 1.3, Stateless Servers",
+    "ru": "раздел 1.3, Stateless Servers"
+   }
+  },
+  "rfc1094-2.2": {
+   "url": "https://www.rfc-editor.org/rfc/rfc1094.html#section-2.2",
+   "title": "RFC 1094: NFS: Network File System Protocol Specification",
+   "where": {
+    "en": "section 2.2, Server Procedures",
+    "ru": "раздел 2.2, Server Procedures"
+   }
+  },
+  "rfc1094-3.4": {
+   "url": "https://www.rfc-editor.org/rfc/rfc1094.html#section-3.4",
+   "title": "RFC 1094: NFS: Network File System Protocol Specification",
+   "where": {
+    "en": "section 3.4, RPC Information",
+    "ru": "раздел 3.4, RPC Information"
+   }
+  },
+  "rfc1094-3.5": {
+   "url": "https://www.rfc-editor.org/rfc/rfc1094.html#section-3.5",
+   "title": "RFC 1094: NFS: Network File System Protocol Specification",
+   "where": {
+    "en": "section 3.5, Sizes of XDR Structures",
+    "ru": "раздел 3.5, Sizes of XDR Structures"
+   }
+  },
+  "rfc1813-1.6": {
+   "url": "https://www.rfc-editor.org/rfc/rfc1813.html#section-1.6",
+   "title": "RFC 1813: NFS Version 3 Protocol Specification",
+   "where": {
+    "en": "section 1.6, Philosophy",
+    "ru": "раздел 1.6, Philosophy"
+   }
+  },
+  "rfc1813-1.7": {
+   "url": "https://www.rfc-editor.org/rfc/rfc1813.html#section-1.7",
+   "title": "RFC 1813: NFS Version 3 Protocol Specification",
+   "where": {
+    "en": "section 1.7, Changes from the NFS Version 2 Protocol",
+    "ru": "раздел 1.7, Changes from the NFS Version 2 Protocol"
+   }
+  },
+  "rfc1813-2.2": {
+   "url": "https://www.rfc-editor.org/rfc/rfc1813.html#section-2.2",
+   "title": "RFC 1813: NFS Version 3 Protocol Specification",
+   "where": {
+    "en": "section 2.2, Constants",
+    "ru": "раздел 2.2, Constants"
+   }
+  },
+  "rfc1813-2.3": {
+   "url": "https://www.rfc-editor.org/rfc/rfc1813.html#section-2.3",
+   "title": "RFC 1813: NFS Version 3 Protocol Specification",
+   "where": {
+    "en": "section 2.3, Transport address",
+    "ru": "раздел 2.3, Transport address"
+   }
+  },
+  "rfc1813-2.4": {
+   "url": "https://www.rfc-editor.org/rfc/rfc1813.html#section-2.4",
+   "title": "RFC 1813: NFS Version 3 Protocol Specification",
+   "where": {
+    "en": "section 2.4, Sizes",
+    "ru": "раздел 2.4, Sizes"
+   }
+  },
+  "rfc1813-2.6": {
+   "url": "https://www.rfc-editor.org/rfc/rfc1813.html#section-2.6",
+   "title": "RFC 1813: NFS Version 3 Protocol Specification",
+   "where": {
+    "en": "section 2.6, Defined Error Numbers (NFS3ERR_STALE)",
+    "ru": "раздел 2.6, коды ошибок (NFS3ERR_STALE)"
+   }
+  },
+  "rfc1813-3.3.3": {
+   "url": "https://www.rfc-editor.org/rfc/rfc1813.html#section-3.3.3",
+   "title": "RFC 1813: NFS Version 3 Protocol Specification",
+   "where": {
+    "en": "section 3.3.3, LOOKUP",
+    "ru": "раздел 3.3.3, LOOKUP"
+   }
+  },
+  "rfc1813-3.3.4": {
+   "url": "https://www.rfc-editor.org/rfc/rfc1813.html#section-3.3.4",
+   "title": "RFC 1813: NFS Version 3 Protocol Specification",
+   "where": {
+    "en": "section 3.3.4, ACCESS",
+    "ru": "раздел 3.3.4, ACCESS"
+   }
+  },
+  "rfc1813-3.3.7": {
+   "url": "https://www.rfc-editor.org/rfc/rfc1813.html#section-3.3.7",
+   "title": "RFC 1813: NFS Version 3 Protocol Specification",
+   "where": {
+    "en": "section 3.3.7, WRITE",
+    "ru": "раздел 3.3.7, WRITE"
+   }
+  },
+  "rfc1813-3.3.17": {
+   "url": "https://www.rfc-editor.org/rfc/rfc1813.html#section-3.3.17",
+   "title": "RFC 1813: NFS Version 3 Protocol Specification",
+   "where": {
+    "en": "section 3.3.17, READDIRPLUS",
+    "ru": "раздел 3.3.17, READDIRPLUS"
+   }
+  },
+  "rfc1813-3.3.21": {
+   "url": "https://www.rfc-editor.org/rfc/rfc1813.html#section-3.3.21",
+   "title": "RFC 1813: NFS Version 3 Protocol Specification",
+   "where": {
+    "en": "section 3.3.21, COMMIT",
+    "ru": "раздел 3.3.21, COMMIT"
+   }
+  },
+  "rfc1813-4.5": {
+   "url": "https://www.rfc-editor.org/rfc/rfc1813.html#section-4.5",
+   "title": "RFC 1813: NFS Version 3 Protocol Specification",
+   "where": {
+    "en": "section 4.5, Duplicate request cache",
+    "ru": "раздел 4.5, Duplicate request cache"
+   }
+  },
+  "rfc1813-5.1.2": {
+   "url": "https://www.rfc-editor.org/rfc/rfc1813.html#section-5.1.2",
+   "title": "RFC 1813: NFS Version 3 Protocol Specification",
+   "where": {
+    "en": "Appendix I (Mount protocol), section 5.1.2, Constants",
+    "ru": "приложение I (протокол MOUNT), раздел 5.1.2, константы"
+   }
+  },
+  "rfc1813-6.1.2": {
+   "url": "https://www.rfc-editor.org/rfc/rfc1813.html#section-6.1.2",
+   "title": "RFC 1813: NFS Version 3 Protocol Specification",
+   "where": {
+    "en": "Appendix II (Lock manager protocol), section 6.1.2, Constants",
+    "ru": "приложение II (протокол менеджера блокировок), раздел 6.1.2, константы"
+   }
+  },
+  "rfc1833-1": {
+   "url": "https://www.rfc-editor.org/rfc/rfc1833.html#section-1",
+   "title": "RFC 1833: Binding Protocols for ONC RPC Version 2",
+   "where": {
+    "en": "section 1, Introduction",
+    "ru": "раздел 1, Introduction"
+   }
+  },
+  "rfc4506-1": {
+   "url": "https://www.rfc-editor.org/rfc/rfc4506.html#section-1",
+   "title": "RFC 4506: XDR: External Data Representation Standard",
+   "where": {
+    "en": "section 1, Introduction",
+    "ru": "раздел 1, Introduction"
+   }
+  },
+  "rfc4506-3": {
+   "url": "https://www.rfc-editor.org/rfc/rfc4506.html#section-3",
+   "title": "RFC 4506: XDR: External Data Representation Standard",
+   "where": {
+    "en": "section 3, Basic Block Size",
+    "ru": "раздел 3, Basic Block Size"
+   }
+  },
+  "rfc4506-4.1": {
+   "url": "https://www.rfc-editor.org/rfc/rfc4506.html#section-4.1",
+   "title": "RFC 4506: XDR: External Data Representation Standard",
+   "where": {
+    "en": "section 4.1, Integer",
+    "ru": "раздел 4.1, Integer"
+   }
+  },
+  "rfc4506-4.5": {
+   "url": "https://www.rfc-editor.org/rfc/rfc4506.html#section-4.5",
+   "title": "RFC 4506: XDR: External Data Representation Standard",
+   "where": {
+    "en": "section 4.5, Hyper Integer and Unsigned Hyper Integer",
+    "ru": "раздел 4.5, Hyper Integer and Unsigned Hyper Integer"
+   }
+  },
+  "rfc4506-4.11": {
+   "url": "https://www.rfc-editor.org/rfc/rfc4506.html#section-4.11",
+   "title": "RFC 4506: XDR: External Data Representation Standard",
+   "where": {
+    "en": "section 4.11, String",
+    "ru": "раздел 4.11, String"
+   }
+  },
+  "rfc5531-9": {
+   "url": "https://www.rfc-editor.org/rfc/rfc5531.html#section-9",
+   "title": "RFC 5531: RPC: Remote Procedure Call Protocol Specification Version 2",
+   "where": {
+    "en": "section 9, The RPC Message Protocol",
+    "ru": "раздел 9, The RPC Message Protocol"
+   }
+  },
+  "rfc5531-11": {
+   "url": "https://www.rfc-editor.org/rfc/rfc5531.html#section-11",
+   "title": "RFC 5531: RPC: Remote Procedure Call Protocol Specification Version 2",
+   "where": {
+    "en": "section 11, Record Marking Standard",
+    "ru": "раздел 11, Record Marking Standard"
+   }
+  },
+  "rfc5531-appA": {
+   "url": "https://www.rfc-editor.org/rfc/rfc5531.html#page-25",
+   "title": "RFC 5531: RPC: Remote Procedure Call Protocol Specification Version 2",
+   "where": {
+    "en": "Appendix A, System Authentication",
+    "ru": "приложение A, System Authentication"
+   }
+  },
+  "rfc5531-appC": {
+   "url": "https://www.rfc-editor.org/rfc/rfc5531.html#page-60",
+   "title": "RFC 5531: RPC: Remote Procedure Call Protocol Specification Version 2",
+   "where": {
+    "en": "Appendix C, Current Number Assignments (authentication flavors)",
+    "ru": "приложение C, текущие номера (типы аутентификации)"
+   }
+  },
+  "rfc5663-1": {
+   "url": "https://www.rfc-editor.org/rfc/rfc5663.html#section-1",
+   "title": "RFC 5663: Parallel NFS (pNFS) Block/Volume Layout",
+   "where": {
+    "en": "section 1, Introduction",
+    "ru": "раздел 1, Introduction"
+   }
+  },
+  "rfc5663-2.2.1": {
+   "url": "https://www.rfc-editor.org/rfc/rfc5663.html#section-2.2.1",
+   "title": "RFC 5663: Parallel NFS (pNFS) Block/Volume Layout",
+   "where": {
+    "en": "section 2.2.1, Volume Identification",
+    "ru": "раздел 2.2.1, Volume Identification"
+   }
+  },
+  "rfc5664-1": {
+   "url": "https://www.rfc-editor.org/rfc/rfc5664.html#section-1",
+   "title": "RFC 5664: Object-Based Parallel NFS (pNFS) Operations",
+   "where": {
+    "en": "section 1, Introduction",
+    "ru": "раздел 1, Introduction"
+   }
+  },
+  "rfc7530-1.4": {
+   "url": "https://www.rfc-editor.org/rfc/rfc7530.html#section-1.4",
+   "title": "RFC 7530: Network File System (NFS) Version 4 Protocol",
+   "where": {
+    "en": "section 1.4, Overview of NFSv4 Features",
+    "ru": "раздел 1.4, Overview of NFSv4 Features"
+   }
+  },
+  "rfc7530-1.4.5": {
+   "url": "https://www.rfc-editor.org/rfc/rfc7530.html#section-1.4.5",
+   "title": "RFC 7530: Network File System (NFS) Version 4 Protocol",
+   "where": {
+    "en": "section 1.4.5, File Locking",
+    "ru": "раздел 1.4.5, File Locking"
+   }
+  },
+  "rfc7530-3.1": {
+   "url": "https://www.rfc-editor.org/rfc/rfc7530.html#section-3.1",
+   "title": "RFC 7530: Network File System (NFS) Version 4 Protocol",
+   "where": {
+    "en": "section 3.1, Ports and Transports",
+    "ru": "раздел 3.1, Ports and Transports"
+   }
+  },
+  "rfc7530-3.2.1": {
+   "url": "https://www.rfc-editor.org/rfc/rfc7530.html#section-3.2.1",
+   "title": "RFC 7530: Network File System (NFS) Version 4 Protocol",
+   "where": {
+    "en": "section 3.2.1, Security Mechanisms for NFSv4",
+    "ru": "раздел 3.2.1, Security Mechanisms for NFSv4"
+   }
+  },
+  "rfc7530-4.2.1": {
+   "url": "https://www.rfc-editor.org/rfc/rfc7530.html#section-4.2.1",
+   "title": "RFC 7530: Network File System (NFS) Version 4 Protocol",
+   "where": {
+    "en": "section 4.2.1, General Properties of a Filehandle",
+    "ru": "раздел 4.2.1, General Properties of a Filehandle"
+   }
+  },
+  "rfc7530-5.9": {
+   "url": "https://www.rfc-editor.org/rfc/rfc7530.html#section-5.9",
+   "title": "RFC 7530: Network File System (NFS) Version 4 Protocol",
+   "where": {
+    "en": "section 5.9, Interpreting owner and owner_group",
+    "ru": "раздел 5.9, Interpreting owner and owner_group"
+   }
+  },
+  "rfc7530-6.2.1": {
+   "url": "https://www.rfc-editor.org/rfc/rfc7530.html#section-6.2.1",
+   "title": "RFC 7530: Network File System (NFS) Version 4 Protocol",
+   "where": {
+    "en": "section 6.2.1, Attribute 12: acl",
+    "ru": "раздел 6.2.1, Attribute 12: acl"
+   }
+  },
+  "rfc7530-7.3": {
+   "url": "https://www.rfc-editor.org/rfc/rfc7530.html#section-7.3",
+   "title": "RFC 7530: Network File System (NFS) Version 4 Protocol",
+   "where": {
+    "en": "section 7.3, Server Pseudo-File System",
+    "ru": "раздел 7.3, Server Pseudo-File System"
+   }
+  },
+  "rfc7530-9.1.1": {
+   "url": "https://www.rfc-editor.org/rfc/rfc7530.html#section-9.1.1",
+   "title": "RFC 7530: Network File System (NFS) Version 4 Protocol",
+   "where": {
+    "en": "section 9.1.1, Client ID",
+    "ru": "раздел 9.1.1, Client ID"
+   }
+  },
+  "rfc7530-9.1.4.1": {
+   "url": "https://www.rfc-editor.org/rfc/rfc7530.html#section-9.1.4.1",
+   "title": "RFC 7530: Network File System (NFS) Version 4 Protocol",
+   "where": {
+    "en": "section 9.1.4.1, Stateid Types",
+    "ru": "раздел 9.1.4.1, Stateid Types"
+   }
+  },
+  "rfc7530-9.1.4.2": {
+   "url": "https://www.rfc-editor.org/rfc/rfc7530.html#section-9.1.4.2",
+   "title": "RFC 7530: Network File System (NFS) Version 4 Protocol",
+   "where": {
+    "en": "section 9.1.4.2, Stateid Structure",
+    "ru": "раздел 9.1.4.2, Stateid Structure"
+   }
+  },
+  "rfc7530-9.5": {
+   "url": "https://www.rfc-editor.org/rfc/rfc7530.html#section-9.5",
+   "title": "RFC 7530: Network File System (NFS) Version 4 Protocol",
+   "where": {
+    "en": "section 9.5, Lease Renewal",
+    "ru": "раздел 9.5, Lease Renewal"
+   }
+  },
+  "rfc7530-9.9": {
+   "url": "https://www.rfc-editor.org/rfc/rfc7530.html#section-9.9",
+   "title": "RFC 7530: Network File System (NFS) Version 4 Protocol",
+   "where": {
+    "en": "section 9.9, Share Reservations",
+    "ru": "раздел 9.9, Share Reservations"
+   }
+  },
+  "rfc7530-10.2": {
+   "url": "https://www.rfc-editor.org/rfc/rfc7530.html#section-10.2",
+   "title": "RFC 7530: Network File System (NFS) Version 4 Protocol",
+   "where": {
+    "en": "section 10.2, Delegation and Callbacks",
+    "ru": "раздел 10.2, Delegation and Callbacks"
+   }
+  },
+  "rfc7530-10.4": {
+   "url": "https://www.rfc-editor.org/rfc/rfc7530.html#section-10.4",
+   "title": "RFC 7530: Network File System (NFS) Version 4 Protocol",
+   "where": {
+    "en": "section 10.4, Open Delegation",
+    "ru": "раздел 10.4, Open Delegation"
+   }
+  },
+  "rfc7530-15.2.4": {
+   "url": "https://www.rfc-editor.org/rfc/rfc7530.html#section-15.2.4",
+   "title": "RFC 7530: Network File System (NFS) Version 4 Protocol",
+   "where": {
+    "en": "section 15.2.4, COMPOUND: Description",
+    "ru": "раздел 15.2.4, COMPOUND: Description"
+   }
+  },
+  "rfc7530-15.2.4.1": {
+   "url": "https://www.rfc-editor.org/rfc/rfc7530.html#section-15.2.4.1",
+   "title": "RFC 7530: Network File System (NFS) Version 4 Protocol",
+   "where": {
+    "en": "section 15.2.4.1, Current Filehandle",
+    "ru": "раздел 15.2.4.1, Current Filehandle"
+   }
+  },
+  "rfc7530-16.33": {
+   "url": "https://www.rfc-editor.org/rfc/rfc7530.html#section-16.33",
+   "title": "RFC 7530: Network File System (NFS) Version 4 Protocol",
+   "where": {
+    "en": "section 16.33, SETCLIENTID",
+    "ru": "раздел 16.33, SETCLIENTID"
+   }
+  },
+  "rfc7862-1.4": {
+   "url": "https://www.rfc-editor.org/rfc/rfc7862.html#section-1.4",
+   "title": "RFC 7862: Network File System (NFS) Version 4 Minor Version 2 Protocol",
+   "where": {
+    "en": "section 1.4, Overview of NFSv4.2 Features",
+    "ru": "раздел 1.4, Overview of NFSv4.2 Features"
+   }
+  },
+  "rfc7862-1.4.1": {
+   "url": "https://www.rfc-editor.org/rfc/rfc7862.html#section-1.4.1",
+   "title": "RFC 7862: Network File System (NFS) Version 4 Minor Version 2 Protocol",
+   "where": {
+    "en": "section 1.4.1, Server-Side Clone and Copy",
+    "ru": "раздел 1.4.1, Server-Side Clone and Copy"
+   }
+  },
+  "rfc7862-1.4.2": {
+   "url": "https://www.rfc-editor.org/rfc/rfc7862.html#section-1.4.2",
+   "title": "RFC 7862: Network File System (NFS) Version 4 Minor Version 2 Protocol",
+   "where": {
+    "en": "section 1.4.2, Application Input/Output (I/O) Advise",
+    "ru": "раздел 1.4.2, Application Input/Output (I/O) Advise"
+   }
+  },
+  "rfc7862-1.4.3": {
+   "url": "https://www.rfc-editor.org/rfc/rfc7862.html#section-1.4.3",
+   "title": "RFC 7862: Network File System (NFS) Version 4 Minor Version 2 Protocol",
+   "where": {
+    "en": "section 1.4.3, Sparse Files",
+    "ru": "раздел 1.4.3, Sparse Files"
+   }
+  },
+  "rfc7862-1.4.4": {
+   "url": "https://www.rfc-editor.org/rfc/rfc7862.html#section-1.4.4",
+   "title": "RFC 7862: Network File System (NFS) Version 4 Minor Version 2 Protocol",
+   "where": {
+    "en": "section 1.4.4, Space Reservation",
+    "ru": "раздел 1.4.4, Space Reservation"
+   }
+  },
+  "rfc7862-1.4.5": {
+   "url": "https://www.rfc-editor.org/rfc/rfc7862.html#section-1.4.5",
+   "title": "RFC 7862: Network File System (NFS) Version 4 Minor Version 2 Protocol",
+   "where": {
+    "en": "section 1.4.5, Application Data Block (ADB) Support",
+    "ru": "раздел 1.4.5, Application Data Block (ADB) Support"
+   }
+  },
+  "rfc7862-1.4.6": {
+   "url": "https://www.rfc-editor.org/rfc/rfc7862.html#section-1.4.6",
+   "title": "RFC 7862: Network File System (NFS) Version 4 Minor Version 2 Protocol",
+   "where": {
+    "en": "section 1.4.6, Labeled NFS",
+    "ru": "раздел 1.4.6, Labeled NFS"
+   }
+  },
+  "rfc7862-1.4.7": {
+   "url": "https://www.rfc-editor.org/rfc/rfc7862.html#section-1.4.7",
+   "title": "RFC 7862: Network File System (NFS) Version 4 Minor Version 2 Protocol",
+   "where": {
+    "en": "section 1.4.7, Layout Enhancements",
+    "ru": "раздел 1.4.7, Layout Enhancements"
+   }
+  },
+  "rfc7862-2": {
+   "url": "https://www.rfc-editor.org/rfc/rfc7862.html#section-2",
+   "title": "RFC 7862: Network File System (NFS) Version 4 Minor Version 2 Protocol",
+   "where": {
+    "en": "section 2, Minor Versioning",
+    "ru": "раздел 2, Minor Versioning"
+   }
+  },
+  "rfc7862-4.1": {
+   "url": "https://www.rfc-editor.org/rfc/rfc7862.html#section-4.1",
+   "title": "RFC 7862: Network File System (NFS) Version 4 Minor Version 2 Protocol",
+   "where": {
+    "en": "section 4.1, Server-Side Copy: Protocol Overview",
+    "ru": "раздел 4.1, Server-Side Copy: Protocol Overview"
+   }
+  },
+  "rfc7862-4.1.1": {
+   "url": "https://www.rfc-editor.org/rfc/rfc7862.html#section-4.1.1",
+   "title": "RFC 7862: Network File System (NFS) Version 4 Minor Version 2 Protocol",
+   "where": {
+    "en": "section 4.1.1, COPY Operations",
+    "ru": "раздел 4.1.1, COPY Operations"
+   }
+  },
+  "rfc7862-4.6.2": {
+   "url": "https://www.rfc-editor.org/rfc/rfc7862.html#section-4.6.2",
+   "title": "RFC 7862: Network File System (NFS) Version 4 Minor Version 2 Protocol",
+   "where": {
+    "en": "section 4.6.2, Using NFSv4.x as the Copy Protocol",
+    "ru": "раздел 4.6.2, Using NFSv4.x as the Copy Protocol"
+   }
+  },
+  "rfc7862-6": {
+   "url": "https://www.rfc-editor.org/rfc/rfc7862.html#section-6",
+   "title": "RFC 7862: Network File System (NFS) Version 4 Minor Version 2 Protocol",
+   "where": {
+    "en": "section 6, Sparse Files",
+    "ru": "раздел 6, Sparse Files"
+   }
+  },
+  "rfc7862-7": {
+   "url": "https://www.rfc-editor.org/rfc/rfc7862.html#section-7",
+   "title": "RFC 7862: Network File System (NFS) Version 4 Minor Version 2 Protocol",
+   "where": {
+    "en": "section 7, Space Reservation",
+    "ru": "раздел 7, Space Reservation"
+   }
+  },
+  "rfc7862-8": {
+   "url": "https://www.rfc-editor.org/rfc/rfc7862.html#section-8",
+   "title": "RFC 7862: Network File System (NFS) Version 4 Minor Version 2 Protocol",
+   "where": {
+    "en": "section 8, Application Data Block Support",
+    "ru": "раздел 8, Application Data Block Support"
+   }
+  },
+  "rfc7862-13": {
+   "url": "https://www.rfc-editor.org/rfc/rfc7862.html#section-13",
+   "title": "RFC 7862: Network File System (NFS) Version 4 Minor Version 2 Protocol",
+   "where": {
+    "en": "section 13, Operations: REQUIRED, RECOMMENDED, or OPTIONAL",
+    "ru": "раздел 13, Operations: REQUIRED, RECOMMENDED, or OPTIONAL"
+   }
+  },
+  "rfc7862-15.1": {
+   "url": "https://www.rfc-editor.org/rfc/rfc7862.html#section-15.1",
+   "title": "RFC 7862: Network File System (NFS) Version 4 Minor Version 2 Protocol",
+   "where": {
+    "en": "section 15.1, ALLOCATE",
+    "ru": "раздел 15.1, ALLOCATE"
+   }
+  },
+  "rfc7862-15.2": {
+   "url": "https://www.rfc-editor.org/rfc/rfc7862.html#section-15.2",
+   "title": "RFC 7862: Network File System (NFS) Version 4 Minor Version 2 Protocol",
+   "where": {
+    "en": "section 15.2, COPY",
+    "ru": "раздел 15.2, COPY"
+   }
+  },
+  "rfc7862-15.4": {
+   "url": "https://www.rfc-editor.org/rfc/rfc7862.html#section-15.4",
+   "title": "RFC 7862: Network File System (NFS) Version 4 Minor Version 2 Protocol",
+   "where": {
+    "en": "section 15.4, DEALLOCATE",
+    "ru": "раздел 15.4, DEALLOCATE"
+   }
+  },
+  "rfc7862-15.10": {
+   "url": "https://www.rfc-editor.org/rfc/rfc7862.html#section-15.10",
+   "title": "RFC 7862: Network File System (NFS) Version 4 Minor Version 2 Protocol",
+   "where": {
+    "en": "section 15.10, READ_PLUS",
+    "ru": "раздел 15.10, READ_PLUS"
+   }
+  },
+  "rfc7862-15.11": {
+   "url": "https://www.rfc-editor.org/rfc/rfc7862.html#section-15.11",
+   "title": "RFC 7862: Network File System (NFS) Version 4 Minor Version 2 Protocol",
+   "where": {
+    "en": "section 15.11, SEEK",
+    "ru": "раздел 15.11, SEEK"
+   }
+  },
+  "rfc7863-2": {
+   "url": "https://www.rfc-editor.org/rfc/rfc7863.html#section-2",
+   "title": "RFC 7863: Network File System (NFS) Version 4 Minor Version 2 External Data Representation Standard (XDR) Description",
+   "where": {
+    "en": "section 2, XDR Description of NFSv4.2 (enum nfs_opnum4)",
+    "ru": "раздел 2, XDR-описание NFSv4.2 (enum nfs_opnum4)"
+   }
+  },
+  "rfc8154-1": {
+   "url": "https://www.rfc-editor.org/rfc/rfc8154.html#section-1",
+   "title": "RFC 8154: Parallel NFS (pNFS) Small Computer System Interface (SCSI) Layout",
+   "where": {
+    "en": "section 1, Introduction",
+    "ru": "раздел 1, Introduction"
+   }
+  },
+  "rfc8276-3": {
+   "url": "https://www.rfc-editor.org/rfc/rfc8276.html#section-3",
+   "title": "RFC 8276: File System Extended Attributes in NFSv4",
+   "where": {
+    "en": "section 3, Functional Gaps Due to Lack of NFSv4 Extended Attribute Support",
+    "ru": "раздел 3, Functional Gaps Due to Lack of NFSv4 Extended Attribute Support"
+   }
+  },
+  "rfc8276-5": {
+   "url": "https://www.rfc-editor.org/rfc/rfc8276.html#section-5",
+   "title": "RFC 8276: File System Extended Attributes in NFSv4",
+   "where": {
+    "en": "section 5, Namespaces",
+    "ru": "раздел 5, Namespaces"
+   }
+  },
+  "rfc8276-8.4": {
+   "url": "https://www.rfc-editor.org/rfc/rfc8276.html#section-8.4",
+   "title": "RFC 8276: File System Extended Attributes in NFSv4",
+   "where": {
+    "en": "section 8.4, New Operations",
+    "ru": "раздел 8.4, New Operations"
+   }
+  },
+  "rfc8276-8.6": {
+   "url": "https://www.rfc-editor.org/rfc/rfc8276.html#section-8.6",
+   "title": "RFC 8276: File System Extended Attributes in NFSv4",
+   "where": {
+    "en": "section 8.6, Numeric Values Assigned to Protocol Extensions",
+    "ru": "раздел 8.6, Numeric Values Assigned to Protocol Extensions"
+   }
+  },
+  "rfc8435-1": {
+   "url": "https://www.rfc-editor.org/rfc/rfc8435.html#section-1",
+   "title": "RFC 8435: Parallel NFS (pNFS) Flexible File Layout",
+   "where": {
+    "en": "section 1, Introduction",
+    "ru": "раздел 1, Introduction"
+   }
+  },
+  "rfc8881-1.9": {
+   "url": "https://www.rfc-editor.org/rfc/rfc8881.html#section-1.9",
+   "title": "RFC 8881: Network File System (NFS) Version 4 Minor Version 1 Protocol",
+   "where": {
+    "en": "section 1.9, Differences from NFSv4.0",
+    "ru": "раздел 1.9, Differences from NFSv4.0"
+   }
+  },
+  "rfc8881-2.10.1": {
+   "url": "https://www.rfc-editor.org/rfc/rfc8881.html#section-2.10.1",
+   "title": "RFC 8881: Network File System (NFS) Version 4 Minor Version 1 Protocol",
+   "where": {
+    "en": "section 2.10.1, Session: Motivation and Overview",
+    "ru": "раздел 2.10.1, Session: Motivation and Overview"
+   }
+  },
+  "rfc8881-2.10.2": {
+   "url": "https://www.rfc-editor.org/rfc/rfc8881.html#section-2.10.2",
+   "title": "RFC 8881: Network File System (NFS) Version 4 Minor Version 1 Protocol",
+   "where": {
+    "en": "section 2.10.2, NFSv4 Integration",
+    "ru": "раздел 2.10.2, NFSv4 Integration"
+   }
+  },
+  "rfc8881-2.10.5": {
+   "url": "https://www.rfc-editor.org/rfc/rfc8881.html#section-2.10.5",
+   "title": "RFC 8881: Network File System (NFS) Version 4 Minor Version 1 Protocol",
+   "where": {
+    "en": "section 2.10.5, Trunking",
+    "ru": "раздел 2.10.5, Trunking"
+   }
+  },
+  "rfc8881-2.10.6": {
+   "url": "https://www.rfc-editor.org/rfc/rfc8881.html#section-2.10.6",
+   "title": "RFC 8881: Network File System (NFS) Version 4 Minor Version 1 Protocol",
+   "where": {
+    "en": "section 2.10.6, Exactly Once Semantics",
+    "ru": "раздел 2.10.6, Exactly Once Semantics"
+   }
+  },
+  "rfc8881-2.10.6.1": {
+   "url": "https://www.rfc-editor.org/rfc/rfc8881.html#section-2.10.6.1",
+   "title": "RFC 8881: Network File System (NFS) Version 4 Minor Version 1 Protocol",
+   "where": {
+    "en": "section 2.10.6.1, Slot Identifiers and Reply Cache",
+    "ru": "раздел 2.10.6.1, Slot Identifiers and Reply Cache"
+   }
+  },
+  "rfc8881-3.1": {
+   "url": "https://www.rfc-editor.org/rfc/rfc8881.html#section-3.1",
+   "title": "RFC 8881: Network File System (NFS) Version 4 Minor Version 1 Protocol",
+   "where": {
+    "en": "section 3.1, Basic Constants",
+    "ru": "раздел 3.1, Basic Constants"
+   }
+  },
+  "rfc8881-8.3": {
+   "url": "https://www.rfc-editor.org/rfc/rfc8881.html#section-8.3",
+   "title": "RFC 8881: Network File System (NFS) Version 4 Minor Version 1 Protocol",
+   "where": {
+    "en": "section 8.3, Lease Renewal",
+    "ru": "раздел 8.3, Lease Renewal"
+   }
+  },
+  "rfc8881-8.4.2.1": {
+   "url": "https://www.rfc-editor.org/rfc/rfc8881.html#section-8.4.2.1",
+   "title": "RFC 8881: Network File System (NFS) Version 4 Minor Version 1 Protocol",
+   "where": {
+    "en": "section 8.4.2.1, State Reclaim",
+    "ru": "раздел 8.4.2.1, State Reclaim"
+   }
+  },
+  "rfc8881-10.9.1": {
+   "url": "https://www.rfc-editor.org/rfc/rfc8881.html#section-10.9.1",
+   "title": "RFC 8881: Network File System (NFS) Version 4 Minor Version 1 Protocol",
+   "where": {
+    "en": "section 10.9.1, Introduction to Directory Delegations",
+    "ru": "раздел 10.9.1, Introduction to Directory Delegations"
+   }
+  },
+  "rfc8881-12.1": {
+   "url": "https://www.rfc-editor.org/rfc/rfc8881.html#section-12.1",
+   "title": "RFC 8881: Network File System (NFS) Version 4 Minor Version 1 Protocol",
+   "where": {
+    "en": "section 12.1, pNFS: Introduction",
+    "ru": "раздел 12.1, pNFS: Introduction"
+   }
+  },
+  "rfc8881-12.5.2": {
+   "url": "https://www.rfc-editor.org/rfc/rfc8881.html#section-12.5.2",
+   "title": "RFC 8881: Network File System (NFS) Version 4 Minor Version 1 Protocol",
+   "where": {
+    "en": "section 12.5.2, Getting a Layout",
+    "ru": "раздел 12.5.2, Getting a Layout"
+   }
+  },
+  "rfc8881-13.3": {
+   "url": "https://www.rfc-editor.org/rfc/rfc8881.html#section-13.3",
+   "title": "RFC 8881: Network File System (NFS) Version 4 Minor Version 1 Protocol",
+   "where": {
+    "en": "section 13.3, File Layout Data Types",
+    "ru": "раздел 13.3, File Layout Data Types"
+   }
+  },
+  "rfc8881-13.6": {
+   "url": "https://www.rfc-editor.org/rfc/rfc8881.html#section-13.6",
+   "title": "RFC 8881: Network File System (NFS) Version 4 Minor Version 1 Protocol",
+   "where": {
+    "en": "section 13.6, Operations Sent to NFSv4.1 Data Servers",
+    "ru": "раздел 13.6, Operations Sent to NFSv4.1 Data Servers"
+   }
+  },
+  "rfc8881-18.35": {
+   "url": "https://www.rfc-editor.org/rfc/rfc8881.html#section-18.35",
+   "title": "RFC 8881: Network File System (NFS) Version 4 Minor Version 1 Protocol",
+   "where": {
+    "en": "section 18.35, EXCHANGE_ID",
+    "ru": "раздел 18.35, EXCHANGE_ID"
+   }
+  },
+  "rfc8881-18.36": {
+   "url": "https://www.rfc-editor.org/rfc/rfc8881.html#section-18.36",
+   "title": "RFC 8881: Network File System (NFS) Version 4 Minor Version 1 Protocol",
+   "where": {
+    "en": "section 18.36, CREATE_SESSION",
+    "ru": "раздел 18.36, CREATE_SESSION"
+   }
+  },
+  "rfc8881-18.40": {
+   "url": "https://www.rfc-editor.org/rfc/rfc8881.html#section-18.40",
+   "title": "RFC 8881: Network File System (NFS) Version 4 Minor Version 1 Protocol",
+   "where": {
+    "en": "section 18.40, GETDEVICEINFO",
+    "ru": "раздел 18.40, GETDEVICEINFO"
+   }
+  },
+  "rfc8881-18.42": {
+   "url": "https://www.rfc-editor.org/rfc/rfc8881.html#section-18.42",
+   "title": "RFC 8881: Network File System (NFS) Version 4 Minor Version 1 Protocol",
+   "where": {
+    "en": "section 18.42, LAYOUTCOMMIT",
+    "ru": "раздел 18.42, LAYOUTCOMMIT"
+   }
+  },
+  "rfc8881-18.44": {
+   "url": "https://www.rfc-editor.org/rfc/rfc8881.html#section-18.44",
+   "title": "RFC 8881: Network File System (NFS) Version 4 Minor Version 1 Protocol",
+   "where": {
+    "en": "section 18.44, LAYOUTRETURN",
+    "ru": "раздел 18.44, LAYOUTRETURN"
+   }
+  },
+  "rfc8881-18.46": {
+   "url": "https://www.rfc-editor.org/rfc/rfc8881.html#section-18.46",
+   "title": "RFC 8881: Network File System (NFS) Version 4 Minor Version 1 Protocol",
+   "where": {
+    "en": "section 18.46, SEQUENCE",
+    "ru": "раздел 18.46, SEQUENCE"
+   }
+  },
+  "rfc8881-20.3": {
+   "url": "https://www.rfc-editor.org/rfc/rfc8881.html#section-20.3",
+   "title": "RFC 8881: Network File System (NFS) Version 4 Minor Version 1 Protocol",
+   "where": {
+    "en": "section 20.3, CB_LAYOUTRECALL",
+    "ru": "раздел 20.3, CB_LAYOUTRECALL"
+   }
+  },
+  "rfc9289-1": {
+   "url": "https://www.rfc-editor.org/rfc/rfc9289.html#section-1",
+   "title": "RFC 9289: Towards Remote Procedure Call Encryption by Default",
+   "where": {
+    "en": "section 1, Introduction",
+    "ru": "раздел 1, Introduction"
+   }
+  },
+  "rfc9289-4.2": {
+   "url": "https://www.rfc-editor.org/rfc/rfc9289.html#section-4.2",
+   "title": "RFC 9289: Towards Remote Procedure Call Encryption by Default",
+   "where": {
+    "en": "section 4.2, Authentication",
+    "ru": "раздел 4.2, Authentication"
+   }
+  },
+  "rfc9754-2": {
+   "url": "https://www.rfc-editor.org/rfc/rfc9754.html#section-2",
+   "title": "RFC 9754: Extensions for Opening and Delegating Files in NFSv4.2",
+   "where": {
+    "en": "section 2, Offline Files",
+    "ru": "раздел 2, Offline Files"
+   }
+  },
+  "rfc9754-3": {
+   "url": "https://www.rfc-editor.org/rfc/rfc9754.html#section-3",
+   "title": "RFC 9754: Extensions for Opening and Delegating Files in NFSv4.2",
+   "where": {
+    "en": "section 3, Determining OPEN Feature Support",
+    "ru": "раздел 3, Determining OPEN Feature Support"
+   }
+  },
+  "rfc9754-4": {
+   "url": "https://www.rfc-editor.org/rfc/rfc9754.html#section-4",
+   "title": "RFC 9754: Extensions for Opening and Delegating Files in NFSv4.2",
+   "where": {
+    "en": "section 4, OPEN Grants Either an Open or a Delegation Stateid",
+    "ru": "раздел 4, OPEN Grants Either an Open or a Delegation Stateid"
+   }
+  },
+  "rfc9754-5": {
+   "url": "https://www.rfc-editor.org/rfc/rfc9754.html#section-5",
+   "title": "RFC 9754: Extensions for Opening and Delegating Files in NFSv4.2",
+   "where": {
+    "en": "section 5, Proxying of Times",
+    "ru": "раздел 5, Proxying of Times"
+   }
+  },
+  "nfs5-opts": {
+   "url": "https://man7.org/linux/man-pages/man5/nfs.5.html#MOUNT_OPTIONS",
+   "title": "nfs(5), Linux manual page",
+   "where": {
+    "en": "MOUNT OPTIONS, Options supported by all versions",
+    "ru": "раздел MOUNT OPTIONS, Options supported by all versions"
+   }
+  },
+  "nfs5-v3opts": {
+   "url": "https://man7.org/linux/man-pages/man5/nfs.5.html#MOUNT_OPTIONS",
+   "title": "nfs(5), Linux manual page",
+   "where": {
+    "en": "MOUNT OPTIONS, Options for NFS versions 2 and 3 only",
+    "ru": "раздел MOUNT OPTIONS, Options for NFS versions 2 and 3 only"
+   }
+  },
+  "nfs5-v4opts": {
+   "url": "https://man7.org/linux/man-pages/man5/nfs.5.html#MOUNT_OPTIONS",
+   "title": "nfs(5), Linux manual page",
+   "where": {
+    "en": "MOUNT OPTIONS, Options for NFS version 4 only",
+    "ru": "раздел MOUNT OPTIONS, Options for NFS version 4 only"
+   }
+  },
+  "nfs5-sec": {
+   "url": "https://man7.org/linux/man-pages/man5/nfs.5.html#SECURITY_CONSIDERATIONS",
+   "title": "nfs(5), Linux manual page",
+   "where": {
+    "en": "SECURITY CONSIDERATIONS",
+    "ru": "раздел SECURITY CONSIDERATIONS"
+   }
+  },
+  "exports5": {
+   "url": "https://man7.org/linux/man-pages/man5/exports.5.html#DESCRIPTION",
+   "title": "exports(5), Linux manual page",
+   "where": {
+    "en": "DESCRIPTION",
+    "ru": "раздел DESCRIPTION"
+   }
+  },
+  "exportfs8": {
+   "url": "https://man7.org/linux/man-pages/man8/exportfs.8.html#OPTIONS",
+   "title": "exportfs(8), Linux manual page",
+   "where": {
+    "en": "OPTIONS",
+    "ru": "раздел OPTIONS"
+   }
+  },
+  "nfsconf5": {
+   "url": "https://man7.org/linux/man-pages/man5/nfs.conf.5.html#SECTIONS",
+   "title": "nfs.conf(5), Linux manual page",
+   "where": {
+    "en": "SECTIONS, nfsd",
+    "ru": "раздел SECTIONS, nfsd"
+   }
+  },
+  "rpcnfsd8-desc": {
+   "url": "https://man7.org/linux/man-pages/man8/rpc.nfsd.8.html#DESCRIPTION",
+   "title": "rpc.nfsd(8), Linux manual page",
+   "where": {
+    "en": "DESCRIPTION",
+    "ru": "раздел DESCRIPTION"
+   }
+  },
+  "rpcnfsd8-opts": {
+   "url": "https://man7.org/linux/man-pages/man8/rpc.nfsd.8.html#OPTIONS",
+   "title": "rpc.nfsd(8), Linux manual page",
+   "where": {
+    "en": "OPTIONS, nproc",
+    "ru": "раздел OPTIONS, nproc"
+   }
+  },
+  "rpcmountd8-desc": {
+   "url": "https://man7.org/linux/man-pages/man8/rpc.mountd.8.html#DESCRIPTION",
+   "title": "rpc.mountd(8), Linux manual page",
+   "where": {
+    "en": "DESCRIPTION",
+    "ru": "раздел DESCRIPTION"
+   }
+  },
+  "rpcmountd8-opts": {
+   "url": "https://man7.org/linux/man-pages/man8/rpc.mountd.8.html#OPTIONS",
+   "title": "rpc.mountd(8), Linux manual page",
+   "where": {
+    "en": "OPTIONS, -g and -p",
+    "ru": "раздел OPTIONS, -g и -p"
+   }
+  },
+  "rpcbind8": {
+   "url": "https://man7.org/linux/man-pages/man8/rpcbind.8.html#DESCRIPTION",
+   "title": "rpcbind(8), Linux manual page",
+   "where": {
+    "en": "DESCRIPTION",
+    "ru": "раздел DESCRIPTION"
+   }
+  },
+  "rpcstatd8-desc": {
+   "url": "https://man7.org/linux/man-pages/man8/rpc.statd.8.html#DESCRIPTION",
+   "title": "rpc.statd(8), Linux manual page",
+   "where": {
+    "en": "DESCRIPTION",
+    "ru": "раздел DESCRIPTION"
+   }
+  },
+  "rpcstatd8-opts": {
+   "url": "https://man7.org/linux/man-pages/man8/rpc.statd.8.html#OPTIONS",
+   "title": "rpc.statd(8), Linux manual page",
+   "where": {
+    "en": "OPTIONS, -p",
+    "ru": "раздел OPTIONS, -p"
+   }
+  },
+  "nfsdcld8": {
+   "url": "https://man7.org/linux/man-pages/man8/nfsdcld.8.html#DESCRIPTION",
+   "title": "nfsdcld(8), Linux manual page",
+   "where": {
+    "en": "DESCRIPTION",
+    "ru": "раздел DESCRIPTION"
+   }
+  },
+  "rpcgssd8": {
+   "url": "https://man7.org/linux/man-pages/man8/rpc.gssd.8.html#INTRODUCTION",
+   "title": "rpc.gssd(8), Linux manual page",
+   "where": {
+    "en": "INTRODUCTION",
+    "ru": "раздел INTRODUCTION"
+   }
+  },
+  "nfsidmap8": {
+   "url": "https://man7.org/linux/man-pages/man8/nfsidmap.8.html#DESCRIPTION",
+   "title": "nfsidmap(8), Linux manual page",
+   "where": {
+    "en": "DESCRIPTION",
+    "ru": "раздел DESCRIPTION"
+   }
+  },
+  "nfsstat8": {
+   "url": "https://man7.org/linux/man-pages/man8/nfsstat.8.html#OPTIONS",
+   "title": "nfsstat(8), Linux manual page",
+   "where": {
+    "en": "OPTIONS",
+    "ru": "раздел OPTIONS"
+   }
+  },
+  "mountstats8": {
+   "url": "https://man7.org/linux/man-pages/man8/mountstats.8.html#DESCRIPTION",
+   "title": "mountstats(8), Linux manual page",
+   "where": {
+    "en": "DESCRIPTION",
+    "ru": "раздел DESCRIPTION"
+   }
+  },
+  "nfsiostat8-desc": {
+   "url": "https://man7.org/linux/man-pages/man8/nfsiostat.8.html#DESCRIPTION",
+   "title": "nfsiostat(8), Linux manual page",
+   "where": {
+    "en": "DESCRIPTION",
+    "ru": "раздел DESCRIPTION"
+   }
+  },
+  "nfsiostat8-opts": {
+   "url": "https://man7.org/linux/man-pages/man8/nfsiostat.8.html#OPTIONS",
+   "title": "nfsiostat(8), Linux manual page",
+   "where": {
+    "en": "OPTIONS (avg RTT, avg exe)",
+    "ru": "раздел OPTIONS (avg RTT, avg exe)"
+   }
+  },
+  "nfsdclnts8": {
+   "url": "https://man7.org/linux/man-pages/man8/nfsdclnts.8.html#DESCRIPTION",
+   "title": "nfsdclnts(8), Linux manual page",
+   "where": {
+    "en": "DESCRIPTION",
+    "ru": "раздел DESCRIPTION"
+   }
+  },
+  "rpcdebug8": {
+   "url": "https://man7.org/linux/man-pages/man8/rpcdebug.8.html#DESCRIPTION",
+   "title": "rpcdebug(8), Linux manual page",
+   "where": {
+    "en": "DESCRIPTION",
+    "ru": "раздел DESCRIPTION"
+   }
+  },
+  "lseek2": {
+   "url": "https://man7.org/linux/man-pages/man2/lseek.2.html#DESCRIPTION",
+   "title": "lseek(2), Linux manual page",
+   "where": {
+    "en": "DESCRIPTION, SEEK_DATA and SEEK_HOLE",
+    "ru": "раздел DESCRIPTION, SEEK_DATA и SEEK_HOLE"
+   }
+  },
+  "ficlone2-desc": {
+   "url": "https://man7.org/linux/man-pages/man2/ioctl_ficlone.2.html#DESCRIPTION",
+   "title": "ioctl_ficlone(2), Linux manual page",
+   "where": {
+    "en": "DESCRIPTION",
+    "ru": "раздел DESCRIPTION"
+   }
+  },
+  "ficlone2-err": {
+   "url": "https://man7.org/linux/man-pages/man2/ioctl_ficlone.2.html#ERRORS",
+   "title": "ioctl_ficlone(2), Linux manual page",
+   "where": {
+    "en": "ERRORS, EOPNOTSUPP",
+    "ru": "раздел ERRORS, EOPNOTSUPP"
+   }
+  },
+  "ficlone2-hist": {
+   "url": "https://man7.org/linux/man-pages/man2/ioctl_ficlone.2.html#HISTORY",
+   "title": "ioctl_ficlone(2), Linux manual page",
+   "where": {
+    "en": "HISTORY",
+    "ru": "раздел HISTORY"
+   }
+  },
+  "fallocate2": {
+   "url": "https://man7.org/linux/man-pages/man2/fallocate.2.html#DESCRIPTION",
+   "title": "fallocate(2), Linux manual page",
+   "where": {
+    "en": "DESCRIPTION, Deallocating file space",
+    "ru": "раздел DESCRIPTION, Deallocating file space"
+   }
+  },
+  "posixfallocate3": {
+   "url": "https://man7.org/linux/man-pages/man3/posix_fallocate.3.html#CAVEATS",
+   "title": "posix_fallocate(3), Linux manual page",
+   "where": {
+    "en": "CAVEATS",
+    "ru": "раздел CAVEATS"
+   }
+  },
+  "mkfsxfs8": {
+   "url": "https://man7.org/linux/man-pages/man8/mkfs.xfs.8.html#OPTIONS",
+   "title": "mkfs.xfs(8), Linux manual page",
+   "where": {
+    "en": "OPTIONS, -m reflink=",
+    "ru": "раздел OPTIONS, -m reflink="
+   }
+  },
+  "nfs4acl5": {
+   "url": "https://man7.org/linux/man-pages/man5/nfs4_acl.5.html#DESCRIPTION",
+   "title": "nfs4_acl(5), Linux manual page",
+   "where": {
+    "en": "DESCRIPTION",
+    "ru": "раздел DESCRIPTION"
+   }
+  },
+  "nfs4setfacl1": {
+   "url": "https://man7.org/linux/man-pages/man1/nfs4_setfacl.1.html#NAME",
+   "title": "nfs4_setfacl(1), Linux manual page",
+   "where": {
+    "en": "NAME and COLOPHON",
+    "ru": "разделы NAME и COLOPHON"
+   }
+  },
+  "k-nfs-file-read": {
+   "url": "https://elixir.bootlin.com/linux/v6.18/source/fs/nfs/file.c#L159",
+   "title": "Linux v6.18 source: fs/nfs/file.c",
+   "where": {
+    "en": "line 159, nfs_file_read()",
+    "ru": "строка 159, nfs_file_read()"
+   }
+  },
+  "k-nfs-file-ops": {
+   "url": "https://elixir.bootlin.com/linux/v6.18/source/fs/nfs/file.c#L951",
+   "title": "Linux v6.18 source: fs/nfs/file.c",
+   "where": {
+    "en": "line 951, nfs_file_operations",
+    "ru": "строка 951, nfs_file_operations"
+   }
+  },
+  "k-nfs-kconfig-udp": {
+   "url": "https://elixir.bootlin.com/linux/v6.18/source/fs/nfs/Kconfig#L202",
+   "title": "Linux v6.18 source: fs/nfs/Kconfig",
+   "where": {
+    "en": "line 202, NFS_DISABLE_UDP_SUPPORT",
+    "ru": "строка 202, NFS_DISABLE_UDP_SUPPORT"
+   }
+  },
+  "k-nfs-kconfig-pnfs": {
+   "url": "https://elixir.bootlin.com/linux/v6.18/source/fs/nfs/Kconfig#L118",
+   "title": "Linux v6.18 source: fs/nfs/Kconfig",
+   "where": {
+    "en": "lines 118-131, PNFS_FILE_LAYOUT, PNFS_BLOCK, PNFS_FLEXFILE_LAYOUT",
+    "ru": "строки 118-131, PNFS_FILE_LAYOUT, PNFS_BLOCK, PNFS_FLEXFILE_LAYOUT"
+   }
+  },
+  "k-nfs-kconfig-readplus": {
+   "url": "https://elixir.bootlin.com/linux/v6.18/source/fs/nfs/Kconfig#L211",
+   "title": "Linux v6.18 source: fs/nfs/Kconfig",
+   "where": {
+    "en": "line 211, NFS_V4_2_READ_PLUS",
+    "ru": "строка 211, NFS_V4_2_READ_PLUS"
+   }
+  },
+  "k-nfsd-kconfig-flex": {
+   "url": "https://elixir.bootlin.com/linux/v6.18/source/fs/nfsd/Kconfig#L124",
+   "title": "Linux v6.18 source: fs/nfsd/Kconfig",
+   "where": {
+    "en": "line 124, NFSD_FLEXFILELAYOUT",
+    "ru": "строка 124, NFSD_FLEXFILELAYOUT"
+   }
+  },
+  "k-nfsd-kconfig-ssc": {
+   "url": "https://elixir.bootlin.com/linux/v6.18/source/fs/nfsd/Kconfig#L141",
+   "title": "Linux v6.18 source: fs/nfsd/Kconfig",
+   "where": {
+    "en": "line 141, NFSD_V4_2_INTER_SSC",
+    "ru": "строка 141, NFSD_V4_2_INTER_SSC"
+   }
+  },
+  "k-nfsd-kconfig-delegts": {
+   "url": "https://elixir.bootlin.com/linux/v6.18/source/fs/nfsd/Kconfig#L180",
+   "title": "Linux v6.18 source: fs/nfsd/Kconfig",
+   "where": {
+    "en": "line 180, NFSD_V4_DELEG_TIMESTAMPS",
+    "ru": "строка 180, NFSD_V4_DELEG_TIMESTAMPS"
+   }
+  },
+  "k-fs-kconfig-localio": {
+   "url": "https://elixir.bootlin.com/linux/v6.18/source/fs/Kconfig#L388",
+   "title": "Linux v6.18 source: fs/Kconfig",
+   "where": {
+    "en": "line 388, NFS_LOCALIO",
+    "ru": "строка 388, NFS_LOCALIO"
+   }
+  },
+  "k-lockd-mon": {
+   "url": "https://elixir.bootlin.com/linux/v6.18/source/fs/lockd/mon.c#L26",
+   "title": "Linux v6.18 source: fs/lockd/mon.c",
+   "where": {
+    "en": "line 26, NSM_PROGRAM",
+    "ru": "строка 26, NSM_PROGRAM"
+   }
+  },
+  "k-nfsacl-h": {
+   "url": "https://elixir.bootlin.com/linux/v6.18/source/include/uapi/linux/nfsacl.h#L10",
+   "title": "Linux v6.18 source: include/uapi/linux/nfsacl.h",
+   "where": {
+    "en": "line 10, NFS_ACL_PROGRAM",
+    "ru": "строка 10, NFS_ACL_PROGRAM"
+   }
+  },
+  "k-nfsfh-h": {
+   "url": "https://elixir.bootlin.com/linux/v6.18/source/fs/nfsd/nfsfh.h#L19",
+   "title": "Linux v6.18 source: fs/nfsd/nfsfh.h",
+   "where": {
+    "en": "lines 19-47, file handle layout comment",
+    "ru": "строки 19-47, комментарий о формате хэндла"
+   }
+  },
+  "k-exportfs-h": {
+   "url": "https://elixir.bootlin.com/linux/v6.18/source/include/linux/exportfs.h#L33",
+   "title": "Linux v6.18 source: include/linux/exportfs.h",
+   "where": {
+    "en": "lines 33-42, enum fid_type",
+    "ru": "строки 33-42, enum fid_type"
+   }
+  },
+  "k-nfsd-lease": {
+   "url": "https://elixir.bootlin.com/linux/v6.18/source/fs/nfsd/nfs4state.c#L4916",
+   "title": "Linux v6.18 source: fs/nfsd/nfs4state.c",
+   "where": {
+    "en": "line 4916, nfsd4_init_leases_net()",
+    "ru": "строка 4916, nfsd4_init_leases_net()"
+   }
+  },
+  "k-nfsd-acl": {
+   "url": "https://elixir.bootlin.com/linux/v6.18/source/fs/nfsd/nfs4acl.c#L102",
+   "title": "Linux v6.18 source: fs/nfsd/nfs4acl.c",
+   "where": {
+    "en": "line 102, comment on NFSv4-to-POSIX ACL mapping",
+    "ru": "строка 102, комментарий о переводе ACL NFSv4 в POSIX"
+   }
+  },
+  "k-nfsd-intercopy": {
+   "url": "https://elixir.bootlin.com/linux/v6.18/source/fs/nfsd/nfs4proc.c#L55",
+   "title": "Linux v6.18 source: fs/nfsd/nfs4proc.c",
+   "where": {
+    "en": "line 55, inter_copy_offload_enable",
+    "ru": "строка 55, inter_copy_offload_enable"
+   }
+  },
+  "k-nfsd-copy": {
+   "url": "https://elixir.bootlin.com/linux/v6.18/source/fs/nfsd/vfs.c#L709",
+   "title": "Linux v6.18 source: fs/nfsd/vfs.c",
+   "where": {
+    "en": "line 709, nfsd_copy_file_range()",
+    "ru": "строка 709, nfsd_copy_file_range()"
+   }
+  },
+  "k-nfs4file-fops": {
+   "url": "https://elixir.bootlin.com/linux/v6.18/source/fs/nfs/nfs4file.c#L452",
+   "title": "Linux v6.18 source: fs/nfs/nfs4file.c",
+   "where": {
+    "en": "lines 452-455, nfs4_file_operations",
+    "ru": "строки 452-455, nfs4_file_operations"
+   }
+  },
+  "k-nfs4file-falloc": {
+   "url": "https://elixir.bootlin.com/linux/v6.18/source/fs/nfs/nfs4file.c#L241",
+   "title": "Linux v6.18 source: fs/nfs/nfs4file.c",
+   "where": {
+    "en": "lines 241-244, nfs42_fallocate()",
+    "ru": "строки 241-244, nfs42_fallocate()"
+   }
+  },
+  "k-nfs42-clone": {
+   "url": "https://elixir.bootlin.com/linux/v6.18/source/fs/nfs/nfs42proc.c#L1340",
+   "title": "Linux v6.18 source: fs/nfs/nfs42proc.c",
+   "where": {
+    "en": "line 1340, nfs42_proc_clone()",
+    "ru": "строка 1340, nfs42_proc_clone()"
+   }
+  },
+  "k-nfs42xattr": {
+   "url": "https://elixir.bootlin.com/linux/v6.18/source/fs/nfs/nfs42xattr.c#L6",
+   "title": "Linux v6.18 source: fs/nfs/nfs42xattr.c",
+   "where": {
+    "en": "header comment",
+    "ru": "комментарий в начале файла"
+   }
+  },
+  "kd-localio": {
+   "url": "https://docs.kernel.org/filesystems/nfs/localio.html#overview",
+   "title": "NFS LOCALIO, The Linux Kernel documentation",
+   "where": {
+    "en": "Overview",
+    "ru": "раздел Overview"
+   }
+  },
+  "kd-clientid": {
+   "url": "https://docs.kernel.org/filesystems/nfs/client-identifier.html#selecting-an-appropriate-client-identifier",
+   "title": "NFSv4 client identifier, The Linux Kernel documentation",
+   "where": {
+    "en": "Selecting an appropriate client identifier",
+    "ru": "раздел Selecting an appropriate client identifier"
+   }
+  },
+  "kd-pnfs-block": {
+   "url": "https://docs.kernel.org/admin-guide/nfs/pnfs-block-server.html",
+   "title": "pNFS block layout server user guide, The Linux Kernel documentation",
+   "where": {
+    "en": "whole page",
+    "ru": "вся страница"
+   }
+  },
+  "kd-pnfs-scsi": {
+   "url": "https://docs.kernel.org/admin-guide/nfs/pnfs-scsi-server.html",
+   "title": "pNFS SCSI layout server user guide, The Linux Kernel documentation",
+   "where": {
+    "en": "whole page",
+    "ru": "вся страница"
+   }
+  },
+  "kd-rdma": {
+   "url": "https://docs.kernel.org/admin-guide/nfs/nfs-rdma.html#nfs-rdma-setup",
+   "title": "Setting up NFS/RDMA, The Linux Kernel documentation",
+   "where": {
+    "en": "NFS/RDMA Setup",
+    "ru": "раздел NFS/RDMA Setup"
+   }
+  },
+  "kd-params": {
+   "url": "https://docs.kernel.org/admin-guide/kernel-parameters.html",
+   "title": "The kernel's command-line parameters, The Linux Kernel documentation",
+   "where": {
+    "en": "nfs.max_session_slots, nfs.nfs4_disable_idmapping, nfsd.inter_copy_offload_enable",
+    "ru": "nfs.max_session_slots, nfs.nfs4_disable_idmapping, nfsd.inter_copy_offload_enable"
+   }
+  },
+  "kd-knfsd-stats": {
+   "url": "https://docs.kernel.org/filesystems/nfs/knfsd-stats.html#proc-fs-nfsd-pool-stats",
+   "title": "Kernel NFS Server Statistics, The Linux Kernel documentation",
+   "where": {
+    "en": "/proc/fs/nfsd/pool_stats, sockets-enqueued",
+    "ru": "раздел /proc/fs/nfsd/pool_stats, sockets-enqueued"
+   }
+  },
+  "git-courtesy-limit": {
+   "url": "https://git.kernel.org/pub/scm/linux/kernel/git/torvalds/linux.git/commit/?id=4271c2c0887562318a0afef97d32d8a71cbe0743",
+   "title": "Linux commit 4271c2c08875: NFSD: limit the number of v4 clients to 1024 per 1GB of system memory",
+   "where": {
+    "en": "commit message",
+    "ru": "сообщение коммита"
+   }
+  },
+  "git-courtesy-shrinker": {
+   "url": "https://git.kernel.org/pub/scm/linux/kernel/git/torvalds/linux.git/commit/?id=7746b32f467b3813fb61faaab3258de35806a7ac",
+   "title": "Linux commit 7746b32f467b: NFSD: add shrinker to reap courtesy clients on low memory condition",
+   "where": {
+    "en": "commit message",
+    "ru": "сообщение коммита"
+   }
+  },
+  "git-merge-6.19": {
+   "url": "https://git.kernel.org/pub/scm/linux/kernel/git/torvalds/linux.git/commit/?id=6bb34aff1ebdd4ee8ea1721068f74d476d707f01",
+   "title": "Linux commit 6bb34aff1ebd: Merge tag 'nfs-for-6.19-1' (NFS client updates)",
+   "where": {
+    "en": "merge message and shortlog",
+    "ru": "сообщение слияния и список коммитов"
+   }
+  },
+  "git-merge-6.11": {
+   "url": "https://git.kernel.org/pub/scm/linux/kernel/git/torvalds/linux.git/commit/?id=4f40c636b291deeae7d1f4c9fb5db5f0aac54267",
+   "title": "Linux commit 4f40c636b291: Merge tag 'nfs-for-6.11-1' (NFS client updates)",
+   "where": {
+    "en": "merge message, New Features",
+    "ru": "сообщение слияния, New Features"
+   }
+  },
+  "git-merge-5.9": {
+   "url": "https://git.kernel.org/pub/scm/linux/kernel/git/torvalds/linux.git/commit/?id=37711e5e2325535bf094bdc0a66790d659b52d5b",
+   "title": "Linux commit 37711e5e2325: Merge tag 'nfs-for-5.9-1' (NFS client updates)",
+   "where": {
+    "en": "merge message, Features",
+    "ru": "сообщение слияния, Features"
+   }
+  },
+  "git-log-kconfig": {
+   "url": "https://git.kernel.org/pub/scm/linux/kernel/git/torvalds/linux.git/log/fs/nfs/Kconfig?h=v6.6",
+   "title": "Linux git history of fs/nfs/Kconfig up to v6.6",
+   "where": {
+    "en": "commit log",
+    "ru": "журнал коммитов"
+   }
+  },
+  "kn-5.3": {
+   "url": "https://kernelnewbies.org/Linux_5.3",
+   "title": "Linux 5.3, Linux Kernel Newbies",
+   "where": {
+    "en": "File systems, NFS",
+    "ru": "раздел File systems, NFS"
+   }
+  },
+  "kn-5.9": {
+   "url": "https://kernelnewbies.org/Linux_5.9",
+   "title": "Linux 5.9, Linux Kernel Newbies",
+   "where": {
+    "en": "NFS support for extended attributes",
+    "ru": "раздел NFS support for extended attributes"
+   }
+  },
+  "kn-5.19": {
+   "url": "https://kernelnewbies.org/Linux_5.19",
+   "title": "Linux 5.19, Linux Kernel Newbies",
+   "where": {
+    "en": "NFS Courteous Server",
+    "ru": "раздел NFS Courteous Server"
+   }
+  },
+  "kn-6.6": {
+   "url": "https://kernelnewbies.org/Linux_6.6",
+   "title": "Linux 6.6, Linux Kernel Newbies",
+   "where": {
+    "en": "File systems, NFS",
+    "ru": "раздел File systems, NFS"
+   }
+  },
+  "kn-6.12": {
+   "url": "https://kernelnewbies.org/Linux_6.12",
+   "title": "Linux 6.12, Linux Kernel Newbies",
+   "where": {
+    "en": "File systems, NFS",
+    "ru": "раздел File systems, NFS"
+   }
+  },
+  "wsl-readplus": {
+   "url": "https://github.com/microsoft/WSL2-Linux-Kernel/blob/linux-msft-wsl-6.18.54.1/arch/x86/configs/config-wsl#L6517",
+   "title": "WSL2 kernel configuration config-wsl (tag linux-msft-wsl-6.18.54.1)",
+   "where": {
+    "en": "line 6517, CONFIG_NFS_V4_2_READ_PLUS",
+    "ru": "строка 6517, CONFIG_NFS_V4_2_READ_PLUS"
+   }
+  },
+  "wsl-delegts": {
+   "url": "https://github.com/microsoft/WSL2-Linux-Kernel/blob/linux-msft-wsl-6.18.54.1/arch/x86/configs/config-wsl#L6529",
+   "title": "WSL2 kernel configuration config-wsl (tag linux-msft-wsl-6.18.54.1)",
+   "where": {
+    "en": "line 6529, CONFIG_NFSD_V4_DELEG_TIMESTAMPS",
+    "ru": "строка 6529, CONFIG_NFSD_V4_DELEG_TIMESTAMPS"
+   }
+  },
+  "wsl-localio": {
+   "url": "https://github.com/microsoft/WSL2-Linux-Kernel/blob/linux-msft-wsl-6.18.54.1/arch/x86/configs/config-wsl#L6535",
+   "title": "WSL2 kernel configuration config-wsl (tag linux-msft-wsl-6.18.54.1)",
+   "where": {
+    "en": "line 6535, CONFIG_NFS_LOCALIO",
+    "ru": "строка 6535, CONFIG_NFS_LOCALIO"
+   }
+  },
+  "sandberg-impl": {
+   "url": "https://www.cs.ucf.edu/~eurip/papers/sandbergnfs.pdf",
+   "title": "Russel Sandberg, The Sun Network Filesystem: Design, Implementation and Experience (1985)",
+   "where": {
+    "en": "section Implementation",
+    "ru": "раздел Implementation"
+   }
+  },
+  "sandberg-concl": {
+   "url": "https://www.cs.ucf.edu/~eurip/papers/sandbergnfs.pdf",
+   "title": "Russel Sandberg, The Sun Network Filesystem: Design, Implementation and Experience (1985)",
+   "where": {
+    "en": "section Conclusions",
+    "ru": "раздел Conclusions"
+   }
+  },
+  "ganesha-readme": {
+   "url": "https://github.com/nfs-ganesha/nfs-ganesha#readme",
+   "title": "NFS-Ganesha README",
+   "where": {
+    "en": "introduction",
+    "ru": "вступление"
+   }
+  },
+  "ganesha-wiki": {
+   "url": "https://github.com/nfs-ganesha/nfs-ganesha/wiki",
+   "title": "NFS-Ganesha wiki, Home",
+   "where": {
+    "en": "list of FSALs",
+    "ru": "список FSAL"
+   }
+  },
+  "ktls-readme": {
+   "url": "https://github.com/oracle/ktls-utils#readme",
+   "title": "ktls-utils README (Oracle)",
+   "where": {
+    "en": "release notes and dependencies",
+    "ru": "описание и зависимости"
+   }
+  },
+  "coreutils-9.0": {
+   "url": "https://github.com/coreutils/coreutils/blob/v9.0/NEWS",
+   "title": "GNU coreutils NEWS",
+   "where": {
+    "en": "release 9.0, Changes in behavior",
+    "ru": "выпуск 9.0, Changes in behavior"
+   }
+  },
+  "nfsutils-v4root": {
+   "url": "https://git.linux-nfs.org/cgit/steved/nfs-utils.git/tree/support/export/v4root.c#n195",
+   "title": "nfs-utils source: support/export/v4root.c",
+   "where": {
+    "en": "comment before v4root_set()",
+    "ru": "комментарий перед v4root_set()"
+   }
+  }
+ },
+ "cites": [
+  {
+   "src": [
+    "sandberg-impl",
+    "sandberg-concl"
+   ],
+   "en": "Sun Microsystems built NFS in 1984 and published the protocol so that anyone could implement it.",
+   "ru": "Sun Microsystems создала NFS в 1984 году и опубликовала протокол, чтобы его мог реализовать кто угодно.",
+   "quote": {
+    "sandberg-impl": "Implementation of NFS started in March 1984.",
+    "sandberg-concl": "To encourage others to use NFS, Sun has made public all of the protocols associated with NFS."
+   }
+  },
+  {
+   "src": [
+    "rfc1813-front",
+    "rfc7530-front"
+   ],
+   "en": "Every version since has been specified in RFCs, and from NFSv4 on as IETF standards.",
+   "ru": "Каждая следующая версия описана в RFC, а начиная с NFSv4 — как стандарт IETF.",
+   "quote": {
+    "rfc1813-front": "Category: Informational ... This memo provides information for the Internet community. This memo does not specify an Internet standard of any kind.",
+    "rfc7530-front": "Category: Standards Track"
+   }
+  },
+  {
+   "src": [
+    "rfc3530-front",
+    "rfc7530-front",
+    "rfc8881-front"
+   ],
+   "en": "which is why NFSv4.0 has three numbers and NFSv4.1 two.",
+   "ru": "поэтому у NFSv4.0 три номера, а у NFSv4.1 два.",
+   "quote": {
+    "rfc3530-front": "Request for Comments: 3530 ... Obsoletes: 3010",
+    "rfc7530-front": "Request for Comments: 7530 ... Obsoletes: 3530",
+    "rfc8881-front": "Request for Comments: 8881 ... Obsoletes: 5661"
+   }
+  },
+  {
+   "src": "rfc1094-front",
+   "en": "<td>1094</td><td>1989",
+   "ru": "<td>1094</td><td>1989",
+   "quote": "Request for Comments: 1094 ... March 1989"
+  },
+  {
+   "src": [
+    "rfc1094-1.3",
+    "rfc1094-3.4"
+   ],
+   "en": "<td>Stateless server, UDP,",
+   "ru": "<td>Сервер без состояния, UDP,",
+   "quote": {
+    "rfc1094-1.3": "The NFS protocol was intended to be as stateless as possible.",
+    "rfc1094-3.4": "NFS is supported normally on UDP."
+   }
+  },
+  {
+   "src": [
+    "rfc1813-1.7",
+    "rfc1094-3.5",
+    "rfc1094-2.2"
+   ],
+   "en": "32-bit file sizes, 8 KiB transfers, every write synchronous.",
+   "ru": "32-битные размеры файлов, передачи по 8 КиБ, каждая запись синхронная.",
+   "quote": {
+    "rfc1813-1.7": "The size and fileid fields have been widened to eight-byte unsigned integers from four-byte integers.",
+    "rfc1094-3.5": "const MAXDATA = 8192;",
+    "rfc1094-2.2": "All of the procedures in the NFS protocol are assumed to be synchronous. When a procedure returns to the client, the client can assume that the operation has completed and any data associated with the request is now on stable storage."
+   }
+  },
+  {
+   "src": "rfc1813-front",
+   "en": "<td>1813</td><td>1995",
+   "ru": "<td>1813</td><td>1995",
+   "quote": "Request for Comments: 1813 ... June 1995"
+  },
+  {
+   "src": [
+    "rfc1813-1.7",
+    "rfc1813-1.6",
+    "rfc1813-5.1.2",
+    "rfc1813-6.1.2"
+   ],
+   "en": "Still stateless; locking and mounting in side protocols.",
+   "ru": "По-прежнему без состояния; блокировки и монтирование вынесены в побочные протоколы.",
+   "quote": {
+    "rfc1813-1.7": "The protocol does not place any artificial limits on the maximum transfer sizes. ... The COMMIT procedure provides the synchronization mechanism to be used with asynchronous WRITE operations.",
+    "rfc1813-1.6": "The NFS version 3 protocol assumes a stateless server implementation.",
+    "rfc1813-5.1.2": "These are the RPC constants needed to call the MOUNT service.",
+    "rfc1813-6.1.2": "These are the RPC constants needed to call the NLM service."
+   }
+  },
+  {
+   "src": [
+    "rfc3010-front",
+    "rfc3530-front",
+    "rfc7530-front"
+   ],
+   "en": "<td>2000 / 2003 / 2015",
+   "ru": "<td>2000 / 2003 / 2015",
+   "quote": {
+    "rfc3010-front": "Request for Comments: 3010 ... December 2000",
+    "rfc3530-front": "Request for Comments: 3530 ... April 2003",
+    "rfc7530-front": "Request for Comments: 7530 ... March 2015"
+   }
+  },
+  {
+   "src": [
+    "rfc7530-1.4",
+    "rfc7530-3.2.1"
+   ],
+   "en": "Delegations. ACLs. Strong security mandatory to implement.",
+   "ru": "Делегирование. ACL. Надёжная защита обязательна к реализации.",
+   "quote": {
+    "rfc7530-1.4": "For the NFSv4 protocol, there are two RPC procedures: NULL and COMPOUND.",
+    "rfc7530-3.2.1": "For interoperability, NFSv4 clients and servers MUST support the Kerberos V5 security mechanism."
+   }
+  },
+  {
+   "src": [
+    "rfc5661-front",
+    "rfc8881-front"
+   ],
+   "en": "<td>2010 / 2020",
+   "ru": "<td>2010 / 2020",
+   "quote": {
+    "rfc5661-front": "Request for Comments: 5661 ... January 2010",
+    "rfc8881-front": "Request for Comments: 8881 ... August 2020"
+   }
+  },
+  {
+   "src": [
+    "rfc8881-1.9",
+    "rfc8881-2.10.1"
+   ],
+   "en": "Trunking. pNFS (parallel NFS). Directory delegations.",
+   "ru": "Транкинг. pNFS (параллельный NFS). Делегирование каталогов.",
+   "quote": {
+    "rfc8881-1.9": "Implementation of the sessions model (Section 2.10). ... Parallel access to data (Section 12). ... Delegations on directories and other file types in addition to regular files",
+    "rfc8881-2.10.1": "The NFSv4.1 client (defined in Section 1.7) creates transport connections and provides them to the server to use for sending callback requests, thus solving the firewall issue"
+   }
+  },
+  {
+   "src": "rfc7862-front",
+   "en": "<td>7862</td><td>2016",
+   "ru": "<td>7862</td><td>2016",
+   "quote": "Request for Comments: 7862 ... November 2016"
+  },
+  {
+   "src": "rfc7862-1.4",
+   "en": "ALLOCATE and DEALLOCATE, IO_ADVISE, Labeled NFS, layout statistics.",
+   "ru": "ALLOCATE и DEALLOCATE, IO_ADVISE, Labeled NFS, статистика раскладок.",
+   "quote": "The intra-server CLONE feature allows the client to request a synchronous cloning ... READ_PLUS (see Section 15.10) allows a server to send back to the client metadata describing the hole ... ALLOCATE (see Section 15.1) allows a client to request a guarantee that space will be available."
+  },
+  {
+   "src": [
+    "rfc8276-front",
+    "rfc8276-8.4"
+   ],
+   "en": "(GETXATTR, SETXATTR, LISTXATTRS, REMOVEXATTR).",
+   "ru": "(GETXATTR, SETXATTR, LISTXATTRS, REMOVEXATTR).",
+   "quote": {
+    "rfc8276-front": "Request for Comments: 8276 ... December 2017 ... File System Extended Attributes in NFSv4",
+    "rfc8276-8.4": "this section introduces four new OPTIONAL operations: GETXATTR, SETXATTR, LISTXATTRS and REMOVEXATTR."
+   }
+  },
+  {
+   "src": [
+    "rfc8435-front",
+    "rfc8435-1"
+   ],
+   "en": "with client-side mirroring.",
+   "ru": "зеркалирование выполняет клиент.",
+   "quote": {
+    "rfc8435-front": "Request for Comments: 8435 ... August 2018 ... Client-side mirroring is also added to provide replication of files.",
+    "rfc8435-1": "This document defines the flexible file layout type used with file-based data servers that are accessed using the NFS protocols: NFSv3 [RFC1813], NFSv4.0 [RFC7530], NFSv4.1 [RFC5661], and NFSv4.2 [RFC7862]."
+   }
+  },
+  {
+   "src": "rfc9754-front",
+   "en": "discovery of supported OPEN flags, offline-file detection.",
+   "ru": "обнаружение поддерживаемых флагов OPEN, распознавание офлайн-файлов.",
+   "quote": "Request for Comments: 9754 ... March 2025 ... This document presents several extensions for both opening the file and delegating it to the client. This document extends NFSv4.2 (see RFC 7863)."
+  },
+  {
+   "src": "rfc8881-2.10.2",
+   "en": "every COMPOUND request carries its minor version number.",
+   "ru": "номер минорной версии передаётся в каждом запросе COMPOUND.",
+   "quote": "COMPOUND includes a minor version number field, and for NFSv4.1 this minor version is set to 1."
+  },
+  {
+   "src": [
+    "rfc7862-2",
+    "rfc7862-13"
+   ],
+   "en": "may still answer some 4.2 operations with <code>NFS4ERR_NOTSUPP</code>.",
+   "ru": "может ответить на некоторые операции 4.2 кодом <code>NFS4ERR_NOTSUPP</code>.",
+   "quote": {
+    "rfc7862-2": "NFSv4.2 only defines extensions to NFSv4.1, each of which may be supported (or not) independently.",
+    "rfc7862-13": "For the NFSv4.2 features that are OPTIONAL, the operations that support those features are OPTIONAL, and the server MUST return NFS4ERR_NOTSUPP in response to the client's use of those operations when those operations are not implemented by the server."
+   }
+  },
+  {
+   "src": "nfs5-opts",
+   "en": "gives you 4.2.",
+   "ru": "даёт 4.2.",
+   "quote": "If this option is not specified, the client tries version 4.2 first, then negotiates down until it finds a version supported by the server."
+  },
+  {
+   "src": [
+    "k-nfs-file-ops",
+    "k-nfs-file-read"
+   ],
+   "en": "lets the generic page-cache code copy the data.",
+   "ru": "а копирует данные общий код страничного кэша.",
+   "quote": {
+    "k-nfs-file-ops": "const struct file_operations nfs_file_operations = { .llseek = nfs_file_llseek, .read_iter = nfs_file_read,",
+    "k-nfs-file-read": "result = nfs_revalidate_mapping(inode, iocb->ki_filp->f_mapping); if (!result) { result = generic_file_read_iter(iocb, to);"
+   }
+  },
+  {
+   "src": "k-nfs-kconfig-udp",
+   "en": "UDP is legacy, and many kernels are built without NFS-over-UDP support.",
+   "ru": "UDP — наследие прошлого, и многие ядра собраны без поддержки NFS поверх UDP.",
+   "quote": "config NFS_DISABLE_UDP_SUPPORT bool \"NFS: Disable NFS UDP protocol support\" depends on NFS_FS default y help Choose Y here to disable the use of NFS over UDP."
+  },
+  {
+   "src": "rpcnfsd8-desc",
+   "en": "calls into the server's VFS exactly as a local process would.",
+   "ru": "обращается к VFS сервера ровно так же, как обычный локальный процесс.",
+   "quote": "The main functionality is handled by the nfsd kernel module. The user space program merely specifies what sort of sockets the kernel service should listen on, what NFS versions it should support, and how many kernel threads it should use."
+  },
+  {
+   "src": "rpcmountd8-desc",
+   "en": "answers the MOUNT protocol and feeds export information to the kernel;",
+   "ru": "отвечает на протокол MOUNT и передаёт ядру информацию об экспортах;",
+   "quote": "The rpc.mountd daemon implements the server side of the NFS MOUNT protocol ... It also responds to requests from the Linux kernel to authenticate clients and provides details of access permissions."
+  },
+  {
+   "src": "rpcbind8",
+   "en": "maps RPC program numbers to ports;",
+   "ru": "сопоставляет номера RPC-программ портам;",
+   "quote": "The rpcbind utility is a server that converts RPC program numbers into universal addresses."
+  },
+  {
+   "src": "rpcstatd8-desc",
+   "en": "handles NFSv3 lock recovery;",
+   "ru": "отвечает за восстановление блокировок NFSv3;",
+   "quote": "For NFS version 2 [RFC1094] and NFS version 3 [RFC1813], the Network Status Monitor protocol (or NSM for short) is used to notify NFS peers of reboots."
+  },
+  {
+   "src": "nfsdcld8",
+   "en": "records which NFSv4 clients may reclaim state after a server reboot;",
+   "ru": "записывает, каким клиентам NFSv4 разрешено вернуть своё состояние после перезагрузки сервера;",
+   "quote": "nfsdcld is the NFSv4 client tracking daemon. ... the server must track a small amount of per-client information on stable storage. This daemon provides the userspace piece of that functionality."
+  },
+  {
+   "src": [
+    "rpcgssd8",
+    "nfsidmap8"
+   ],
+   "en": "handle Kerberos and user-name mapping.",
+   "ru": "занимаются Kerberos и сопоставлением имён пользователей.",
+   "quote": {
+    "rpcgssd8": "The RPCSEC_GSS protocol, defined in RFC 5403, is used to provide strong security for RPC-based protocols such as NFS.",
+    "nfsidmap8": "The NFSv4 protocol represents the local system's UID and GID values on the wire as strings of the form user@domain. The process of translating from UID to string and string to UID is referred to as \"ID mapping.\""
+   }
+  },
+  {
+   "src": [
+    "ganesha-readme",
+    "ganesha-wiki"
+   ],
+   "en": "can export Ceph, GlusterFS and other backends,",
+   "ru": "умеет экспортировать Ceph, GlusterFS и другие хранилища,",
+   "quote": {
+    "ganesha-readme": "NFS-Ganesha is an NFSv3,v4,v4.1 fileserver that runs in user mode on most UNIX/Linux systems.",
+    "ganesha-wiki": "FSALs: FSAL Support cephfs Gluster GPFS VFS - host local file system export"
+   }
+  },
+  {
+   "src": [
+    "rfc5531-front",
+    "rfc4506-front"
+   ],
+   "en": "and the encoding is <b>XDR</b> (External Data Representation, RFC 4506).",
+   "ru": "а кодировка называется <b>XDR</b> (External Data Representation, RFC 4506).",
+   "quote": {
+    "rfc5531-front": "RPC: Remote Procedure Call Protocol Specification Version 2 ... This document describes the Open Network Computing (ONC) Remote Procedure Call (RPC) version 2 protocol",
+    "rfc4506-front": "XDR: External Data Representation Standard ... This document describes the External Data Representation Standard (XDR) protocol"
+   }
+  },
+  {
+   "src": "rfc5531-9",
+   "en": "which is how many calls can be in flight on one connection.",
+   "ru": "благодаря чему в одном соединении может одновременно находиться много вызовов.",
+   "quote": "The xid of a REPLY message always matches that of the initiating CALL message. NB: The \"xid\" field is only used for clients matching reply messages with call messages or for servers detecting retransmissions"
+  },
+  {
+   "src": "rfc5531-11",
+   "en": "Over TCP each message is preceded by a 4-byte record mark that holds its length.",
+   "ru": "В TCP каждому сообщению предшествует 4-байтовая метка записи (record mark), в которой хранится его длина.",
+   "quote": "When RPC messages are passed on top of a byte stream transport protocol (like TCP), it is necessary to delimit one message from another ... A record fragment is a four-byte header followed by 0 to (2**31) - 1 bytes of fragment data."
+  },
+  {
+   "src": [
+    "rfc4506-3",
+    "rfc4506-4.1",
+    "rfc4506-4.5"
+   ],
+   "en": "Integers are 4 or 8 bytes.",
+   "ru": "Целые числа занимают 4 или 8 байт.",
+   "quote": {
+    "rfc4506-3": "The representation of all items requires a multiple of four bytes (or 32 bits) of data.",
+    "rfc4506-4.1": "An XDR signed integer is a 32-bit datum ... The most and least significant bytes are 0 and 3, respectively.",
+    "rfc4506-4.5": "The standard also defines 64-bit (8-byte) numbers called hyper integers and unsigned hyper integers."
+   }
+  },
+  {
+   "src": "rfc4506-4.11",
+   "en": "padded with zeros to a multiple of 4.",
+   "ru": "дополненные нулями до кратного 4.",
+   "quote": "The standard defines a string of n (numbered 0 through n-1) ASCII bytes to be the number n encoded as an unsigned integer (as described above), and followed by the n bytes of the string. ... If n is not a multiple of four, then the n bytes are followed by enough (0 to 3) residual zero bytes"
+  },
+  {
+   "src": "rfc4506-1",
+   "en": "which is written in XDR's own definition language.",
+   "ru": "написанной на собственном языке описаний XDR.",
+   "quote": "The major difference between these two is that XDR uses implicit typing, while X.409 uses explicit typing. XDR uses a language to describe data formats."
+  },
+  {
+   "src": "rfc1833-1",
+   "en": "<td>NFSv3: finds the ports of the other programs",
+   "ru": "<td>NFSv3: находит порты остальных программ",
+   "quote": "This document describes three versions of a lookup service, all of which use the same RPC program number (100000). They all use port 111 over TCP and UDP transports."
+  },
+  {
+   "src": [
+    "rfc1813-2.2",
+    "rfc1813-2.3"
+   ],
+   "en": "<td>100003</td><td>2049",
+   "ru": "<td>100003</td><td>2049",
+   "quote": {
+    "rfc1813-2.2": "PROGRAM 100003 VERSION 3",
+    "rfc1813-2.3": "It uses port 2049, the same as the NFS version 2 protocol."
+   }
+  },
+  {
+   "src": "rfc1813-5.1.2",
+   "en": "<td>NFSv3: get the root file handle of an export",
+   "ru": "<td>NFSv3: получить корневой хэндл файла экспорта",
+   "quote": "These are the RPC constants needed to call the MOUNT service. They are given in decimal. PROGRAM 100005 VERSION 3"
+  },
+  {
+   "src": "rfc1813-6.1.2",
+   "en": "<td>NFSv3 byte-range locks (<code>lockd</code>)",
+   "ru": "<td>блокировки диапазонов байтов в NFSv3 (<code>lockd</code>)",
+   "quote": "These are the RPC constants needed to call the NLM service. They are given in decimal. PROGRAM 100021 VERSION 4"
+  },
+  {
+   "src": [
+    "k-lockd-mon",
+    "rpcstatd8-desc"
+   ],
+   "en": "<td>NFSv3 reboot notification for lock recovery (<code>rpc.statd</code>)",
+   "ru": "<td>уведомления о перезагрузке в NFSv3 для восстановления блокировок (<code>rpc.statd</code>)",
+   "quote": {
+    "k-lockd-mon": "#define NSM_PROGRAM 100024",
+    "rpcstatd8-desc": "the Network Status Monitor protocol (or NSM for short) is used to notify NFS peers of reboots."
+   }
+  },
+  {
+   "src": [
+    "k-nfsacl-h",
+    "nfs5-v3opts",
+    "kd-localio"
+   ],
+   "en": "<td>NFSv3 POSIX ACLs (Linux and Solaris side protocol)",
+   "ru": "<td>POSIX ACL в NFSv3 (побочный протокол Linux и Solaris)",
+   "quote": {
+    "k-nfsacl-h": "#define NFS_ACL_PROGRAM 100227",
+    "nfs5-v3opts": "The NFSACL sideband protocol is a proprietary protocol implemented in Solaris that manages Access Control Lists.",
+    "kd-localio": "The LOCALIO auxiliary protocol's implementation, which uses the same connection as NFS traffic, follows the pattern established by the NFS ACL protocol extension."
+   }
+  },
+  {
+   "src": [
+    "rfc7530-3.1",
+    "nfs5-v4opts"
+   ],
+   "en": "That one change made NFS usable through firewalls.",
+   "ru": "Одно это изменение сделало NFS пригодным для работы через межсетевые экраны.",
+   "quote": {
+    "rfc7530-3.1": "Using the registered port for NFS services means the NFS client will not need to use the RPC binding protocols as described in [RFC1833]; this will allow NFS to transit firewalls.",
+    "nfs5-v4opts": "the NFS client uses the standard NFS port number of 2049 without first checking the server's rpcbind service. This allows an NFS version 4 client to contact an NFS version 4 server through a firewall that may block rpcbind requests."
+   }
+  },
+  {
+   "src": [
+    "rfc5531-appC",
+    "rfc5531-appA"
+   ],
+   "en": "up to 16 supplementary group ids in every call.",
+   "ru": "до 16 дополнительных идентификаторов групп.",
+   "quote": {
+    "rfc5531-appC": "/* unix style (uid+gids), RFC 1831 */ /* a.k.a. AUTH_UNIX */",
+    "rfc5531-appA": "struct authsys_parms { unsigned int stamp; string machinename<255>; unsigned int uid; unsigned int gid; unsigned int gids<16>; };"
+   }
+  },
+  {
+   "src": "rfc9289-1",
+   "en": "Security therefore depends on trusting the client machine and the network.",
+   "ru": "Поэтому безопасность держится на доверии к клиентской машине и к сети.",
+   "quote": "Most critically, transport encryption can significantly reduce several security issues inherent in the current widespread use of AUTH_SYS (i.e., acceptance of UIDs and GIDs generated by an unauthenticated client)."
+  },
+  {
+   "src": "exports5",
+   "en": "can still claim to be any other uid.",
+   "ru": "всё равно может выдать себя за любой другой uid.",
+   "quote": "root_squash Map requests from uid/gid 0 to the anonymous uid/gid. Note that this does not apply to any other uids or gids that might be equally sensitive, such as user bin or group staff."
+  },
+  {
+   "src": "rpcmountd8-opts",
+   "en": "(<code>rpc.mountd --manage-gids</code>).",
+   "ru": "(<code>rpc.mountd --manage-gids</code>).",
+   "quote": "An NFS request will normally (except when using Kerberos or other cryptographic authentication) contains a user-id and a list of group-ids. Due to a limitation in the NFS protocol, at most 16 groups ids can be listed."
+  },
+  {
+   "src": "rpcgssd8",
+   "en": "picks the level:",
+   "ru": "Уровень выбирается опцией монтирования <code>sec=</code>:",
+   "quote": "The RPCSEC_GSS protocol, defined in RFC 5403, is used to provide strong security for RPC-based protocols such as NFS."
+  },
+  {
+   "src": "nfs5-sec",
+   "en": "This costs CPU on both ends.",
+   "ru": "Это стоит процессорного времени на обеих сторонах.",
+   "quote": "Specifying sec=krb5 provides cryptographic proof of a user's identity in each RPC request. ... The krb5i security flavor provides a cryptographically strong guarantee that the data in each RPC request has not been tampered with. The krb5p security flavor encrypts every RPC request"
+  },
+  {
+   "src": [
+    "nfs5-opts",
+    "ktls-readme"
+   ],
+   "en": "mount option and the <code>tlshd</code> user-space handshake daemon.",
+   "ru": "вместе с демоном <code>tlshd</code>, который выполняет рукопожатие в пространстве пользователя.",
+   "quote": {
+    "nfs5-opts": "xprtsec=policy Specifies the use of transport layer security to protect NFS network traffic on behalf of this mount point. policy can be one of none, tls, or mtls.",
+    "ktls-readme": "This package of software provides a TLS handshake user agent that listens for kernel requests ... tlshd reads the kernel's generic netlink attribute policy to detect optional handshake features"
+   }
+  },
+  {
+   "src": "rfc9289-4.2",
+   "en": "it does not by itself authenticate individual users.",
+   "ru": "но сам по себе не аутентифицирует отдельных пользователей.",
+   "quote": "In either of these modes, RPC user authentication is not affected by the use of transport layer security."
+  },
+  {
+   "src": "rfc7530-5.9",
+   "en": "rather than numbers.",
+   "ru": "а не числами.",
+   "quote": "the protocol requires that when these attributes are transferred between the client and server, the local representation is translated to a string of the form \"identifier@dns_domain\"."
+  },
+  {
+   "src": [
+    "nfsidmap8",
+    "rfc7530-5.9"
+   ],
+   "en": "shows up as files owned by <code>nobody</code>.",
+   "ru": "проявляется как файлы, принадлежащие <code>nobody</code>.",
+   "quote": {
+    "nfsidmap8": "An incorrect cached key can result in file and directory ownership reverting to \"nobody\" on NFSv4 mount points.",
+    "rfc7530-5.9": "Servers should accept as valid a set of users for at least one domain. A server may treat other domains as having no valid translations."
+   }
+  },
+  {
+   "src": "kd-params",
+   "en": "as long as uids match across machines.",
+   "ru": "пока uid совпадают на всех машинах.",
+   "quote": "nfs.nfs4_disable_idmapping= [NFSv4] When set to the default of '1', this option ensures that both the RPC level authentication scheme and the NFS level operations agree to use numeric uids/gids if the mount is using the 'sec=sys' security flavour."
+  },
+  {
+   "src": "rfc7530-4.2.1",
+   "en": "an opaque blob the server created and the client stores without interpreting.",
+   "ru": "непрозрачным блоком байтов, который создал сервер и который клиент хранит, не интерпретируя.",
+   "quote": "The filehandle contains all the information the server needs to distinguish an individual file. To the client, the filehandle is opaque. The client stores filehandles for use in a later request ... the client MUST NOT otherwise interpret the contents of filehandles."
+  },
+  {
+   "src": [
+    "rfc1813-2.4",
+    "rfc8881-3.1"
+   ],
+   "en": "NFSv3 handles are at most 64 bytes; NFSv4 handles at most 128.",
+   "ru": "Хэндлы NFSv3 занимают не больше 64 байт, хэндлы NFSv4 — не больше 128.",
+   "quote": {
+    "rfc1813-2.4": "NFS3_FHSIZE 64 The maximum size in bytes of the opaque file handle.",
+    "rfc8881-3.1": "const NFS4_FHSIZE = 128; ... NFS4_FHSIZE is the maximum size of a filehandle."
+   }
+  },
+  {
+   "src": [
+    "k-nfsfh-h",
+    "k-exportfs-h"
+   ],
+   "en": "the server can find the export and the inode without any per-client table.",
+   "ru": "сервер может найти экспорт и inode без какой-либо таблицы клиентов.",
+   "quote": {
+    "k-nfsfh-h": "The first word contains a version number (1) and three descriptor bytes ... These three bytes are auth_type, fsid_type and fileid_type.",
+    "k-exportfs-h": "32bit inode number, 32 bit generation number. */ FILEID_INO32_GEN = 1, ... 32 bit parent directory inode number."
+   }
+  },
+  {
+   "src": [
+    "k-exportfs-h",
+    "rfc1813-2.6"
+   ],
+   "en": "(\"Stale file handle\").",
+   "ru": "(«Stale file handle»).",
+   "quote": {
+    "k-exportfs-h": "32bit inode number, 32 bit generation number.",
+    "rfc1813-2.6": "NFS3ERR_STALE Invalid file handle. The file handle given in the arguments was invalid. The file referred to by that file handle no longer exists or access to it has been revoked."
+   }
+  },
+  {
+   "src": "exports5",
+   "en": "need an explicit <code>fsid=</code> export option for the same reason.",
+   "ru": "нужна явная опция экспорта <code>fsid=</code>.",
+   "quote": "As not all filesystems are stored on devices, and not all filesystems have UUIDs, it is sometimes necessary to explicitly tell NFS how to identify a filesystem. This is done with the fsid= option."
+  },
+  {
+   "src": "rfc1813-1.6",
+   "en": "to them the crash looks like a slow server.",
+   "ru": "для них сбой выглядит как медленный сервер.",
+   "quote": "Statelessness means that the server does not need to maintain state about any of its clients in order to function correctly. ... With stateless servers, a client need only retry a request until the server responds; the client does not even need to know that the server has crashed."
+  },
+  {
+   "src": "rfc1813-3.3.17",
+   "en": "PLUS also returns each entry's handle and attributes",
+   "ru": "PLUS дополнительно возвращает хэндл и атрибуты каждой записи",
+   "quote": "In READDIR, each entry returns the filename and the fileid. In READDIRPLUS, each entry returns the name, the fileid, attributes (including the fileid), and file handle."
+  },
+  {
+   "src": "rfc1813-1.7",
+   "en": "<td>space totals, transfer limits, name limits",
+   "ru": "<td>общий объём места, ограничения на размер передачи, ограничения на имена",
+   "quote": "the FSSTAT procedure returns dynamic information about a file system, the FSINFO procedure returns static information about a file system and server, ... and the PATHCONF procedure returns POSIX pathconf information about a file."
+  },
+  {
+   "src": [
+    "rfc1813-3.3.17",
+    "rfc1813-3.3.3"
+   ],
+   "en": "one READDIR plus 10,000 LOOKUPs.",
+   "ru": "одного READDIR и 10 000 LOOKUP.",
+   "quote": {
+    "rfc1813-3.3.17": "In READDIR, each entry returns the filename and the fileid. ... over-the-wire overhead versus expected subsequent LOOKUP elimination.",
+    "rfc1813-3.3.3": "struct LOOKUP3resok { nfs_fh3 object; post_op_attr obj_attributes; post_op_attr dir_attributes; };"
+   }
+  },
+  {
+   "src": "rfc1813-3.3.4",
+   "en": "when the server uses ACLs or maps ids.",
+   "ru": "когда сервер использует ACL или отображает идентификаторы.",
+   "quote": "it is not sufficient for the client to attempt to deduce access permissions by inspecting the uid, gid, and mode fields in the file attributes, since the server may perform uid or gid mapping or enforce additional access control restrictions."
+  },
+  {
+   "src": "rfc1813-3.3.7",
+   "en": "which made writes painfully slow.",
+   "ru": "из-за чего запись была мучительно медленной.",
+   "quote": "UNSTABLE followed by a COMMIT addresses the performance bottleneck found in the NFS version 2 protocol, the need to synchronously commit all writes to stable storage."
+  },
+  {
+   "src": "rfc1813-3.3.7",
+   "en": "<code>FILE_SYNC</code>: data and metadata on stable storage.",
+   "ru": "<code>FILE_SYNC</code>: данные и метаданные на стабильном носителе.",
+   "quote": "If stable is DATA_SYNC, then the server must commit all of the data to stable storage and enough of the metadata to retrieve the data before returning. ... If stable is UNSTABLE, the server is free to commit any part of the data and the metadata to stable storage, including all or none"
+  },
+  {
+   "src": "rfc1813-3.3.21",
+   "en": "because the server might crash and lose it.",
+   "ru": "потому что сервер может упасть и потерять их.",
+   "quote": "After a buffer is written with stable UNSTABLE, it must be considered as dirty by the client system until it is either flushed via a COMMIT operation or written via a WRITE operation with stable set to FILE_SYNC or DATA_SYNC."
+  },
+  {
+   "src": [
+    "rfc1813-2.4",
+    "rfc1813-3.3.7"
+   ],
+   "en": "a value the server picks at boot.",
+   "ru": "значение, которое сервер выбирает при загрузке.",
+   "quote": {
+    "rfc1813-2.4": "NFS3_WRITEVERFSIZE 8 The size in bytes of the opaque verifier used for asynchronous WRITE.",
+    "rfc1813-3.3.7": "A suggested verf cookie would be to use the time that the server was booted or the time the server was last started"
+   }
+  },
+  {
+   "src": "rfc1813-3.3.21",
+   "en": "the client resends every write it has not seen committed.",
+   "ru": "клиент повторно отправляет все записи, подтверждения фиксации которых он ещё не видел.",
+   "quote": "When a response comes back from either a WRITE or a COMMIT operation that contains an unexpected verf, the client will need to retransmit all of the buffers containing uncommitted cached data to the server."
+  },
+  {
+   "src": "rpcmountd8-desc",
+   "en": "checks the export list and hands out the export's root file handle.",
+   "ru": "проверяет список экспортов и выдаёт корневой хэндл файла экспорта.",
+   "quote": "The rpc.mountd daemon implements the server side of the NFS MOUNT protocol, an NFS side protocol used by NFS version 2 [RFC1094] and NFS version 3 [RFC1813]."
+  },
+  {
+   "src": "nfs5-v3opts",
+   "en": "which need state the NFS protocol refuses to keep.",
+   "ru": "хранить которое протокол NFS отказывается.",
+   "quote": "lock / nolock Selects whether to use the NLM sideband protocol to lock files on the server."
+  },
+  {
+   "src": "rpcstatd8-desc",
+   "en": "servers can drop locks of dead clients.",
+   "ru": "а серверы — снять блокировки умерших клиентов.",
+   "quote": "After an NFS client reboots, an NFS server must release all file locks held by applications that were running on that client. After a server reboots, a client must remind the server of file locks held by applications running on that client."
+  },
+  {
+   "src": [
+    "rpcmountd8-opts",
+    "rpcstatd8-opts"
+   ],
+   "en": "means pinning ports in configuration.",
+   "ru": "означает фиксацию портов в конфигурации.",
+   "quote": {
+    "rpcmountd8-opts": "This option can be used to fix the port value of rpc.mountd's listeners when NFS MOUNT requests must traverse a firewall between clients and servers.",
+    "rpcstatd8-opts": "This option can be used to fix the port value of its listeners when SM_NOTIFY requests must traverse a firewall between clients and servers."
+   }
+  },
+  {
+   "src": "rfc1813-4.5",
+   "en": "although the operation succeeded.",
+   "ru": "хотя операция была выполнена.",
+   "quote": "Some NFS operations are obviously non-idempotent. They cannot be reprocessed without special attention simply because they may fail if tried a second time. ... Likewise, a file can be removed only once."
+  },
+  {
+   "src": [
+    "rfc1813-4.5",
+    "rfc8881-2.10.6.1"
+   ],
+   "en": "are replayed on retransmission.",
+   "ru": "и воспроизводятся при повторной передаче.",
+   "quote": {
+    "rfc1813-4.5": "Most NFS version 3 protocol server implementations use a cache of recent requests (called the duplicate request cache) for the processing of duplicate non-idempotent requests.",
+    "rfc8881-2.10.6.1": "When consulting an RPC-based duplicate request cache, the opaqueness of the XID requires a computationally expensive look up (often via a hash that includes XID and source address)."
+   }
+  },
+  {
+   "src": [
+    "rfc1813-4.5",
+    "rfc8881-2.10.6.1"
+   ],
+   "en": "NFSv4.1 sessions replace it with a guarantee.",
+   "ru": "сессии NFSv4.1 заменяют её гарантией.",
+   "quote": {
+    "rfc1813-4.5": "This mechanism, however, does not guarantee against these destructive side effects in all failure modes. ... its effectiveness is a function of its size.",
+    "rfc8881-2.10.6.1": "unlike XID-indexed reply caches (also known as duplicate request caches - DRCs), the slot ID-based reply cache cannot be overflowed."
+   }
+  },
+  {
+   "src": [
+    "rfc8881-8.3",
+    "rfc8881-8.4.2.1"
+   ],
+   "en": "after a server reboot the client reclaims it during the grace period.",
+   "ru": "а после перезагрузки сервера клиент возвращает своё состояние в период отсрочки.",
+   "quote": {
+    "rfc8881-8.3": "Each client/server pair, as represented by a client ID, has a single lease. The purpose of the lease is to allow the client to indicate to the server, in a low-overhead way, that it is active, and thus that the server is to retain the client's locks.",
+    "rfc8881-8.4.2.1": "Because each client must have an opportunity to reclaim all of the locks that it has without the possibility that some other client will be granted a conflicting lock, a \"grace period\" is devoted to the reclaim process."
+   }
+  },
+  {
+   "src": "rfc7530-15.2.4",
+   "en": "NULL and <b>COMPOUND</b>.",
+   "ru": "NULL и <b>COMPOUND</b>.",
+   "quote": "The main NFS RPC program has two main procedures: NULL and COMPOUND. All other operations use the COMPOUND procedure as a wrapper."
+  },
+  {
+   "src": [
+    "rfc7530-15.2.4.1",
+    "rfc7862-15.2"
+   ],
+   "en": "such as RENAME, LINK, COPY and CLONE.",
+   "ru": "таких как RENAME, LINK, COPY и CLONE.",
+   "quote": {
+    "rfc7530-15.2.4.1": "Most operations implicitly use the current filehandle as an argument ... The saved filehandle value is used in combination with the current filehandle value for the LINK and RENAME operations.",
+    "rfc7862-15.2": "struct COPY4args { /* SAVED_FH: source file */ /* CURRENT_FH: destination file */"
+   }
+  },
+  {
+   "src": "rfc7530-15.2.4",
+   "en": "the reply holds the results up to and including that one.",
+   "ru": "ответ содержит результаты вплоть до неё включительно.",
+   "quote": "If an operation is executed by the server and the status of that operation is NFS4_OK, then the next operation in the COMPOUND procedure is executed. The server continues this process until there are no more operations to be executed or one of the operations has a status value other than NFS4_OK."
+  },
+  {
+   "src": [
+    "rfc7530-9.1.1",
+    "rfc8881-18.35"
+   ],
+   "en": "in 4.1 it is EXCHANGE_ID.",
+   "ru": "в 4.1 — EXCHANGE_ID.",
+   "quote": {
+    "rfc7530-9.1.1": "A sequence of a SETCLIENTID operation followed by a SETCLIENTID_CONFIRM operation is required to establish the identification onto the server.",
+    "rfc8881-18.35": "18.35. Operation 42: EXCHANGE_ID - Instantiate Client ID"
+   }
+  },
+  {
+   "src": [
+    "kd-clientid",
+    "rfc7530-9.1.1"
+   ],
+   "en": "the server returns a short <b>client ID</b>.",
+   "ru": "сервер возвращает короткий <b>идентификатор клиента</b> (client ID).",
+   "quote": {
+    "kd-clientid": "By default, the Linux NFSv4 client implementation constructs its \"co_ownerid\" string starting with the words \"Linux NFS\" followed by the client's UTS node name ... nfs.nfs4_unique_id This module parameter can set an arbitrary uniquifier string",
+    "rfc7530-9.1.1": "the client uses the shorthand client identifier, of type clientid4, instead of the longer and less compact nfs_client_id4 structure."
+   }
+  },
+  {
+   "src": "rfc7530-9.1.1",
+   "en": "so its old state can be thrown away.",
+   "ru": "и его старое состояние можно выбросить.",
+   "quote": "The first field, verifier, is a client incarnation verifier that is used to detect client reboots. Only if the verifier is different from that which the server has previously recorded for the client ... does the server start the process of canceling the client's leased state."
+  },
+  {
+   "src": "rfc7530-9.9",
+   "en": "(Windows-style \"nobody else may write\").",
+   "ru": "«никто другой не может писать»).",
+   "quote": "When a client opens a file, it issues an OPEN operation to the server specifying the type of access required (READ, WRITE, or BOTH) and the type of access to deny others (OPEN4_SHARE_DENY_NONE, OPEN4_SHARE_DENY_READ, OPEN4_SHARE_DENY_WRITE, or OPEN4_SHARE_DENY_BOTH)."
+  },
+  {
+   "src": "rfc7530-9.1.4.2",
+   "en": "a 4-byte sequence number plus 12 bytes that identify the state.",
+   "ru": "из которых 4 байта — порядковый номер и 12 байт идентифицируют состояние.",
+   "quote": "Stateids are divided into two fields: a 96-bit \"other\" field identifying the specific set of locks and a 32-bit \"seqid\" sequence value."
+  },
+  {
+   "src": "rfc7530-9.5",
+   "en": "so the server always knows which open a request belongs to.",
+   "ru": "поэтому сервер всегда знает, к какому открытию относится запрос.",
+   "quote": "a valid stateid (CLOSE, DELEGRETURN, LOCK, LOCKU, OPEN, OPEN_CONFIRM, OPEN_DOWNGRADE, READ, SETATTR, or WRITE)"
+  },
+  {
+   "src": [
+    "rfc7530-1.4.5",
+    "rfc7530-9.1.4.1"
+   ],
+   "en": "each with its own lock stateid.",
+   "ru": "у каждой блокировки свой stateid.",
+   "quote": {
+    "rfc7530-1.4.5": "With the NFSv4 protocol, the support for byte-range file locking is part of the NFS protocol. ... This is a departure from the previous versions of the NFS file locking protocol, Network Lock Manager (NLM) [RFC1813].",
+    "rfc7530-9.1.4.1": "Stateids may represent sets of byte-range locks. All locks held on a particular file by a particular owner and all gotten under the aegis of a particular open file are associated with a single stateid"
+   }
+  },
+  {
+   "src": [
+    "rfc7530-9.5",
+    "rfc8881-8.3"
+   ],
+   "en": "a 4.1 client's SEQUENCE operation renews implicitly.",
+   "ru": "у клиента 4.1 аренду неявно продлевает операция SEQUENCE.",
+   "quote": {
+    "rfc7530-9.5": "Any operation made with a valid clientid (DELEGPURGE, LOCK, LOCKT, OPEN, RELEASE_LOCKOWNER, or RENEW) or a valid stateid ... informs the server to renew all of the leases for that client",
+    "rfc8881-8.3": "successful execution of a SEQUENCE operation (or successful retrieval of the result of SEQUENCE from the reply cache) on an unexpired lease will result in the lease being implicitly renewed"
+   }
+  },
+  {
+   "src": [
+    "k-nfsd-lease",
+    "nfsconf5"
+   ],
+   "en": "or <code>lease-time</code> in <code>nfs.conf</code>).",
+   "ru": "или <code>lease-time</code> в <code>nfs.conf</code>).",
+   "quote": {
+    "k-nfsd-lease": "nn->nfsd4_lease = 90; /* default lease time */ nn->nfsd4_grace = 90;",
+    "nfsconf5": "nfsd Recognized values: threads, min-threads, host, scope, port, grace-time, lease-time, udp, tcp, vers3, vers4, vers4.0, vers4.1, vers4.2, rdma, fh-key-file,"
+   }
+  },
+  {
+   "src": "rfc8881-8.3",
+   "en": "the server may release its opens and locks so others can proceed.",
+   "ru": "сервер может освободить его открытия и блокировки, чтобы другие могли продолжить работу.",
+   "quote": "This arrangement allows the server to remove stale locking-related objects that are held by a client that has crashed or is otherwise unreachable, once the relevant lease expires. This in turn allows other clients to obtain conflicting locks"
+  },
+  {
+   "src": [
+    "kn-5.19",
+    "git-courtesy-limit",
+    "git-courtesy-shrinker"
+   ],
+   "en": "can often resume without losing anything.",
+   "ru": "часто может продолжить работу, ничего не потеряв.",
+   "quote": {
+    "kn-5.19": "This release implements the NFSv4 Courteous Server. ... after one lease period, another can open and lock those files and the unresponsive client's is purged; otherwise if the unresponsive client's open and lock is uncontended, the server retains that open and lock state",
+    "git-courtesy-limit": "Since there is now a limit of the number of clients, the 24-hr idle time limit of courtesy client is no longer needed and was removed.",
+    "git-courtesy-shrinker": "Add courtesy_client_reaper to react to low memory condition triggered by the system memory shrinker."
+   }
+  },
+  {
+   "src": [
+    "rfc8881-8.4.2.1",
+    "k-nfsd-lease"
+   ],
+   "en": "and lets clients <b>reclaim</b> what they held.",
+   "ru": "и позволяет клиентам <b>вернуть</b> (reclaim) то, что у них было.",
+   "quote": {
+    "rfc8881-8.4.2.1": "During the grace period, the server must reject READ and WRITE operations and non-reclaim locking requests (i.e., other LOCK and OPEN operations) with an error of NFS4ERR_GRACE, unless it can guarantee that these may be done safely",
+    "k-nfsd-lease": "nn->nfsd4_lease = 90; /* default lease time */ nn->nfsd4_grace = 90;"
+   }
+  },
+  {
+   "src": [
+    "rfc8881-8.4.2.1",
+    "nfsdcld8"
+   ],
+   "en": "(<code>nfsdcld</code> on Linux).",
+   "ru": "(в Linux этим занимается <code>nfsdcld</code>).",
+   "quote": {
+    "rfc8881-8.4.2.1": "In order for the server to know that all clients with possible prior lock state have done a RECLAIM_COMPLETE, the server must maintain in stable storage a list clients that may have such locks.",
+    "nfsdcld8": "In order to prevent these problems, the server must track a small amount of per-client information on stable storage. This daemon provides the userspace piece of that functionality."
+   }
+  },
+  {
+   "src": "rfc8881-8.4.2.1",
+   "en": "can end grace early.",
+   "ru": "может закончить период отсрочки досрочно.",
+   "quote": "The grace period may last until all clients that are known to possibly have had locks have done a global RECLAIM_COMPLETE operation, indicating that they have finished reclaiming the locks they held before the server restart."
+  },
+  {
+   "src": "rfc7530-10.4",
+   "en": "(a write delegation).",
+   "ru": "(делегирование на запись).",
+   "quote": "When a single client holds an OPEN_DELEGATE_READ delegation, it is assured that no other client may modify the contents or attributes of the file. ... An OPEN_DELEGATE_WRITE delegation allows the client to handle, on its own, all opens."
+  },
+  {
+   "src": "rfc7530-10.4",
+   "en": "attribute queries from its cache without asking the server.",
+   "ru": "запросы атрибутов из своего кэша, не спрашивая сервер.",
+   "quote": "When a client has an open delegation, it does not send OPENs or CLOSEs to the server but updates the appropriate status internally."
+  },
+  {
+   "src": "rfc7530-10.2",
+   "en": "and the newcomer proceeds.",
+   "ru": "после чего новый клиент продолжает работу.",
+   "quote": "Unlike locks, an operation by a second client to a delegated file will cause the server to recall a delegation through a callback. On recall, the client holding the delegation must flush modified state (such as modified data) to the server and return the delegation."
+  },
+  {
+   "src": [
+    "rfc7530-16.33",
+    "nfs5-v4opts"
+   ],
+   "en": "to an address the client advertised in SETCLIENTID.",
+   "ru": "на адрес, который клиент сообщил в SETCLIENTID.",
+   "quote": {
+    "rfc7530-16.33": "The callback information provided in this operation will be used if the client is provided an open delegation at a future point.",
+    "nfs5-v4opts": "Specifies a single IPv4 address (in dotted-quad form), or a non-link-local IPv6 address, that the NFS client advertises to allow servers to perform NFS version 4.0 callback requests against files on this mount point."
+   }
+  },
+  {
+   "src": "rfc7530-10.2",
+   "en": "a 4.0 server then quietly stops granting delegations.",
+   "ru": "сервер 4.0 молча перестаёт выдавать делегирования.",
+   "quote": "Because callback RPCs may not work in all environments (due to firewalls, for example), correct protocol operation does not depend on them. ... A server ... avoids delegating responsibilities until it has determined that callbacks are supported."
+  },
+  {
+   "src": [
+    "nfs5-v4opts",
+    "rfc8881-2.10.1"
+   ],
+   "en": "NFSv4.1 fixed this by sending callbacks over the client's own connection.",
+   "ru": "NFSv4.1 исправил это, отправляя обратные вызовы по собственному соединению клиента.",
+   "quote": {
+    "nfs5-v4opts": "NFS protocol versions 4.1 and 4.2 use the client-established TCP connection for callback requests, so do not require the server to connect to the client.",
+    "rfc8881-2.10.1": "The NFSv4.1 client (defined in Section 1.7) creates transport connections and provides them to the server to use for sending callback requests, thus solving the firewall issue"
+   }
+  },
+  {
+   "src": "rfc7530-7.3",
+   "en": "the directories that only join exports together are synthetic.",
+   "ru": "каталоги, которые лишь соединяют экспорты между собой, синтетические.",
+   "quote": "Portions of the server namespace that are not exported are bridged via a \"pseudo-file system\" that provides a view of exported directories only."
+  },
+  {
+   "src": [
+    "exports5",
+    "nfsutils-v4root"
+   ],
+   "en": "its real path on the server.",
+   "ru": "его настоящим путём на сервере.",
+   "quote": {
+    "exports5": "For NFSv4, there is a distinguished filesystem which is the root of all exported filesystem. This is specified with fsid=root or fsid=0 both of which mean exactly the same thing.",
+    "nfsutils-v4root": "Create pseudo exports by running through the real export ... Those path components, if not exported, will become pseudo"
+   }
+  },
+  {
+   "src": [
+    "rfc7530-6.2.1",
+    "nfs4acl5"
+   ],
+   "en": "much closer to Windows ACLs than to POSIX mode bits.",
+   "ru": "гораздо ближе к ACL Windows, чем к битам режима POSIX.",
+   "quote": {
+    "rfc7530-6.2.1": "To determine if a request succeeds, the server processes each nfsace4 entry in order.",
+    "nfs4acl5": "NFSv4 ACLs provide finer granularity than typical POSIX read/write/execute permissions and are similar to CIFS ACLs."
+   }
+  },
+  {
+   "src": "nfs4setfacl1",
+   "en": "from <code>nfs4-acl-tools</code> manipulate them.",
+   "ru": "из пакета <code>nfs4-acl-tools</code>.",
+   "quote": "nfs4_setfacl, nfs4_editfacl - manipulate NFSv4 file/directory access control lists ... This page is part of the nfs4-acl-tools (NFSv4 ACL tools) project."
+  },
+  {
+   "src": [
+    "k-nfsd-acl",
+    "nfs4acl5"
+   ],
+   "en": "so some NFSv4 ACLs are rejected or approximated.",
+   "ru": "поэтому некоторые ACL NFSv4 отклоняются или приближаются.",
+   "quote": {
+    "k-nfsd-acl": "We only map from NFSv4 to POSIX ACLs when setting ACLs, when we err on the ... side of being more restrictive",
+    "nfs4acl5": "NFSv4 servers may return an ACL slightly different than one you set."
+   }
+  },
+  {
+   "src": [
+    "rfc8881-18.36",
+    "rfc8881-2.10.6.1"
+   ],
+   "en": "which is the number of requests the client may have outstanding at once.",
+   "ru": "то есть число запросов, которые клиент может держать незавершёнными одновременно.",
+   "quote": {
+    "rfc8881-18.36": "struct channel_attrs4 { count4 ca_headerpadsize; count4 ca_maxrequestsize; count4 ca_maxresponsesize; count4 ca_maxresponsesize_cached; count4 ca_maxoperations; count4 ca_maxrequests;",
+    "rfc8881-2.10.6.1": "In NFSv4.1, the number of outstanding requests is bounded by the size of the slot table"
+   }
+  },
+  {
+   "src": "rfc8881-18.46",
+   "en": "Every COMPOUND then starts with a SEQUENCE operation:",
+   "ru": "После этого каждый COMPOUND начинается с операции SEQUENCE:",
+   "quote": "struct SEQUENCE4args { sessionid4 sa_sessionid; sequenceid4 sa_sequenceid; slotid4 sa_slotid; slotid4 sa_highest_slotid; bool sa_cachethis; }; ... SEQUENCE MUST appear as the first operation of any COMPOUND in which it appears."
+  },
+  {
+   "src": "rfc8881-2.10.6.1",
+   "en": "a retransmission carries the same number and gets the cached reply.",
+   "ru": "повторная передача несёт тот же номер и получает ответ из кэша.",
+   "quote": "Each time a slot is reused, the request MUST specify a sequence ID that is one greater than that of the previous request on the slot. ... A retransmitted request, in which the sequence ID is equal to that currently recorded in the slot. ... the replier returns the cached reply."
+  },
+  {
+   "src": [
+    "rfc8881-2.10.6",
+    "rfc8881-2.10.1"
+   ],
+   "en": "whose memory cost the server chose at CREATE_SESSION.",
+   "ru": "Она заменяет эвристику DRC гарантией, цену которой в памяти сервер сам выбрал при CREATE_SESSION.",
+   "quote": {
+    "rfc8881-2.10.6": "Each COMPOUND or CB_COMPOUND request that is sent with a leading SEQUENCE or CB_SEQUENCE operation MUST be executed by the receiver exactly once.",
+    "rfc8881-2.10.1": "EOS is enabled by a reply cache with a bounded size, making it feasible to keep the cache in persistent storage"
+   }
+  },
+  {
+   "src": "rfc8881-2.10.6.1",
+   "en": "to slow a client down.",
+   "ru": "чтобы притормозить клиента.",
+   "quote": "The target highest_slotid is an indication to the requester of the highest_slotid the replier wishes the requester to be using. This permits the replier to withdraw (or add) resources from a requester"
+  },
+  {
+   "src": "kd-params",
+   "en": "module parameter.",
+   "ru": "задаёт параметр модуля <code>nfs.max_session_slots</code>.",
+   "quote": "nfs.max_session_slots= [NFSv4.1] Sets the maximum number of session slots the client will attempt to negotiate with the server. This limits the number of simultaneous RPC requests that the client can send to the NFSv4.1 server."
+  },
+  {
+   "src": [
+    "rfc8881-18.36",
+    "rfc8881-2.10.1"
+   ],
+   "en": "so callbacks work through NAT and firewalls.",
+   "ru": "поэтому обратные вызовы проходят через NAT и межсетевые экраны.",
+   "quote": {
+    "rfc8881-18.36": "If CREATE_SESSION4_FLAG_CONN_BACK_CHAN is set in csa_flags, the client is requesting that the connection over which the CREATE_SESSION operation arrived be associated with the session's backchannel in addition to its fore channel.",
+    "rfc8881-2.10.1": "creates transport connections and provides them to the server to use for sending callback requests, thus solving the firewall issue"
+   }
+  },
+  {
+   "src": "rfc8881-2.10.5",
+   "en": "uses several sessions under one client ID.",
+   "ru": "использует несколько сессий под одним идентификатором клиента.",
+   "quote": "Session trunking is essentially the association of multiple connections, each with potentially different target and/or source network addresses, to the same session. ... Client ID trunking is the association of multiple sessions to the same client ID."
+  },
+  {
+   "src": [
+    "nfs5-opts",
+    "kn-5.3"
+   ],
+   "en": "it also works with NFSv3.",
+   "ru": "она работает и с NFSv3.",
+   "quote": {
+    "nfs5-opts": "Options supported by all versions ... the nconnect option allows the user to specify the number of connections that should be established between the client and server up to a limit of 16.",
+    "kn-5.3": "Allow NFS client to set up multiple TCP connections to the server using a new 'nconnect=X' mount option. Queue length is used to balance load"
+   }
+  },
+  {
+   "src": "rfc8881-12.1",
+   "en": "The client then reads and writes directly to the data servers, in parallel.",
+   "ru": "Затем клиент читает и пишет напрямую на серверы данных, параллельно.",
+   "quote": "the pNFS feature set allows direct client access to the storage devices containing file data. ... When a client holds a layout, it is granted the ability to directly access the byte-range at the storage location specified in the layout."
+  },
+  {
+   "src": "rfc8881-20.3",
+   "en": "the client can always fall back to doing I/O through the MDS.",
+   "ru": "клиент всегда может вернуться к вводу-выводу через MDS.",
+   "quote": "a clora_changed value of TRUE indicates some level of change for the layout and the client SHOULD NOT write and commit modified data to the storage devices. In this case, the client writes and commits data through the metadata server."
+  },
+  {
+   "src": [
+    "rfc8881-12.5.2",
+    "rfc8881-12.1"
+   ],
+   "en": "the MDS can recall them with <b>CB_LAYOUTRECALL</b>.",
+   "ru": "MDS может отозвать их обратным вызовом <b>CB_LAYOUTRECALL</b>.",
+   "quote": {
+    "rfc8881-12.5.2": "A client obtains a layout with the LAYOUTGET operation. ... A successful LAYOUTGET result includes a layout stateid.",
+    "rfc8881-12.1": "The layout is managed in a similar fashion as NFSv4.1 data delegations. For example, the layout is leased, recallable, and revocable."
+   }
+  },
+  {
+   "src": [
+    "rfc8881-18.40",
+    "rfc8881-13.3",
+    "rfc5663-2.2.1",
+    "rfc8154-1"
+   ],
+   "en": "SCSI device identifiers for SCSI layouts).",
+   "ru": "идентификаторы устройств SCSI для раскладок SCSI).",
+   "quote": {
+    "rfc8881-18.40": "The GETDEVICEINFO operation returns pNFS storage device address information for the specified device ID.",
+    "rfc8881-13.3": "nflda_multipath_ds_list: An array of lists of data servers, where each list can be one or more elements, and each element represents a data server address",
+    "rfc5663-2.2.1": "this pNFS block layout identifies storage volumes by content, for example providing the means to match (unique portions of) labels used by volume managers.",
+    "rfc8154-1": "it can provide reliable and efficient device discovery by using SCSI device identifiers instead of having to rely on probing all devices potentially attached to a client."
+   }
+  },
+  {
+   "src": "rfc8881-18.42",
+   "en": "so it can update the file size and modification time.",
+   "ru": "чтобы тот мог обновить размер файла и время изменения.",
+   "quote": "The LAYOUTCOMMIT operation indicates that the client has completed writes using a layout obtained by a previous LAYOUTGET. ... LAYOUTCOMMIT allows it to commit or discard provisionally allocated space and to update the server with a new end-of-file."
+  },
+  {
+   "src": "rfc8881-18.44",
+   "en": "gives the layout back.",
+   "ru": "возвращает раскладку.",
+   "quote": "This operation returns from the client to the server one or more layouts"
+  },
+  {
+   "src": "rfc8881-13.6",
+   "en": "<td>NFSv4.1 READ and WRITE",
+   "ru": "<td>READ и WRITE из NFSv4.1",
+   "quote": "13.6. Operations Sent to NFSv4.1 Data Servers"
+  },
+  {
+   "src": "rfc5663-1",
+   "en": "against extents the MDS hands out",
+   "ru": "по экстентам, которые выдаёт MDS",
+   "quote": "This document is concerned with access from pNFS clients to storage systems over storage protocols based on blocks and volumes, such as the Small Computer System Interface (SCSI) protocol family (e.g., parallel SCSI, Fibre Channel Protocol (FCP) for Fibre Channel, Internet SCSI (iSCSI)"
+  },
+  {
+   "src": "rfc8154-1",
+   "en": "with persistent reservations for fencing",
+   "ru": "для изоляции узлов (fencing)",
+   "quote": "In contrast to [RFC5663], this document uses SCSI protocol features to provide reliable fencing by using SCSI persistent reservations"
+  },
+  {
+   "src": "rfc5664-1",
+   "en": "<td>T10 object storage",
+   "ru": "<td>объектное хранилище T10",
+   "quote": "This document describes the layouts used with object-based storage devices (OSDs) that are accessed according to the OSD storage protocol standard (ANSI INCITS 400-2004 [1])."
+  },
+  {
+   "src": [
+    "rfc8435-front",
+    "rfc8435-1"
+   ],
+   "en": "LAYOUTSTATS and LAYOUTERROR report back",
+   "ru": "LAYOUTSTATS и LAYOUTERROR передают обратную связь",
+   "quote": {
+    "rfc8435-front": "The flexible file layout type is defined in this document as an extension to pNFS that allows the use of storage devices that require only a limited degree of interaction with the metadata server and use already-existing protocols. Client-side mirroring is also added",
+    "rfc8435-1": "accessed using the NFS protocols: NFSv3 [RFC1813], NFSv4.0 [RFC7530], NFSv4.1 [RFC5661], and NFSv4.2 [RFC7862]."
+   }
+  },
+  {
+   "src": [
+    "k-nfs-kconfig-pnfs",
+    "kd-pnfs-scsi"
+   ],
+   "en": "supports the files, block, SCSI and flexible-files layouts.",
+   "ru": "поддерживает раскладки files, block, SCSI и flexible files.",
+   "quote": {
+    "k-nfs-kconfig-pnfs": "config PNFS_FILE_LAYOUT tristate ... config PNFS_BLOCK tristate ... config PNFS_FLEXFILE_LAYOUT tristate",
+    "kd-pnfs-scsi": "On the client make sure the kernel has the CONFIG_PNFS_BLOCK option enabled, and the file system is mounted using the NFSv4.1 protocol version (mount -o vers=4.1)."
+   }
+  },
+  {
+   "src": [
+    "kd-pnfs-block",
+    "kd-pnfs-scsi"
+   ],
+   "en": "and the exported filesystem must currently be XFS)",
+   "ru": "а экспортируемой файловой системой пока может быть только XFS)",
+   "quote": {
+    "kd-pnfs-block": "To use pNFS block layouts with the Linux NFS server the exported file system needs to support the pNFS block layouts (currently just XFS), and the file system must sit on shared storage (typically iSCSI)",
+    "kd-pnfs-scsi": "the exported file system needs to support the pNFS SCSI layouts (currently just XFS), and the file system must sit on a SCSI LUN that is accessible to the clients"
+   }
+  },
+  {
+   "src": "k-nfsd-kconfig-flex",
+   "en": "is meant for testing clients.",
+   "ru": "предназначен для тестирования клиентов.",
+   "quote": "Warning, this server implements the bare minimum functionality to be a flex file server - it is for testing the client, not for use in production."
+  },
+  {
+   "src": "rfc8881-10.9.1",
+   "en": "its negative lookups safely.",
+   "ru": "отрицательные результаты поиска.",
+   "quote": "By allowing clients to cache directory contents (in a read-only fashion) while being notified of changes, the client can avoid making frequent requests to interrogate the contents of slowly-changing directories"
+  },
+  {
+   "src": "git-merge-6.19",
+   "en": "with a module option to turn it off.",
+   "ru": "и её можно отключить параметром модуля.",
+   "quote": "Add initial support for basic directory delegations ... NFS: Add a module option to disable directory delegations ... NFS: Request a directory delegation during RENAME NFS: Request a directory delegation on ACCESS, CREATE, and UNLINK"
+  },
+  {
+   "src": "rfc7862-1.4.1",
+   "en": "plus a few attributes.",
+   "ru": "и несколько атрибутов.",
+   "quote": "A traditional file copy of a remotely accessed file ... results in the data being put on the network twice -- source to client and then client to destination. New operations are introduced to allow unnecessary traffic to be eliminated"
+  },
+  {
+   "src": "rfc7863-2",
+   "en": "<th>Operations (number)",
+   "ru": "<th>Операции (номер)",
+   "quote": "/// OP_ALLOCATE = 59, /// OP_COPY = 60, /// OP_COPY_NOTIFY = 61, /// OP_DEALLOCATE = 62, /// OP_IO_ADVISE = 63, /// OP_LAYOUTERROR = 64, /// OP_LAYOUTSTATS = 65, /// OP_OFFLOAD_CANCEL = 66, /// OP_OFFLOAD_STATUS = 67, /// OP_READ_PLUS = 68, /// OP_SEEK = 69, /// OP_WRITE_SAME = 70, /// OP_CLONE = 71"
+  },
+  {
+   "src": [
+    "k-nfs4file-fops",
+    "coreutils-9.0"
+   ],
+   "en": "<code>cp</code> in coreutils 9 uses it",
+   "ru": "его использует <code>cp</code> из coreutils 9",
+   "quote": {
+    "k-nfs4file-fops": ".copy_file_range = nfs4_copy_file_range, .llseek = nfs4_file_llseek, .fallocate = nfs42_fallocate, .remap_file_range = nfs42_remap_file_range,",
+    "coreutils-9.0": "cp, install and mv now use the copy_file_range syscall if available."
+   }
+  },
+  {
+   "src": "rfc7862-1.4.1",
+   "en": "<td>the data never travels to the client",
+   "ru": "<td>данные вообще не попадают на клиент",
+   "quote": "The intra-server COPY feature allows the client to request the server to perform the copy internally, avoiding unnecessary network traffic."
+  },
+  {
+   "src": [
+    "ficlone2-desc",
+    "k-nfs4file-fops"
+   ],
+   "en": "<code>FICLONERANGE</code>; <code>cp --reflink</code>",
+   "ru": "<code>FICLONERANGE</code>; <code>cp --reflink</code>",
+   "quote": {
+    "ficlone2-desc": "If a filesystem supports files sharing physical storage between multiple files (\"reflink\"), this ioctl(2) operation can be used to make some of the data in the src_fd file appear in the dest_fd file by sharing the underlying storage",
+    "k-nfs4file-fops": ".remap_file_range = nfs42_remap_file_range,"
+   }
+  },
+  {
+   "src": "rfc7862-1.4.3",
+   "en": "instead of the zeros",
+   "ru": "а не самими нулями",
+   "quote": "Such holes are typically transferred as zeros when read from the file. READ_PLUS (see Section 15.10) allows a server to send back to the client metadata describing the hole"
+  },
+  {
+   "src": [
+    "rfc7862-1.4.4",
+    "k-nfs4file-falloc"
+   ],
+   "en": "<td>reserve or free blocks on the server",
+   "ru": "<td>зарезервировать или освободить блоки на сервере",
+   "quote": {
+    "rfc7862-1.4.4": "ALLOCATE (see Section 15.1) allows a client to request a guarantee that space will be available. Also, DEALLOCATE (see Section 15.4) allows the client to punch a hole into a file, thus releasing a space reservation.",
+    "k-nfs4file-falloc": "if (mode & FALLOC_FL_PUNCH_HOLE) return nfs42_proc_deallocate(filep, offset, len); ... return nfs42_proc_allocate(filep, offset, len);"
+   }
+  },
+  {
+   "src": "rfc7862-1.4.2",
+   "en": "<code>posix_fadvise</code> semantics)",
+   "ru": "семантика <code>posix_fadvise</code>)",
+   "quote": "This operation can be used to support the posix_fadvise() [posix_fadvise] function."
+  },
+  {
+   "src": "rfc7862-1.4.5",
+   "en": "<td>initialise a file with a repeated pattern",
+   "ru": "<td>заполнить файл повторяющимся шаблоном",
+   "quote": "Some applications treat a file as if it were a disk and as such want to initialize (or format) the file image. The WRITE_SAME operation (see Section 15.12) is introduced to send this metadata to the server to allow it to write the block contents."
+  },
+  {
+   "src": "rfc7862-1.4.6",
+   "en": "<td>MAC labels stored and enforced across the wire",
+   "ru": "<td>мандатные метки (MAC) хранятся и соблюдаются по сети",
+   "quote": "A new file object attribute, sec_label (see Section 12.2.4), allows the server to store MAC labels on files, which the client retrieves and uses to enforce data access"
+  },
+  {
+   "src": "rfc7862-1.4.7",
+   "en": "<td>the MDS learns which data servers are slow or failing",
+   "ru": "<td>MDS узнаёт, какие серверы данных тормозят или отказывают",
+   "quote": "the client cannot communicate back to the metadata server any errors or performance characteristics with the storage devices. NFSv4.2 provides two new operations to do so: LAYOUTERROR (see Section 15.6) and LAYOUTSTATS (see Section 15.7), respectively."
+  },
+  {
+   "src": "rfc8276-8.6",
+   "en": "<code>REMOVEXATTR</code> (75)",
+   "ru": "<code>REMOVEXATTR</code> (75)",
+   "quote": "/// OP_GETXATTR = 72, /// OP_SETXATTR = 73, /// OP_LISTXATTRS = 74, /// OP_REMOVEXATTR = 75,"
+  },
+  {
+   "src": "rfc8276-8.4",
+   "en": "<td>extended attributes survive the trip to the server",
+   "ru": "<td>расширенные атрибуты доезжают до сервера",
+   "quote": "GETXATTR allows obtaining the value of an xattr key, SETXATTR allows creating or replacing an xattr key with a value, LISTXATTRS enumerates all the xattrs names, and REMOVEXATTR allows deleting a single xattr."
+  },
+  {
+   "src": "rfc7862-15.2",
+   "en": "offsets and a length.",
+   "ru": "смещениями и длиной.",
+   "quote": "stateid4 ca_src_stateid; stateid4 ca_dst_stateid; offset4 ca_src_offset; offset4 ca_dst_offset; length4 ca_count;"
+  },
+  {
+   "src": [
+    "rfc7862-15.2",
+    "k-nfsd-copy"
+   ],
+   "en": "usually through its own <code>copy_file_range</code>.",
+   "ru": "обычно своим собственным <code>copy_file_range</code>.",
+   "quote": {
+    "rfc7862-15.2": "The COPY operation requests that a range in the file specified by SAVED_FH be copied to a range in the file specified by CURRENT_FH.",
+    "k-nfsd-copy": "ret = vfs_copy_file_range(src, src_pos, dst, dst_pos, count, 0);"
+   }
+  },
+  {
+   "src": [
+    "rfc7862-4.1",
+    "rfc7862-4.1.1"
+   ],
+   "en": "<b>CB_OFFLOAD</b> callback.",
+   "ru": "обратным вызовом <b>CB_OFFLOAD</b>.",
+   "quote": {
+    "rfc7862-4.1": "In both cases, the copy may be performed synchronously or asynchronously.",
+    "rfc7862-4.1.1": "OFFLOAD_CANCEL: Used by the client to terminate an asynchronous file copy. ... OFFLOAD_STATUS: Used by the client to poll the status of an asynchronous file copy. ... CB_OFFLOAD: Used by the destination server to report the results of an asynchronous file copy to the client."
+   }
+  },
+  {
+   "src": [
+    "rfc7862-4.1.1",
+    "rfc7862-15.2",
+    "rfc7862-4.6.2"
+   ],
+   "en": "as an NFSv4.2 client itself.",
+   "ru": "сам выступая клиентом NFSv4.2.",
+   "quote": {
+    "rfc7862-4.1.1": "COPY_NOTIFY: Used by the client to request the source server to authorize a future file copy that will be made by a given destination server on behalf of the given user.",
+    "rfc7862-15.2": "In both cases, the COPY is always sent from the client to the destination server of the file copy.",
+    "rfc7862-4.6.2": "The destination server MAY use standard NFSv4.x (where x >= 1) operations to read the data from the source server."
+   }
+  },
+  {
+   "src": [
+    "k-nfsd-intercopy",
+    "kd-params",
+    "k-nfsd-kconfig-ssc"
+   ],
+   "en": "a kernel built with <code>CONFIG_NFSD_V4_2_INTER_SSC</code>.",
+   "ru": "ядро, собранное с <code>CONFIG_NFSD_V4_2_INTER_SSC</code>.",
+   "quote": {
+    "k-nfsd-intercopy": "static bool inter_copy_offload_enable; module_param(inter_copy_offload_enable, bool, 0644); MODULE_PARM_DESC(inter_copy_offload_enable, \"Enable inter server to server copy offload. Default: false\");",
+    "kd-params": "nfsd.inter_copy_offload_enable= [NFSv4.2] When set to 1, the server will support server-to-server copies for which this server is the destination of the copy.",
+    "k-nfsd-kconfig-ssc": "This option enables support for NFSv4.2 inter server to server copy where the destination server calls the NFSv4.2 client to read the data to copy from the source server."
+   }
+  },
+  {
+   "src": "rfc7862-4.1",
+   "en": "like <code>cp --reflink</code> locally.",
+   "ru": "как <code>cp --reflink</code> делает это локально.",
+   "quote": "the CLONE operation provides COPY-like functionality in the intra-server case, which is both synchronous and atomic"
+  },
+  {
+   "src": [
+    "mkfsxfs8",
+    "ficlone2-hist"
+   ],
+   "en": "btrfs, and a few others.",
+   "ru": "btrfs и ещё несколько.",
+   "quote": {
+    "mkfsxfs8": "By default, mkfs.xfs will create reference count btrees and therefore will enable the reflink feature.",
+    "ficlone2-hist": "They were previously known as BTRFS_IOC_CLONE and BTRFS_IOC_CLONE_RANGE, and were private to Btrfs."
+   }
+  },
+  {
+   "src": "ficlone2-err",
+   "en": "fails with <code>EOPNOTSUPP</code>.",
+   "ru": "завершается ошибкой <code>EOPNOTSUPP</code>.",
+   "quote": "EOPNOTSUPP This can appear if the filesystem does not support reflinking either file descriptor, or if either file descriptor refers to special inodes."
+  },
+  {
+   "src": "k-nfs42-clone",
+   "en": "for the rest of the mount and stops sending the operation.",
+   "ru": "до конца монтирования и перестаёт отправлять эту операцию.",
+   "quote": "if (err == -ENOTSUPP || err == -EOPNOTSUPP) { NFS_SERVER(inode)->caps &= ~NFS_CAP_CLONE; err = -EOPNOTSUPP; break; }"
+  },
+  {
+   "src": "rfc7862-6",
+   "en": "became fully allocated on copy.",
+   "ru": "при копировании становился полностью выделенным.",
+   "quote": "If an application reads a hole in a sparse file, the file system must return all zeros to the application. For local data access there is little penalty, but with NFS these zeros must be transferred back to the client."
+  },
+  {
+   "src": [
+    "rfc7862-15.11",
+    "lseek2"
+   ],
+   "en": "<code>SEEK_HOLE</code> on the server.",
+   "ru": "<code>SEEK_HOLE</code> на сервере.",
+   "quote": {
+    "rfc7862-15.11": "SEEK is an operation that allows a client to determine the location of the next data_content4 in a file. It allows an implementation of the emerging extension to the lseek(2) function",
+    "lseek2": "SEEK_DATA Adjust the file offset to the next location in the file greater than or equal to offset containing data."
+   }
+  },
+  {
+   "src": "rfc7862-15.10",
+   "en": "each either data or \"a hole of N bytes\".",
+   "ru": "либо данные, либо «дыра длиной N байт».",
+   "quote": "The READ_PLUS result is comprised of an array of rpr_contents, each of which describes a data_content4 type of data. For NFSv4.2, the allowed values are data and hole."
+  },
+  {
+   "src": [
+    "k-nfs-kconfig-readplus",
+    "git-log-kconfig",
+    "kn-6.6"
+   ],
+   "en": "after an earlier attempt was reverted.",
+   "ru": "после того как более раннюю попытку откатили.",
+   "quote": {
+    "k-nfs-kconfig-readplus": "config NFS_V4_2_READ_PLUS bool \"NFS: Enable support for the NFSv4.2 READ_PLUS operation\" depends on NFS_V4_2 default y",
+    "git-log-kconfig": "2023-08-23 NFS: Enable the READ_PLUS operation by default ... 2023-02-17 Revert \"NFSv4.2: Change the default KConfig value for READ_PLUS\" ... 2022-12-10 NFSv4.2: Change the default KConfig value for READ_PLUS",
+    "kn-6.6": "Enable the NFS v4.2 READ_PLUS operation by default"
+   }
+  },
+  {
+   "src": "wsl-readplus",
+   "en": "so it always sends READ.",
+   "ru": "поэтому всегда отправляет READ.",
+   "quote": "# CONFIG_NFS_V4_2_READ_PLUS is not set"
+  },
+  {
+   "src": [
+    "k-nfs4file-falloc",
+    "rfc7862-15.1"
+   ],
+   "en": "so a later write cannot fail with <code>ENOSPC</code>.",
+   "ru": "поэтому последующая запись не может завершиться ошибкой <code>ENOSPC</code>.",
+   "quote": {
+    "k-nfs4file-falloc": "return nfs42_proc_allocate(filep, offset, len);",
+    "rfc7862-15.1": "The server will ensure that backing blocks are reserved to the region specified by aa_offset and aa_length, and that no future writes into this region will return NFS4ERR_NOSPC."
+   }
+  },
+  {
+   "src": [
+    "rfc7862-15.4",
+    "fallocate2"
+   ],
+   "en": "the server frees the blocks and the range reads as zeros.",
+   "ru": "сервер освобождает блоки, и диапазон читается как нули.",
+   "quote": {
+    "rfc7862-15.4": "All further READs from the region passed to DEALLOCATE MUST return zeros until overwritten.",
+    "fallocate2": "Specifying the FALLOC_FL_PUNCH_HOLE flag (available since Linux 2.6.38) in mode deallocates space (i.e., creates a hole) ... The FALLOC_FL_PUNCH_HOLE flag must be ORed with FALLOC_FL_KEEP_SIZE in mode"
+   }
+  },
+  {
+   "src": [
+    "posixfallocate3",
+    "rfc7862-7"
+   ],
+   "en": "by writing to every block, over the network.",
+   "ru": "записывая в каждый блок, и всё это шло по сети.",
+   "quote": {
+    "posixfallocate3": "If the underlying filesystem does not support fallocate(2), then the operation is emulated with the following caveats: ... The emulation is inefficient.",
+    "rfc7862-7": "Currently, in order to achieve such a guarantee, applications zero the entire file. The initial zeroing allocates the backing blocks"
+   }
+  },
+  {
+   "src": "rfc7862-1.4.2",
+   "en": "so the server can read ahead or drop pages.",
+   "ru": "чтобы сервер мог читать с упреждением или выбрасывать страницы.",
+   "quote": "whether a file will be accessed sequentially or randomly, and whether a file will or will not be accessed in the near future, allows servers to optimize future I/O requests for a file by, for example, prefetching or evicting data."
+  },
+  {
+   "src": "rfc7862-8",
+   "en": "a fixed header in each block;",
+   "ru": "фиксированным заголовком в каждом блоке,",
+   "quote": "An ADB is typically comprised of two sections: header and data. ... Applications already impose structures on files [Strohm11] ... [Strohm11] Strohm, R., \"Chapter 2: Data Blocks, Extents, and Segments\", Oracle Database Concepts 11g Release 1 (11.1)"
+  },
+  {
+   "src": [
+    "rfc7862-1.4.6",
+    "exports5"
+   ],
+   "en": "Linux enables it per export with the <code>security_label</code> option.",
+   "ru": "в Linux это включается для отдельного экспорта опцией <code>security_label</code>.",
+   "quote": {
+    "rfc7862-1.4.6": "allows the server to store MAC labels on files, which the client retrieves and uses to enforce data access",
+    "exports5": "security_label With this option set, clients using NFSv4.2 or higher will be able to set and retrieve security labels (such as those used by SELinux)."
+   }
+  },
+  {
+   "src": "rfc8276-3",
+   "en": "on an NFS file failed.",
+   "ru": "на файле NFS завершалась ошибкой.",
+   "quote": "application use of xattrs poses further difficulties given the current lack of xattr support within NFSv4. As a result, certain applications may not be supported by NFSv4"
+  },
+  {
+   "src": "rfc8276-5",
+   "en": "do not cross the wire this way.",
+   "ru": "таким путём по сети не передаются.",
+   "quote": "Linux, for example, defines \"security\", \"system\", \"trusted\", and \"user\" namespaces ... This document provides support for namespaces related to user-managed metadata only"
+  },
+  {
+   "src": [
+    "kn-5.9",
+    "git-merge-5.9"
+   ],
+   "en": "Linux added client and server support in 5.9.",
+   "ru": "Linux получил поддержку на клиенте и сервере в версии 5.9.",
+   "quote": {
+    "kn-5.9": "This release incorporates support for extended attributes ... which bridges one of the most relevant gaps in NFS. ... NFS v4.2 User xattr support (RFC 8276), Server side",
+    "git-merge-5.9": "NFS: Add support for user xattrs through the NFSv4.2 protocol"
+   }
+  },
+  {
+   "src": "k-nfs42xattr",
+   "en": "may not reach the server.",
+   "ru": "могут не доходить до сервера.",
+   "quote": "User extended attribute client side cache functions."
+  },
+  {
+   "src": "rfc9754-front",
+   "en": "extends 4.2 opens and delegations:",
+   "ru": "расширяет открытия и делегирования в 4.2:",
+   "quote": "This document presents several extensions for both opening the file and delegating it to the client. This document extends NFSv4.2 (see RFC 7863). ... March 2025"
+  },
+  {
+   "src": "rfc9754-5",
+   "en": "the server asks it with CB_GETATTR when another client needs them.",
+   "ru": "сервер запрашивает их у держателя обратным вызовом CB_GETATTR.",
+   "quote": "With the addition of the new OPEN4_SHARE_ACCESS_WANT_DELEG_TIMESTAMPS flag, the client and server can negotiate that the client will be the authority for these values ... If the server is queried by another client for either the size or the times, it will need to use a CB_GETATTR"
+  },
+  {
+   "src": "git-merge-6.11",
+   "en": "The Linux client added support in 6.11.",
+   "ru": "Клиент Linux получил поддержку в версии 6.11.",
+   "quote": "New Features: - Add support for large folios - Implement rpcrdma generic device removal notification - Add client support for attribute delegations"
+  },
+  {
+   "src": [
+    "k-nfsd-kconfig-delegts",
+    "wsl-delegts"
+   ],
+   "en": "<code>CONFIG_NFSD_V4_DELEG_TIMESTAMPS</code>, which is off.",
+   "ru": "<code>CONFIG_NFSD_V4_DELEG_TIMESTAMPS</code>, и та выключена.",
+   "quote": {
+    "k-nfsd-kconfig-delegts": "NFSD implements delegated timestamps according to draft-ietf-nfsv4-delstid-08 \"Extending the Opening of Files\". This is currently an experimental feature and is therefore left disabled by default.",
+    "wsl-delegts": "# CONFIG_NFSD_V4_DELEG_TIMESTAMPS is not set"
+   }
+  },
+  {
+   "src": "rfc9754-4",
+   "en": "which reduces state on both sides.",
+   "ru": "и состояния на обеих сторонах становится меньше.",
+   "quote": "If the client knows that the server supports the OPEN4_SHARE_ACCESS_WANT_OPEN_XOR_DELEGATION flag ... then the client can supply that flag during the OPEN and get either an open or a delegation stateid."
+  },
+  {
+   "src": "rfc9754-3",
+   "en": "A new attribute lists which OPEN flags the server supports.",
+   "ru": "Новый атрибут перечисляет флаги OPEN, которые поддерживает сервер.",
+   "quote": "The fattr4_open_arguments attribute is a new XDR extension that provides helpful support when the OPEN procedure is extended in such a fashion. It models all of the parameters via bitmap4 data structures"
+  },
+  {
+   "src": "rfc9754-2",
+   "en": "so it can avoid hanging on it.",
+   "ru": "и не зависать на нём.",
+   "quote": "If a file is offline, then the server has immediate high-performance access to the file's attributes, but not to the file's content. ... By interrogating the new attribute fattr4_offline, a client can predetermine the availability of the file, avoiding the need to open it at all."
+  },
+  {
+   "src": "nfs5-opts",
+   "en": "<td>tries 4.2, then lower",
+   "ru": "<td>пробует 4.2, затем ниже",
+   "quote": "If this option is not specified, the client tries version 4.2 first, then negotiates down until it finds a version supported by the server."
+  },
+  {
+   "src": "nfs5-v4opts",
+   "en": "<td><code>tcp</code>, 2049",
+   "ru": "<td><code>tcp</code>, 2049",
+   "quote": "All NFS version 4 servers are required to support TCP, so if this mount option is not specified, the NFS version 4 client uses the TCP protocol. ... the NFS client uses the standard NFS port number of 2049 without first checking the server's rpcbind service."
+  },
+  {
+   "src": "kd-rdma",
+   "en": "for NFS over RDMA",
+   "ru": "для NFS поверх RDMA",
+   "quote": "$ mount -o rdma,port=20049 <IPoIB-server-name-or-address>:/<export> /mnt"
+  },
+  {
+   "src": "nfs5-opts",
+   "en": "The Linux client's maximum is 1,048,576 bytes.",
+   "ru": "Максимум клиента Linux — 1 048 576 байт.",
+   "quote": "The largest read payload supported by the Linux NFS client is 1,048,576 bytes (one megabyte). ... If an rsize value is not specified, or if the specified rsize value is larger than the maximum that either client or server can support, the client and server negotiate the largest rsize value"
+  },
+  {
+   "src": "nfs5-opts",
+   "en": "(<code>softerr</code>: <code>ETIMEDOUT</code>).",
+   "ru": "(у <code>softerr</code> — <code>ETIMEDOUT</code>).",
+   "quote": "If no option is specified (or if the hard option is specified), NFS requests are retried indefinitely. If either the soft or softerr option is specified, then the NFS client fails an NFS request after retrans retransmissions ... either the error EIO (for the soft option) or ETIMEDOUT"
+  },
+  {
+   "src": "nfs5-opts",
+   "en": "message (or a soft failure)",
+   "ru": "(или до отказа в режиме soft)",
+   "quote": "For NFS over TCP the default timeo value is 600 (60 seconds). ... the NFS client tries each UDP request three times and each TCP request twice. The NFS client generates a \"server not responding\" message after retrans retries"
+  },
+  {
+   "src": "nfs5-opts",
+   "en": "<td>TCP connections to the server, up to 16",
+   "ru": "<td>число TCP-соединений с сервером, до 16",
+   "quote": "the nconnect option allows the user to specify the number of connections that should be established between the client and server up to a limit of 16."
+  },
+  {
+   "src": "nfs5-opts",
+   "en": "<td><code>sec=</code></td><td>negotiated",
+   "ru": "<td><code>sec=</code></td><td>согласуется",
+   "quote": "If sec= is not specified, the client attempts to find a security flavor that both the client and the server supports. Valid flavors are none, sys, krb5, krb5i, and krb5p."
+  },
+  {
+   "src": "nfs5-opts",
+   "en": "<code>mtls</code>: RPC-with-TLS",
+   "ru": "<code>mtls</code>: RPC-with-TLS",
+   "quote": "If tls is specified, the client uses RPC-with-TLS to provide in-transit confidentiality. If mtls is specified, the client uses RPC-with-TLS to authenticate itself ... If the xprtsec= option is not specified, the default behavior ... is usually equivalent to xprtsec=none."
+  },
+  {
+   "src": "nfs5-v3opts",
+   "en": "locks local to the client",
+   "ru": "локальными для клиента",
+   "quote": "If this option is not specified, or if none is specified, the client assumes that the locks are not local."
+  },
+  {
+   "src": "nfs5-opts",
+   "en": "and the options of the first mount win silently.",
+   "ru": "и молча побеждают опции первого монтирования.",
+   "quote": "If the nosharecache option is specified, then that mount point gets a unique cache. Note that when data and attribute caches are shared, the mount options from the first mount point take effect for subsequent concurrent mounts of the same export."
+  },
+  {
+   "src": "exports5",
+   "en": "lists what the server shares and with whom:",
+   "ru": "перечисляет, что сервер раздаёт и кому:",
+   "quote": "After reading /etc/exports exportfs reads files in the /etc/exports.d directory as extra export tables. Only files ending in .exports are considered."
+  },
+  {
+   "src": "exports5",
+   "en": "read-write or read-only (default <code>ro</code>)",
+   "ru": "чтение и запись или только чтение (по умолчанию <code>ro</code>)",
+   "quote": "rw Allow both read and write requests on this NFS volume. The default is to disallow any request which changes the filesystem. This can also be made explicit by using the ro option."
+  },
+  {
+   "src": "exports5",
+   "en": "that clients were told was safe.",
+   "ru": "о которых клиентам сообщили, что они в сохранности.",
+   "quote": "async This option allows the NFS server to violate the NFS protocol and reply to requests before any changes made by that request have been committed to stable storage ... an unclean server restart (i.e. a crash) can cause data to be lost or corrupted."
+  },
+  {
+   "src": "exports5",
+   "en": "<code>root_squash</code> is the default.",
+   "ru": "По умолчанию действует <code>root_squash</code>.",
+   "quote": "uid 0 is normally mapped to a different id: the so-called anonymous or nobody uid. This mode of operation (called `root squashing') is the default ... you can map all user requests to the anonymous uid by specifying the all_squash option."
+  },
+  {
+   "src": "exports5",
+   "en": "subtree checking breaks when files are renamed while open.",
+   "ru": "проверка поддерева ломается, когда файлы переименовывают, пока они открыты.",
+   "quote": "This can cause problems with accessing files that are renamed while a client has them open ... Before release 1.1.0 of nfs-utils, the default was subtree_check. Since release 1.1.0, the default is no_subtree_check"
+  },
+  {
+   "src": "exports5",
+   "en": "come from a source port below 1024",
+   "ru": "приходили с исходного порта ниже 1024",
+   "quote": "secure This option requires that requests not using gss originate on an Internet port less than IPPORT_RESERVED (1024). This option is on by default."
+  },
+  {
+   "src": "exports5",
+   "en": "<td>let clients see filesystems mounted below the export",
+   "ru": "<td>показывать клиентам файловые системы, смонтированные ниже экспорта",
+   "quote": "crossmnt This option is similar to nohide but it makes it possible for clients to access all filesystems mounted on a filesystem marked with crossmnt."
+  },
+  {
+   "src": "exports5",
+   "en": "<td>offer pNFS layouts; carry SELinux labels",
+   "ru": "<td>предлагать раскладки pNFS; передавать метки SELinux",
+   "quote": "pnfs This option enables the use of the pNFS extension if the protocol level is NFSv4.1 or higher, and the filesystem supports pNFS exports."
+  },
+  {
+   "src": "exportfs8",
+   "en": "list the active exports with <code>exportfs -v</code>.",
+   "ru": "список действующих экспортов выводит <code>exportfs -v</code>.",
+   "quote": "-r Reexport all directories, synchronizing /var/lib/nfs/etab with /etc/exports and files under /etc/exports.d. ... -v Be verbose. When exporting or unexporting, show what's going on. When displaying the current export list, also display the list of export options."
+  },
+  {
+   "src": "nfsconf5",
+   "en": "and <code>rdma</code>, among others.",
+   "ru": "<code>vers4.2</code> и <code>rdma</code>.",
+   "quote": "nfsd Recognized values: threads, min-threads, host, scope, port, grace-time, lease-time, udp, tcp, vers3, vers4, vers4.0, vers4.1, vers4.2, rdma, fh-key-file,"
+  },
+  {
+   "src": "rpcnfsd8-opts",
+   "en": "starts eight threads unless told otherwise.)",
+   "ru": "запускает восемь потоков, если не указано иное.)",
+   "quote": "nproc specify the number of NFS server threads. By default, eight threads are started."
+  },
+  {
+   "src": "kd-knfsd-stats",
+   "en": "as RPCs that wait in a queue.",
+   "ru": "как RPC, которые ждут в очереди.",
+   "quote": "sockets-enqueued Counts how many times an NFS transport is enqueued to wait for an nfsd thread to service it, i.e. no nfsd thread was considered available. ... This can happen because there are too few nfsd threads in the thread pool for the NFS workload"
+  },
+  {
+   "src": [
+    "kn-6.12",
+    "kd-localio"
+   ],
+   "en": "skipping XDR and the network stack.",
+   "ru": "в обход XDR и сетевого стека.",
+   "quote": {
+    "kn-6.12": "Add support for LOCALIO protocol extension",
+    "kd-localio": "Once an NFS client and server handshake as \"local\", the client will bypass the network RPC protocol for read, write and commit operations. Due to this XDR and RPC bypass, these operations will operate faster."
+   }
+  },
+  {
+   "src": [
+    "k-fs-kconfig-localio",
+    "wsl-localio"
+   ],
+   "en": "which the WSL kernel does not enable,",
+   "ru": "которую ядро WSL не включает,",
+   "quote": {
+    "k-fs-kconfig-localio": "config NFS_LOCALIO bool \"NFS client and server support for LOCALIO auxiliary protocol\" depends on NFSD && NFS_FS select NFS_COMMON_LOCALIO_SUPPORT default n",
+    "wsl-localio": "# CONFIG_NFS_LOCALIO is not set"
+   }
+  },
+  {
+   "src": "nfsiostat8-opts",
+   "en": "(too few slots or connections).",
+   "ru": "(слишком мало слотов или соединений).",
+   "quote": "avg RTT (ms) This is the duration from the time that client's kernel sends the RPC request until the time it receives the reply. ... avg exe (ms) This is the duration from the time that NFS client does the RPC request to its kernel until the RPC request is completed"
+  },
+  {
+   "src": "nfsstat8",
+   "en": "each mount with its options.",
+   "ru": "каждое монтирование с его опциями.",
+   "quote": "-s, --server Print only server-side statistics. ... -c, --client Print only client-side statistics. ... -m, --mounts Print information about each of the mounted NFS file systems."
+  },
+  {
+   "src": "mountstats8",
+   "en": "formats one mount's mountstats block with per-op averages.",
+   "ru": "форматирует блок mountstats одного монтирования и считает средние по каждой операции.",
+   "quote": "The mountstats command displays various NFS client statistics for each given mountpoint. ... Display a combination of per-op RPC statistics, NFS event counts, and NFS byte counts."
+  },
+  {
+   "src": "nfsiostat8-desc",
+   "en": "like <code>iostat</code>.",
+   "ru": "как в <code>iostat</code>.",
+   "quote": "The nfsiostat command displays NFS client per-mount statistics. <interval> specifies the amount of time in seconds between each report."
+  },
+  {
+   "src": "kn-5.3",
+   "en": "(its opens, locks, delegations and layouts).",
+   "ru": "(его открытия, блокировки, делегирования и раскладки).",
+   "quote": "add a new directory /proc/fs/nfsd/clients/ with subdirectories for each active NFSv4 client. Each subdirectory has an \"info\" file with some basic information to help identify the client and a \"states\" directory that lists the open state held by that client"
+  },
+  {
+   "src": "nfsdclnts8",
+   "en": "prints them as a table.",
+   "ru": "выводит их таблицей.",
+   "quote": "The nfsdclnts(8) command parses the content present in /proc/fs/nfsd/clients/ directories. nfsdclnts(8) displays files which are open, locked, delegated by the nfs-client."
+  },
+  {
+   "src": "rpcdebug8",
+   "en": "turns on the kernel's old debug messages (very noisy).",
+   "ru": "включает старые отладочные сообщения ядра (очень шумные).",
+   "quote": "The rpcdebug command allows an administrator to set and clear the Linux kernel's NFS client and server debug flags. Setting these flags causes the kernel to emit messages to the system log in response to NFS activity"
+  },
+  {
+   "src": "fallocate2",
+   "en": "which ext4 and XFS have.",
+   "ru": "которая есть у ext4 и XFS.",
+   "quote": "Not all filesystems support FALLOC_FL_PUNCH_HOLE; if a filesystem doesn't support the operation, an error is returned. The operation is supported on at least the following filesystems: ... XFS (since Linux 2.6.38) ... ext4 (since Linux 3.0)"
+  }
+ ]
+}

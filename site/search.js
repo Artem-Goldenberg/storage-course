@@ -47,6 +47,7 @@
       sections: []
     };
     doc.querySelectorAll("main section[id]").forEach(function (sec) {
+      if (sec.id === "sources") return; // the footnote list would only echo source titles
       var h2 = sec.querySelector("h2");
       var s = { page: page, id: sec.id, title: h2 ? squash(h2.textContent) : sec.id, blocks: [] };
       s.ntitle = norm(s.title);
@@ -54,7 +55,7 @@
       var byEl = new Map(), sub = null;
       var walk = doc.createTreeWalker(sec, NodeFilter.SHOW_TEXT, {
         acceptNode: function (n) {
-          return n.parentElement.closest("svg, script, style, h2") ? NodeFilter.FILTER_REJECT : NodeFilter.FILTER_ACCEPT;
+          return n.parentElement.closest("svg, script, style, h2, sup.cite") ? NodeFilter.FILTER_REJECT : NodeFilter.FILTER_ACCEPT;
         }
       });
       for (var n = walk.nextNode(); n; n = walk.nextNode()) {

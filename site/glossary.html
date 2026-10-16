@@ -7,7 +7,7 @@
 <link rel="preconnect" href="https://fonts.googleapis.com">
 <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
 <link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=IBM+Plex+Mono:wght@400;600&family=IBM+Plex+Sans+Condensed:wght@500;600;700&family=Source+Serif+4:ital,opsz,wght@0,8..60,400;0,8..60,600;1,8..60,400&display=swap">
-<link rel="stylesheet" href="course.css?v=11">
+<link rel="stylesheet" href="course.css?v=12">
 <style>
   .gl-tools { display: flex; flex-wrap: wrap; gap: 0.75rem 1.25rem; align-items: center; }
   .gl-tools label { font-family: var(--display); font-size: 0.85rem; color: var(--ink-2); text-transform: uppercase; letter-spacing: 0.08em; }
@@ -49,11 +49,11 @@
 <ol>
 <li class="user"><a href="01-syscalls.html"><span class="n">01</span><span>Syscalls &amp; file descriptors</span></a></li>
 <li class="block"><a href="02-blocks.html"><span class="n">02</span><span>Block devices &amp; addressing</span></a></li>
-<li class="fs"><a href="03-ondisk.html"><span class="n">03</span><span>Inside an ext4 image</span></a></li>
-<li class="fs"><a href="04-btrees.html"><span class="n">04</span><span>B-trees, really</span></a></li>
-<li class="kernel"><a href="05-vfs-cache.html"><span class="n">05</span><span>The VFS and the caches</span></a></li>
+<li class="fs"><a href="03-ondisk.html"><span class="n">03</span><span>The ext4 on-disk format</span></a></li>
+<li class="fs"><a href="04-btrees.html"><span class="n">04</span><span>B-trees in filesystems and databases</span></a></li>
+<li class="kernel"><a href="05-vfs-cache.html"><span class="n">05</span><span>The VFS and the page cache</span></a></li>
 <li class="net"><a href="06-nfs.html"><span class="n">06</span><span>NFS from v3 to 4.2</span></a></li>
-<li class="net"><a href="07-nfs-caching.html"><span class="n">07</span><span>Caching across the network</span></a></li>
+<li class="net"><a href="07-nfs-caching.html"><span class="n">07</span><span>NFS client caching and coherence</span></a></li>
 <li class="net"><a href="08-rdma.html"><span class="n">08</span><span>RDMA and NFS over RDMA</span></a></li>
 <li class="net"><a href="09-distributed.html"><span class="n">09</span><span>Distributed filesystems</span></a></li>
 <li class="extra"><a href="glossary.html" aria-current="page"><span class="n">··</span><span>Glossary</span></a></li>
@@ -93,15 +93,15 @@
 <dl>
 <div class="entry" id="g-address-space" data-text="address_space one file&#x27;s page cache: an xarray of folios plus its address_space_operations.">
 <dt>address_space</dt>
-<dd>One file's page cache: an XArray of folios plus its <code>address_space_operations</code>. <a class="layer-chip kernel" href="05-vfs-cache.html#page-cache" title="The VFS and the caches">05</a></dd>
+<dd>One file's page cache: an XArray of folios plus its <code>address_space_operations</code>. <a class="layer-chip kernel" href="05-vfs-cache.html#page-cache" title="The VFS and the page cache">05</a></dd>
 </div>
 <div class="entry" id="g-atomic-replace-pattern" data-text="atomic replace pattern write a temp file, fsync it, rename it over the target, fsync the directory.">
 <dt>Atomic replace pattern</dt>
-<dd>Write a temp file, <code>fsync</code> it, <code>rename</code> it over the target, <code>fsync</code> the directory. <a class="layer-chip kernel" href="05-vfs-cache.html#durability" title="The VFS and the caches">05</a></dd>
+<dd>Write a temp file, <code>fsync</code> it, <code>rename</code> it over the target, <code>fsync</code> the directory. <a class="layer-chip kernel" href="05-vfs-cache.html#durability" title="The VFS and the page cache">05</a></dd>
 </div>
 <div class="entry" id="g-attribute-cache" data-text="attribute cache the nfs client&#x27;s cache of file attributes, trusted for a timeout that adapts between acregmin and acregmax (3 to 60 s).">
 <dt>Attribute cache</dt>
-<dd>The NFS client's cache of file attributes, trusted for a timeout that adapts between acregmin and acregmax (3 to 60 s). <a class="layer-chip net" href="07-nfs-caching.html#attr" title="Caching across the network">07</a></dd>
+<dd>The NFS client's cache of file attributes, trusted for a timeout that adapts between acregmin and acregmax (3 to 60 s). <a class="layer-chip net" href="07-nfs-caching.html#attr" title="NFS client caching and coherence">07</a></dd>
 </div>
 <div class="entry" id="g-auth-sys" data-text="auth_sys rpc credential that sends a numeric uid, gid and up to 16 groups, which the server simply trusts.">
 <dt>AUTH_SYS</dt>
@@ -114,7 +114,7 @@
 <dl>
 <div class="entry" id="g-balance-dirty-pages" data-text="balance_dirty_pages throttling that makes writers sleep when dirty memory exceeds its limit.">
 <dt>balance_dirty_pages</dt>
-<dd>Throttling that makes writers sleep when dirty memory exceeds its limit. <a class="layer-chip kernel" href="05-vfs-cache.html#write-path" title="The VFS and the caches">05</a></dd>
+<dd>Throttling that makes writers sleep when dirty memory exceeds its limit. <a class="layer-chip kernel" href="05-vfs-cache.html#write-path" title="The VFS and the page cache">05</a></dd>
 </div>
 <div class="entry" id="g-bio" data-text="bio the block layer&#x27;s i/o descriptor: device, start sector, memory segments and a completion callback.">
 <dt>bio</dt>
@@ -122,7 +122,7 @@
 </div>
 <div class="entry" id="g-b-link-tree" data-text="b-link tree a b+tree variant with right-sibling links, so readers can carry on while a node splits.">
 <dt>B-link tree</dt>
-<dd>A B+tree variant with right-sibling links, so readers can carry on while a node splits. <a class="layer-chip fs" href="04-btrees.html#concurrency" title="B-trees, really">04</a></dd>
+<dd>A B+tree variant with right-sibling links, so readers can carry on while a node splits. <a class="layer-chip fs" href="04-btrees.html#concurrency" title="B-trees in filesystems and databases">04</a></dd>
 </div>
 <div class="entry" id="g-blk-mq" data-text="blk-mq the multi-queue block layer: per-cpu software queues mapped onto the device&#x27;s hardware queues.">
 <dt>blk-mq</dt>
@@ -134,15 +134,15 @@
 </div>
 <div class="entry" id="g-block-group" data-text="block group a fixed-size slice of an ext4 filesystem with its own bitmaps and its part of the inode table.">
 <dt>Block group</dt>
-<dd>A fixed-size slice of an ext4 filesystem with its own bitmaps and its part of the inode table. <a class="layer-chip fs" href="03-ondisk.html#layout" title="Inside an ext4 image">03</a></dd>
+<dd>A fixed-size slice of an ext4 filesystem with its own bitmaps and its part of the inode table. <a class="layer-chip fs" href="03-ondisk.html#layout" title="The ext4 on-disk format">03</a></dd>
 </div>
 <div class="entry" id="g-b-tree" data-text="b-tree a balanced search tree with many keys per node, where all leaves are at the same depth.">
 <dt>B-tree</dt>
-<dd>A balanced search tree with many keys per node, where all leaves are at the same depth. <a class="layer-chip fs" href="04-btrees.html#btree" title="B-trees, really">04</a></dd>
+<dd>A balanced search tree with many keys per node, where all leaves are at the same depth. <a class="layer-chip fs" href="04-btrees.html#btree" title="B-trees in filesystems and databases">04</a></dd>
 </div>
 <div class="entry" id="g-bplustree" data-text="b+tree a b-tree that keeps all records in the leaves and only separator keys in the internal nodes; leaves are linked for range scans.">
 <dt>B+tree</dt>
-<dd>A B-tree that keeps all records in the leaves and only separator keys in the internal nodes; leaves are linked for range scans. <a class="layer-chip fs" href="04-btrees.html#bplus" title="B-trees, really">04</a></dd>
+<dd>A B-tree that keeps all records in the leaves and only separator keys in the internal nodes; leaves are linked for range scans. <a class="layer-chip fs" href="04-btrees.html#bplus" title="B-trees in filesystems and databases">04</a></dd>
 </div>
 </dl>
 </section>
@@ -151,11 +151,11 @@
 <dl>
 <div class="entry" id="g-change-attribute" data-text="change attribute an nfsv4 value the server must change on every modification of a file; linux backs it with i_version.">
 <dt>Change attribute</dt>
-<dd>An NFSv4 value the server must change on every modification of a file; Linux backs it with <code>i_version</code>. <a class="layer-chip net" href="07-nfs-caching.html#change" title="Caching across the network">07</a></dd>
+<dd>An NFSv4 value the server must change on every modification of a file; Linux backs it with <code>i_version</code>. <a class="layer-chip net" href="07-nfs-caching.html#change" title="NFS client caching and coherence">07</a></dd>
 </div>
 <div class="entry" id="g-close-to-open-consistency" data-text="close-to-open consistency an open made after another client&#x27;s close sees that client&#x27;s writes. the nfs contract.">
 <dt>Close-to-open consistency</dt>
-<dd>An open made after another client's close sees that client's writes. The NFS contract. <a class="layer-chip net" href="07-nfs-caching.html#cto" title="Caching across the network">07</a></dd>
+<dd>An open made after another client's close sees that client's writes. The NFS contract. <a class="layer-chip net" href="07-nfs-caching.html#cto" title="NFS client caching and coherence">07</a></dd>
 </div>
 <div class="entry" id="g-completion-queue-cq" data-text="completion queue (cq) where the nic posts a completion entry for each finished work request.">
 <dt>Completion queue (CQ)</dt>
@@ -171,7 +171,7 @@
 </div>
 <div class="entry" id="g-copy-on-write-cow" data-text="copy-on-write (cow) never overwriting a block in place: new versions are written elsewhere and the parent pointers updated, up to the root.">
 <dt>Copy-on-write (COW)</dt>
-<dd>Never overwriting a block in place: new versions are written elsewhere and the parent pointers updated, up to the root. <a class="layer-chip fs" href="03-ondisk.html#cow" title="Inside an ext4 image">03</a></dd>
+<dd>Never overwriting a block in place: new versions are written elsewhere and the parent pointers updated, up to the root. <a class="layer-chip fs" href="03-ondisk.html#cow" title="The ext4 on-disk format">03</a></dd>
 </div>
 <div class="entry" id="g-crush" data-text="crush ceph&#x27;s deterministic placement function over a weighted hierarchy of failure domains, using straw2 at each level.">
 <dt>CRUSH</dt>
@@ -184,11 +184,11 @@
 <dl>
 <div class="entry" id="g-delayed-allocation" data-text="delayed allocation choosing disk blocks at writeback time instead of at write() time, so the allocator sees larger runs.">
 <dt>Delayed allocation</dt>
-<dd>Choosing disk blocks at writeback time instead of at <code>write()</code> time, so the allocator sees larger runs. <a class="layer-chip fs" href="03-ondisk.html#allocation" title="Inside an ext4 image">03</a></dd>
+<dd>Choosing disk blocks at writeback time instead of at <code>write()</code> time, so the allocator sees larger runs. <a class="layer-chip fs" href="03-ondisk.html#allocation" title="The ext4 on-disk format">03</a></dd>
 </div>
 <div class="entry" id="g-delegation" data-text="delegation a server promise that lets a client open and cache a file without asking again, until the server sends cb_recall.">
 <dt>Delegation</dt>
-<dd>A server promise that lets a client open and cache a file without asking again, until the server sends CB_RECALL. <a class="layer-chip net" href="07-nfs-caching.html#delegations" title="Caching across the network">07</a></dd>
+<dd>A server promise that lets a client open and cache a file without asking again, until the server sends CB_RECALL. <a class="layer-chip net" href="07-nfs-caching.html#delegations" title="NFS client caching and coherence">07</a></dd>
 </div>
 <div class="entry" id="g-deleted-but-open-file" data-text="deleted-but-open file an unlinked inode kept alive by an open descriptor, still using space until the last close.">
 <dt>Deleted-but-open file</dt>
@@ -196,15 +196,15 @@
 </div>
 <div class="entry" id="g-dentry" data-text="dentry cached link from (parent directory, name) to an inode, or to nothing.">
 <dt>Dentry</dt>
-<dd>Cached link from (parent directory, name) to an inode, or to nothing. <a class="layer-chip kernel" href="05-vfs-cache.html#dcache" title="The VFS and the caches">05</a></dd>
+<dd>Cached link from (parent directory, name) to an inode, or to nothing. <a class="layer-chip kernel" href="05-vfs-cache.html#dcache" title="The VFS and the page cache">05</a></dd>
 </div>
 <div class="entry" id="g-directory-entry" data-text="directory entry a variable-length record pairing a name with an inode number inside a directory block.">
 <dt>Directory entry</dt>
-<dd>A variable-length record pairing a name with an inode number inside a directory block. <a class="layer-chip fs" href="03-ondisk.html#directories" title="Inside an ext4 image">03</a></dd>
+<dd>A variable-length record pairing a name with an inode number inside a directory block. <a class="layer-chip fs" href="03-ondisk.html#directories" title="The ext4 on-disk format">03</a></dd>
 </div>
 <div class="entry" id="g-dirty-page" data-text="dirty page cached data changed in ram and not yet written to the device.">
 <dt>Dirty page</dt>
-<dd>Cached data changed in RAM and not yet written to the device. <a class="layer-chip kernel" href="05-vfs-cache.html#write-path" title="The VFS and the caches">05</a></dd>
+<dd>Cached data changed in RAM and not yet written to the device. <a class="layer-chip kernel" href="05-vfs-cache.html#write-path" title="The VFS and the page cache">05</a></dd>
 </div>
 <div class="entry" id="g-discard-trim" data-text="discard / trim a command telling a device that a range of lbas no longer holds useful data.">
 <dt>Discard / TRIM</dt>
@@ -237,7 +237,7 @@
 </div>
 <div class="entry" id="g-errseq-t" data-text="errseq_t per-file writeback error counter that lets fsync report each error once per open file.">
 <dt>errseq_t</dt>
-<dd>Per-file writeback error counter that lets <code>fsync</code> report each error once per open file. <a class="layer-chip kernel" href="05-vfs-cache.html#durability" title="The VFS and the caches">05</a></dd>
+<dd>Per-file writeback error counter that lets <code>fsync</code> report each error once per open file. <a class="layer-chip kernel" href="05-vfs-cache.html#durability" title="The VFS and the page cache">05</a></dd>
 </div>
 <div class="entry" id="g-estale" data-text="estale stale file handle: the server no longer recognises a handle, usually because the file was removed or replaced.">
 <dt>ESTALE</dt>
@@ -245,11 +245,11 @@
 </div>
 <div class="entry" id="g-extent" data-text="extent one run of contiguous blocks, described as (file block, length, disk block).">
 <dt>Extent</dt>
-<dd>One run of contiguous blocks, described as (file block, length, disk block). <a class="layer-chip fs" href="03-ondisk.html#extents" title="Inside an ext4 image">03</a></dd>
+<dd>One run of contiguous blocks, described as (file block, length, disk block). <a class="layer-chip fs" href="03-ondisk.html#extents" title="The ext4 on-disk format">03</a></dd>
 </div>
 <div class="entry" id="g-extent-tree" data-text="extent tree ext4&#x27;s b+tree of extents, rooted in the inode&#x27;s 60-byte i_block.">
 <dt>Extent tree</dt>
-<dd>ext4's B+tree of extents, rooted in the inode's 60-byte <code>i_block</code>. <a class="layer-chip fs" href="04-btrees.html#ext4-extents" title="B-trees, really">04</a></dd>
+<dd>ext4's B+tree of extents, rooted in the inode's 60-byte <code>i_block</code>. <a class="layer-chip fs" href="04-btrees.html#ext4-extents" title="B-trees in filesystems and databases">04</a></dd>
 </div>
 </dl>
 </section>
@@ -258,7 +258,7 @@
 <dl>
 <div class="entry" id="g-fanout" data-text="fanout the number of children one tree node can point to: node size divided by entry size.">
 <dt>Fanout</dt>
-<dd>The number of children one tree node can point to: node size divided by entry size. <a class="layer-chip fs" href="04-btrees.html#cost-model" title="B-trees, really">04</a></dd>
+<dd>The number of children one tree node can point to: node size divided by entry size. <a class="layer-chip fs" href="04-btrees.html#cost-model" title="B-trees in filesystems and databases">04</a></dd>
 </div>
 <div class="entry" id="g-fencing" data-text="fencing making a suspected-dead node harmless (power off, storage cut-off, blocklist, epoch) before taking over its work.">
 <dt>Fencing</dt>
@@ -278,7 +278,7 @@
 </div>
 <div class="entry" id="g-folio" data-text="folio a power-of-two run of contiguous pages managed as one unit (linux 5.16 and later).">
 <dt>Folio</dt>
-<dd>A power-of-two run of contiguous pages managed as one unit (Linux 5.16 and later). <a class="layer-chip kernel" href="05-vfs-cache.html#page-cache" title="The VFS and the caches">05</a></dd>
+<dd>A power-of-two run of contiguous pages managed as one unit (Linux 5.16 and later). <a class="layer-chip kernel" href="05-vfs-cache.html#page-cache" title="The VFS and the page cache">05</a></dd>
 </div>
 <div class="entry" id="g-frwr" data-text="frwr fast registration: register and invalidate memory through work requests, per i/o, without a system call.">
 <dt>FRWR</dt>
@@ -286,7 +286,7 @@
 </div>
 <div class="entry" id="g-fsync-fdatasync" data-text="fsync / fdatasync wait until a file&#x27;s data, plus all or only the needed metadata, is on stable storage, including a device cache flush.">
 <dt>fsync / fdatasync</dt>
-<dd>Wait until a file's data, plus all or only the needed metadata, is on stable storage, including a device cache flush. <a class="layer-chip kernel" href="05-vfs-cache.html#durability" title="The VFS and the caches">05</a></dd>
+<dd>Wait until a file's data, plus all or only the needed metadata, is on stable storage, including a device cache flush. <a class="layer-chip kernel" href="05-vfs-cache.html#durability" title="The VFS and the page cache">05</a></dd>
 </div>
 <div class="entry" id="g-ftl-flash-translation-layer" data-text="ftl (flash translation layer) ssd firmware that maps lbas to flash pages and never overwrites in place.">
 <dt>FTL (flash translation layer)</dt>
@@ -303,7 +303,7 @@
 </div>
 <div class="entry" id="g-group-descriptor" data-text="group descriptor the per-group entry giving the block numbers of that group&#x27;s bitmaps and inode table.">
 <dt>Group descriptor</dt>
-<dd>The per-group entry giving the block numbers of that group's bitmaps and inode table. <a class="layer-chip fs" href="03-ondisk.html#descriptors" title="Inside an ext4 image">03</a></dd>
+<dd>The per-group entry giving the block numbers of that group's bitmaps and inode table. <a class="layer-chip fs" href="03-ondisk.html#descriptors" title="The ext4 on-disk format">03</a></dd>
 </div>
 </dl>
 </section>
@@ -312,15 +312,15 @@
 <dl>
 <div class="entry" id="g-hard-link" data-text="hard link a second directory entry for the same inode, counted in i_links_count.">
 <dt>Hard link</dt>
-<dd>A second directory entry for the same inode, counted in <code>i_links_count</code>. <a class="layer-chip fs" href="03-ondisk.html#links" title="Inside an ext4 image">03</a></dd>
+<dd>A second directory entry for the same inode, counted in <code>i_links_count</code>. <a class="layer-chip fs" href="03-ondisk.html#links" title="The ext4 on-disk format">03</a></dd>
 </div>
 <div class="entry" id="g-hole" data-text="hole a range of file blocks with no extent, which reads back as zeros.">
 <dt>Hole</dt>
-<dd>A range of file blocks with no extent, which reads back as zeros. <a class="layer-chip fs" href="03-ondisk.html#extents" title="Inside an ext4 image">03</a></dd>
+<dd>A range of file blocks with no extent, which reads back as zeros. <a class="layer-chip fs" href="03-ondisk.html#extents" title="The ext4 on-disk format">03</a></dd>
 </div>
 <div class="entry" id="g-htree" data-text="htree ext4&#x27;s hashed b-tree directory index, whose root (dx_root) lives in directory block 0.">
 <dt>htree</dt>
-<dd>ext4's hashed B-tree directory index, whose root (<code>dx_root</code>) lives in directory block 0. <a class="layer-chip fs" href="04-btrees.html#htree" title="B-trees, really">04</a></dd>
+<dd>ext4's hashed B-tree directory index, whose root (<code>dx_root</code>) lives in directory block 0. <a class="layer-chip fs" href="04-btrees.html#htree" title="B-trees in filesystems and databases">04</a></dd>
 </div>
 </dl>
 </section>
@@ -333,11 +333,11 @@
 </div>
 <div class="entry" id="g-inode" data-text="inode the fixed-size record holding a file&#x27;s type, permissions, size, timestamps, link count and block map.">
 <dt>Inode</dt>
-<dd>The fixed-size record holding a file's type, permissions, size, timestamps, link count and block map. <a class="layer-chip fs" href="03-ondisk.html#inode" title="Inside an ext4 image">03</a></dd>
+<dd>The fixed-size record holding a file's type, permissions, size, timestamps, link count and block map. <a class="layer-chip fs" href="03-ondisk.html#inode" title="The ext4 on-disk format">03</a></dd>
 </div>
 <div class="entry" id="g-inode-number-arithmetic" data-text="inode number arithmetic group = (ino − 1) / inodes_per_group; the byte offset follows from the group&#x27;s inode table block and the inode size.">
 <dt>Inode number arithmetic</dt>
-<dd>group = (ino − 1) / inodes_per_group; the byte offset follows from the group's inode table block and the inode size. <a class="layer-chip fs" href="03-ondisk.html#inode-address" title="Inside an ext4 image">03</a></dd>
+<dd>group = (ino − 1) / inodes_per_group; the byte offset follows from the group's inode table block and the inode size. <a class="layer-chip fs" href="03-ondisk.html#inode-address" title="The ext4 on-disk format">03</a></dd>
 </div>
 </dl>
 </section>
@@ -346,7 +346,7 @@
 <dl>
 <div class="entry" id="g-jbd2-journal" data-text="jbd2 journal ext4&#x27;s write-ahead log: metadata changes commit as transactions and are replayed after a crash.">
 <dt>jbd2 journal</dt>
-<dd>ext4's write-ahead log: metadata changes commit as transactions and are replayed after a crash. <a class="layer-chip fs" href="03-ondisk.html#journal" title="Inside an ext4 image">03</a></dd>
+<dd>ext4's write-ahead log: metadata changes commit as transactions and are replayed after a crash. <a class="layer-chip fs" href="03-ondisk.html#journal" title="The ext4 on-disk format">03</a></dd>
 </div>
 </dl>
 </section>
@@ -367,7 +367,7 @@
 </div>
 <div class="entry" id="g-lsm-tree" data-text="lsm tree buffers writes in memory and merges sorted files in the background instead of updating a tree in place (rocksdb, bluestore metadata).">
 <dt>LSM tree</dt>
-<dd>Buffers writes in memory and merges sorted files in the background instead of updating a tree in place (RocksDB, BlueStore metadata). <a class="layer-chip fs" href="04-btrees.html#lsm" title="B-trees, really">04</a></dd>
+<dd>Buffers writes in memory and merges sorted files in the background instead of updating a tree in place (RocksDB, BlueStore metadata). <a class="layer-chip fs" href="04-btrees.html#lsm" title="B-trees in filesystems and databases">04</a></dd>
 </div>
 </dl>
 </section>
@@ -376,7 +376,7 @@
 <dl>
 <div class="entry" id="g-maple-tree" data-text="maple tree the linux kernel&#x27;s in-memory b-tree of address ranges, used for a process&#x27;s memory map.">
 <dt>Maple tree</dt>
-<dd>The Linux kernel's in-memory B-tree of address ranges, used for a process's memory map. <a class="layer-chip fs" href="04-btrees.html#in-memory" title="B-trees, really">04</a></dd>
+<dd>The Linux kernel's in-memory B-tree of address ranges, used for a process's memory map. <a class="layer-chip fs" href="04-btrees.html#in-memory" title="B-trees in filesystems and databases">04</a></dd>
 </div>
 <div class="entry" id="g-memory-region-mr" data-text="memory region (mr) a registered, pinned buffer. its lkey lets local work requests use it; its rkey lets a remote peer access it.">
 <dt>Memory region (MR)</dt>
@@ -389,7 +389,7 @@
 <dl>
 <div class="entry" id="g-negative-dentry" data-text="negative dentry a cached record that a name does not exist, so repeated misses skip the filesystem.">
 <dt>Negative dentry</dt>
-<dd>A cached record that a name does not exist, so repeated misses skip the filesystem. <a class="layer-chip kernel" href="05-vfs-cache.html#dcache" title="The VFS and the caches">05</a></dd>
+<dd>A cached record that a name does not exist, so repeated misses skip the filesystem. <a class="layer-chip kernel" href="05-vfs-cache.html#dcache" title="The VFS and the page cache">05</a></dd>
 </div>
 <div class="entry" id="g-nvme-queue-pair" data-text="nvme queue pair submission and completion ring buffers in host ram, driven by doorbell writes. rdma reuses the same model.">
 <dt>NVMe queue pair</dt>
@@ -410,7 +410,7 @@
 </div>
 <div class="entry" id="g-o-direct" data-text="o_direct open flag for dma between the user buffer and the device, bypassing the page cache. needs aligned buffers and offsets.">
 <dt>O_DIRECT</dt>
-<dd>Open flag for DMA between the user buffer and the device, bypassing the page cache. Needs aligned buffers and offsets. <a class="layer-chip kernel" href="05-vfs-cache.html#direct" title="The VFS and the caches">05</a></dd>
+<dd>Open flag for DMA between the user buffer and the device, bypassing the page cache. Needs aligned buffers and offsets. <a class="layer-chip kernel" href="05-vfs-cache.html#direct" title="The VFS and the page cache">05</a></dd>
 </div>
 <div class="entry" id="g-onc-rpc" data-text="onc rpc the remote procedure call framework (rfc 5531) under every nfs message; replies are matched to calls by xid.">
 <dt>ONC RPC</dt>
@@ -422,7 +422,7 @@
 </div>
 <div class="entry" id="g-operation-table" data-text="operation table a struct of function pointers a filesystem fills in so the vfs can call it.">
 <dt>Operation table</dt>
-<dd>A struct of function pointers a filesystem fills in so the VFS can call it. <a class="layer-chip kernel" href="05-vfs-cache.html#objects" title="The VFS and the caches">05</a></dd>
+<dd>A struct of function pointers a filesystem fills in so the VFS can call it. <a class="layer-chip kernel" href="05-vfs-cache.html#objects" title="The VFS and the page cache">05</a></dd>
 </div>
 </dl>
 </section>
@@ -431,7 +431,7 @@
 <dl>
 <div class="entry" id="g-page-cache" data-text="page cache the kernel&#x27;s ram copy of file contents, shared by read, write and mmap.">
 <dt>Page cache</dt>
-<dd>The kernel's RAM copy of file contents, shared by <code>read</code>, <code>write</code> and <code>mmap</code>. <a class="layer-chip kernel" href="05-vfs-cache.html#page-cache" title="The VFS and the caches">05</a></dd>
+<dd>The kernel's RAM copy of file contents, shared by <code>read</code>, <code>write</code> and <code>mmap</code>. <a class="layer-chip kernel" href="05-vfs-cache.html#page-cache" title="The VFS and the page cache">05</a></dd>
 </div>
 <div class="entry" id="g-placement-group-pg" data-text="placement group (pg) a ceph hash bucket of objects within a pool; crush maps pgs, not single objects, to osds.">
 <dt>Placement group (PG)</dt>
@@ -461,7 +461,7 @@
 <dl>
 <div class="entry" id="g-rcu-walk" data-text="rcu walk lock-free path lookup through the dcache that falls back to a reference-counted walk when something changes.">
 <dt>RCU walk</dt>
-<dd>Lock-free path lookup through the dcache that falls back to a reference-counted walk when something changes. <a class="layer-chip kernel" href="05-vfs-cache.html#dcache" title="The VFS and the caches">05</a></dd>
+<dd>Lock-free path lookup through the dcache that falls back to a reference-counted walk when something changes. <a class="layer-chip kernel" href="05-vfs-cache.html#dcache" title="The VFS and the page cache">05</a></dd>
 </div>
 <div class="entry" id="g-rdma" data-text="rdma a nic reads or writes another machine&#x27;s registered memory directly, with no remote cpu or kernel on the data path.">
 <dt>RDMA</dt>
@@ -469,7 +469,7 @@
 </div>
 <div class="entry" id="g-readahead" data-text="readahead fetching file data before it is asked for, triggered by sequential access.">
 <dt>Readahead</dt>
-<dd>Fetching file data before it is asked for, triggered by sequential access. <a class="layer-chip kernel" href="05-vfs-cache.html#readahead" title="The VFS and the caches">05</a></dd>
+<dd>Fetching file data before it is asked for, triggered by sequential access. <a class="layer-chip kernel" href="05-vfs-cache.html#readahead" title="The VFS and the page cache">05</a></dd>
 </div>
 <div class="entry" id="g-read-modify-write" data-text="read-modify-write reading a whole unit to change part of it, caused by small or misaligned writes.">
 <dt>Read-modify-write</dt>
@@ -481,7 +481,7 @@
 </div>
 <div class="entry" id="g-reclaim-kswapd" data-text="reclaim / kswapd freeing memory by dropping clean pages, writing dirty ones and swapping anonymous ones.">
 <dt>Reclaim / kswapd</dt>
-<dd>Freeing memory by dropping clean pages, writing dirty ones and swapping anonymous ones. <a class="layer-chip kernel" href="05-vfs-cache.html#reclaim" title="The VFS and the caches">05</a></dd>
+<dd>Freeing memory by dropping clean pages, writing dirty ones and swapping anonymous ones. <a class="layer-chip kernel" href="05-vfs-cache.html#reclaim" title="The VFS and the page cache">05</a></dd>
 </div>
 <div class="entry" id="g-reliable-connected-rc" data-text="reliable connected (rc) the rdma transport with acknowledged, in-order delivery between one pair of qps; the one storage protocols use.">
 <dt>Reliable Connected (RC)</dt>
@@ -514,7 +514,7 @@
 </div>
 <div class="entry" id="g-silly-rename" data-text="silly rename the nfs client renaming an unlinked file it still has open to .nfsxxxx, and removing it at the last close.">
 <dt>Silly rename</dt>
-<dd>The NFS client renaming an unlinked file it still has open to <code>.nfsXXXX</code>, and removing it at the last close. <a class="layer-chip net" href="07-nfs-caching.html#failures" title="Caching across the network">07</a></dd>
+<dd>The NFS client renaming an unlinked file it still has open to <code>.nfsXXXX</code>, and removing it at the last close. <a class="layer-chip net" href="07-nfs-caching.html#failures" title="NFS client caching and coherence">07</a></dd>
 </div>
 <div class="entry" id="g-sparse-file" data-text="sparse file a file with holes: ranges with no disk blocks that read back as zeros.">
 <dt>Sparse file</dt>
@@ -530,11 +530,11 @@
 </div>
 <div class="entry" id="g-super-block" data-text="super_block in-memory object for one mounted filesystem instance; carries its super_operations.">
 <dt>super_block</dt>
-<dd>In-memory object for one mounted filesystem instance; carries its <code>super_operations</code>. <a class="layer-chip kernel" href="05-vfs-cache.html#objects" title="The VFS and the caches">05</a></dd>
+<dd>In-memory object for one mounted filesystem instance; carries its <code>super_operations</code>. <a class="layer-chip kernel" href="05-vfs-cache.html#objects" title="The VFS and the page cache">05</a></dd>
 </div>
 <div class="entry" id="g-superblock" data-text="superblock the 1 kib record at byte 1024 holding the filesystem&#x27;s sizes, counts, features and the magic number 0xef53.">
 <dt>Superblock</dt>
-<dd>The 1 KiB record at byte 1024 holding the filesystem's sizes, counts, features and the magic number <code>0xEF53</code>. <a class="layer-chip fs" href="03-ondisk.html#superblock" title="Inside an ext4 image">03</a></dd>
+<dd>The 1 KiB record at byte 1024 holding the filesystem's sizes, counts, features and the magic number <code>0xEF53</code>. <a class="layer-chip fs" href="03-ondisk.html#superblock" title="The ext4 on-disk format">03</a></dd>
 </div>
 <div class="entry" id="g-system-call" data-text="system call a request from a user program to the kernel, made with the syscall instruction: number in rax, arguments in registers.">
 <dt>System call</dt>
@@ -547,7 +547,7 @@
 <dl>
 <div class="entry" id="g-vfs-virtual-file-system" data-text="vfs (virtual file system) the kernel layer that turns file syscalls into calls on a specific filesystem&#x27;s operation tables.">
 <dt>VFS (virtual file system)</dt>
-<dd>The kernel layer that turns file syscalls into calls on a specific filesystem's operation tables. <a class="layer-chip kernel" href="05-vfs-cache.html#where" title="The VFS and the caches">05</a></dd>
+<dd>The kernel layer that turns file syscalls into calls on a specific filesystem's operation tables. <a class="layer-chip kernel" href="05-vfs-cache.html#where" title="The VFS and the page cache">05</a></dd>
 </div>
 </dl>
 </section>
@@ -560,7 +560,7 @@
 </div>
 <div class="entry" id="g-writeback" data-text="writeback flusher threads writing dirty folios to the device on thresholds, on age, or on fsync.">
 <dt>Writeback</dt>
-<dd>Flusher threads writing dirty folios to the device on thresholds, on age, or on <code>fsync</code>. <a class="layer-chip kernel" href="05-vfs-cache.html#write-path" title="The VFS and the caches">05</a></dd>
+<dd>Flusher threads writing dirty folios to the device on thresholds, on age, or on <code>fsync</code>. <a class="layer-chip kernel" href="05-vfs-cache.html#write-path" title="The VFS and the page cache">05</a></dd>
 </div>
 <div class="entry" id="g-write-verifier" data-text="write verifier an 8-byte value in write and commit replies that changes when the server restarts, telling clients to resend uncommitted data.">
 <dt>Write verifier</dt>
@@ -573,7 +573,7 @@
 <dl>
 <div class="entry" id="g-xarray" data-text="xarray the radix tree that indexes a file&#x27;s folios by page index.">
 <dt>XArray</dt>
-<dd>The radix tree that indexes a file's folios by page index. <a class="layer-chip kernel" href="05-vfs-cache.html#page-cache" title="The VFS and the caches">05</a></dd>
+<dd>The radix tree that indexes a file's folios by page index. <a class="layer-chip kernel" href="05-vfs-cache.html#page-cache" title="The VFS and the page cache">05</a></dd>
 </div>
 <div class="entry" id="g-xdr" data-text="xdr big-endian, 4-byte-aligned encoding of rpc arguments, with no field tags on the wire (rfc 4506).">
 <dt>XDR</dt>

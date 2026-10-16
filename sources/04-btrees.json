@@ -1,0 +1,1863 @@
+{
+ "page": "04-btrees.html",
+ "sources": {
+  "ostep-hdd": {
+   "url": "https://pages.cs.wisc.edu/~remzi/OSTEP/file-disks.pdf",
+   "title": "R. H. Arpaci-Dusseau, A. C. Arpaci-Dusseau: Operating Systems: Three Easy Pieces, chapter 37: Hard Disk Drives",
+   "where": {
+    "en": "section 37.4, I/O Time: Doing The Math",
+    "ru": "раздел 37.4, I/O Time: Doing The Math"
+   }
+  },
+  "ostep-ssd-ops": {
+   "url": "https://pages.cs.wisc.edu/~remzi/OSTEP/file-ssd.pdf",
+   "title": "R. H. Arpaci-Dusseau, A. C. Arpaci-Dusseau: Operating Systems: Three Easy Pieces, chapter 44: Flash-based SSDs",
+   "where": {
+    "en": "section 44.3, Basic Flash Operations",
+    "ru": "раздел 44.3, Basic Flash Operations"
+   }
+  },
+  "ostep-ssd-perf": {
+   "url": "https://pages.cs.wisc.edu/~remzi/OSTEP/file-ssd.pdf",
+   "title": "R. H. Arpaci-Dusseau, A. C. Arpaci-Dusseau: Operating Systems: Three Easy Pieces, chapter 44: Flash-based SSDs",
+   "where": {
+    "en": "section 44.11, SSD Performance And Cost",
+    "ru": "раздел 44.11, SSD Performance And Cost"
+   }
+  },
+  "ext4-iblock": {
+   "url": "https://docs.kernel.org/filesystems/ext4/ifork.html#the-contents-of-inode-i-block",
+   "title": "ext4 Data Structures and Algorithms: The Contents of inode.i_block",
+   "where": {
+    "en": "section 4.2, introduction",
+    "ru": "раздел 4.2, вводная часть"
+   }
+  },
+  "ext4-extent": {
+   "url": "https://docs.kernel.org/filesystems/ext4/ifork.html#extent-tree",
+   "title": "ext4 Data Structures and Algorithms: The Contents of inode.i_block",
+   "where": {
+    "en": "section 4.2.3, Extent Tree",
+    "ru": "раздел 4.2.3, Extent Tree"
+   }
+  },
+  "k-space-block": {
+   "url": "https://elixir.bootlin.com/linux/v6.12/source/fs/ext4/extents.c#L277",
+   "title": "Linux v6.12 source: fs/ext4/extents.c",
+   "where": {
+    "en": "ext4_ext_space_block(), lines 277–288",
+    "ru": "функция ext4_ext_space_block(), строки 277–288"
+   }
+  },
+  "bm-title": {
+   "url": "https://doi.org/10.1145/1734663.1734671",
+   "title": "R. Bayer, E. McCreight: Organization and Maintenance of Large Ordered Indices (1970)",
+   "where": {
+    "en": "title page and abstract",
+    "ru": "титульная страница и аннотация"
+   }
+  },
+  "bm-def": {
+   "url": "https://doi.org/10.1145/1734663.1734671",
+   "title": "R. Bayer, E. McCreight: Organization and Maintenance of Large Ordered Indices (1970)",
+   "where": {
+    "en": "section 2, B-Trees, Def. 2.1",
+    "ru": "раздел 2, B-Trees, определение 2.1"
+   }
+  },
+  "bm-sec3": {
+   "url": "https://doi.org/10.1145/1734663.1734671",
+   "title": "R. Bayer, E. McCreight: Organization and Maintenance of Large Ordered Indices (1970)",
+   "where": {
+    "en": "section 3, The Data Structure and Retrieval Algorithm",
+    "ru": "раздел 3, The Data Structure and Retrieval Algorithm"
+   }
+  },
+  "comer-abstract": {
+   "url": "https://doi.org/10.1145/356770.356776",
+   "title": "D. Comer: The Ubiquitous B-Tree (ACM Computing Surveys, 1979)",
+   "where": {
+    "en": "abstract, p. 121",
+    "ru": "аннотация, с. 121"
+   }
+  },
+  "comer-order": {
+   "url": "https://doi.org/10.1145/356770.356776",
+   "title": "D. Comer: The Ubiquitous B-Tree (ACM Computing Surveys, 1979)",
+   "where": {
+    "en": "section 1, The Basic B-Tree, p. 124",
+    "ru": "раздел 1, The Basic B-Tree, с. 124"
+   }
+  },
+  "comer-insert": {
+   "url": "https://doi.org/10.1145/356770.356776",
+   "title": "D. Comer: The Ubiquitous B-Tree (ACM Computing Surveys, 1979)",
+   "where": {
+    "en": "section 1, Insertion, pp. 125–126",
+    "ru": "раздел 1, Insertion, с. 125–126"
+   }
+  },
+  "comer-delete": {
+   "url": "https://doi.org/10.1145/356770.356776",
+   "title": "D. Comer: The Ubiquitous B-Tree (ACM Computing Surveys, 1979)",
+   "where": {
+    "en": "section 1, Deletion, pp. 126–127",
+    "ru": "раздел 1, Deletion, с. 126–127"
+   }
+  },
+  "comer-bplus": {
+   "url": "https://doi.org/10.1145/356770.356776",
+   "title": "D. Comer: The Ubiquitous B-Tree (ACM Computing Surveys, 1979)",
+   "where": {
+    "en": "section 3, B+-Trees, pp. 129–130",
+    "ru": "раздел 3, B+-Trees, с. 129–130"
+   }
+  },
+  "comer-prefix": {
+   "url": "https://doi.org/10.1145/356770.356776",
+   "title": "D. Comer: The Ubiquitous B-Tree (ACM Computing Surveys, 1979)",
+   "where": {
+    "en": "section 3, Prefix B+-Trees, pp. 130–131",
+    "ru": "раздел 3, Prefix B+-Trees, с. 130–131"
+   }
+  },
+  "comer-yao": {
+   "url": "https://doi.org/10.1145/356770.356776",
+   "title": "D. Comer: The Ubiquitous B-Tree (ACM Computing Surveys, 1979)",
+   "where": {
+    "en": "section 3, p. 133 (Yao's analysis)",
+    "ru": "раздел 3, с. 133 (анализ Яо)"
+   }
+  },
+  "wiki-btree": {
+   "url": "https://en.wikipedia.org/wiki/B-tree#Differences_in_terminology",
+   "title": "B-tree — Wikipedia",
+   "where": {
+    "en": "section Definition, Differences in terminology",
+    "ru": "раздел Definition, Differences in terminology"
+   }
+  },
+  "k-binsearch": {
+   "url": "https://elixir.bootlin.com/linux/v6.12/source/fs/ext4/extents.c#L749",
+   "title": "Linux v6.12 source: fs/ext4/extents.c",
+   "where": {
+    "en": "ext4_ext_binsearch_idx() and ext4_ext_binsearch(), lines 749–820",
+    "ru": "функции ext4_ext_binsearch_idx() и ext4_ext_binsearch(), строки 749–820"
+   }
+  },
+  "pg-readme-delete": {
+   "url": "https://github.com/postgres/postgres/blob/REL_17_0/src/backend/access/nbtree/README#L231",
+   "title": "PostgreSQL 17 source: src/backend/access/nbtree/README",
+   "where": {
+    "en": "section Deleting entire pages during VACUUM",
+    "ru": "раздел Deleting entire pages during VACUUM"
+   }
+  },
+  "pg-ff": {
+   "url": "https://www.postgresql.org/docs/17/sql-createindex.html#INDEX-RELOPTION-FILLFACTOR",
+   "title": "PostgreSQL 17 Documentation: CREATE INDEX",
+   "where": {
+    "en": "Index Storage Parameters, fillfactor",
+    "ru": "раздел Index Storage Parameters, fillfactor"
+   }
+  },
+  "xfs-ads-btree": {
+   "url": "https://mirrors.edge.kernel.org/pub/linux/utils/fs/xfs/docs/xfs_filesystem_structure.pdf",
+   "title": "XFS Algorithms & Data Structures, 3rd Edition",
+   "where": {
+    "en": "chapter 10, Fixed Length Record B+trees, sections 10.1–10.2, pp. 33–36",
+    "ru": "глава 10, Fixed Length Record B+trees, разделы 10.1–10.2, с. 33–36"
+   }
+  },
+  "xfs-ads-magic": {
+   "url": "https://mirrors.edge.kernel.org/pub/linux/utils/fs/xfs/docs/xfs_filesystem_structure.pdf",
+   "title": "XFS Algorithms & Data Structures, 3rd Edition",
+   "where": {
+    "en": "chapter 7, Magic Numbers, pp. 27–28",
+    "ru": "глава 7, Magic Numbers, с. 27–28"
+   }
+  },
+  "xfs-ads-free": {
+   "url": "https://mirrors.edge.kernel.org/pub/linux/utils/fs/xfs/docs/xfs_filesystem_structure.pdf",
+   "title": "XFS Algorithms & Data Structures, 3rd Edition",
+   "where": {
+    "en": "section 13.2, AG Free Space Management",
+    "ru": "раздел 13.2, AG Free Space Management"
+   }
+  },
+  "xfs-ads-inobt": {
+   "url": "https://mirrors.edge.kernel.org/pub/linux/utils/fs/xfs/docs/xfs_filesystem_structure.pdf",
+   "title": "XFS Algorithms & Data Structures, 3rd Edition",
+   "where": {
+    "en": "section 13.4, Inode B+trees",
+    "ru": "раздел 13.4, Inode B+trees"
+   }
+  },
+  "xfs-ads-rmap": {
+   "url": "https://mirrors.edge.kernel.org/pub/linux/utils/fs/xfs/docs/xfs_filesystem_structure.pdf",
+   "title": "XFS Algorithms & Data Structures, 3rd Edition",
+   "where": {
+    "en": "section 13.6, Reverse-Mapping B+tree",
+    "ru": "раздел 13.6, Reverse-Mapping B+tree"
+   }
+  },
+  "xfs-ads-refcount": {
+   "url": "https://mirrors.edge.kernel.org/pub/linux/utils/fs/xfs/docs/xfs_filesystem_structure.pdf",
+   "title": "XFS Algorithms & Data Structures, 3rd Edition",
+   "where": {
+    "en": "section 13.7, Reference Count B+tree",
+    "ru": "раздел 13.7, Reference Count B+tree"
+   }
+  },
+  "xfs-ads-extlist": {
+   "url": "https://mirrors.edge.kernel.org/pub/linux/utils/fs/xfs/docs/xfs_filesystem_structure.pdf",
+   "title": "XFS Algorithms & Data Structures, 3rd Edition",
+   "where": {
+    "en": "section 19.1, Extent List",
+    "ru": "раздел 19.1, Extent List"
+   }
+  },
+  "xfs-ads-extrec": {
+   "url": "https://mirrors.edge.kernel.org/pub/linux/utils/fs/xfs/docs/xfs_filesystem_structure.pdf",
+   "title": "XFS Algorithms & Data Structures, 3rd Edition",
+   "where": {
+    "en": "chapter 19, Data Extents, table 19.1",
+    "ru": "глава 19, Data Extents, таблица 19.1"
+   }
+  },
+  "xfs-ads-dabtree": {
+   "url": "https://mirrors.edge.kernel.org/pub/linux/utils/fs/xfs/docs/xfs_filesystem_structure.pdf",
+   "title": "XFS Algorithms & Data Structures, 3rd Edition",
+   "where": {
+    "en": "chapter 11, Variable Length Record B+trees",
+    "ru": "глава 11, Variable Length Record B+trees"
+   }
+  },
+  "xfs-ads-selfdesc": {
+   "url": "https://mirrors.edge.kernel.org/pub/linux/utils/fs/xfs/docs/xfs_filesystem_structure.pdf",
+   "title": "XFS Algorithms & Data Structures, 3rd Edition",
+   "where": {
+    "en": "section 2.2, Self Describing Metadata",
+    "ru": "раздел 2.2, Self Describing Metadata"
+   }
+  },
+  "xfs-fsck-rmap": {
+   "url": "https://docs.kernel.org/filesystems/xfs/xfs-online-fsck-design.html#reverse-mapping",
+   "title": "XFS Online Fsck Design (Linux kernel documentation)",
+   "where": {
+    "en": "section 4.5.2, Reverse Mapping",
+    "ru": "раздел 4.5.2, Reverse Mapping"
+   }
+  },
+  "xfs-fsck-ag": {
+   "url": "https://docs.kernel.org/filesystems/xfs/xfs-online-fsck-design.html#eventual-consistency-vs-online-fsck",
+   "title": "XFS Online Fsck Design (Linux kernel documentation)",
+   "where": {
+    "en": "section 4.5.4, Eventual Consistency vs. Online Fsck",
+    "ru": "раздел 4.5.4, Eventual Consistency vs. Online Fsck"
+   }
+  },
+  "sweeney-ag": {
+   "url": "https://www.usenix.org/legacy/publications/library/proceedings/sd96/full_papers/sweeney.txt",
+   "title": "A. Sweeney et al.: Scalability in the XFS File System (USENIX 1996)",
+   "where": {
+    "en": "section 5.1, Allocation Groups",
+    "ru": "раздел 5.1, Allocation Groups"
+   }
+  },
+  "sweeney-free": {
+   "url": "https://www.usenix.org/legacy/publications/library/proceedings/sd96/full_papers/sweeney.txt",
+   "title": "A. Sweeney et al.: Scalability in the XFS File System (USENIX 1996)",
+   "where": {
+    "en": "section 5.2, Managing Free Space",
+    "ru": "раздел 5.2, Managing Free Space"
+   }
+  },
+  "k-ext-next-leaf": {
+   "url": "https://elixir.bootlin.com/linux/v6.12/source/fs/ext4/extents.c#L1666",
+   "title": "Linux v6.12 source: fs/ext4/extents.c",
+   "where": {
+    "en": "ext4_ext_next_leaf_block(), lines 1666–1693",
+    "ru": "функция ext4_ext_next_leaf_block(), строки 1666–1693"
+   }
+  },
+  "phillips": {
+   "url": "https://www.usenix.org/legacy/publications/library/proceedings/als01/full_papers/phillips/phillips.pdf",
+   "title": "D. Phillips: A Directory Index for Ext2 (5th Annual Linux Showcase & Conference, 2001)",
+   "where": {
+    "en": "abstract",
+    "ru": "аннотация"
+   }
+  },
+  "ext4-htree": {
+   "url": "https://docs.kernel.org/filesystems/ext4/directory.html#hash-tree-directories",
+   "title": "ext4 Data Structures and Algorithms: Directory Entries",
+   "where": {
+    "en": "section 4.3.2, Hash Tree Directories",
+    "ru": "раздел 4.3.2, Hash Tree Directories"
+   }
+  },
+  "ext4-super-compat": {
+   "url": "https://docs.kernel.org/filesystems/ext4/super.html#super-compat",
+   "title": "ext4 Data Structures and Algorithms: Super Block",
+   "where": {
+    "en": "s_feature_compat flags",
+    "ru": "флаги s_feature_compat"
+   }
+  },
+  "ext4-super-incompat": {
+   "url": "https://docs.kernel.org/filesystems/ext4/super.html#super-incompat",
+   "title": "ext4 Data Structures and Algorithms: Super Block",
+   "where": {
+    "en": "s_feature_incompat flags, INCOMPAT_LARGEDIR",
+    "ru": "флаги s_feature_incompat, INCOMPAT_LARGEDIR"
+   }
+  },
+  "k-hash-md4": {
+   "url": "https://elixir.bootlin.com/linux/v6.12/source/fs/ext4/hash.c#L51",
+   "title": "Linux v6.12 source: fs/ext4/hash.c",
+   "where": {
+    "en": "half_md4_transform(), line 51",
+    "ru": "функция half_md4_transform(), строка 51"
+   }
+  },
+  "k-hash-seed": {
+   "url": "https://elixir.bootlin.com/linux/v6.12/source/fs/ext4/hash.c#L186",
+   "title": "Linux v6.12 source: fs/ext4/hash.c",
+   "where": {
+    "en": "comment above __ext4fs_dirhash(), lines 186–199",
+    "ru": "комментарий перед __ext4fs_dirhash(), строки 186–199"
+   }
+  },
+  "k-hash-lowbit": {
+   "url": "https://elixir.bootlin.com/linux/v6.12/source/fs/ext4/hash.c#L286",
+   "title": "Linux v6.12 source: fs/ext4/hash.c",
+   "where": {
+    "en": "__ext4fs_dirhash(), line 286",
+    "ru": "функция __ext4fs_dirhash(), строка 286"
+   }
+  },
+  "e2fs-seed": {
+   "url": "https://github.com/tytso/e2fsprogs/blob/v1.47.0/misc/mke2fs.c#L3220",
+   "title": "e2fsprogs v1.47.0 source: misc/mke2fs.c",
+   "where": {
+    "en": "lines 3220–3225",
+    "ru": "строки 3220–3225"
+   }
+  },
+  "e2fs-split": {
+   "url": "https://github.com/tytso/e2fsprogs/blob/v1.47.0/lib/ext2fs/extent.c#L995",
+   "title": "e2fsprogs v1.47.0 source: lib/ext2fs/extent.c",
+   "where": {
+    "en": "extent_node_split(), lines 995–1020",
+    "ru": "функция extent_node_split(), строки 995–1020"
+   }
+  },
+  "k-create-leaf": {
+   "url": "https://elixir.bootlin.com/linux/v6.12/source/fs/ext4/extents.c#L1393",
+   "title": "Linux v6.12 source: fs/ext4/extents.c",
+   "where": {
+    "en": "ext4_ext_create_new_leaf(), lines 1393–1450",
+    "ru": "функция ext4_ext_create_new_leaf(), строки 1393–1450"
+   }
+  },
+  "k-grow": {
+   "url": "https://elixir.bootlin.com/linux/v6.12/source/fs/ext4/extents.c#L1303",
+   "title": "Linux v6.12 source: fs/ext4/extents.c",
+   "where": {
+    "en": "comment above ext4_ext_grow_indepth(), lines 1303–1310",
+    "ru": "комментарий перед ext4_ext_grow_indepth(), строки 1303–1310"
+   }
+  },
+  "k-split": {
+   "url": "https://elixir.bootlin.com/linux/v6.12/source/fs/ext4/extents.c#L1042",
+   "title": "Linux v6.12 source: fs/ext4/extents.c",
+   "where": {
+    "en": "ext4_ext_split(), lines 1042–1167",
+    "ru": "функция ext4_ext_split(), строки 1042–1167"
+   }
+  },
+  "k-maxdepth": {
+   "url": "https://elixir.bootlin.com/linux/v6.12/source/fs/ext4/ext4_extents.h#L94",
+   "title": "Linux v6.12 source: fs/ext4/ext4_extents.h",
+   "where": {
+    "en": "line 94",
+    "ru": "строка 94"
+   }
+  },
+  "k-depthcheck": {
+   "url": "https://elixir.bootlin.com/linux/v6.12/source/fs/ext4/extents.c#L900",
+   "title": "Linux v6.12 source: fs/ext4/extents.c",
+   "where": {
+    "en": "ext4_find_extent(), lines 900–905",
+    "ru": "функция ext4_find_extent(), строки 900–905"
+   }
+  },
+  "k-es-c": {
+   "url": "https://elixir.bootlin.com/linux/v6.12/source/fs/ext4/extents_status.c#L20",
+   "title": "Linux v6.12 source: fs/ext4/extents_status.c",
+   "where": {
+    "en": "header comment, lines 20–130",
+    "ru": "комментарий в начале файла, строки 20–130"
+   }
+  },
+  "k-es-h": {
+   "url": "https://elixir.bootlin.com/linux/v6.12/source/fs/ext4/extents_status.h#L72",
+   "title": "Linux v6.12 source: fs/ext4/extents_status.h",
+   "where": {
+    "en": "struct ext4_es_tree, lines 72–75",
+    "ru": "struct ext4_es_tree, строки 72–75"
+   }
+  },
+  "k-htree-level": {
+   "url": "https://elixir.bootlin.com/linux/v6.12/source/fs/ext4/ext4.h#L2574",
+   "title": "Linux v6.12 source: fs/ext4/ext4.h",
+   "where": {
+    "en": "htree levels, lines 2574–2582",
+    "ru": "уровни htree, строки 2574–2582"
+   }
+  },
+  "k-dir-fname": {
+   "url": "https://elixir.bootlin.com/linux/v6.12/source/fs/ext4/dir.c#L409",
+   "title": "Linux v6.12 source: fs/ext4/dir.c",
+   "where": {
+    "en": "comment above struct fname, lines 409–412",
+    "ru": "комментарий перед struct fname, строки 409–412"
+   }
+  },
+  "k-dir-hash2pos": {
+   "url": "https://elixir.bootlin.com/linux/v6.12/source/fs/ext4/dir.c#L333",
+   "title": "Linux v6.12 source: fs/ext4/dir.c",
+   "where": {
+    "en": "hash2pos(), lines 333–349",
+    "ru": "функция hash2pos(), строки 333–349"
+   }
+  },
+  "nfsd": {
+   "url": "https://elixir.bootlin.com/linux/v6.12/source/fs/nfsd/vfs.c#L2176",
+   "title": "Linux v6.12 source: fs/nfsd/vfs.c",
+   "where": {
+    "en": "nfsd_readdir(), lines 2176–2181",
+    "ru": "функция nfsd_readdir(), строки 2176–2181"
+   }
+  },
+  "k-idatasem": {
+   "url": "https://elixir.bootlin.com/linux/v6.12/source/fs/ext4/extents.c#L4174",
+   "title": "Linux v6.12 source: fs/ext4/extents.c",
+   "where": {
+    "en": "comment above ext4_ext_map_blocks(), lines 4174–4176",
+    "ru": "комментарий перед ext4_ext_map_blocks(), строки 4174–4176"
+   }
+  },
+  "btrfs-design-intro": {
+   "url": "https://btrfs.readthedocs.io/en/latest/dev/dev-btrfs-design.html#btrfs-design",
+   "title": "BTRFS documentation: Btrfs design",
+   "where": {
+    "en": "introduction",
+    "ru": "вводная часть"
+   }
+  },
+  "btrfs-design-btree": {
+   "url": "https://btrfs.readthedocs.io/en/latest/dev/dev-btrfs-design.html#btree-data-structures",
+   "title": "BTRFS documentation: Btrfs design",
+   "where": {
+    "en": "section Btree data structures",
+    "ru": "раздел Btree data structures"
+   }
+  },
+  "btrfs-design-fs": {
+   "url": "https://btrfs.readthedocs.io/en/latest/dev/dev-btrfs-design.html#filesystem-data-structures",
+   "title": "BTRFS documentation: Btrfs design",
+   "where": {
+    "en": "section Filesystem data structures",
+    "ru": "раздел Filesystem data structures"
+   }
+  },
+  "btrfs-design-dirs": {
+   "url": "https://btrfs.readthedocs.io/en/latest/dev/dev-btrfs-design.html#directories",
+   "title": "BTRFS documentation: Btrfs design",
+   "where": {
+    "en": "section Directories",
+    "ru": "раздел Directories"
+   }
+  },
+  "btrfs-design-snap": {
+   "url": "https://btrfs.readthedocs.io/en/latest/dev/dev-btrfs-design.html#snapshots-and-subvolumes",
+   "title": "BTRFS documentation: Btrfs design",
+   "where": {
+    "en": "section Snapshots and subvolumes",
+    "ru": "раздел Snapshots and subvolumes"
+   }
+  },
+  "btrfs-design-cow": {
+   "url": "https://btrfs.readthedocs.io/en/latest/dev/dev-btrfs-design.html#copy-on-write-logging",
+   "title": "BTRFS documentation: Btrfs design",
+   "where": {
+    "en": "section Copy on write logging",
+    "ru": "раздел Copy on write logging"
+   }
+  },
+  "btrfs-btrees": {
+   "url": "https://btrfs.readthedocs.io/en/latest/dev/dev-btrees.html#b-trees-introduction",
+   "title": "BTRFS documentation: Btrees",
+   "where": {
+    "en": "B-trees introduction and the list of trees",
+    "ru": "раздел B-trees introduction и список деревьев"
+   }
+  },
+  "btrfs-btrees-extent": {
+   "url": "https://btrfs.readthedocs.io/en/latest/dev/dev-btrees.html#extent-tree",
+   "title": "BTRFS documentation: Btrees",
+   "where": {
+    "en": "section Extent Tree",
+    "ru": "раздел Extent Tree"
+   }
+  },
+  "odf-basic": {
+   "url": "https://btrfs.readthedocs.io/en/latest/dev/On-disk-format.html#basic-structures",
+   "title": "BTRFS documentation: On-disk Format",
+   "where": {
+    "en": "Basic Structures, key",
+    "ru": "раздел Basic Structures, ключ"
+   }
+  },
+  "odf-header": {
+   "url": "https://btrfs.readthedocs.io/en/latest/dev/On-disk-format.html#header",
+   "title": "BTRFS documentation: On-disk Format",
+   "where": {
+    "en": "section Header",
+    "ru": "раздел Header"
+   }
+  },
+  "odf-internal": {
+   "url": "https://btrfs.readthedocs.io/en/latest/dev/On-disk-format.html#internal-node",
+   "title": "BTRFS documentation: On-disk Format",
+   "where": {
+    "en": "section Internal Node",
+    "ru": "раздел Internal Node"
+   }
+  },
+  "odf-leaf": {
+   "url": "https://btrfs.readthedocs.io/en/latest/dev/On-disk-format.html#leaf-node",
+   "title": "BTRFS documentation: On-disk Format",
+   "where": {
+    "en": "section Leaf Node",
+    "ru": "раздел Leaf Node"
+   }
+  },
+  "odf-itemtypes": {
+   "url": "https://btrfs.readthedocs.io/en/latest/dev/On-disk-format.html#item-types",
+   "title": "BTRFS documentation: On-disk Format",
+   "where": {
+    "en": "section Item Types",
+    "ru": "раздел Item Types"
+   }
+  },
+  "odf-inoderef": {
+   "url": "https://btrfs.readthedocs.io/en/latest/dev/On-disk-format.html#inode-ref-0c",
+   "title": "BTRFS documentation: On-disk Format",
+   "where": {
+    "en": "section INODE_REF (0c)",
+    "ru": "раздел INODE_REF (0c)"
+   }
+  },
+  "k-btrfs-cmp": {
+   "url": "https://elixir.bootlin.com/linux/v6.12/source/fs/btrfs/ctree.c#L766",
+   "title": "Linux v6.12 source: fs/btrfs/ctree.c",
+   "where": {
+    "en": "btrfs_comp_cpu_keys(), lines 766–781",
+    "ru": "функция btrfs_comp_cpu_keys(), строки 766–781"
+   }
+  },
+  "mkfs-btrfs": {
+   "url": "https://btrfs.readthedocs.io/en/latest/mkfs.btrfs.html#options",
+   "title": "mkfs.btrfs(8), BTRFS documentation",
+   "where": {
+    "en": "OPTIONS, --nodesize",
+    "ru": "раздел OPTIONS, --nodesize"
+   }
+  },
+  "rodeh-shadow": {
+   "url": "https://www.usenix.org/legacy/events/lsf07/tech/rodeh.pdf",
+   "title": "O. Rodeh: B-trees, Shadowing, and Clones (slides, Linux Storage & Filesystem Workshop 2007)",
+   "where": {
+    "en": "slides 4–6, Shadowing",
+    "ru": "слайды 4–6, Shadowing"
+   }
+  },
+  "rodeh-links": {
+   "url": "https://www.usenix.org/legacy/events/lsf07/tech/rodeh.pdf",
+   "title": "O. Rodeh: B-trees, Shadowing, and Clones (slides, Linux Storage & Filesystem Workshop 2007)",
+   "where": {
+    "en": "slide 9, Challenges",
+    "ru": "слайд 9, Challenges"
+   }
+  },
+  "rodeh-clones": {
+   "url": "https://www.usenix.org/legacy/events/lsf07/tech/rodeh.pdf",
+   "title": "O. Rodeh: B-trees, Shadowing, and Clones (slides, Linux Storage & Filesystem Workshop 2007)",
+   "where": {
+    "en": "slide 24, Main idea",
+    "ru": "слайд 24, Main idea"
+   }
+  },
+  "btrfs-admin-mount": {
+   "url": "https://btrfs.readthedocs.io/en/latest/Administration.html#btrfs-specific-mount-options",
+   "title": "BTRFS documentation: Administration",
+   "where": {
+    "en": "mount options commit and treelog",
+    "ru": "параметры монтирования commit и treelog"
+   }
+  },
+  "k-treelog": {
+   "url": "https://elixir.bootlin.com/linux/v6.12/source/fs/btrfs/tree-log.c#L117",
+   "title": "Linux v6.12 source: fs/btrfs/tree-log.c",
+   "where": {
+    "en": "header comment, lines 117–138",
+    "ru": "комментарий в начале файла, строки 117–138"
+   }
+  },
+  "k-btrfs-lock": {
+   "url": "https://elixir.bootlin.com/linux/v6.12/source/fs/btrfs/locking.c#L115",
+   "title": "Linux v6.12 source: fs/btrfs/locking.c",
+   "where": {
+    "en": "comment Extent buffer locking, lines 115–129",
+    "ru": "комментарий Extent buffer locking, строки 115–129"
+   }
+  },
+  "mysql-phys": {
+   "url": "https://dev.mysql.com/doc/refman/8.4/en/innodb-physical-structure.html",
+   "title": "MySQL 8.4 Reference Manual: The Physical Structure of an InnoDB Index",
+   "where": {
+    "en": "section 17.6.2.2",
+    "ru": "раздел 17.6.2.2"
+   }
+  },
+  "mysql-idx": {
+   "url": "https://dev.mysql.com/doc/refman/8.4/en/innodb-index-types.html",
+   "title": "MySQL 8.4 Reference Manual: Clustered and Secondary Indexes",
+   "where": {
+    "en": "whole page",
+    "ru": "вся страница"
+   }
+  },
+  "pg-page": {
+   "url": "https://www.postgresql.org/docs/17/storage-page-layout.html",
+   "title": "PostgreSQL 17 Documentation: Database Page Layout",
+   "where": {
+    "en": "section 65.6, introduction and item identifiers",
+    "ru": "раздел 65.6, вводная часть и идентификаторы элементов"
+   }
+  },
+  "pg-btree-struct": {
+   "url": "https://www.postgresql.org/docs/17/btree.html#BTREE-STRUCTURE",
+   "title": "PostgreSQL 17 Documentation: B-Tree Indexes",
+   "where": {
+    "en": "section 64.1.4.1, B-Tree Structure",
+    "ru": "раздел 64.1.4.1, B-Tree Structure"
+   }
+  },
+  "pg-readme-ly": {
+   "url": "https://github.com/postgres/postgres/blob/REL_17_0/src/backend/access/nbtree/README#L1",
+   "title": "PostgreSQL 17 source: src/backend/access/nbtree/README",
+   "where": {
+    "en": "introduction and section The basic Lehman & Yao Algorithm",
+    "ru": "вводная часть и раздел The basic Lehman & Yao Algorithm"
+   }
+  },
+  "pg-readme-suffix": {
+   "url": "https://github.com/postgres/postgres/blob/REL_17_0/src/backend/access/nbtree/README#L823",
+   "title": "PostgreSQL 17 source: src/backend/access/nbtree/README",
+   "where": {
+    "en": "section Notes about suffix truncation",
+    "ru": "раздел Notes about suffix truncation"
+   }
+  },
+  "sqlite-pagesize": {
+   "url": "https://www.sqlite.org/pragma.html#pragma_page_size",
+   "title": "SQLite: Pragma statements supported by SQLite",
+   "where": {
+    "en": "PRAGMA page_size",
+    "ru": "PRAGMA page_size"
+   }
+  },
+  "sqlite-ff-btree": {
+   "url": "https://www.sqlite.org/fileformat2.html#b_tree_pages",
+   "title": "SQLite Database File Format",
+   "where": {
+    "en": "section 1.6, B-tree Pages",
+    "ru": "раздел 1.6, B-tree Pages"
+   }
+  },
+  "sqlite-ff-idx": {
+   "url": "https://www.sqlite.org/fileformat2.html#representation_of_sql_indices",
+   "title": "SQLite Database File Format",
+   "where": {
+    "en": "section 2.5, Representation Of SQL Indices",
+    "ru": "раздел 2.5, Representation Of SQL Indices"
+   }
+  },
+  "sqlite-dbstat": {
+   "url": "https://www.sqlite.org/dbstat.html#overview",
+   "title": "SQLite: The DBSTAT Virtual Table",
+   "where": {
+    "en": "section 1, Overview",
+    "ru": "раздел 1, Overview"
+   }
+  },
+  "lsm-paper": {
+   "url": "https://www.cs.umb.edu/~poneil/lsmtree.pdf",
+   "title": "P. O'Neil, E. Cheng, D. Gawlick, E. O'Neil: The Log-Structured Merge-Tree (LSM-Tree) (Acta Informatica 33, 1996)",
+   "where": {
+    "en": "title and abstract",
+    "ru": "заголовок и аннотация"
+   }
+  },
+  "rocksdb-leveled": {
+   "url": "https://github.com/facebook/rocksdb/wiki/Leveled-Compaction#structure-of-the-files",
+   "title": "RocksDB Wiki: Leveled Compaction",
+   "where": {
+    "en": "Structure of the files",
+    "ru": "раздел Structure of the files"
+   }
+  },
+  "rocksdb-tuning": {
+   "url": "https://github.com/facebook/rocksdb/wiki/Setup-Options-and-Basic-Tuning#write-buffer-size",
+   "title": "RocksDB Wiki: Setup Options and Basic Tuning",
+   "where": {
+    "en": "Write Buffer Size",
+    "ru": "раздел Write Buffer Size"
+   }
+  },
+  "rocksdb-bbt": {
+   "url": "https://github.com/facebook/rocksdb/wiki/Rocksdb-BlockBasedTable-Format#file-format",
+   "title": "RocksDB Wiki: Rocksdb BlockBasedTable Format",
+   "where": {
+    "en": "File format",
+    "ru": "раздел File format"
+   }
+  },
+  "rocksdb-bloom": {
+   "url": "https://github.com/facebook/rocksdb/wiki/RocksDB-Bloom-Filter#what-is-a-bloom-filter",
+   "title": "RocksDB Wiki: RocksDB Bloom Filter",
+   "where": {
+    "en": "What is a Bloom Filter?",
+    "ru": "раздел What is a Bloom Filter?"
+   }
+  },
+  "rocksdb-ov-csum": {
+   "url": "https://github.com/facebook/rocksdb/wiki/RocksDB-Overview#data-checksuming",
+   "title": "RocksDB Wiki: RocksDB Overview",
+   "where": {
+    "en": "section 4, Data Checksuming",
+    "ru": "раздел 4, Data Checksuming"
+   }
+  },
+  "rocksdb-ov-persist": {
+   "url": "https://github.com/facebook/rocksdb/wiki/RocksDB-Overview#persistence",
+   "title": "RocksDB Wiki: RocksDB Overview",
+   "where": {
+    "en": "section 4, Persistence",
+    "ru": "раздел 4, Persistence"
+   }
+  },
+  "rocksdb-ov-prefix": {
+   "url": "https://github.com/facebook/rocksdb/wiki/RocksDB-Overview#prefix-iterators",
+   "title": "RocksDB Wiki: RocksDB Overview",
+   "where": {
+    "en": "section 4, Prefix Iterators",
+    "ru": "раздел 4, Prefix Iterators"
+   }
+  },
+  "rocksdb-compaction": {
+   "url": "https://github.com/facebook/rocksdb/wiki/Compaction#classic-leveled",
+   "title": "RocksDB Wiki: Compaction",
+   "where": {
+    "en": "Classic Leveled",
+    "ru": "раздел Classic Leveled"
+   }
+  },
+  "leveldb-tables": {
+   "url": "https://github.com/google/leveldb/blob/main/doc/impl.md#sorted-tables",
+   "title": "LevelDB: Implementation notes (doc/impl.md)",
+   "where": {
+    "en": "section Sorted tables",
+    "ru": "раздел Sorted tables"
+   }
+  },
+  "leveldb-compactions": {
+   "url": "https://github.com/google/leveldb/blob/main/doc/impl.md#compactions",
+   "title": "LevelDB: Implementation notes (doc/impl.md)",
+   "where": {
+    "en": "section Compactions",
+    "ru": "раздел Compactions"
+   }
+  },
+  "cassandra": {
+   "url": "https://cassandra.apache.org/doc/5.0/cassandra/architecture/storage-engine.html",
+   "title": "Apache Cassandra 5.0 Documentation: Storage Engine",
+   "where": {
+    "en": "introduction",
+    "ru": "вводная часть"
+   }
+  },
+  "ceph-devices": {
+   "url": "https://docs.ceph.com/en/latest/rados/configuration/storage-devices/#bluestore",
+   "title": "Ceph Documentation: Storage Devices",
+   "where": {
+    "en": "section BlueStore",
+    "ru": "раздел BlueStore"
+   }
+  },
+  "ceph-bstool": {
+   "url": "https://docs.ceph.com/en/latest/man/8/ceph-bluestore-tool/#commands",
+   "title": "ceph-bluestore-tool – bluestore administrative tool",
+   "where": {
+    "en": "Commands, bluefs-export",
+    "ru": "раздел Commands, bluefs-export"
+   }
+  },
+  "graefe-31": {
+   "url": "https://doi.org/10.1145/1806907.1806908",
+   "title": "G. Graefe: A Survey of B-Tree Locking Techniques (ACM TODS, 2010)",
+   "where": {
+    "en": "section 3.1, Locks and Latches",
+    "ru": "раздел 3.1, Locks and Latches"
+   }
+  },
+  "graefe-42": {
+   "url": "https://doi.org/10.1145/1806907.1806908",
+   "title": "G. Graefe: A Survey of B-Tree Locking Techniques (ACM TODS, 2010)",
+   "where": {
+    "en": "section 4.2, Lock Coupling",
+    "ru": "раздел 4.2, Lock Coupling"
+   }
+  },
+  "ly-paper": {
+   "url": "https://doi.org/10.1145/319628.319663",
+   "title": "P. L. Lehman, S. B. Yao: Efficient Locking for Concurrent Operations on B-Trees (ACM TODS, 1981)",
+   "where": {
+    "en": "abstract",
+    "ru": "аннотация"
+   }
+  },
+  "drepper": {
+   "url": "https://www.akkadia.org/drepper/cpumemory.pdf",
+   "title": "U. Drepper: What Every Programmer Should Know About Memory (2007)",
+   "where": {
+    "en": "section 3.2, Cache Operation at High Level, pp. 15–16",
+    "ru": "раздел 3.2, Cache Operation at High Level, с. 15–16"
+   }
+  },
+  "kn61": {
+   "url": "https://kernelnewbies.org/Linux_6.1#Maple_trees.2C_a_more_efficient_tree_data_structure",
+   "title": "Linux 6.1 – Linux Kernel Newbies",
+   "where": {
+    "en": "section 1.7, Maple trees, a more efficient tree data structure",
+    "ru": "раздел 1.7, Maple trees, a more efficient tree data structure"
+   }
+  },
+  "maple-rst": {
+   "url": "https://elixir.bootlin.com/linux/v6.12/source/Documentation/core-api/maple_tree.rst#L10",
+   "title": "Linux v6.12 source: Documentation/core-api/maple_tree.rst",
+   "where": {
+    "en": "section Overview",
+    "ru": "раздел Overview"
+   }
+  },
+  "maple-h": {
+   "url": "https://elixir.bootlin.com/linux/v6.12/source/include/linux/maple_tree.h#L26",
+   "title": "Linux v6.12 source: include/linux/maple_tree.h",
+   "where": {
+    "en": "lines 26–31 and 283",
+    "ru": "строки 26–31 и 283"
+   }
+  },
+  "lwn-maple": {
+   "url": "https://lwn.net/Articles/845507/",
+   "title": "LWN.net: Introducing maple trees (2021)",
+   "where": {
+    "en": "introduction",
+    "ru": "вводная часть"
+   }
+  },
+  "xarray-rst": {
+   "url": "https://elixir.bootlin.com/linux/v6.12/source/Documentation/core-api/xarray.rst#L9",
+   "title": "Linux v6.12 source: Documentation/core-api/xarray.rst",
+   "where": {
+    "en": "section Overview",
+    "ru": "раздел Overview"
+   }
+  },
+  "xarray-h": {
+   "url": "https://elixir.bootlin.com/linux/v6.12/source/include/linux/xarray.h#L1137",
+   "title": "Linux v6.12 source: include/linux/xarray.h",
+   "where": {
+    "en": "comment above XA_CHUNK_SHIFT, lines 1137–1150",
+    "ru": "комментарий перед XA_CHUNK_SHIFT, строки 1137–1150"
+   }
+  },
+  "man-mke2fs": {
+   "url": "https://man7.org/linux/man-pages/man8/mke2fs.8.html#OPTIONS",
+   "title": "mke2fs(8) — Linux manual page",
+   "where": {
+    "en": "OPTIONS, -d",
+    "ru": "раздел OPTIONS, -d"
+   }
+  },
+  "man-e2fsck": {
+   "url": "https://man7.org/linux/man-pages/man8/e2fsck.8.html#OPTIONS",
+   "title": "e2fsck(8) — Linux manual page",
+   "where": {
+    "en": "OPTIONS, -D",
+    "ru": "раздел OPTIONS, -D"
+   }
+  }
+ },
+ "cites": [
+  {
+   "src": [
+    "ostep-hdd",
+    "ostep-ssd-ops"
+   ],
+   "en": "10–100 µs on an NVMe SSD.",
+   "ru": "10–100 мкс на NVMe SSD.",
+   "quote": {
+    "ostep-hdd": "Thus, from our equation above, TI/O for the Cheetah roughly equals 6 ms. … The same calculation for the Barracuda yields a TI/O of about 13.2 ms",
+    "ostep-ssd-ops": "Read (a page): … This operation is typically quite fast, 10s of microseconds or so, regardless of location on the device"
+   }
+  },
+  {
+   "src": [
+    "ext4-extent",
+    "k-space-block"
+   ],
+   "en": "so one 4 KiB node holds (4096 − 12) / 12 = 340 entries.",
+   "ru": "поэтому один узел размером 4 КиБ вмещает (4096 − 12) / 12 = 340 записей.",
+   "quote": {
+    "ext4-extent": "The extent tree header is recorded in struct ext4_extent_header, which is 12 bytes long … Leaf nodes of the extent tree are recorded as struct ext4_extent, and are also 12 bytes long",
+    "k-space-block": "size = (inode->i_sb->s_blocksize - sizeof(struct ext4_extent_header)) / sizeof(struct ext4_extent);"
+   }
+  },
+  {
+   "src": "bm-title",
+   "en": "while working at Boeing's research labs, as a way to index files on disk.",
+   "ru": "когда работали в исследовательских лабораториях Boeing, как способ индексировать файлы на диске.",
+   "quote": "Mathematical and Information Sciences Report No. 20 … BOEING SCIENTIFIC RESEARCH LABORATORIES … July 1970 … It is assumed that the index must be kept on some pseudo random access backup store like a disc or a drum."
+  },
+  {
+   "src": "comer-abstract",
+   "en": "title a survey <i>The Ubiquitous B-Tree</i>.",
+   "ru": "назвать свой обзор <i>The Ubiquitous B-Tree</i> («Вездесущее B-дерево»).",
+   "quote": "The Ubiquitous B-Tree … B-trees have become, de facto, a standard for file organization."
+  },
+  {
+   "src": "bm-sec3",
+   "en": "Every node except the root is at least half full.",
+   "ru": "Каждый узел, кроме корня, заполнен хотя бы наполовину.",
+   "quote": "Each page holds between k and 2k keys (index elements) except the root page which may hold between 1 and 2k keys."
+  },
+  {
+   "src": "bm-def",
+   "en": "it guarantees every lookup reads the same number of nodes.",
+   "ru": "гарантирует, что любой поиск читает одинаковое число узлов.",
+   "quote": "Each path from the root to any leaf has the same length h, also called the height of T"
+  },
+  {
+   "src": "wiki-btree",
+   "en": "Knuth's order, used here and in the demo, is the maximum number of children.",
+   "ru": "Порядок по Кнуту, который используется здесь и в демонстрации, — это максимальное число потомков.",
+   "quote": "Knuth (1998) avoids the problem by defining the order to be the maximum number of children (which is one more than the maximum number of keys)."
+  },
+  {
+   "src": [
+    "bm-sec3",
+    "comer-order"
+   ],
+   "en": "so their nodes hold between <var>k</var> and 2<var>k</var> keys.",
+   "ru": "так что их узлы хранят от <var>k</var> до 2<var>k</var> ключей.",
+   "quote": {
+    "bm-sec3": "To repeat, the pages on which the index is stored are the nodes of a B-tree … and can hold up to 2k keys. … Each page holds between k and 2k keys (index elements) except the root page",
+    "comer-order": "In general, each node in a B-tree of order d contains at most 2d keys and 2d + 1 pointers … but each must have at least d keys and d + 1 pointers."
+   }
+  },
+  {
+   "src": "k-binsearch",
+   "en": "ext4 does exactly this in <code>ext4_ext_binsearch_idx()</code> and <code>ext4_ext_binsearch()</code>.",
+   "ru": "ext4 делает ровно это в <code>ext4_ext_binsearch_idx()</code> и <code>ext4_ext_binsearch()</code>.",
+   "quote": "ext4_ext_binsearch_idx: binary search for the closest index of the given block … ext4_ext_binsearch: binary search for closest extent of the given block"
+  },
+  {
+   "src": "comer-insert",
+   "en": "This is the only way the tree gets taller.",
+   "ru": "Только так дерево и становится выше.",
+   "quote": "In the worst case, splitting propagates all the way to the root and the tree increases in height by one level. In fact, a B-tree only increases in height because of a split at the root."
+  },
+  {
+   "src": "comer-delete",
+   "en": "that child becomes the root and the tree gets one level shorter.",
+   "ru": "этот потомок становится корнем, и дерево становится на уровень ниже.",
+   "quote": "When some node loses a separator key due to concatenation of two of its children, it too may underflow … Finally, if the descendants of the root are concatenated, they form a new root, decreasing the height of the B-tree by 1."
+  },
+  {
+   "src": "pg-readme-delete",
+   "en": "says plainly that merging partly full pages is impractical under concurrent scans.",
+   "ru": "прямо говорит, что сливать частично заполненные страницы при параллельных просмотрах непрактично.",
+   "quote": "We consider deleting an entire page from the btree only when it's become completely empty of items. (Merging partly-full pages would allow better space reuse, but it seems impractical to move existing data items left or right to make this happen"
+  },
+  {
+   "src": "comer-yao",
+   "en": "(ln 2, a result due to Andrew Yao in 1978).",
+   "ru": "(ln 2, результат Эндрю Яо 1978 года).",
+   "quote": "Extending the analysis to B-trees of higher order, Yao has shown that the expected storage utilization is ln 2 ≈ 69%."
+  },
+  {
+   "src": "pg-ff",
+   "en": "it leaves the left page 90% full (its default fillfactor) instead of half full.",
+   "ru": "он оставляет левую страницу заполненной на 90% (его fillfactor по умолчанию), а не наполовину.",
+   "quote": "For B-trees, leaf pages are filled to this percentage during initial index builds, and also when extending the index at the right (adding new largest key values). … B-trees use a default fillfactor of 90"
+  },
+  {
+   "src": "comer-bplus",
+   "en": "All records live in the <b>leaves</b>.",
+   "ru": "Все записи лежат в <b>листьях</b>.",
+   "quote": "In a B+-tree, all keys reside in the leaves. The upper levels, which are organized as a B-tree, consist only of an index"
+  },
+  {
+   "src": "comer-prefix",
+   "en": "so it can be a copy of a key or a shortened version of one.",
+   "ru": "поэтому он может быть копией ключа или его укороченной версией.",
+   "quote": "The separator value in the index between the keys \"computer,\" \"electronic\" need not be either of them; any string between suffices. … The simple technique of choosing the shortest unique prefix of the key to serve as a separator works well."
+  },
+  {
+   "src": "comer-bplus",
+   "en": "finds the first leaf and then follows links without going back up the tree.",
+   "ru": "находит первый лист, а дальше идёт по ссылкам, не поднимаясь обратно по дереву.",
+   "quote": "leaf nodes are usually linked together left-to-right, as shown. The linked list of leaves is referred to as the sequence set. Sequence set links allow easy sequential processing."
+  },
+  {
+   "src": [
+    "comer-bplus",
+    "comer-insert"
+   ],
+   "en": "because separators are only signposts.",
+   "ru": "потому что разделители — всего лишь указатели пути.",
+   "quote": {
+    "comer-bplus": "When a leaf splits in two, instead of promoting the middle key, the algorithm promotes a copy of the key, retaining the actual key in the right leaf.",
+    "comer-insert": "Of the 2d + 1 keys, the smallest d are placed in one node, the largest d are placed in another node, and the remaining value is promoted to the parent node where it serves as a separator."
+   }
+  },
+  {
+   "src": [
+    "ext4-extent",
+    "xfs-ads-btree",
+    "btrfs-design-btree"
+   ],
+   "en": "the XFS trees and the btrfs trees all keep their records in the leaves.",
+   "ru": "деревья XFS и деревья btrfs хранят записи в листьях.",
+   "quote": {
+    "ext4-extent": "If the node is a leaf node (eh.eh_depth == 0), then the header is followed by eh.eh_entries instances of struct ext4_extent; these instances point to the file’s data blocks.",
+    "xfs-ads-btree": "Each b+tree block is either a leaf node containing records, or an internal node containing keys and pointers to other b+tree blocks.",
+    "btrfs-design-btree": "Upper nodes of the trees contain only [ key, block pointer ] pairs. Tree leaves are broken up into two sections that grow toward each other."
+   }
+  },
+  {
+   "src": "xfs-ads-btree",
+   "en": "XFS links every level in both directions.",
+   "ru": "XFS связывает узлы каждого уровня в обе стороны.",
+   "quote": "bb_leftsib AG block number of the left sibling of this B+tree node. bb_rightsib AG block number of the right sibling of this B+tree node."
+  },
+  {
+   "src": "k-ext-next-leaf",
+   "en": "through the path it has already read,",
+   "ru": "поднимаясь обратно по уже прочитанному пути,",
+   "quote": "ext4_ext_next_leaf_block: returns first allocated block from next leaf or EXT_MAX_BLOCKS … /* go to index block */ depth--; while (depth >= 0) { if (path[depth].p_idx != EXT_LAST_INDEX(path[depth].p_hdr))"
+  },
+  {
+   "src": [
+    "ext4-iblock",
+    "ext4-extent"
+   ],
+   "en": "holds a 12-byte <code>ext4_extent_header</code> and room for four 12-byte entries.",
+   "ru": "содержит 12-байтный <code>ext4_extent_header</code> и место для четырёх 12-байтных записей.",
+   "quote": {
+    "ext4-iblock": "Depending on the type of file an inode describes, the 60 bytes of storage in inode.i_block can be used in different ways.",
+    "ext4-extent": "The root node of the extent tree is stored in inode.i_block, which allows for the first four extents to be recorded without the use of extra metadata blocks."
+   }
+  },
+  {
+   "src": "ext4-extent",
+   "en": "so a stray block is not mistaken for a tree node",
+   "ru": "чтобы случайный блок не приняли за узел дерева",
+   "quote": "Each node of the tree begins with a struct ext4_extent_header. … eh_magic … Magic number, 0xF30A. … eh_entries … Number of valid entries following the header. … eh_max … Maximum number of entries that could follow the header."
+  },
+  {
+   "src": "ext4-extent",
+   "en": "above 0 they are <code>ext4_extent_idx</code> index entries",
+   "ru": "больше 0 — индексные записи <code>ext4_extent_idx</code>",
+   "quote": "eh_depth … Depth of this extent node in the extent tree. 0 = this extent node points to data blocks; otherwise, this extent node points to other extent nodes."
+  },
+  {
+   "src": "ext4-extent",
+   "en": "are described by the node in disk block <code>ei_leaf</code>\".",
+   "ru": "описаны узлом в дисковом блоке <code>ei_leaf</code>».",
+   "quote": "ei_block … This index node covers file blocks from ‘block’ onward. … ei_leaf_lo … Lower 32-bits of the block number of the extent node that is the next level lower in the tree."
+  },
+  {
+   "src": [
+    "ext4-extent",
+    "k-space-block"
+   ],
+   "en": "checksum when <code>metadata_csum</code> is on.",
+   "ru": "если включена <code>metadata_csum</code>.",
+   "quote": {
+    "ext4-extent": "Prior to the introduction of metadata checksums, the extent header + extent entries always left at least 4 bytes of unallocated space at the end of each extent tree data block (because (2^x % 12) >= 4). Therefore, the 32-bit checksum is inserted into this space.",
+    "k-space-block": "size = (inode->i_sb->s_blocksize - sizeof(struct ext4_extent_header)) / sizeof(struct ext4_extent);"
+   }
+  },
+  {
+   "src": "k-create-leaf",
+   "en": "it grows the tree in depth (<code>ext4_ext_grow_indepth()</code>).",
+   "ru": "дерево растёт в глубину (<code>ext4_ext_grow_indepth()</code>).",
+   "quote": "ext4_ext_create_new_leaf: finds empty index and adds new leaf. if no free index is found, then it requests in-depth growing."
+  },
+  {
+   "src": "k-grow",
+   "en": "leaves the inode with a single index entry pointing at that block.",
+   "ru": "оставляет в inode одну индексную запись, указывающую на этот блок.",
+   "quote": "ext4_ext_grow_indepth: implements tree growing procedure: - allocates new block - moves top-level data (index block or leaf) into the new block - initializes new top-level, creating index that points to the just created block"
+  },
+  {
+   "src": "k-split",
+   "en": "and a file written front to back ends up with full leaves.",
+   "ru": "и у файла, записанного от начала до конца, листья получаются полными.",
+   "quote": "/* FIXME: now decision is simplest: at current extent */ … border = newext->ee_block; ext_debug(inode, \"leaf will be added.\" … /* start copy from next extent */ m = EXT_MAX_EXTENT(path[depth].p_hdr) - path[depth].p_ext++;"
+  },
+  {
+   "src": "e2fs-split",
+   "en": "which is why its leaves hold 339 entries instead of 340.)",
+   "ru": "поэтому в его листьях 339 записей, а не 340.)",
+   "quote": "Normally, we try to split a full node in half. This doesn't turn out so well if we're tacking extents on the end of the file because then we're stuck with a tree of half-full extent blocks. … if (no_balance) tocopy = 1;"
+  },
+  {
+   "src": [
+    "k-maxdepth",
+    "k-depthcheck"
+   ],
+   "en": "and the kernel uses the cap to reject corrupted headers.",
+   "ru": "и ядро использует этот предел, чтобы отбраковывать повреждённые заголовки.",
+   "quote": {
+    "k-maxdepth": "#define EXT4_MAX_EXTENT_DEPTH 5",
+    "k-depthcheck": "if (depth < 0 || depth > EXT4_MAX_EXTENT_DEPTH) { EXT4_ERROR_INODE(inode, \"inode has invalid extent depth: %d\", depth); ret = -EFSCORRUPTED;"
+   }
+  },
+  {
+   "src": "ext4-extent",
+   "en": "so such a file never reaches the cap.",
+   "ru": "так что такой файл до предела никогда не доходит.",
+   "quote": "The extent tree can be at most 5 levels deep: a logical block number can be at most 2^32, and the smallest n that satisfies 4*(((blocksize - 12)/12)^n) >= 2^32 is 5."
+  },
+  {
+   "src": "k-es-c",
+   "en": "so a warm read often never touches the on-disk tree at all.",
+   "ru": "так что повторное чтение часто вообще не трогает дерево на диске.",
+   "quote": "In this step all extent status are tracked by extent status tree. Thus, we can first try to lookup a block mapping in this tree before finding it in extent tree."
+  },
+  {
+   "src": [
+    "phillips",
+    "ext4-htree"
+   ],
+   "en": "designed by Daniel Phillips around 2001.",
+   "ru": "который Дэниел Филлипс спроектировал около 2001 года.",
+   "quote": {
+    "phillips": "A Directory Index for Ext2 … Daniel Phillips … 18th September 2001 … Recently, I conceived and implemented a new kind of indexing technique using hashed keys held in a uniform-depth tree. I gave this structure the name \"HTree\".",
+    "ext4-htree": "A linear array of directory entries isn’t great for performance, so a new feature was added to ext3 to provide a faster (but peculiar) balanced tree keyed off a hash of the directory entry name."
+   }
+  },
+  {
+   "src": "ext4-htree",
+   "en": "keyed by a 32-bit <b>hash</b> of each name.",
+   "ru": "ключом в котором служит 32-битный <b>хеш</b> каждого имени.",
+   "quote": "this directory uses a hashed btree (htree) to organize and find directory entries. … 0x0 __le32 hash Hash code."
+  },
+  {
+   "src": "ext4-htree",
+   "en": "and a 4 KiB index block holds about 500 of them.",
+   "ru": "и индексный блок 4 КиБ вмещает около 500 таких записей.",
+   "quote": "The hash maps that exist in both struct dx_root and struct dx_node are recorded as struct dx_entry, which is 8 bytes long: … hash Hash code. … block Block number (within the directory file, not filesystem blocks) of the next node in the htree."
+  },
+  {
+   "src": "ext4-htree",
+   "en": "still sees a valid directory.",
+   "ru": "по-прежнему видит корректный каталог.",
+   "quote": "For backwards read-only compatibility with ext2, interior tree nodes are actually hidden inside the directory file, masquerading as “empty” directory entries spanning the whole block. … The root of the tree always lives in the first data block of the directory."
+  },
+  {
+   "src": "ext4-htree",
+   "en": ", 8 bytes each, sorted by hash",
+   "ru": ", по 8 байт, отсортирован по хешу",
+   "quote": "0x18 __le32 struct dx_root_info.reserved_zero … 0x1C u8 struct dx_root_info.hash_version … 0x1E u8 struct dx_root_info.indirect_levels … 0x20 __le16 limit … 0x22 __le16 count … 0x24 __le32 block … 0x28 struct dx_entry entries[0]"
+  },
+  {
+   "src": "ext4-htree",
+   "en": "so old code sees an empty block.",
+   "ru": "так что старый код видит пустой блок.",
+   "quote": "fake.inode Zero, to make it look like this entry is not in use. … fake.rec_len The size of the block, in order to hide all of the dx_node data. … Leaf nodes look like classic linear directory blocks"
+  },
+  {
+   "src": "ext4-super-compat",
+   "en": "which is why <code>dir_index</code> is a <i>compat</i> feature.",
+   "ru": "поэтому <code>dir_index</code> относится к совместимым (<i>compat</i>) возможностям.",
+   "quote": "0x20 Has directory indices (COMPAT_DIR_INDEX)."
+  },
+  {
+   "src": [
+    "ext4-htree",
+    "k-hash-md4",
+    "e2fs-seed"
+   ],
+   "en": "seeded with the superblock's random <code>s_hash_seed</code>.",
+   "ru": "с затравкой (seed) из случайного поля суперблока <code>s_hash_seed</code>.",
+   "quote": {
+    "ext4-htree": "The directory hash is one of the following values: … 0x1 Half MD4.",
+    "k-hash-md4": "Basic cut-down MD4 transform. Returns only 32 bits of result.",
+    "e2fs-seed": "} else uuid_generate((unsigned char *) fs->super->s_hash_seed);"
+   }
+  },
+  {
+   "src": "k-hash-seed",
+   "en": "and turn the directory back into a linear list.",
+   "ru": "и снова превратить каталог в линейный список.",
+   "quote": "The seed is an 4 longword (32 bits) \"secret\" which can be used to uniquify a hash. If the seed is all zero's, then some default seed may be used."
+  },
+  {
+   "src": "ext4-htree",
+   "en": "(4096 − 32 bytes of header − 8 bytes of checksum tail) / 8.",
+   "ru": "(4096 − 32 байта заголовка − 8 байт хвоста с контрольной суммой) / 8.",
+   "quote": "If metadata checksums are enabled, the last 8 bytes of the directory block (precisely the length of one dx_entry) are used to store a struct dx_tail, which contains the checksum. The limit and count entries in the dx_root/dx_node structures are adjusted as necessary"
+  },
+  {
+   "src": [
+    "ext4-htree",
+    "k-hash-lowbit"
+   ],
+   "en": "a lookup that misses in one leaf also checks the next.",
+   "ru": "поиск, не нашедший имя в одном листе, проверяет и следующий.",
+   "quote": {
+    "ext4-htree": "The actual hash value for an entry name is only 31 bits, the least-significant bit is set to 0. However, if there is a hash collision between directory entries, the least-significant bit may get set to 1 on interior nodes",
+    "k-hash-lowbit": "hash = hash & ~1;"
+   }
+  },
+  {
+   "src": [
+    "k-htree-level",
+    "ext4-super-incompat"
+   ],
+   "en": "With it a third index level is allowed.",
+   "ru": "С ней разрешён третий индексный уровень.",
+   "quote": {
+    "k-htree-level": "#define EXT4_HTREE_LEVEL_COMPAT 2 #define EXT4_HTREE_LEVEL 3 … return ext4_has_feature_largedir(sb) ? EXT4_HTREE_LEVEL : EXT4_HTREE_LEVEL_COMPAT;",
+    "ext4-super-incompat": "Prior to this feature, directories could not be larger than 4GiB and could not have an htree more than 2 levels deep. If this feature is enabled, directories can be larger than 4GiB and have a maximum htree depth of 3."
+   }
+  },
+  {
+   "src": "k-dir-fname",
+   "en": "which is why <code>ls -f</code> output looks shuffled.",
+   "ru": "поэтому вывод <code>ls -f</code> выглядит перемешанным.",
+   "quote": "This structure holds the nodes of the red-black tree used to store the directory entry in hash order."
+  },
+  {
+   "src": "k-dir-hash2pos",
+   "en": "even if entries were added in between.",
+   "ru": "даже если между вызовами добавились записи.",
+   "quote": "These functions convert from the major/minor hash to an f_pos value for dx directories"
+  },
+  {
+   "src": "nfsd",
+   "en": "NFS servers pass the same positions to clients as READDIR cookies.",
+   "ru": "NFS-серверы передают клиентам те же позиции в качестве cookie для READDIR.",
+   "quote": "if (fhp->fh_64bit_cookies) file->f_mode |= FMODE_64BITHASH; else file->f_mode |= FMODE_32BITHASH; offset = vfs_llseek(file, offset, SEEK_SET);"
+  },
+  {
+   "src": [
+    "xfs-ads-btree",
+    "sweeney-ag"
+   ],
+   "en": "Inside each AG almost every question is answered by its own B+tree.",
+   "ru": "Внутри каждой AG почти на каждый вопрос отвечает своё B+-дерево.",
+   "quote": {
+    "xfs-ads-btree": "XFS uses b+trees to index all metadata records.",
+    "sweeney-ag": "Each AG has its own separate data structures for managing the free space and inodes within its boundaries."
+   }
+  },
+  {
+   "src": "xfs-ads-magic",
+   "en": "so you can tell them apart in a hex dump:",
+   "ru": "так что деревья можно различить в шестнадцатеричном дампе:",
+   "quote": "32-bit magic numbers are always at offset zero in the block. … XFS_ABTB_CRC_MAGIC 0x41423342 … AB3B … Free Space by Block … XFS_ABTC_CRC_MAGIC 0x41423343 … AB3C … Free Space by Size"
+  },
+  {
+   "src": "xfs-ads-free",
+   "en": "and to allocate near related data.",
+   "ru": "и размещать данные рядом со связанными с ними.",
+   "quote": "The XFS filesystem tracks free space in an allocation group using two B+trees. One B+tree tracks space by block number, the second by the size of the free space block. This scheme allows XFS to find quickly free space near a given block or of a given size."
+  },
+  {
+   "src": "xfs-ads-inobt",
+   "en": "which inodes in its chunk are free?\"",
+   "ru": "какие inode в его порции свободны?»",
+   "quote": "Inodes are traditionally allocated in chunks of 64, and a B+tree is used to track these chunks of inodes as they are allocated and freed. … ir_startino The lowest-numbered inode in this chunk."
+  },
+  {
+   "src": "xfs-ads-inobt",
+   "en": "without walking a full inobt.",
+   "ru": "без обхода всего inobt.",
+   "quote": "If the XFS_SB_FEAT_RO_COMPAT_FINOBT feature is enabled, a second B+tree is used to track the chunks containing free inodes; this is an optimization to speed up inode allocation."
+  },
+  {
+   "src": [
+    "xfs-ads-rmap",
+    "xfs-fsck-rmap"
+   ],
+   "en": "Needed by online repair.",
+   "ru": "Нужно для восстановления на лету (online repair).",
+   "quote": {
+    "xfs-ads-rmap": "this data structure is another piece of the puzzle necessary to reconstruct the data or attribute fork of a file from reverse-mapping records",
+    "xfs-fsck-rmap": "the reverse index is key to enabling online fsck and other requested functionality such as free space defragmentation, better media failure reporting, and filesystem shrinking."
+   }
+  },
+  {
+   "src": "xfs-ads-refcount",
+   "en": "(reflink copies)",
+   "ru": "(копии reflink)",
+   "quote": "To support the sharing of file data blocks (reflink), each allocation group has its own reference count B+tree"
+  },
+  {
+   "src": "xfs-ads-extlist",
+   "en": "the file's extent map, once it no longer fits in the inode",
+   "ru": "карта экстентов файла, когда она больше не помещается в inode",
+   "quote": "On a default v5 filesystem with 512 byte inodes, a file can have up to 21 extents with this format. Beyond that, extents have to use the B+tree format."
+  },
+  {
+   "src": "xfs-ads-magic",
+   "en": "several 2-byte ones, at offset 8",
+   "ru": "несколько 2-байтных, по смещению 8",
+   "quote": "16-bit magic numbers for the directory and attribute B+tree are at offset eight."
+  },
+  {
+   "src": "xfs-ads-dabtree",
+   "en": "like ext4's htree",
+   "ru": "как htree в ext4",
+   "quote": "The dir/attr b+tree (or ”dabtree”), if present, computes a hash of the record key to produce the b+tree key"
+  },
+  {
+   "src": "sweeney-free",
+   "en": "A bitmap answers neither question without scanning.",
+   "ru": "Битовая карта не ответит ни на один из этих вопросов без просмотра.",
+   "quote": "One of the B+ trees is indexed by the starting block of the free extents, and the other is indexed by the length of the free extents. This double indexing allows for very flexible and efficient searching … more efficient than a linear bitmap scan"
+  },
+  {
+   "src": "xfs-ads-extrec",
+   "en": "52 bits of start block and 21 bits of length.",
+   "ru": "52 бита начального блока и 21 бит длины.",
+   "quote": "An extent is 128 bits in size and uses the following packed layout: … bit[127] … bits[73-126] … bits[21-72] … bits[0-20] … flag … logical file block offset … absolute block number … # of blocks"
+  },
+  {
+   "src": [
+    "xfs-ads-btree",
+    "sweeney-ag"
+   ],
+   "en": "than trees that need full 64-bit pointers.",
+   "ru": "чем в деревьях, которым нужны полные 64-битные указатели.",
+   "quote": {
+    "xfs-ads-btree": "a short format for records pertaining to a single allocation group, since all block pointers in an AG are 32-bits in size; and a long format for records pertaining to a file, since file data can have 64-bit block offsets.",
+    "sweeney-ag": "The partitioning also allows the per-AG data structures to use AG relative block and inode pointers. Doing so reduces the size of those pointers from 64 to 32 bits."
+   }
+  },
+  {
+   "src": [
+    "xfs-ads-btree",
+    "xfs-ads-selfdesc"
+   ],
+   "en": "is detected when it is read.",
+   "ru": "обнаруживается при чтении.",
+   "quote": {
+    "xfs-ads-btree": "/* version 5 filesystem fields start here */ __be64 bb_blkno; __be64 bb_lsn; uuid_t bb_uuid; __be32 bb_owner; __le32 bb_crc;",
+    "xfs-ads-selfdesc": "Self describing metadata needs to contain enough information so that the metadata block can be verified as being in the correct place without needing to look at any other metadata."
+   }
+  },
+  {
+   "src": "xfs-ads-btree",
+   "en": "Blocks at every level have left and right sibling pointers.",
+   "ru": "У блоков на каждом уровне есть указатели на левого и правого соседа.",
+   "quote": "Leaf blocks of both types of b+trees have the same general format: a header describing the data in the block … bb_leftsib FS block number of the left sibling of this B+tree node. bb_rightsib FS block number of the right sibling of this B+tree node."
+  },
+  {
+   "src": [
+    "btrfs-design-intro",
+    "btrfs-btrees"
+   ],
+   "en": "(<i>B-trees, Shadowing, and Clones</i>, 2008).",
+   "ru": "(<i>B-trees, Shadowing, and Clones</i>, 2008).",
+   "quote": {
+    "btrfs-design-intro": "The copy-on-write architecture is based on white paper from Ohad Rodeh (IBM research, presentation slides, 2006 article B-trees, shadowing, and clones).",
+    "btrfs-btrees": "Btrfs uses a single set of btree manipulation code for all metadata in the filesystem."
+   }
+  },
+  {
+   "src": "odf-basic",
+   "en": "with a 17-byte key:",
+   "ru": "с 17-байтным ключом:",
+   "quote": "0x0 0x8 UINT Object ID. … 0x8 0x1 UINT Item type. 0x9 0x8 UINT Offset. The meaning depends on the item type. 0x11"
+  },
+  {
+   "src": "k-btrfs-cmp",
+   "en": "Keys sort by objectid, then type, then offset.",
+   "ru": "Ключи сортируются по objectid, затем по type, затем по offset.",
+   "quote": "if (k1->objectid > k2->objectid) return 1; if (k1->objectid < k2->objectid) return -1; if (k1->type > k2->type) return 1; if (k1->type < k2->type) return -1; if (k1->offset > k2->offset) return 1;"
+  },
+  {
+   "src": "btrfs-design-fs",
+   "en": "so it all sorts together:",
+   "ru": "поэтому всё это оказывается рядом:",
+   "quote": "The objectid makes up the most significant bits of the key, allowing all of the items for a given filesystem object to be logically grouped together in the btree."
+  },
+  {
+   "src": "odf-itemtypes",
+   "en": "the inode: size, mode, times",
+   "ru": "сам inode: размер, режим, времена",
+   "quote": "INODE_ITEM (01) … INODE_REF (0c) … XATTR_ITEM (18) … DIR_ITEM (54) … DIR_INDEX (60) … EXTENT_DATA (6c)"
+  },
+  {
+   "src": "odf-inoderef",
+   "en": "(the back pointer)",
+   "ru": "(обратный указатель)",
+   "quote": "INODE_REF (0c) … (inode_id, directory_id) … From an inode to a name in a directory."
+  },
+  {
+   "src": "btrfs-design-dirs",
+   "en": "used for <code>readdir</code>",
+   "ru": "используется для <code>readdir</code>",
+   "quote": "The second directory index is used by readdir to return data in inode number order. … BTRFS_DIR_INDEX_KEY Inode Sequence number"
+  },
+  {
+   "src": "btrfs-design-dirs",
+   "en": "for the same reason XFS keeps two free-space trees.",
+   "ru": "по той же причине, по которой XFS держит два дерева свободного места.",
+   "quote": "Directories are indexed in two different ways. For filename lookup, there is an index comprised of keys: Directory Objectid BTRFS_DIR_ITEM_KEY 64 bit filename hash"
+  },
+  {
+   "src": "btrfs-btrees",
+   "en": "and one filesystem tree per subvolume.",
+   "ru": "по одному дереву файловой системы на каждый подтом (subvolume).",
+   "quote": "Tree of tree roots (tree_root) … This tree stores pointers to other trees in the filesystem. … The filesystem trees store files and directories of subvolumes. There is one root for each subvolume or snapshot."
+  },
+  {
+   "src": [
+    "odf-leaf",
+    "btrfs-design-btree"
+   ],
+   "en": "and the item bodies growing from the back.",
+   "ru": "и тела элементов, растущие от конца.",
+   "quote": {
+    "odf-leaf": "In leaf nodes, the node header is followed by a number of items. The items’ data is stored at the end of the node … 0x11 0x4 UINT data offset relative to end of header (65) 0x15 0x4 UINT data size 0x19",
+    "btrfs-design-btree": "Tree leaves are broken up into two sections that grow toward each other. Leaves have an array of fixed sized items, and an area where item data are stored."
+   }
+  },
+  {
+   "src": "odf-internal",
+   "en": "An internal node holds 33-byte key pointers <code>(key, block, generation)</code>.",
+   "ru": "Внутренний узел содержит 33-байтные указатели <code>(key, block, generation)</code>.",
+   "quote": "In internal nodes, the node header is followed by a number of key pointers. … 0x0 0x11 KEY key 0x11 0x8 UINT block number 0x19 0x8 UINT generation 0x21"
+  },
+  {
+   "src": [
+    "mkfs-btrfs",
+    "odf-header"
+   ],
+   "en": "= 493 children per node.",
+   "ru": "= 493 потомка на узел.",
+   "quote": {
+    "mkfs-btrfs": "Specify the nodesize, the tree block size in which btrfs stores metadata. The default value is 16KiB (16384) or the page size, whichever is bigger.",
+    "odf-header": "This is the data stored at the start of every node. … 0x60 0x4 UINT Number of items 0x64 0x1 UINT Level (0 for leaf nodes) 0x65"
+   }
+  },
+  {
+   "src": [
+    "btrfs-design-cow",
+    "rodeh-shadow"
+   ],
+   "en": "btrfs never modifies a committed tree block in place.",
+   "ru": "btrfs никогда не изменяет на месте блок уже зафиксированного дерева.",
+   "quote": {
+    "btrfs-design-cow": "Once the transaction that allocated the space on disk is committed, any new writes to that logical address in the file or btree will go to a newly allocated block, and block pointers in the btrees and super blocks will be updated to reflect the new location.",
+    "rodeh-shadow": "Once a page is shadowed, it does not need to be shadowed again until the next checkpoint"
+   }
+  },
+  {
+   "src": "btrfs-design-cow",
+   "en": "and after it the new tree is.",
+   "ru": "а после неё — новое.",
+   "quote": "The updated btree blocks are all flushed to disk, and then the super block is updated to point to the new root tree. Once the super block has been properly written to disk, the transaction is considered complete."
+  },
+  {
+   "src": "btrfs-design-snap",
+   "en": "Nothing is copied until one side changes something.",
+   "ru": "Ничего не копируется, пока одна из сторон что-нибудь не изменит.",
+   "quote": "Snapshots are identical to subvolumes, but their root block is initially shared with another subvolume. When the snapshot is taken, the reference count on the root block is increased, and the copy on write transaction system ensures changes made in either the snapshot or the source subvolume are private to that root."
+  },
+  {
+   "src": [
+    "btrfs-btrees-extent",
+    "btrfs-design-cow"
+   ],
+   "en": "so a block is freed only when no tree points at it.",
+   "ru": "чтобы блок освобождался, только когда на него не указывает ни одно дерево.",
+   "quote": {
+    "btrfs-btrees-extent": "The extent tree records byte ranges that are in use, maintains reference counts on each extent and records back references to the tree or file that is using each extent.",
+    "btrfs-design-cow": "If the reference count reaches zero, the block is freed and the reference count on any nodes the root points to is lowered by one."
+   }
+  },
+  {
+   "src": "rodeh-clones",
+   "en": "so that taking a snapshot does not mean touching every block.",
+   "ru": "чтобы создание снимка не требовало трогать каждый блок.",
+   "quote": "Instead of making a pass on the entire tree and incrementing the counters during the clone operation, this is done in a lazy fashion."
+  },
+  {
+   "src": "rodeh-links",
+   "en": "COW trees therefore have no leaf links.",
+   "ru": "Поэтому у деревьев с COW нет ссылок между листьями.",
+   "quote": "In a regular b-tree the leaves can be linked to their neighbors. Not possible in conjunction with shadowing"
+  },
+  {
+   "src": "btrfs-design-btree",
+   "en": "shows up as a mismatch on the next read.",
+   "ru": "проявляется как несовпадение при следующем чтении.",
+   "quote": "The block header contains a checksum for the block contents … Everything that points to a btree block also stores the generation field it expects that block to have. This allows Btrfs to detect phantom or misplaced writes on the media."
+  },
+  {
+   "src": [
+    "btrfs-admin-mount",
+    "k-treelog"
+   ],
+   "en": "so it does not have to commit everything.",
+   "ru": "чтобы не фиксировать всё целиком.",
+   "quote": {
+    "btrfs-admin-mount": "commit=<seconds>(since: 3.12, default: 30) Set the interval of periodic transaction commit … treelog, notreelog(default: on) Enable the tree logging used for fsync and O_SYNC writes.",
+    "k-treelog": "Instead of doing a tree commit on every fsync, we use the key ranges and transaction ids to find items for a given file or directory that have changed in this transaction. Those items are copied into a special tree (one per subvolume root)"
+   }
+  },
+  {
+   "src": "mysql-phys",
+   "en": "<td>MySQL InnoDB</td><td>16 KiB",
+   "ru": "<td>MySQL InnoDB</td><td>16 КиБ",
+   "quote": "With the exception of spatial indexes, InnoDB indexes are B-tree data structures. … The default size of an index page is 16KB."
+  },
+  {
+   "src": "mysql-idx",
+   "en": "The table <em>is</em> the tree.",
+   "ru": "Таблица <em>и есть</em> дерево.",
+   "quote": "Each InnoDB table has a special index called the clustered index that stores row data. Typically, the clustered index is synonymous with the primary key."
+  },
+  {
+   "src": "mysql-idx",
+   "en": "so a lookup through one walks two trees.",
+   "ru": "поэтому поиск через такой индекс проходит два дерева.",
+   "quote": "In InnoDB, each record in a secondary index contains the primary key columns for the row, as well as the columns specified for the secondary index. InnoDB uses this primary key value to search for the row in the clustered index."
+  },
+  {
+   "src": "pg-page",
+   "en": "<td>PostgreSQL</td><td>8 KiB",
+   "ru": "<td>PostgreSQL</td><td>8 КиБ",
+   "quote": "Every table and index is stored as an array of pages of a fixed size (usually 8 kB, although a different page size can be selected when compiling the server)."
+  },
+  {
+   "src": [
+    "pg-page",
+    "pg-btree-struct"
+   ],
+   "en": "<code>(key, block, offset)</code> tuple IDs.",
+   "ru": "идентификаторы кортежей <code>(key, block, offset)</code>.",
+   "quote": {
+    "pg-page": "In a table, all the pages are logically equivalent, so a particular item (row) can be stored in any page. … every pointer to an item (ItemPointer, also known as CTID) created by PostgreSQL consists of a page number and the index of an item identifier.",
+    "pg-btree-struct": "Each leaf page contains tuples that point to table rows."
+   }
+  },
+  {
+   "src": "pg-readme-ly",
+   "en": "Its B-tree implements Lehman and Yao's B-link tree (see the concurrency section).",
+   "ru": "Его B-дерево реализует B-link-дерево Лемана и Яо (см. раздел о параллельном доступе).",
+   "quote": "This directory contains a correct implementation of Lehman and Yao's high-concurrency B-tree management algorithm (P. Lehman and S. Yao, Efficient Locking for Concurrent Operations on B-Trees"
+  },
+  {
+   "src": "sqlite-pagesize",
+   "en": "<td>SQLite</td><td>4 KiB by default",
+   "ru": "<td>SQLite</td><td>4 КиБ по умолчанию",
+   "quote": "For many years, the default page size was almost always 1024 bytes, but beginning with SQLite version 3.12.0 (2016-03-29), the default page size increased to 4096."
+  },
+  {
+   "src": "sqlite-ff-btree",
+   "en": "(\"table b-tree\").",
+   "ru": "(«table b-tree»).",
+   "quote": "\"Table b-trees\" use a 64-bit signed integer key and store all data in the leaves. … (The key of a table b-tree corresponds to the rowid of the SQL table that the b-tree implements.)"
+  },
+  {
+   "src": "sqlite-ff-idx",
+   "en": "(\"index b-tree\").",
+   "ru": "(«index b-tree»).",
+   "quote": "Each SQL index, whether explicitly declared via a CREATE INDEX statement or implied by a UNIQUE or PRIMARY KEY constraint, corresponds to an index b-tree in the database file. … The key to an index b-tree is a record composed of the columns that are being indexed followed by the key of the corresponding table row."
+  },
+  {
+   "src": "sqlite-dbstat",
+   "en": "lists every page with its path from the root.",
+   "ru": "перечисляет все страницы вместе с путём от корня.",
+   "quote": "The DBSTAT virtual table is a read-only eponymous virtual table that returns information about the amount of disk space used to store the content of an SQLite database. … path TEXT, -- Path to page from root"
+  },
+  {
+   "src": "pg-readme-suffix",
+   "en": "to tell the two halves of a split apart (suffix truncation).",
+   "ru": "две половины расщеплённой страницы (suffix truncation).",
+   "quote": "We truncate away suffix key attributes that are not needed for a page high key during a leaf page split. … Suffix truncation in Postgres currently only works at the whole-attribute granularity"
+  },
+  {
+   "src": "lsm-paper",
+   "en": "that random write is the bottleneck.",
+   "ru": "узким местом становится именно эта случайная запись.",
+   "quote": "Unfortunately, standard disk-based index structures such as the B-tree will effectively double the I/O cost of the transaction to maintain an index such as this in real time"
+  },
+  {
+   "src": "lsm-paper",
+   "en": "O'Neil, Cheng, Gawlick and O'Neil, 1996)",
+   "ru": "О’Нил, Ченг, Гаулик и О’Нил, 1996)",
+   "quote": "Patrick O'Neil … Edward Cheng … Dieter Gawlick … Elizabeth O'Neil … The LSM-tree uses an algorithm that defers and batches index changes, cascading the changes from a memory-based component through one or more disk components in an efficient manner reminiscent of merge sort."
+  },
+  {
+   "src": [
+    "rocksdb-leveled",
+    "leveldb-tables",
+    "rocksdb-tuning"
+   ],
+   "en": "A leveled LSM tree, as in RocksDB.",
+   "ru": "Уровневое (leveled) LSM-дерево, как в RocksDB.",
+   "quote": {
+    "rocksdb-leveled": "A special level-0 (or L0 for short) contains files just flushed from in-memory write buffer (memtable). Each level (except level 0) is one data sorted run",
+    "leveldb-tables": "Files in the young level may contain overlapping keys. However files in other levels have distinct non-overlapping key ranges. … (10^L) MB (i.e., 10MB for level-1, 100MB for level-2, ...)",
+    "rocksdb-tuning": "It represents the amount of data to build up in memory (backed by an unsorted log on disk) before converting to a sorted on-disk file. The default is 64 MB."
+   }
+  },
+  {
+   "src": [
+    "rocksdb-bbt",
+    "rocksdb-bloom",
+    "rocksdb-ov-csum"
+   ],
+   "en": "with a small index and a Bloom filter.",
+   "ru": "с небольшим индексом и фильтром Блума.",
+   "quote": {
+    "rocksdb-bbt": "BlockBasedTable is the default SST table format in RocksDB. … [meta block 1: filter block] … [meta block 2: index block] … The sequence of key/value pairs in the file are stored in sorted order",
+    "rocksdb-bloom": "In RocksDB, when the filter policy is set, every newly created SST file will contain a Bloom filter, which is used to determine if the file may contain the key we're looking for.",
+    "rocksdb-ov-csum": "A block, once written to storage, is never modified."
+   }
+  },
+  {
+   "src": [
+    "lsm-paper",
+    "ostep-ssd-perf"
+   ],
+   "en": "which suits both hard disks and the flash translation layer of SSDs.",
+   "ru": "что хорошо подходит и жёстким дискам, и слою трансляции флеш-памяти (FTL) в SSD.",
+   "quote": {
+    "lsm-paper": "The algorithm has greatly reduced disk arm movements compared to a traditional access methods such as B-trees",
+    "ostep-ssd-perf": "The reason for such unexpectedly good random-write performance is due to the log-structured design of many SSDs, which transforms random writes into sequential ones and improves performance."
+   }
+  },
+  {
+   "src": "rocksdb-bloom",
+   "en": "Bloom filters make most misses cheap",
+   "ru": "фильтры Блума делают большинство промахов дешёвыми",
+   "quote": "Given an arbitrary key, this bit array may be used to determine if the key may exist or definitely does not exist in the key set."
+  },
+  {
+   "src": [
+    "rocksdb-ov-persist",
+    "rocksdb-compaction"
+   ],
+   "en": "in the worst case about 10 times per level (write amplification)",
+   "ru": "в худшем случае около 10 раз на уровень (усиление записи)",
+   "quote": {
+    "rocksdb-ov-persist": "All write operations (Put, Delete and Merge) are stored in an in-memory buffer called the memtable as well as optionally inserted into WAL.",
+    "rocksdb-compaction": "Compaction into Ln rewrites data that was previously merged into Ln. The per-level write amplification is equal to the fanout in the worst case, but it tends to be less than the fanout in practice"
+   }
+  },
+  {
+   "src": "leveldb-compactions",
+   "en": "old versions linger until compaction",
+   "ru": "старые версии живут до уплотнения",
+   "quote": "Compactions drop overwritten values. They also drop deletion markers if there are no higher numbered levels that contain a file whose range overlaps the current key."
+  },
+  {
+   "src": "rocksdb-ov-prefix",
+   "en": "merge iterators over all levels",
+   "ru": "слияние итераторов по всем уровням",
+   "quote": "Most LSM-tree engines cannot support an efficient range scan API because it needs to look into multiple data files."
+  },
+  {
+   "src": [
+    "leveldb-tables",
+    "cassandra"
+   ],
+   "en": "RocksDB, LevelDB, Cassandra, Ceph BlueStore metadata",
+   "ru": "RocksDB, LevelDB, Cassandra, метаданные Ceph BlueStore",
+   "quote": {
+    "leveldb-tables": "The set of sorted tables are organized into a sequence of levels.",
+    "cassandra": "The architecture is based on Log Structured Merge (LSM) trees, which utilize an append-only approach instead of the traditional relational database design with B-trees."
+   }
+  },
+  {
+   "src": [
+    "ceph-devices",
+    "ceph-bstool"
+   ],
+   "en": "running on a small internal filesystem called BlueFS.",
+   "ru": "которое работает поверх маленькой внутренней файловой системы BlueFS.",
+   "quote": {
+    "ceph-devices": "BlueStore consumes raw block devices or partitions. … RocksDB’s key/value database is embedded in order to manage internal metadata, including the mapping of object names to block locations on disk.",
+    "ceph-bstool": "bluefs-export Export the contents of BlueFS (i.e., RocksDB files) to an output directory."
+   }
+  },
+  {
+   "src": "graefe-31",
+   "en": "is called a <b>latch</b>.",
+   "ru": "называется <b>защёлкой</b> (latch).",
+   "quote": "crisp separation of locks and latches, the former protecting database contents against conflicts among transactions and the latter protecting in-memory data structures against conflicts among concurrent threads."
+  },
+  {
+   "src": "graefe-42",
+   "en": "and then releases everything above it.",
+   "ru": "и тогда отпускает всё, что выше.",
+   "quote": "retaining the latch on the parent node until the child node is latched. This technique is traditionally called “lock coupling” but a better term is “latch coupling” … retains latches on nodes along its root-to-leaf search only until a lower, less-than-full node guarantees that split operations will not propagate up the tree"
+  },
+  {
+   "src": "graefe-42",
+   "en": "only in the rare case where the leaf must split.",
+   "ru": "лишь в редком случае, когда лист нужно расщепить.",
+   "quote": "Since most nodes are less than full, most insertion operations will latch no nodes in addition to the current one. … A fifth approach protects its initial root-to-leaf search with shared latches, aborts this search when a node requires splitting, restarts a new one"
+  },
+  {
+   "src": "pg-readme-ly",
+   "en": "follows the right link to the new sibling.",
+   "ru": "идёт по правой ссылке к новому соседу.",
+   "quote": "Compared to a classic B-tree, L&Y adds a right-link pointer to each page, to the page's right sibling. It also adds a \"high key\" to each page, which is an upper bound on the keys that are allowed on that page. … If the search key is greater than the high key, the page must've been split concurrently"
+  },
+  {
+   "src": "ly-paper",
+   "en": "Readers then need no latch coupling at all.",
+   "ru": "Тогда читателям вообще не нужно сцепление защёлок.",
+   "quote": "A single additional “link” pointer in each node allows a process to easily recover from tree modifications performed by other concurrent processes. Our solution compares favorably with earlier solutions in that the locking scheme is simpler (no read-locks are used)"
+  },
+  {
+   "src": "pg-readme-ly",
+   "en": "and its README walks through the details.",
+   "ru": "и его README подробно разбирает детали.",
+   "quote": "These two additions make it possible to detect a concurrent page split, which allows the tree to be searched without holding any read locks (except to keep a single page from being modified while reading it)."
+  },
+  {
+   "src": "k-idatasem",
+   "en": "a per-inode read/write semaphore, <code>i_data_sem</code>.",
+   "ru": "семафором чтения-записи на inode, <code>i_data_sem</code>.",
+   "quote": "Need to be called with down_read(&EXT4_I(inode)->i_data_sem) if not allocating file system block (ie, flags is zero). Otherwise down_write(&EXT4_I(inode)->i_data_sem)"
+  },
+  {
+   "src": [
+    "xfs-fsck-ag",
+    "sweeney-ag"
+   ],
+   "en": "that is a large part of why XFS scales on big machines.",
+   "ru": "во многом поэтому XFS хорошо масштабируется на больших машинах.",
+   "quote": {
+    "xfs-fsck-ag": "The count should be dropped when the filesystem has locked the AG header buffers and finished the work. When online fsck wants to examine an AG, it should lock the AG header buffers to quiesce all transaction chains that want to modify that AG.",
+    "sweeney-ag": "By making the structures in each AG independent of those in the other AGs, XFS enables free space and inode management operations to proceed in parallel throughout the file system."
+   }
+  },
+  {
+   "src": "k-btrfs-lock",
+   "en": "so it is always safe to read.",
+   "ru": "поэтому читать его всегда безопасно.",
+   "quote": "Extent buffer locking … We use a rw_semaphore for tree locking, and the semantics are exactly the same: - reader/writer exclusion - writer/writer exclusion - reader/reader sharing"
+  },
+  {
+   "src": "drepper",
+   "en": "during which a modern core could have executed hundreds of instructions.",
+   "ru": "за которые современное процессорное ядро успело бы выполнить сотни инструкций.",
+   "quote": "In early caches these lines were 32 bytes long; nowadays the norm is 64 bytes. … These are the numbers Intel lists for a Pentium M: … Main Memory ∼ 240"
+  },
+  {
+   "src": [
+    "kn61",
+    "maple-rst"
+   ],
+   "en": "stores each process's memory mappings.",
+   "ru": "хранит отображения памяти каждого процесса.",
+   "quote": {
+    "kn61": "1.7. Maple trees, a more efficient tree data structure The maple tree is an RCU-safe range based B-tree designed to use modern processor cache efficiently.",
+    "maple-rst": "The most important usage of the Maple Tree is the tracking of the virtual memory areas."
+   }
+  },
+  {
+   "src": [
+    "maple-h",
+    "maple-rst"
+   ],
+   "en": "and it supports lookups under RCU without locks.",
+   "ru": "а поиск в нём работает под RCU без блокировок.",
+   "quote": {
+    "maple-h": "/* 64bit sizes */ #define MAPLE_NODE_SLOTS 31 /* 256 bytes including ->parent */ #define MAPLE_RANGE64_SLOTS 16 /* 256 bytes */",
+    "maple-rst": "The tree can also be put into an RCU-safe mode of operation which allows reading and writing concurrently."
+   }
+  },
+  {
+   "src": "lwn-maple",
+   "en": "It replaced a red-black tree plus a linked list.",
+   "ru": "Оно заменило красно-чёрное дерево вместе со связным списком.",
+   "quote": "VMAs are currently stored in a modified red-black tree (rbtree) with an additional, doubly-linked list … the first usage is replacing the rbtrees and linked lists to manage VMAs."
+  },
+  {
+   "src": [
+    "xarray-rst",
+    "xarray-h"
+   ],
+   "en": "keyed by page index within the file.",
+   "ru": "ключом в котором служит номер страницы внутри файла.",
+   "quote": {
+    "xarray-rst": "The XArray is an abstract data type which behaves like a very large array of pointers. … It takes advantage of RCU to perform lookups without locking. … The most important user of the XArray is the page cache.",
+    "xarray-h": "A power of two recommends itself so that we can walk the tree based purely on shifts and masks. … #define XA_CHUNK_SHIFT (IS_ENABLED(CONFIG_BASE_SMALL) ? 4 : 6)"
+   }
+  },
+  {
+   "src": [
+    "k-es-h",
+    "k-es-c"
+   ],
+   "en": "is a red-black tree per inode.",
+   "ru": "— это красно-чёрное дерево на каждый inode.",
+   "quote": {
+    "k-es-h": "struct ext4_es_tree { struct rb_root root;",
+    "k-es-c": "Every inode has an extent status tree and all allocation blocks are added to the tree with different status."
+   }
+  },
+  {
+   "src": [
+    "man-mke2fs",
+    "man-e2fsck"
+   ],
+   "en": "then <code>e2fsck -fD</code> to build the directory index.",
+   "ru": "а затем <code>e2fsck -fD</code>, чтобы построить индекс каталога.",
+   "quote": {
+    "man-mke2fs": "-d root-directory|tarball|- Copy the contents of the given directory or tarball into the root directory of the file system.",
+    "man-e2fsck": "-D Optimize directories in file system. This option causes e2fsck to try to optimize all directories, either by re-indexing them if the file system supports directory indexing"
+   }
+  }
+ ]
+}

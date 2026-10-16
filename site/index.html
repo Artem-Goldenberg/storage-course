@@ -3,7 +3,7 @@
 <link rel="preconnect" href="https://fonts.googleapis.com">
 <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
 <link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=IBM+Plex+Mono:wght@400;600&family=IBM+Plex+Sans+Condensed:wght@500;600;700&family=Source+Serif+4:ital,opsz,wght@0,8..60,400;0,8..60,600;1,8..60,400&display=swap">
-<link rel="stylesheet" href="course.css?v=11">
+<link rel="stylesheet" href="course.css?v=12">
 <style>
   .home { max-width: 74rem; margin: 0 auto; padding-block: 2.5rem 4rem; padding-inline: max(1.25rem, env(safe-area-inset-left)) max(1.25rem, env(safe-area-inset-right)); display: grid; gap: 3.5rem; }
   .home > * { min-width: 0; }
@@ -258,11 +258,11 @@ across the network. Lessons 06–09 lean on everything before them, so take them
 <ol>
 <li><a class="user" href="01-syscalls.html"><div class="meta"><span>01 · user space</span><span>lab 01-fds</span></div><h3>Syscalls and file descriptors</h3><p>What a syscall is, the file API in C, and the three tables behind every fd: descriptor table, open file description, inode.</p></a></li>
 <li><a class="block" href="02-blocks.html"><div class="meta"><span>02 · block</span><span>lab 02-blocks</span></div><h3>Block devices and addressing</h3><p>Sectors, LBAs and blocks; HDDs, SSDs and NVMe queues; the block layer; write caches, FLUSH and FUA.</p></a></li>
-<li><a class="fs" href="03-ondisk.html"><div class="meta"><span>03 · filesystem</span><span>lab 03-ondisk</span></div><h3>Inside an ext4 image</h3><p>Superblock, block groups, inodes, extents, directories and the journal, read byte by byte with a walker you compile.</p></a></li>
-<li><a class="fs" href="04-btrees.html"><div class="meta"><span>04 · filesystem</span><span>lab 04-btrees</span></div><h3>B-trees, really</h3><p>Why disks want wide, shallow trees, and where they live: ext4 extents and htree, XFS, btrfs, databases. With a live B+tree.</p></a></li>
-<li><a class="kernel" href="05-vfs-cache.html"><div class="meta"><span>05 · kernel</span><span>lab 05-cache</span></div><h3>The VFS and the caches</h3><p>How <code>read()</code> dispatches, the dcache and page cache, writeback, <code>fsync</code>, <code>O_DIRECT</code>, and what "durable" means.</p></a></li>
+<li><a class="fs" href="03-ondisk.html"><div class="meta"><span>03 · filesystem</span><span>lab 03-ondisk</span></div><h3>The ext4 on-disk format</h3><p>Superblock, block groups, inodes, extents, directories and the journal, read byte by byte with a walker you compile.</p></a></li>
+<li><a class="fs" href="04-btrees.html"><div class="meta"><span>04 · filesystem</span><span>lab 04-btrees</span></div><h3>B-trees in filesystems and databases</h3><p>Why disks want wide, shallow trees, and where they live: ext4 extents and htree, XFS, btrfs, databases. With a live B+tree.</p></a></li>
+<li><a class="kernel" href="05-vfs-cache.html"><div class="meta"><span>05 · kernel</span><span>lab 05-cache</span></div><h3>The VFS and the page cache</h3><p>How <code>read()</code> dispatches, the dcache and page cache, writeback, <code>fsync</code>, <code>O_DIRECT</code>, and what "durable" means.</p></a></li>
 <li><a class="net" href="06-nfs.html"><div class="meta"><span>06 · network</span><span>lab 06-nfs (A)</span></div><h3>NFS from v3 to 4.2</h3><p>RPC and file handles, stateless v3, stateful v4, sessions and pNFS in 4.1, and every 4.2 feature mapped to the syscall that uses it.</p></a></li>
-<li><a class="net" href="07-nfs-caching.html"><div class="meta"><span>07 · network</span><span>lab 06-nfs (B)</span></div><h3>Caching across the network</h3><p>Attribute timeouts, close-to-open, unstable writes and COMMIT, delegations and recalls, FS-Cache, and how other systems keep caches coherent.</p></a></li>
+<li><a class="net" href="07-nfs-caching.html"><div class="meta"><span>07 · network</span><span>lab 06-nfs (B)</span></div><h3>NFS client caching and coherence</h3><p>Attribute timeouts, close-to-open, unstable writes and COMMIT, delegations and recalls, FS-Cache, and how other systems keep caches coherent.</p></a></li>
 <li><a class="net" href="08-rdma.html"><div class="meta"><span>08 · network</span><span>lab 07-rdma</span></div><h3>RDMA and NFS over RDMA</h3><p>Verbs, queue pairs and memory registration; InfiniBand, RoCE and iWARP; how RPC-over-RDMA moves NFS data with read and write chunks.</p></a></li>
 <li><a class="net" href="09-distributed.html"><div class="meta"><span>09 · network</span><span>lab 08-distributed</span></div><h3>Distributed filesystems</h3><p>Metadata servers and striping, CRUSH and consistent hashing, replication and erasure coding, locks and leases, failure and recovery.</p></a></li>
 </ol>
@@ -304,7 +304,7 @@ Nine lessons, eight labs, one <a href="glossary.html">glossary</a>. Start with
 <a href="01-syscalls.html">lesson 01</a>.
 </footer>
 </main>
-<script src="search.js?v=2"></script>
+<script src="search.js?v=3"></script>
 <script src="course.js?v=11"></script>
 
 </body></html>

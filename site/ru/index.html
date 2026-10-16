@@ -3,7 +3,7 @@
 <link rel="preconnect" href="https://fonts.googleapis.com">
 <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
 <link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=IBM+Plex+Mono:wght@400;600&family=IBM+Plex+Sans+Condensed:wght@500;600;700&family=PT+Sans+Narrow:wght@400;700&family=Source+Serif+4:ital,opsz,wght@0,8..60,400;0,8..60,600;1,8..60,400&display=swap">
-<link rel="stylesheet" href="../course.css?v=11">
+<link rel="stylesheet" href="../course.css?v=12">
 <style>
   .home { max-width: 74rem; margin: 0 auto; padding-block: 2.5rem 4rem; padding-inline: max(1.25rem, env(safe-area-inset-left)) max(1.25rem, env(safe-area-inset-right)); display: grid; gap: 3.5rem; }
   .home > * { min-width: 0; }
@@ -258,11 +258,11 @@
 <ol>
 <li><a class="user" href="01-syscalls.html"><div class="meta"><span>01 · пространство пользователя</span><span>практика 01-fds</span></div><h3>Системные вызовы и файловые дескрипторы</h3><p>Что такое системный вызов, файловый API на C и три таблицы за каждым fd: таблица дескрипторов, описание открытого файла, inode.</p></a></li>
 <li><a class="block" href="02-blocks.html"><div class="meta"><span>02 · блочный уровень</span><span>практика 02-blocks</span></div><h3>Блочные устройства и адресация</h3><p>Секторы, LBA и блоки; HDD, SSD и очереди NVMe; блочный уровень ядра; кэши записи, FLUSH и FUA.</p></a></li>
-<li><a class="fs" href="03-ondisk.html"><div class="meta"><span>03 · файловая система</span><span>практика 03-ondisk</span></div><h3>Внутри образа ext4</h3><p>Суперблок, группы блоков, inode, экстенты, каталоги и журнал, прочитанные байт за байтом программой, которую вы сами скомпилируете.</p></a></li>
-<li><a class="fs" href="04-btrees.html"><div class="meta"><span>04 · файловая система</span><span>практика 04-btrees</span></div><h3>B-деревья на практике</h3><p>Почему дискам нужны широкие и низкие деревья и где они живут: экстенты и htree в ext4, XFS, btrfs, базы данных. С живым B+-деревом.</p></a></li>
-<li><a class="kernel" href="05-vfs-cache.html"><div class="meta"><span>05 · ядро</span><span>практика 05-cache</span></div><h3>VFS и кэши</h3><p>Как диспетчеризуется <code>read()</code>, dcache и страничный кэш, обратная запись, <code>fsync</code>, <code>O_DIRECT</code> и что значит «надёжно записано».</p></a></li>
+<li><a class="fs" href="03-ondisk.html"><div class="meta"><span>03 · файловая система</span><span>практика 03-ondisk</span></div><h3>Формат ext4 на диске</h3><p>Суперблок, группы блоков, inode, экстенты, каталоги и журнал, прочитанные байт за байтом программой, которую вы сами скомпилируете.</p></a></li>
+<li><a class="fs" href="04-btrees.html"><div class="meta"><span>04 · файловая система</span><span>практика 04-btrees</span></div><h3>B-деревья в файловых системах и базах данных</h3><p>Почему дискам нужны широкие и низкие деревья и где они живут: экстенты и htree в ext4, XFS, btrfs, базы данных. С живым B+-деревом.</p></a></li>
+<li><a class="kernel" href="05-vfs-cache.html"><div class="meta"><span>05 · ядро</span><span>практика 05-cache</span></div><h3>VFS и страничный кэш</h3><p>Как диспетчеризуется <code>read()</code>, dcache и страничный кэш, обратная запись, <code>fsync</code>, <code>O_DIRECT</code> и что значит «надёжно записано».</p></a></li>
 <li><a class="net" href="06-nfs.html"><div class="meta"><span>06 · сеть</span><span>практика 06-nfs (A)</span></div><h3>NFS от v3 до 4.2</h3><p>RPC и хэндлы файлов, v3 без состояния, v4 с состоянием, сессии и pNFS в 4.1 и каждая возможность 4.2, привязанная к системному вызову, который её использует.</p></a></li>
-<li><a class="net" href="07-nfs-caching.html"><div class="meta"><span>07 · сеть</span><span>практика 06-nfs (B)</span></div><h3>Кэширование по сети</h3><p>Тайм-ауты атрибутов, close-to-open, нестабильные записи и COMMIT, делегирования и их отзыв, FS-Cache и то, как другие системы поддерживают согласованность кэшей.</p></a></li>
+<li><a class="net" href="07-nfs-caching.html"><div class="meta"><span>07 · сеть</span><span>практика 06-nfs (B)</span></div><h3>Кэширование и согласованность в клиенте NFS</h3><p>Тайм-ауты атрибутов, close-to-open, нестабильные записи и COMMIT, делегирования и их отзыв, FS-Cache и то, как другие системы поддерживают согласованность кэшей.</p></a></li>
 <li><a class="net" href="08-rdma.html"><div class="meta"><span>08 · сеть</span><span>практика 07-rdma</span></div><h3>RDMA и NFS поверх RDMA</h3><p>Verbs, пары очередей и регистрация памяти; InfiniBand, RoCE и iWARP; как RPC-over-RDMA перемещает данные NFS с помощью чанков чтения и записи.</p></a></li>
 <li><a class="net" href="09-distributed.html"><div class="meta"><span>09 · сеть</span><span>практика 08-distributed</span></div><h3>Распределённые файловые системы</h3><p>Серверы метаданных и чередование, CRUSH и согласованное хеширование, репликация и помехоустойчивое кодирование, блокировки и аренды, отказы и восстановление.</p></a></li>
 </ol>
@@ -308,7 +308,7 @@
 с <a href="01-syscalls.html">урока 01</a>.
 </footer>
 </main>
-<script src="../search.js?v=2"></script>
+<script src="../search.js?v=3"></script>
 <script src="../course.js?v=11"></script>
 
 </body></html>

@@ -1,0 +1,1082 @@
+{
+  "page": "08-rdma.html",
+  "sources": {
+    "k-napi": {
+      "url": "https://docs.kernel.org/networking/napi.html#napi",
+      "title": "NAPI, The Linux Kernel documentation",
+      "where": {"en": "section NAPI", "ru": "раздел NAPI"}
+    },
+    "k-msgzc": {
+      "url": "https://docs.kernel.org/networking/msg_zerocopy.html#opportunity-and-caveats",
+      "title": "MSG_ZEROCOPY, The Linux Kernel documentation",
+      "where": {"en": "section Opportunity and Caveats", "ru": "раздел Opportunity and Caveats"}
+    },
+    "guo-1": {
+      "url": "https://www.microsoft.com/en-us/research/wp-content/uploads/2016/11/rdma_sigcomm2016.pdf",
+      "title": "Guo et al., RDMA over Commodity Ethernet at Scale (SIGCOMM 2016)",
+      "where": {"en": "section 1, Introduction", "ru": "раздел 1, Introduction"}
+    },
+    "guo-2": {
+      "url": "https://www.microsoft.com/en-us/research/wp-content/uploads/2016/11/rdma_sigcomm2016.pdf",
+      "title": "Guo et al., RDMA over Commodity Ethernet at Scale (SIGCOMM 2016)",
+      "where": {"en": "section 2, Background: PFC and buffer reservation", "ru": "раздел 2, Background: PFC and buffer reservation"}
+    },
+    "k-tso": {
+      "url": "https://docs.kernel.org/networking/segmentation-offloads.html#tcp-segmentation-offload",
+      "title": "Segmentation Offloads, The Linux Kernel documentation",
+      "where": {"en": "section TCP Segmentation Offload", "ru": "раздел TCP Segmentation Offload"}
+    },
+    "k-gro": {
+      "url": "https://docs.kernel.org/networking/segmentation-offloads.html#generic-receive-offload",
+      "title": "Segmentation Offloads, The Linux Kernel documentation",
+      "where": {"en": "section Generic Receive Offload", "ru": "раздел Generic Receive Offload"}
+    },
+    "nv-glossary": {
+      "url": "https://docs.nvidia.com/rdma-aware-networks-programming-user-manual-1-7.pdf",
+      "title": "RDMA Aware Networks Programming User Manual, Rev 1.7 (NVIDIA)",
+      "where": {"en": "chapter 1, Glossary", "ru": "глава 1, Glossary"}
+    },
+    "nv-2-4": {
+      "url": "https://docs.nvidia.com/rdma-aware-networks-programming-user-manual-1-7.pdf",
+      "title": "RDMA Aware Networks Programming User Manual, Rev 1.7 (NVIDIA)",
+      "where": {"en": "section 2.4, Comparison of RDMA Technologies", "ru": "раздел 2.4, Comparison of RDMA Technologies"}
+    },
+    "nv-2-5": {
+      "url": "https://docs.nvidia.com/rdma-aware-networks-programming-user-manual-1-7.pdf",
+      "title": "RDMA Aware Networks Programming User Manual, Rev 1.7 (NVIDIA)",
+      "where": {"en": "section 2.5, Key Components (Subnet Manager, Switches)", "ru": "раздел 2.5, Key Components (Subnet Manager, Switches)"}
+    },
+    "nv-3": {
+      "url": "https://docs.nvidia.com/rdma-aware-networks-programming-user-manual-1-7.pdf",
+      "title": "RDMA Aware Networks Programming User Manual, Rev 1.7 (NVIDIA)",
+      "where": {"en": "chapter 3, RDMA-Aware Programming Overview (introduction)", "ru": "глава 3, RDMA-Aware Programming Overview (вступление)"}
+    },
+    "nv-3-1": {
+      "url": "https://docs.nvidia.com/rdma-aware-networks-programming-user-manual-1-7.pdf",
+      "title": "RDMA Aware Networks Programming User Manual, Rev 1.7 (NVIDIA)",
+      "where": {"en": "section 3.1, Available Communication Operations", "ru": "раздел 3.1, Available Communication Operations"}
+    },
+    "nv-3-2": {
+      "url": "https://docs.nvidia.com/rdma-aware-networks-programming-user-manual-1-7.pdf",
+      "title": "RDMA Aware Networks Programming User Manual, Rev 1.7 (NVIDIA)",
+      "where": {"en": "section 3.2, Transport Modes", "ru": "раздел 3.2, Transport Modes"}
+    },
+    "nv-3-3-2": {
+      "url": "https://docs.nvidia.com/rdma-aware-networks-programming-user-manual-1-7.pdf",
+      "title": "RDMA Aware Networks Programming User Manual, Rev 1.7 (NVIDIA)",
+      "where": {"en": "section 3.3.2, Receive Request (RR)", "ru": "раздел 3.3.2, Receive Request (RR)"}
+    },
+    "nv-3-3-4": {
+      "url": "https://docs.nvidia.com/rdma-aware-networks-programming-user-manual-1-7.pdf",
+      "title": "RDMA Aware Networks Programming User Manual, Rev 1.7 (NVIDIA)",
+      "where": {"en": "section 3.3.4, Memory Registration", "ru": "раздел 3.3.4, Memory Registration"}
+    },
+    "nv-3-3-5": {
+      "url": "https://docs.nvidia.com/rdma-aware-networks-programming-user-manual-1-7.pdf",
+      "title": "RDMA Aware Networks Programming User Manual, Rev 1.7 (NVIDIA)",
+      "where": {"en": "section 3.3.5, Memory Window", "ru": "раздел 3.3.5, Memory Window"}
+    },
+    "nv-3-3-11": {
+      "url": "https://docs.nvidia.com/rdma-aware-networks-programming-user-manual-1-7.pdf",
+      "title": "RDMA Aware Networks Programming User Manual, Rev 1.7 (NVIDIA)",
+      "where": {"en": "section 3.3.11, Polling", "ru": "раздел 3.3.11, Polling"}
+    },
+    "nv-3-4": {
+      "url": "https://docs.nvidia.com/rdma-aware-networks-programming-user-manual-1-7.pdf",
+      "title": "RDMA Aware Networks Programming User Manual, Rev 1.7 (NVIDIA)",
+      "where": {"en": "section 3.4, Typical Application, step 8", "ru": "раздел 3.4, Typical Application, шаг 8"}
+    },
+    "nv-4-3-2": {
+      "url": "https://docs.nvidia.com/rdma-aware-networks-programming-user-manual-1-7.pdf",
+      "title": "RDMA Aware Networks Programming User Manual, Rev 1.7 (NVIDIA)",
+      "where": {"en": "section 4.3.2, ibv_query_port (max_mtu)", "ru": "раздел 4.3.2, ibv_query_port (max_mtu)"}
+    },
+    "nv-4-3-5": {
+      "url": "https://docs.nvidia.com/rdma-aware-networks-programming-user-manual-1-7.pdf",
+      "title": "RDMA Aware Networks Programming User Manual, Rev 1.7 (NVIDIA)",
+      "where": {"en": "section 4.3.5, ibv_alloc_pd", "ru": "раздел 4.3.5, ibv_alloc_pd"}
+    },
+    "nv-4-4-11": {
+      "url": "https://docs.nvidia.com/rdma-aware-networks-programming-user-manual-1-7.pdf",
+      "title": "RDMA Aware Networks Programming User Manual, Rev 1.7 (NVIDIA)",
+      "where": {"en": "section 4.4.11, ibv_create_xrc_rcv_qp", "ru": "раздел 4.4.11, ibv_create_xrc_rcv_qp"}
+    },
+    "nv-4-5": {
+      "url": "https://docs.nvidia.com/rdma-aware-networks-programming-user-manual-1-7.pdf",
+      "title": "RDMA Aware Networks Programming User Manual, Rev 1.7 (NVIDIA)",
+      "where": {"en": "section 4.5, Queue Pair Bringup (ibv_modify_qp), QP States", "ru": "раздел 4.5, Queue Pair Bringup (ibv_modify_qp), QP States"}
+    },
+    "nv-5-2-25": {
+      "url": "https://docs.nvidia.com/rdma-aware-networks-programming-user-manual-1-7.pdf",
+      "title": "RDMA Aware Networks Programming User Manual, Rev 1.7 (NVIDIA)",
+      "where": {"en": "section 5.2.25, rdma_create_qp", "ru": "раздел 5.2.25, rdma_create_qp"}
+    },
+    "k-ib-useraccess": {
+      "url": "https://elixir.bootlin.com/linux/v6.12/source/drivers/infiniband/Kconfig#L28",
+      "title": "drivers/infiniband/Kconfig, Linux v6.12 source",
+      "where": {"en": "lines 28–38, config INFINIBAND_USER_ACCESS", "ru": "строки 28–38, config INFINIBAND_USER_ACCESS"}
+    },
+    "irn-2-1": {
+      "url": "https://arxiv.org/abs/1806.08159",
+      "title": "Mittal et al., Revisiting Network Support for RDMA (SIGCOMM 2018, extended version)",
+      "where": {"en": "section 2.1, Infiniband RDMA and RoCE", "ru": "раздел 2.1, Infiniband RDMA and RoCE"}
+    },
+    "irn-2-2": {
+      "url": "https://arxiv.org/abs/1806.08159",
+      "title": "Mittal et al., Revisiting Network Support for RDMA (SIGCOMM 2018, extended version)",
+      "where": {"en": "section 2.2, Priority Flow Control", "ru": "раздел 2.2, Priority Flow Control"}
+    },
+    "irn-2-3": {
+      "url": "https://arxiv.org/abs/1806.08159",
+      "title": "Mittal et al., Revisiting Network Support for RDMA (SIGCOMM 2018, extended version)",
+      "where": {"en": "section 2.3, iWARP vs RoCE", "ru": "раздел 2.3, iWARP vs RoCE"}
+    },
+    "nv-roce-modes": {
+      "url": "https://docs.nvidia.com/doca/sdk/rdma-over-converged-ethernet.pdf",
+      "title": "RDMA over Converged Ethernet, NVIDIA DOCA documentation",
+      "where": {"en": "section RoCE Modes (RoCEv1, RoCEv2)", "ru": "раздел RoCE Modes (RoCEv1, RoCEv2)"}
+    },
+    "nv-roce-gid": {
+      "url": "https://docs.nvidia.com/doca/sdk/rdma-over-converged-ethernet.pdf",
+      "title": "RDMA over Converged Ethernet, NVIDIA DOCA documentation",
+      "where": {"en": "section GID Table Population", "ru": "раздел GID Table Population"}
+    },
+    "iana-4791": {
+      "url": "https://www.iana.org/assignments/service-names-port-numbers/service-names-port-numbers.xhtml?search=4791",
+      "title": "Service Name and Transport Protocol Port Number Registry, IANA",
+      "where": {"en": "entry roce, 4791/udp", "ru": "запись roce, 4791/udp"}
+    },
+    "dcqcn-abs": {
+      "url": "https://conferences.sigcomm.org/sigcomm/2015/pdf/papers/p523.pdf",
+      "title": "Zhu et al., Congestion Control for Large-Scale RDMA Deployments (SIGCOMM 2015)",
+      "where": {"en": "Abstract", "ru": "аннотация (Abstract)"}
+    },
+    "dcqcn-3-1": {
+      "url": "https://conferences.sigcomm.org/sigcomm/2015/pdf/papers/p523.pdf",
+      "title": "Zhu et al., Congestion Control for Large-Scale RDMA Deployments (SIGCOMM 2015)",
+      "where": {"en": "section 3.1, Algorithm", "ru": "раздел 3.1, Algorithm"}
+    },
+    "dcqcn-4": {
+      "url": "https://conferences.sigcomm.org/sigcomm/2015/pdf/papers/p523.pdf",
+      "title": "Zhu et al., Congestion Control for Large-Scale RDMA Deployments (SIGCOMM 2015)",
+      "where": {"en": "section 4, Buffer Settings", "ru": "раздел 4, Buffer Settings"}
+    },
+    "rfc5044-abs": {
+      "url": "https://www.rfc-editor.org/rfc/rfc5044",
+      "title": "RFC 5044: Marker PDU Aligned Framing for TCP Specification",
+      "where": {"en": "Abstract", "ru": "аннотация (Abstract)"}
+    },
+    "opensm": {
+      "url": "https://manpages.debian.org/bookworm/opensm/opensm.8.en.html#DESCRIPTION",
+      "title": "opensm(8), Debian manual page",
+      "where": {"en": "DESCRIPTION", "ru": "раздел DESCRIPTION"}
+    },
+    "ibstat": {
+      "url": "https://man7.org/linux/man-pages/man8/ibstat.8.html#DESCRIPTION",
+      "title": "ibstat(8), Linux manual page",
+      "where": {"en": "DESCRIPTION", "ru": "раздел DESCRIPTION"}
+    },
+    "onyx-roce": {
+      "url": "https://networking-docs.nvidia.com/onyxum/3102202/rdma-over-converged-ethernet-roce",
+      "title": "RDMA Over Converged Ethernet (RoCE), NVIDIA Onyx User Manual",
+      "where": {"en": "sections RoCE Congestion Management and Configuring Simplified RoCE", "ru": "разделы RoCE Congestion Management и Configuring Simplified RoCE"}
+    },
+    "cx7-rn": {
+      "url": "https://networking-docs.nvidia.com/connectx7fwrn/28401000/bug-fixes-in-this-firmware-version",
+      "title": "ConnectX-7 Firmware Release Notes v28.40.1000, Bug Fixes in this Firmware Version (NVIDIA)",
+      "where": {"en": "issue 3708035", "ru": "запись 3708035"}
+    },
+    "k-rxe-kconfig": {
+      "url": "https://elixir.bootlin.com/linux/v6.12/source/drivers/infiniband/sw/rxe/Kconfig#L2",
+      "title": "drivers/infiniband/sw/rxe/Kconfig, Linux v6.12 source",
+      "where": {"en": "lines 2–16, config RDMA_RXE", "ru": "строки 2–16, config RDMA_RXE"}
+    },
+    "k-rxe-net": {
+      "url": "https://elixir.bootlin.com/linux/v6.12/source/drivers/infiniband/sw/rxe/rxe_net.c#L642",
+      "title": "drivers/infiniband/sw/rxe/rxe_net.c, Linux v6.12 source",
+      "where": {"en": "lines 642–645, rxe_net_ipv4_init()", "ru": "строки 642–645, rxe_net_ipv4_init()"}
+    },
+    "rdmacore-readme": {
+      "url": "https://github.com/linux-rdma/rdma-core/blob/v50.0/README.md",
+      "title": "rdma-core README (v50.0)",
+      "where": {"en": "opening paragraph", "ru": "первый абзац"}
+    },
+    "k-core-makefile": {
+      "url": "https://elixir.bootlin.com/linux/v6.12/source/drivers/infiniband/core/Makefile#L5",
+      "title": "drivers/infiniband/core/Makefile, Linux v6.12 source",
+      "where": {"en": "line 5", "ru": "строка 5"}
+    },
+    "k-frwr-post": {
+      "url": "https://elixir.bootlin.com/linux/v6.12/source/net/sunrpc/xprtrdma/frwr_ops.c#L417",
+      "title": "net/sunrpc/xprtrdma/frwr_ops.c, Linux v6.12 source",
+      "where": {"en": "line 417, frwr_send()", "ru": "строка 417, frwr_send()"}
+    },
+    "m-create-qp": {
+      "url": "https://man7.org/linux/man-pages/man3/ibv_create_qp.3.html#DESCRIPTION",
+      "title": "ibv_create_qp(3), rdma-core manual page",
+      "where": {"en": "DESCRIPTION", "ru": "раздел DESCRIPTION"}
+    },
+    "k-ib-verbs-qpn": {
+      "url": "https://elixir.bootlin.com/linux/v6.12/source/include/rdma/ib_verbs.h#L808",
+      "title": "include/rdma/ib_verbs.h, Linux v6.12 source",
+      "where": {"en": "line 808, IB_QPN_MASK", "ru": "строка 808, IB_QPN_MASK"}
+    },
+    "m-post-send": {
+      "url": "https://man7.org/linux/man-pages/man3/ibv_post_send.3.html#DESCRIPTION",
+      "title": "ibv_post_send(3), rdma-core manual page",
+      "where": {"en": "DESCRIPTION", "ru": "раздел DESCRIPTION"}
+    },
+    "m-poll-cq": {
+      "url": "https://man7.org/linux/man-pages/man3/ibv_poll_cq.3.html#DESCRIPTION",
+      "title": "ibv_poll_cq(3), rdma-core manual page",
+      "where": {"en": "DESCRIPTION, struct ibv_wc", "ru": "раздел DESCRIPTION, struct ibv_wc"}
+    },
+    "m-reg-mr-ret": {
+      "url": "https://man7.org/linux/man-pages/man3/ibv_reg_mr.3.html#RETURN_VALUE",
+      "title": "ibv_reg_mr(3), rdma-core manual page",
+      "where": {"en": "RETURN VALUE", "ru": "раздел RETURN VALUE"}
+    },
+    "m-reg-mr-desc": {
+      "url": "https://man7.org/linux/man-pages/man3/ibv_reg_mr.3.html#DESCRIPTION",
+      "title": "ibv_reg_mr(3), rdma-core manual page",
+      "where": {"en": "DESCRIPTION, access flags", "ru": "раздел DESCRIPTION, флаги доступа"}
+    },
+    "kalia-3-1": {
+      "url": "https://www.usenix.org/system/files/conference/atc16/atc16_paper-kalia.pdf",
+      "title": "Kalia, Kaminsky, Andersen, Design Guidelines for High Performance RDMA Systems (USENIX ATC 2016)",
+      "where": {"en": "section 3.1, Reduce CPU-initiated MMIOs", "ru": "раздел 3.1, Reduce CPU-initiated MMIOs"}
+    },
+    "kalia-3-4": {
+      "url": "https://www.usenix.org/system/files/conference/atc16/atc16_paper-kalia.pdf",
+      "title": "Kalia, Kaminsky, Andersen, Design Guidelines for High Performance RDMA Systems (USENIX ATC 2016)",
+      "where": {"en": "section 3.4, Avoid NIC cache misses", "ru": "раздел 3.4, Avoid NIC cache misses"}
+    },
+    "nvme-3-3": {
+      "url": "https://nvmexpress.org/wp-content/uploads/NVM-Express-RDMA-Transport-Specification-1.0c-2023.12.27-Ratified.pdf",
+      "title": "NVM Express RDMA Transport Specification, Revision 1.0c",
+      "where": {"en": "section 3.3, Data Transfer Model", "ru": "раздел 3.3, Data Transfer Model"}
+    },
+    "m-modify-qp": {
+      "url": "https://man7.org/linux/man-pages/man3/ibv_modify_qp.3.html#NOTES",
+      "title": "ibv_modify_qp(3), rdma-core manual page",
+      "where": {"en": "NOTES, required attributes per state transition", "ru": "раздел NOTES, обязательные атрибуты для каждого перехода"}
+    },
+    "rc-pingpong": {
+      "url": "https://github.com/linux-rdma/rdma-core/blob/v50.0/libibverbs/man/ibv_rc_pingpong.1",
+      "title": "ibv_rc_pingpong(1), rdma-core manual page (v50.0)",
+      "where": {"en": "OPTIONS, -p", "ru": "раздел OPTIONS, -p"}
+    },
+    "perftest-readme": {
+      "url": "https://github.com/linux-rdma/perftest/blob/v4.5-0.20/README",
+      "title": "perftest README (v4.5-0.20)",
+      "where": {"en": "list of common options", "ru": "список общих параметров"}
+    },
+    "m-rdma-cm": {
+      "url": "https://man7.org/linux/man-pages/man7/rdma_cm.7.html#CLIENT_OPERATION",
+      "title": "rdma_cm(7), rdma-core manual page",
+      "where": {"en": "CLIENT OPERATION", "ru": "раздел CLIENT OPERATION"}
+    },
+    "m-rdma-connect": {
+      "url": "https://man7.org/linux/man-pages/man3/rdma_connect.3.html#CONNECTION_PROPERTIES",
+      "title": "rdma_connect(3), rdma-core manual page",
+      "where": {"en": "CONNECTION PROPERTIES", "ru": "раздел CONNECTION PROPERTIES"}
+    },
+    "k-verbs-private": {
+      "url": "https://elixir.bootlin.com/linux/v6.12/source/net/sunrpc/xprtrdma/verbs.c#L443",
+      "title": "net/sunrpc/xprtrdma/verbs.c, Linux v6.12 source",
+      "where": {"en": "lines 443–454, rpcrdma_ep_create()", "ru": "строки 443–454, rpcrdma_ep_create()"}
+    },
+    "m-mlx5dv-qp": {
+      "url": "https://man7.org/linux/man-pages/man3/mlx5dv_create_qp.3.html#ARGUMENTS",
+      "title": "mlx5dv_create_qp(3), mlx5 Programmer's Manual (rdma-core)",
+      "where": {"en": "ARGUMENTS, dc_type", "ru": "раздел ARGUMENTS, dc_type"}
+    },
+    "rfc8166-2.3.2": {
+      "url": "https://www.rfc-editor.org/rfc/rfc8166.html#section-2.3.2",
+      "title": "RFC 8166: Remote Direct Memory Access Transport for Remote Procedure Call Version 1",
+      "where": {"en": "section 2.3.2, RDMA Transport Requirements", "ru": "раздел 2.3.2, RDMA Transport Requirements"}
+    },
+    "k-rxe-comp": {
+      "url": "https://elixir.bootlin.com/linux/v6.12/source/drivers/infiniband/sw/rxe/rxe_comp.c#L799",
+      "title": "drivers/infiniband/sw/rxe/rxe_comp.c, Linux v6.12 source",
+      "where": {"en": "lines 799–803, case COMPST_RNR_RETRY", "ru": "строки 799–803, case COMPST_RNR_RETRY"}
+    },
+    "redmark-4-2": {
+      "url": "https://www.usenix.org/system/files/sec21-rothenberger.pdf",
+      "title": "Rothenberger et al., ReDMArk: Bypassing RDMA Security Mechanisms (USENIX Security 2021)",
+      "where": {"en": "section 4.2, Memory Protection Keys", "ru": "раздел 4.2, Memory Protection Keys"}
+    },
+    "redmark-1": {
+      "url": "https://www.usenix.org/system/files/sec21-rothenberger.pdf",
+      "title": "Rothenberger et al., ReDMArk: Bypassing RDMA Security Mechanisms (USENIX Security 2021)",
+      "where": {"en": "section 1, Introduction", "ru": "раздел 1, Introduction"}
+    },
+    "rfc5040-5.5": {
+      "url": "https://www.rfc-editor.org/rfc/rfc5040.html#section-5.5",
+      "title": "RFC 5040: A Remote Direct Memory Access Protocol Specification",
+      "where": {"en": "section 5.5, Ordering and Completions", "ru": "раздел 5.5, Ordering and Completions"}
+    },
+    "nprdma-2": {
+      "url": "https://arxiv.org/abs/2310.11062",
+      "title": "Shen et al., NP-RDMA: Using Commodity RDMA without Pinning Memory (arXiv 2310.11062)",
+      "where": {"en": "section 2, Background (Memory Pinning in RDMA; Traditional Memory Management)", "ru": "раздел 2, Background (Memory Pinning in RDMA; Traditional Memory Management)"}
+    },
+    "rfc8166-4.4": {
+      "url": "https://www.rfc-editor.org/rfc/rfc8166.html#section-4.4",
+      "title": "RFC 8166: Remote Direct Memory Access Transport for Remote Procedure Call Version 1",
+      "where": {"en": "section 4.4, Memory Registration", "ru": "раздел 4.4, Memory Registration"}
+    },
+    "ucx-memhooks": {
+      "url": "https://github.com/openucx/ucx/wiki/Memory-hooks",
+      "title": "Memory hooks, openucx/ucx wiki",
+      "where": {"en": "introduction", "ru": "вступление"}
+    },
+    "k-frwr-ops": {
+      "url": "https://elixir.bootlin.com/linux/v6.12/source/net/sunrpc/xprtrdma/frwr_ops.c#L15",
+      "title": "net/sunrpc/xprtrdma/frwr_ops.c, Linux v6.12 source",
+      "where": {"en": "lines 15–20, comment Normal operation", "ru": "строки 15–20, комментарий Normal operation"}
+    },
+    "rfc8797-3.2": {
+      "url": "https://www.rfc-editor.org/rfc/rfc8797.html#section-3.2",
+      "title": "RFC 8797: Remote Direct Memory Access - Connection Manager (RDMA-CM) Private Data for RPC-over-RDMA Version 1",
+      "where": {"en": "section 3.2, Remote Invalidation", "ru": "раздел 3.2, Remote Invalidation"}
+    },
+    "k-transport-memreg": {
+      "url": "https://elixir.bootlin.com/linux/v6.12/source/net/sunrpc/xprtrdma/transport.c#L70",
+      "title": "net/sunrpc/xprtrdma/transport.c, Linux v6.12 source",
+      "where": {"en": "line 70, xprt_rdma_memreg_strategy", "ru": "строка 70, xprt_rdma_memreg_strategy"}
+    },
+    "k-ib-verbs-fastreg": {
+      "url": "https://elixir.bootlin.com/linux/v6.12/source/include/rdma/ib_verbs.h#L4321",
+      "title": "include/rdma/ib_verbs.h, Linux v6.12 source",
+      "where": {"en": "lines 4321–4331, ib_update_fast_reg_key()", "ru": "строки 4321–4331, ib_update_fast_reg_key()"}
+    },
+    "rfc8166-8.1.3": {
+      "url": "https://www.rfc-editor.org/rfc/rfc8166.html#section-8.1.3",
+      "title": "RFC 8166: Remote Direct Memory Access Transport for Remote Procedure Call Version 1",
+      "where": {"en": "section 8.1.3, Memory Protection", "ru": "раздел 8.1.3, Memory Protection"}
+    },
+    "rfc8166-3.3.1": {
+      "url": "https://www.rfc-editor.org/rfc/rfc8166.html#section-3.3.1",
+      "title": "RFC 8166: Remote Direct Memory Access Transport for Remote Procedure Call Version 1",
+      "where": {"en": "section 3.3.1, RPC-over-RDMA Credits", "ru": "раздел 3.3.1, RPC-over-RDMA Credits"}
+    },
+    "m-req-notify": {
+      "url": "https://man7.org/linux/man-pages/man3/ibv_req_notify_cq.3.html#DESCRIPTION",
+      "title": "ibv_req_notify_cq(3), rdma-core manual page",
+      "where": {"en": "DESCRIPTION", "ru": "раздел DESCRIPTION"}
+    },
+    "m-get-cq-event": {
+      "url": "https://man7.org/linux/man-pages/man3/ibv_get_cq_event.3.html#DESCRIPTION",
+      "title": "ibv_get_cq_event(3), rdma-core manual page",
+      "where": {"en": "DESCRIPTION", "ru": "раздел DESCRIPTION"}
+    },
+    "fasst-2-2": {
+      "url": "https://www.usenix.org/system/files/conference/osdi16/osdi16-kalia.pdf",
+      "title": "Kalia, Kaminsky, Andersen, FaSST: Fast, Scalable and Simple Distributed Transactions with Two-Sided (RDMA) Datagram RPCs (OSDI 2016)",
+      "where": {"en": "section 2.2, RDMA", "ru": "раздел 2.2, RDMA"}
+    },
+    "rfc8166-4.5.3": {
+      "url": "https://www.rfc-editor.org/rfc/rfc8166.html#section-4.5.3",
+      "title": "RFC 8166: Remote Direct Memory Access Transport for Remote Procedure Call Version 1",
+      "where": {"en": "section 4.5.3, Responder RDMA Operational Errors", "ru": "раздел 4.5.3, Responder RDMA Operational Errors"}
+    },
+    "rfc7145-abs": {
+      "url": "https://www.rfc-editor.org/rfc/rfc7145",
+      "title": "RFC 7145: Internet Small Computer System Interface (iSCSI) Extensions for the Remote Direct Memory Access (RDMA) Specification",
+      "where": {"en": "Abstract", "ru": "аннотация (Abstract)"}
+    },
+    "k-srp-kconfig": {
+      "url": "https://elixir.bootlin.com/linux/v6.12/source/drivers/infiniband/ulp/srp/Kconfig#L2",
+      "title": "drivers/infiniband/ulp/srp/Kconfig, Linux v6.12 source",
+      "where": {"en": "lines 2–9, config INFINIBAND_SRP", "ru": "строки 2–9, config INFINIBAND_SRP"}
+    },
+    "ms-smbdirect": {
+      "url": "https://learn.microsoft.com/en-us/windows-server/storage/file-server/smb-direct",
+      "title": "Improve performance of a file server with SMB Direct, Microsoft Learn",
+      "where": {"en": "introduction", "ru": "вступление"}
+    },
+    "k-cifs-kconfig": {
+      "url": "https://elixir.bootlin.com/linux/v6.12/source/fs/smb/client/Kconfig#L183",
+      "title": "fs/smb/client/Kconfig, Linux v6.12 source",
+      "where": {"en": "lines 183–189, config CIFS_SMB_DIRECT", "ru": "строки 183–189, config CIFS_SMB_DIRECT"}
+    },
+    "ksmbd-doc": {
+      "url": "https://docs.kernel.org/filesystems/smb/ksmbd.html#ksmbd-feature-status",
+      "title": "KSMBD - SMB3 Kernel Server, The Linux Kernel documentation",
+      "where": {"en": "section KSMBD Feature Status", "ru": "раздел KSMBD Feature Status"}
+    },
+    "lustre-lnet": {
+      "url": "https://wiki.lustre.org/Lustre_Networking_(LNET)_Overview",
+      "title": "Lustre Networking (LNET) Overview, Lustre Wiki",
+      "where": {"en": "section on Lustre Network Drivers (LND)", "ru": "раздел о Lustre Network Drivers (LND)"}
+    },
+    "ibm-redp5658": {
+      "url": "https://www.redbooks.ibm.com/redpapers/pdfs/redp5658.pdf",
+      "title": "Highly Efficient Data Access with RoCE on IBM Elastic Storage Systems and IBM Spectrum Scale (IBM Redpaper REDP-5658)",
+      "where": {"en": "chapter 2, IBM Spectrum Scale Support Matrix", "ru": "глава 2, IBM Spectrum Scale Support Matrix"}
+    },
+    "beegfs-rdma": {
+      "url": "https://doc.beegfs.io/8.2/advanced_topics/rdma_support.html",
+      "title": "RDMA Support, BeeGFS Documentation 8.2",
+      "where": {"en": "introduction", "ru": "вступление"}
+    },
+    "gds-intro": {
+      "url": "https://docs.nvidia.com/gpudirect-storage/overview-guide/index.html#introduction",
+      "title": "NVIDIA Magnum IO GPUDirect Storage Overview Guide",
+      "where": {"en": "section 1.1, Introduction", "ru": "раздел 1.1, Introduction"}
+    },
+    "gds-explicit": {
+      "url": "https://docs.nvidia.com/gpudirect-storage/overview-guide/index.html#explicit-and-direct",
+      "title": "NVIDIA Magnum IO GPUDirect Storage Overview Guide",
+      "where": {"en": "section 1.2.1, Explicit and Direct", "ru": "раздел 1.2.1, Explicit and Direct"}
+    },
+    "k-xprtsock": {
+      "url": "https://elixir.bootlin.com/linux/v6.12/source/net/sunrpc/xprtsock.c#L3",
+      "title": "net/sunrpc/xprtsock.c, Linux v6.12 source",
+      "where": {"en": "lines 3–5, file header", "ru": "строки 3–5, заголовок файла"}
+    },
+    "k-xprtrdma-makefile": {
+      "url": "https://elixir.bootlin.com/linux/v6.12/source/net/sunrpc/xprtrdma/Makefile#L2",
+      "title": "net/sunrpc/xprtrdma/Makefile, Linux v6.12 source",
+      "where": {"en": "lines 2–7", "ru": "строки 2–7"}
+    },
+    "k-module": {
+      "url": "https://elixir.bootlin.com/linux/v6.12/source/net/sunrpc/xprtrdma/module.c#L24",
+      "title": "net/sunrpc/xprtrdma/module.c, Linux v6.12 source",
+      "where": {"en": "lines 24–27, module aliases", "ru": "строки 24–27, псевдонимы модуля"}
+    },
+    "rfc8166-abs": {
+      "url": "https://www.rfc-editor.org/rfc/rfc8166",
+      "title": "RFC 8166: Remote Direct Memory Access Transport for Remote Procedure Call Version 1",
+      "where": {"en": "Abstract", "ru": "аннотация (Abstract)"}
+    },
+    "rfc8267-9": {
+      "url": "https://www.rfc-editor.org/rfc/rfc8267.html#section-9",
+      "title": "RFC 8267: Network File System (NFS) Upper-Layer Binding to RPC-over-RDMA Version 1",
+      "where": {"en": "section 9, IANA Considerations", "ru": "раздел 9, IANA Considerations"}
+    },
+    "rfc8267-6.3": {
+      "url": "https://www.rfc-editor.org/rfc/rfc8267.html#section-6.3",
+      "title": "RFC 8267: Network File System (NFS) Upper-Layer Binding to RPC-over-RDMA Version 1",
+      "where": {"en": "section 6.3, RPC Binding Considerations", "ru": "раздел 6.3, RPC Binding Considerations"}
+    },
+    "rfc8797-4": {
+      "url": "https://www.rfc-editor.org/rfc/rfc8797.html#section-4",
+      "title": "RFC 8797: Remote Direct Memory Access - Connection Manager (RDMA-CM) Private Data for RPC-over-RDMA Version 1",
+      "where": {"en": "section 4, Private Data Message Format", "ru": "раздел 4, Private Data Message Format"}
+    },
+    "rfc8166-4": {
+      "url": "https://www.rfc-editor.org/rfc/rfc8166.html#section-4",
+      "title": "RFC 8166: Remote Direct Memory Access Transport for Remote Procedure Call Version 1",
+      "where": {"en": "section 4, RPC-over-RDMA in Operation", "ru": "раздел 4, RPC-over-RDMA in Operation"}
+    },
+    "rfc8166-3.5.1": {
+      "url": "https://www.rfc-editor.org/rfc/rfc8166.html#section-3.5.1",
+      "title": "RFC 8166: Remote Direct Memory Access Transport for Remote Procedure Call Version 1",
+      "where": {"en": "section 3.5.1, Short Messages", "ru": "раздел 3.5.1, Short Messages"}
+    },
+    "rfc8166-3.4.3": {
+      "url": "https://www.rfc-editor.org/rfc/rfc8166.html#section-3.4.3",
+      "title": "RFC 8166: Remote Direct Memory Access Transport for Remote Procedure Call Version 1",
+      "where": {"en": "section 3.4.3, RDMA Segments", "ru": "раздел 3.4.3, RDMA Segments"}
+    },
+    "rfc8166-3.4.4": {
+      "url": "https://www.rfc-editor.org/rfc/rfc8166.html#section-3.4.4",
+      "title": "RFC 8166: Remote Direct Memory Access Transport for Remote Procedure Call Version 1",
+      "where": {"en": "section 3.4.4, Chunks", "ru": "раздел 3.4.4, Chunks"}
+    },
+    "rfc8166-3.3.2": {
+      "url": "https://www.rfc-editor.org/rfc/rfc8166.html#section-3.3.2",
+      "title": "RFC 8166: Remote Direct Memory Access Transport for Remote Procedure Call Version 1",
+      "where": {"en": "section 3.3.2, Inline Threshold", "ru": "раздел 3.3.2, Inline Threshold"}
+    },
+    "rfc8166-3.3.3": {
+      "url": "https://www.rfc-editor.org/rfc/rfc8166.html#section-3.3.3",
+      "title": "RFC 8166: Remote Direct Memory Access Transport for Remote Procedure Call Version 1",
+      "where": {"en": "section 3.3.3, Initial Connection State", "ru": "раздел 3.3.3, Initial Connection State"}
+    },
+    "k-xprtrdma-h": {
+      "url": "https://elixir.bootlin.com/linux/v6.12/source/include/linux/sunrpc/xprtrdma.h#L56",
+      "title": "include/linux/sunrpc/xprtrdma.h, Linux v6.12 source",
+      "where": {"en": "lines 56–58, inline threshold constants", "ru": "строки 56–58, константы порога inline"}
+    },
+    "rfc8166-3.5.3": {
+      "url": "https://www.rfc-editor.org/rfc/rfc8166.html#section-3.5.3",
+      "title": "RFC 8166: Remote Direct Memory Access Transport for Remote Procedure Call Version 1",
+      "where": {"en": "section 3.5.3, Long Messages", "ru": "раздел 3.5.3, Long Messages"}
+    },
+    "rfc8166-3.4.5": {
+      "url": "https://www.rfc-editor.org/rfc/rfc8166.html#section-3.4.5",
+      "title": "RFC 8166: Remote Direct Memory Access Transport for Remote Procedure Call Version 1",
+      "where": {"en": "section 3.4.5, Read Chunks", "ru": "раздел 3.4.5, Read Chunks"}
+    },
+    "rfc8166-3.4.6": {
+      "url": "https://www.rfc-editor.org/rfc/rfc8166.html#section-3.4.6",
+      "title": "RFC 8166: Remote Direct Memory Access Transport for Remote Procedure Call Version 1",
+      "where": {"en": "section 3.4.6, Write Chunks", "ru": "раздел 3.4.6, Write Chunks"}
+    },
+    "rfc8267-6.1": {
+      "url": "https://www.rfc-editor.org/rfc/rfc8267.html#section-6.1",
+      "title": "RFC 8267: Network File System (NFS) Upper-Layer Binding to RPC-over-RDMA Version 1",
+      "where": {"en": "section 6.1, DDP-Eligibility", "ru": "раздел 6.1, DDP-Eligibility"}
+    },
+    "rfc8166-3.4.2": {
+      "url": "https://www.rfc-editor.org/rfc/rfc8166.html#section-3.4.2",
+      "title": "RFC 8166: Remote Direct Memory Access Transport for Remote Procedure Call Version 1",
+      "where": {"en": "section 3.4.2, DDP-Eligibility", "ru": "раздел 3.4.2, DDP-Eligibility"}
+    },
+    "k-svc-sendto": {
+      "url": "https://elixir.bootlin.com/linux/v6.12/source/net/sunrpc/xprtrdma/svc_rdma_sendto.c#L68",
+      "title": "net/sunrpc/xprtrdma/svc_rdma_sendto.c, Linux v6.12 source",
+      "where": {"en": "lines 68–71, comment Page Management", "ru": "строки 68–71, комментарий Page Management"}
+    },
+    "k-svc-inv": {
+      "url": "https://elixir.bootlin.com/linux/v6.12/source/net/sunrpc/xprtrdma/svc_rdma_sendto.c#L897",
+      "title": "net/sunrpc/xprtrdma/svc_rdma_sendto.c, Linux v6.12 source",
+      "where": {"en": "lines 897–900, svc_rdma_send_reply_msg()", "ru": "строки 897–900, svc_rdma_send_reply_msg()"}
+    },
+    "rfc8797-3.1": {
+      "url": "https://www.rfc-editor.org/rfc/rfc8797.html#section-3.1",
+      "title": "RFC 8797: Remote Direct Memory Access - Connection Manager (RDMA-CM) Private Data for RPC-over-RDMA Version 1",
+      "where": {"en": "section 3.1, Inline Threshold Size", "ru": "раздел 3.1, Inline Threshold Size"}
+    },
+    "rfc8797-1": {
+      "url": "https://www.rfc-editor.org/rfc/rfc8797.html#section-1",
+      "title": "RFC 8797: Remote Direct Memory Access - Connection Manager (RDMA-CM) Private Data for RPC-over-RDMA Version 1",
+      "where": {"en": "section 1, Introduction", "ru": "раздел 1, Introduction"}
+    },
+    "dt-v2": {
+      "url": "https://datatracker.ietf.org/doc/draft-ietf-nfsv4-rpcrdma-version-two/",
+      "title": "draft-ietf-nfsv4-rpcrdma-version-two: RPC-over-RDMA Version 2 Protocol, IETF Datatracker",
+      "where": {"en": "document status and abstract", "ru": "статус документа и аннотация"}
+    },
+    "k-nfsrdma-doc": {
+      "url": "https://docs.kernel.org/admin-guide/nfs/nfs-rdma.html#nfs-rdma-setup",
+      "title": "Setting up NFS/RDMA, The Linux Kernel documentation",
+      "where": {"en": "section NFS/RDMA Setup", "ru": "раздел NFS/RDMA Setup"}
+    },
+    "m-rpc-nfsd": {
+      "url": "https://man7.org/linux/man-pages/man8/rpc.nfsd.8.html#CONFIGURATION_FILE",
+      "title": "rpc.nfsd(8), Linux manual page",
+      "where": {"en": "CONFIGURATION FILE", "ru": "раздел CONFIGURATION FILE"}
+    },
+    "m-nfs5": {
+      "url": "https://man7.org/linux/man-pages/man5/nfs.5.html#MOUNT_OPTIONS",
+      "title": "nfs(5), Linux manual page",
+      "where": {"en": "MOUNT OPTIONS, options for NFS version 4 only: proto", "ru": "раздел MOUNT OPTIONS, параметры только для NFS версии 4: proto"}
+    },
+    "k-transport-stats": {
+      "url": "https://elixir.bootlin.com/linux/v6.12/source/net/sunrpc/xprtrdma/transport.c#L668",
+      "title": "net/sunrpc/xprtrdma/transport.c, Linux v6.12 source",
+      "where": {"en": "lines 668–707, xprt_rdma_print_stats()", "ru": "строки 668–707, xprt_rdma_print_stats()"}
+    },
+    "rdmacore-rxe": {
+      "url": "https://github.com/linux-rdma/rdma-core/blob/v50.0/Documentation/rxe.md",
+      "title": "Configure Soft-RoCE (RXE), rdma-core documentation (v50.0)",
+      "where": {"en": "whole page", "ru": "вся страница"}
+    },
+    "k-sunrpc-kconfig": {
+      "url": "https://elixir.bootlin.com/linux/v6.12/source/net/sunrpc/Kconfig#L104",
+      "title": "net/sunrpc/Kconfig, Linux v6.12 source",
+      "where": {"en": "lines 104–114, config SUNRPC_XPRT_RDMA", "ru": "строки 104–114, config SUNRPC_XPRT_RDMA"}
+    },
+    "wslconfig": {
+      "url": "https://learn.microsoft.com/en-us/windows/wsl/wsl-config#configuration-settings-for-wslconfig",
+      "title": "Advanced settings configuration in WSL, Microsoft Learn",
+      "where": {"en": "section Configuration settings for .wslconfig", "ru": "раздел Configuration settings for .wslconfig"}
+    }
+  },
+  "cites": [
+    {"src": "k-napi",
+     "en": "or the kernel's NAPI poll loop notices new frames.",
+     "ru": "или цикл опроса NAPI в ядре замечает новые кадры.",
+     "quote": "In basic operation the device notifies the host about new events via an interrupt. The host then schedules a NAPI instance to process the events. The device may also be polled for events via NAPI without receiving interrupts first (busy polling)."},
+    {"src": "k-msgzc",
+     "en": "<code>sendfile</code>-style paths).",
+     "ru": "по пути в стиле <code>sendfile</code>).",
+     "quote": "Copying large buffers between user process and kernel can be expensive. Linux supports various interfaces that eschew copying, such as sendfile and splice."},
+    {"src": "guo-1",
+     "en": "and the per-packet protocol work needs several cores.",
+     "ru": "а обработка протокола для каждого пакета требует нескольких ядер.",
+     "quote": "sending at 40Gb/s using 8 TCP connections chews up 6% aggregate CPU time on a 32 core Intel Xeon E5-2690 Windows 2012R2 server. Receiving at 40Gb/s using 8 connections requires 12% aggregate CPU time."},
+    {"src": ["k-tso", "k-gro"],
+     "en": "Offloads such as TSO (the NIC splits large sends into packets) and GRO (the kernel merges received packets) cut the per-packet cost.",
+     "ru": "Разгрузки вроде TSO (карта сама режет большие отправки на пакеты) и GRO (ядро склеивает принятые пакеты) снижают стоимость в расчёте на пакет.",
+     "quote": {"k-tso": "TCP segmentation allows a device to segment a single frame into multiple frames with a data payload size specified in skb_shinfo()->gso_size.",
+               "k-gro": "Generic receive offload is the complement to GSO. Ideally any frame assembled by GRO should be segmented to create an identical sequence of frames using GSO"}},
+    {"src": "nv-2-4",
+     "en": "Segmentation, acknowledgements, retransmission and ordering are done in NIC hardware.",
+     "ru": "Разбиение на сегменты, подтверждения, повторная передача и упорядочивание выполняются в железе карты.",
+     "quote": "Once an application has requested transport of an RDMA Read or Write, the IB hardware segments the outbound message as needed into packets whose size is determined by the fabric path maximum transfer unit. … The IB Transport layer provides reliability and delivery guarantees."},
+    {"src": "nv-3-3-4",
+     "en": "Registration pins the pages and loads their addresses into the NIC's translation table.",
+     "ru": "Регистрация закрепляет страницы и загружает их адреса в таблицу трансляции карты.",
+     "quote": "The registration process pins the memory pages (to prevent the pages from being swapped out and to keep physical <-> virtual mapping). … The registration process writes the virtual to physical address table to the network adapter."},
+    {"src": ["nv-2-4", "k-ib-useraccess"],
+     "en": "No system call, no context switch.",
+     "ru": "Ни системного вызова, ни переключения контекста.",
+     "quote": {"nv-2-4": "However RDMA use the OS to establish a channel and then allows applications to directly exchange messages without further OS intervention.",
+               "k-ib-useraccess": "This enables the kernel side of userspace verbs and the userspace communication manager (CM). This allows userspace processes to set up connections and directly access InfiniBand hardware for fast-path operations."}},
+    {"src": "nv-2-4",
+     "en": "The same programming interface, called <b>verbs</b>, runs over three families of networks.",
+     "ru": "Один и тот же программный интерфейс, который называется <b>verbs</b>, работает поверх трёх семейств сетей.",
+     "quote": "Currently, there are three technologies that support RDMA: InfiniBand, Ethernet RoCE and Ethernet iWARP. All three technologies share a common user API which is defined in this document, but have different physical and link layers."},
+    {"src": "nv-glossary",
+     "en": "GID: 128-bit global ID, for routing between subnets",
+     "ru": "GID: 128-битный глобальный идентификатор для маршрутизации между подсетями",
+     "quote": "LID (Local IDentifier) A 16 bit address assigned to end nodes by the subnet manager. … GID (Global IDentifier) A 128-bit identifier used to identify a Port on a network adapter … GRH (Global Routing Header) A packet header used to deliver packets across a subnet boundary"},
+    {"src": ["irn-2-1", "nv-2-5"],
+     "en": "so switches do not drop packets under congestion",
+     "ru": "поэтому коммутаторы не отбрасывают пакеты при перегрузке",
+     "quote": {"irn-2-1": "RDMA has long been used by the HPC community in special-purpose Infiniband clusters that use credit-based flow control to make the network lossless",
+               "nv-2-5": "IB switches are conceptually similar to standard networking switches but are designed to meet IB performance requirements. They implement flow control of the IB Link Layer to prevent packet dropping"}},
+    {"src": "nv-roce-modes",
+     "en": "rare today; cannot cross an IP router",
+     "ru": "сегодня редкость; не проходит через IP-маршрутизатор",
+     "quote": "RoCE v1 protocol is defined as RDMA over Ethernet header (as shown in the figure above). It uses ethertype 0x8915 … Instead of the GRH used in RoCE, IP routable RoCE packets carry an IP header which allows traversal of IP L3 Routers"},
+    {"src": ["iana-4791", "guo-2"],
+     "en": "UDP/IP, destination port 4791",
+     "ru": "UDP/IP, порт назначения 4791",
+     "quote": {"iana-4791": "roce 4791 udp IP Routable RocE [InfiniBand_Trade_Association]",
+               "guo-2": "RoCEv2 encapsulates an RDMA transport [5] packet within an Ethernet/IPv4/UDP packet. … The destination UDP port is always set to 4791"}},
+    {"src": "nv-roce-gid",
+     "en": "IP address (the GID is derived from it)",
+     "ru": "IP-адрес (GID выводится из него)",
+     "quote": "GID table entries are created whenever an IP address is configured on one of the Ethernet devices of the NIC's ports. … IPv4 GID is an IPv4-mapped IPv6 address, while IPv6 GID is the IPv6 address itself."},
+    {"src": "dcqcn-abs",
+     "en": "Ethernet may drop; usually configured with PFC and ECN plus DCQCN",
+     "ru": "Ethernet может терять пакеты; обычно настраивают PFC и ECN вместе с DCQCN",
+     "quote": "On IP-routed datacenter networks, RDMA is deployed using RoCEv2 protocol, which relies on Priority-based Flow Control (PFC) to enable a drop-free network. … we introduce DCQCN, an end-to-end congestion control scheme for RoCEv2."},
+    {"src": "rfc5044-abs",
+     "en": "TCP (RFC 5040, 5041, 5044)",
+     "ru": "TCP (RFC 5040, 5041, 5044)",
+     "quote": "Marker PDU Aligned Framing (MPA) is designed to work as an \"adaptation layer\" between TCP and the Direct Data Placement protocol (DDP) as described in RFC 5041. It preserves the reliable, in-order delivery of TCP"},
+    {"src": ["nv-2-5", "opensm"],
+     "en": "It discovers the topology, assigns LIDs and programs every switch's forwarding table.",
+     "ru": "Он обнаруживает топологию, назначает LID и программирует таблицы пересылки каждого коммутатора.",
+     "quote": {"nv-2-5": "The InfiniBand subnet manager assigns Local Identifiers (LIDs) to each port connected to the InfiniBand fabric and develops a routing table based on the assigned LIDs. … Many switches include a Subnet Manager.",
+               "opensm": "opensm provides an implementation of an InfiniBand Subnet Manager and Administration. … opensm will scan the IB fabric, initialize it, and sweep occasionally for changes."}},
+    {"src": ["opensm", "ibstat"],
+     "en": "(<code>ibstat</code> shows the port state and LID).",
+     "ru": "(<code>ibstat</code> показывает состояние порта и LID).",
+     "quote": {"opensm": "Such a software entity is required to run for in order to initialize the InfiniBand hardware (at least one per each InfiniBand subnet).",
+               "ibstat": "ibstat is a binary which displays basic information obtained from the local IB driver. Output includes LID, SMLID, port state, link width active, and port physical state."}},
+    {"src": "nv-roce-modes",
+     "en": "Version 2 wraps it in UDP/IP so it can be routed like any IP traffic.",
+     "ru": "Версия 2 заворачивает его в UDP/IP, чтобы его можно было маршрутизировать как любой IP-трафик.",
+     "quote": "RoCE encapsulates IB transport in one of the following Ethernet packets: RoCEv1 - dedicated ether type (0x8915) RoCEv2 - UDP and dedicated UDP port (4791)"},
+    {"src": "irn-2-1",
+     "en": "the sender resends everything from the lost packet onward.",
+     "ru": "после потери отправитель заново шлёт всё, начиная с потерянного пакета.",
+     "quote": "Because packet drops are rare in such clusters, the RDMA Infiniband transport (as implemented on the NIC) was not designed to efficiently recover from packet losses. … it retransmits all packets that were sent after the last acknowledged packet (i.e., it performs a go-back-N retransmission)."},
+    {"src": "irn-2-1",
+     "en": "So most RoCE deployments make Ethernet behave more like InfiniBand",
+     "ru": "Поэтому большинство внедрений RoCE заставляют Ethernet вести себя больше похоже на InfiniBand",
+     "quote": "RoCE adopted the same Infiniband transport design (including go-back-N loss recovery), and the network was made lossless using PFC."},
+    {"src": ["guo-2", "onyx-roce"],
+     "en": "RoCE traffic goes in a paused-not-dropped priority class.",
+     "ru": "Трафик RoCE помещают в класс приоритета, который приостанавливают вместо отбрасывания.",
+     "quote": {"guo-2": "Once the ingress queue length reaches a certain threshold (XOFF), the switch sends out a PFC pause frame to the corresponding upstream egress queue. After the egress queue receives the pause frame, it stops sending packets. A pause frame carries which priorities need to be paused",
+               "onyx-roce": "Enable PFC on priority RoCE (3) on all ports."}},
+    {"src": ["guo-1", "irn-2-2"],
+     "en": "and badly designed topologies can deadlock.",
+     "ru": "а в плохо спроектированных топологиях возможны взаимоблокировки.",
+     "quote": {"guo-1": "While some problems with PFC such as head-of-the line blocking and potential for deadlock are well known [22, 33], we see several issues such as the RDMA transport livelock, the NIC PFC pause frame storm",
+               "irn-2-2": "These issues range from mild (e.g., unfairness and head-of-line blocking) to severe, such as “pause spreading” as highlighted in [23] and even network deadlocks"}},
+    {"src": "dcqcn-3-1",
+     "en": "the receiving NIC turns marks into congestion notification packets and the sending NIC lowers its rate.",
+     "ru": "принимающая карта превращает пометки в пакеты уведомления о перегрузке, и отправляющая карта снижает скорость.",
+     "quote": "an arriving packet is ECN [34]-marked if the queue length exceeds a threshold. … The RoCEv2 standard defines explicit Congestion Notification Packets (CNP) [19] for this purpose. … When an RP (i.e. the flow sender) gets a CNP, it reduces its current rate"},
+    {"src": "dcqcn-4",
+     "en": "The aim is to slow senders down before PFC has to pause anything.",
+     "ru": "Цель в том, чтобы замедлить отправителей раньше, чем PFC придётся что-либо приостанавливать.",
+     "quote": "Correct operation of DCQCN requires balancing two conflicting requirements: (i) PFC is not triggered too early – i.e. before giving ECN a chance to send congestion feedback"},
+    {"src": ["cx7-rn", "onyx-roce"],
+     "en": "Newer NICs recover from loss better (selective retransmission), and some operators run RoCE with little or no PFC.",
+     "ru": "Новые карты лучше восстанавливаются после потерь (выборочная повторная передача), и некоторые операторы запускают RoCE почти или совсем без PFC.",
+     "quote": {"cx7-rn": "Fixed an issue with Selective-Repeat configuration which occasionally caused retransmission to wait for timeout instead of out-of-sequence NACK.",
+               "onyx-roce": "There are three modes in which RoCE can be configured: lossless, semi-lossless, and lossy. … Requires a one-way PFC between the host and the ToR (the fabric will remain lossy). … No PFC, but has the factors common to all modes."}},
+    {"src": "irn-2-3",
+     "en": "so it inherits TCP's congestion control and works on any network.",
+     "ru": "поэтому наследует управление перегрузкой TCP и работает в любой сети.",
+     "quote": "iWARP [32] was designed to support RDMA over a fully general (i.e., not loss-free) network. iWARP implements the entire TCP stack in hardware along with multiple other layers that it needs to translate TCP’s byte stream semantics to RDMA segments."},
+    {"src": ["k-rxe-kconfig", "k-rxe-net"],
+     "en": "implements RoCE v2 in software on top of any Ethernet interface.",
+     "ru": "реализует RoCE v2 программно поверх любого Ethernet-интерфейса.",
+     "quote": {"k-rxe-kconfig": "This driver implements the InfiniBand RDMA transport over the Linux network stack. It enables a system with a standard Ethernet adapter to interoperate with a RoCE adapter or with another system running the RXE driver.",
+               "k-rxe-net": "recv_sockets.sk4 = rxe_setup_udp_tunnel(&init_net, htons(ROCE_V2_UDP_DPORT), false);"}},
+    {"src": "nv-glossary",
+     "en": "The InfiniBand specification describes what an RDMA NIC can do as abstract <b>verbs</b>.",
+     "ru": "Спецификация InfiniBand описывает возможности RDMA-карты в виде абстрактных <b>verbs</b> («глаголов»).",
+     "quote": "Verbs An abstract description of the functionality of a network adapter. Using the verbs, any application can create / manage objects that are needed in order to use RDMA for data transfer."},
+    {"src": ["rdmacore-readme", "k-core-makefile"],
+     "en": "the kernel side is the <code>ib_core</code> subsystem.",
+     "ru": "в ядре этим занимается подсистема <code>ib_core</code>.",
+     "quote": {"rdmacore-readme": "This is the userspace components for the Linux Kernel's drivers/infiniband subsystem. Specifically this contains the userspace libraries for the following device nodes: - /dev/infiniband/uverbsX (libibverbs)",
+               "k-core-makefile": "obj-$(CONFIG_INFINIBAND) += ib_core.o ib_cm.o iw_cm.o"}},
+    {"src": "k-frwr-post",
+     "en": "Kernel users like NFS call the same verbs through in-kernel functions.",
+     "ru": "Пользователи внутри ядра, такие как NFS, вызывают те же verbs через функции ядра.",
+     "quote": "ret = ib_post_send(ep->re_id->qp, post_wr, NULL);"},
+    {"src": "nv-4-3-5",
+     "en": "A queue pair can only use memory regions from its own PD",
+     "ru": "Пара очередей может использовать только регионы памяти из своего PD",
+     "quote": "ibv_alloc_pd creates a protection domain (PD). PDs limit which memory regions can be accessed by which queue pairs (QP) providing a degree of protection from unauthorized access."},
+    {"src": "nv-3-3-4",
+     "en": "Returns an <b>lkey</b> and an <b>rkey</b>",
+     "ru": "Возвращает <b>lkey</b> и <b>rkey</b>",
+     "quote": "The registration process writes the virtual to physical address table to the network adapter. When registering memory, permissions are set for the region. … Every MR has a remote and a local key (r_key, l_key)."},
+    {"src": ["m-create-qp", "k-ib-verbs-qpn", "nv-3"],
+     "en": "The RDMA equivalent of a socket",
+     "ru": "Аналог сокета в мире RDMA",
+     "quote": {"m-create-qp": "struct ibv_cq *send_cq; /* CQ to be associated with the Send Queue (SQ) */ struct ibv_cq *recv_cq; /* CQ to be associated with the Receive Queue (RQ) */",
+               "k-ib-verbs-qpn": "#define IB_QPN_MASK 0xFFFFFF",
+               "nv-3": "For those familiar with a standard IP stack, a QP is roughly equivalent to a socket."}},
+    {"src": "m-post-send",
+     "en": "one operation, with a scatter-gather list of <code>{addr, length, lkey}</code> entries",
+     "ru": "одна операция со списком scatter-gather из элементов <code>{addr, length, lkey}</code>",
+     "quote": "struct ibv_sge *sg_list; /* Pointer to the s/g array */ … struct ibv_sge { uint64_t addr; /* Start address of the local memory buffer … */ uint32_t length; /* Length of the buffer */ uint32_t lkey; /* Key of the local Memory Region */ };"},
+    {"src": "m-poll-cq",
+     "en": "the result of one WR: its <code>wr_id</code>, a status, the byte count",
+     "ru": "результат одного WR: его <code>wr_id</code>, статус, число байтов",
+     "quote": "uint64_t wr_id; /* ID of the completed Work Request (WR) */ enum ibv_wc_status status; /* Status of the operation */ … uint32_t byte_len; /* Number of bytes transferred */"},
+    {"src": "m-reg-mr-ret",
+     "en": "belongs to a region you registered",
+     "ru": "принадлежит зарегистрированному вами региону",
+     "quote": "The local key (L_Key) field lkey is used as the lkey field of struct ibv_sge when posting buffers with ibv_post_* verbs, and the the remote key (R_Key) field rkey is used by remote processes to perform Atomic and RDMA operations."},
+    {"src": ["nv-3-3-4", "m-reg-mr-desc"],
+     "en": "<code>IBV_ACCESS_REMOTE_ATOMIC</code>).",
+     "ru": "<code>IBV_ACCESS_REMOTE_ATOMIC</code>).",
+     "quote": {"nv-3-3-4": "Remote keys are given to the remote HCA to allow a remote process access to system memory during RDMA operations.",
+               "m-reg-mr-desc": "IBV_ACCESS_REMOTE_WRITE Enable Remote Write Access IBV_ACCESS_REMOTE_READ Enable Remote Read Access IBV_ACCESS_REMOTE_ATOMIC Enable Remote Atomic Operation Access (if supported)"}},
+    {"src": "kalia-3-1",
+     "en": "(3) The NIC fetches the WQE by DMA, (4) reads the payload from the registered region by DMA, and (5) sends the packets.",
+     "ru": "(3) Карта забирает WQE через DMA, (4) читает данные из зарегистрированного региона через DMA и (5) отправляет пакеты.",
+     "quote": "CPUs initiate network operations by sending a message to the NIC via MMIO. The message can (1) contain the new work queue elements, or (2) it can refer to the new WQEs by using information such as the address of the last WQE. … In the second case, the NIC reads the WQEs using one or more DMAs."},
+    {"src": "nvme-3-3",
+     "en": "an NVMe command travels in a SEND, the data moves by RDMA READ or WRITE, and the completion comes back in another SEND.",
+     "ru": "команда NVMe едет в SEND, данные идут через RDMA READ или WRITE, а завершение возвращается в другом SEND.",
+     "quote": "The RDMA Transport at the host uses RDMA_SEND to transmit command capsules. The RDMA Transport at the controller uses RDMA_SEND or RDMA_SEND_INVALIDATE to transmit response capsules and optionally invalidate a host memory key."},
+    {"src": ["m-post-send", "m-poll-cq"],
+     "en": "Each work request carries a 64-bit <code>wr_id</code> that you choose and the completion hands back.",
+     "ru": "Каждый рабочий запрос несёт 64-битный <code>wr_id</code>, который вы выбираете сами и который возвращается в завершении.",
+     "quote": {"m-post-send": "uint64_t wr_id; /* User defined WR ID */",
+               "m-poll-cq": "uint64_t wr_id; /* ID of the completed Work Request (WR) */"}},
+    {"src": "nv-3-4",
+     "en": "and each step needs information about the other side",
+     "ru": "и каждому шагу нужны сведения о другой стороне",
+     "quote": "A created QP still cannot be used until it is transitioned through several states, eventually getting to Ready To Send (RTS). This provides needed information used by the QP to be able send / receive data."},
+    {"src": ["nv-4-5", "nv-3-3-11"],
+     "en": "PSN is the packet sequence number the transport starts counting from.",
+     "ru": "PSN — номер пакета в последовательности, с которого транспорт начинает счёт.",
+     "quote": {"nv-4-5": "RESET Newly created, queues empty. INIT Basic information set. Ready for posting to receive queue. RTR Ready to Receive. Remote address info set for connected QPs, QP may now receive packets. RTS Ready to Send. Timeout and retry parameters set, QP may now send packets.",
+               "nv-3-3-11": "If we have completion with bad status in a WR, the rest of the completions will be all be bad (and the Work Queue will be moved to error state)."}},
+    {"src": "m-modify-qp",
+     "en": "So two peers must exchange their QP numbers, GIDs (or LIDs) and starting PSNs before either QP reaches RTR.",
+     "ru": "Значит, два партнёра должны обменяться номерами QP, GID (или LID) и начальными PSN, прежде чем любая из QP перейдёт в RTR.",
+     "quote": "Init IBV_QP_STATE, IBV_QP_PKEY_INDEX, IBV_QP_PORT, IBV_QP_ACCESS_FLAGS RTR IBV_QP_STATE, IBV_QP_AV, IBV_QP_PATH_MTU, IBV_QP_DEST_QPN, IBV_QP_RQ_PSN, … RTS IBV_QP_STATE, IBV_QP_SQ_PSN, IBV_QP_MAX_QP_RD_ATOMIC, IBV_QP_RETRY_CNT, IBV_QP_RNR_RETRY, IBV_QP_TIMEOUT"},
+    {"src": ["rc-pingpong", "perftest-readme"],
+     "en": "then drive <code>ibv_modify_qp</code> by hand.",
+     "ru": "затем вручную вызывать <code>ibv_modify_qp</code>.",
+     "quote": {"rc-pingpong": "use TCP port PORT for initial synchronization (default 18515)",
+               "perftest-readme": "-p, --port=<port> Listen on/connect to port <port> (default: 18515) -R, --rdma_cm Connect QPs with rdma_cm and run test on those QPs"}},
+    {"src": ["m-rdma-cm", "nv-5-2-25"],
+     "en": "and move the QP through all its states for you.",
+     "ru": "и сами проводят QP через все состояния.",
+     "quote": {"m-rdma-cm": "rdma_create_id allocate an rdma_cm_id, this is conceptually similar to a socket rdma_resolve_addr obtain a local RDMA device to reach the remote address … rdma_resolve_route determine the route to the remote address … rdma_connect connect to the remote server",
+               "nv-5-2-25": "QPs allocated to an rdma_cm_id are automatically transitioned by the librdmacm through their states."}},
+    {"src": ["m-rdma-connect", "k-verbs-private"],
+     "en": "and NFS over RDMA uses it to advertise buffer sizes.",
+     "ru": "а NFS поверх RDMA объявляет так размеры своих буферов.",
+     "quote": {"m-rdma-connect": "private_data References a user-controlled data buffer. The contents of the buffer are copied and transparently passed to the remote side as part of the communication request.",
+               "k-verbs-private": "/* Prepare RDMA-CM private message */ … pmsg->cp_send_size = rpcrdma_encode_buffer_size(ep->re_inline_send); pmsg->cp_recv_size = rpcrdma_encode_buffer_size(ep->re_inline_recv); ep->re_remote_cma.private_data = pmsg;"}},
+    {"src": "nv-3-2",
+     "en": "yes: acks, retransmission, in-order",
+     "ru": "да: подтверждения, повторы, порядок",
+     "quote": "Queue Pair is associated with only one other QP. Messages transmitted by the send queue of one QP are reliably delivered to receive queue of the other QP. Packets are delivered in order. A RC connection is very similar to a TCP connection."},
+    {"src": "m-post-send",
+     "en": "no</td><td>SEND, RDMA WRITE",
+     "ru": "нет</td><td>SEND, RDMA WRITE",
+     "quote": "OPCODE | IBV_QPT_UD | IBV_QPT_UC | IBV_QPT_RC | IBV_QPT_XRC_SEND | IBV_QPT_RAW_PACKET … IBV_WR_SEND | X | X | X | X | X … IBV_WR_RDMA_WRITE | | X | X | X | … IBV_WR_RDMA_READ | | | X | X | … IBV_WR_ATOMIC_CMP_AND_SWP | | | X | X |"},
+    {"src": ["nv-glossary", "nv-4-3-2"],
+     "en": "SEND only, each message at most one MTU (up to 4 KiB)",
+     "ru": "только SEND, каждое сообщение не больше одного MTU (до 4 КиБ)",
+     "quote": {"nv-glossary": "UD (Unreliable Datagram) A QP transport service type in which messages can be one packet length and every UD QP can send/receive messages from another UD QP in the subnet … The message size of a UD packet is limited to the Path MTU",
+               "nv-4-3-2": "max_mtu Maximum Transmission Unit (MTU) supported by port. Can be: IBV_MTU_256 IBV_MTU_512 IBV_MTU_1024 IBV_MTU_2048 IBV_MTU_4096"}},
+    {"src": "nv-4-4-11",
+     "en": "shares receive resources across processes on a node",
+     "ru": "делит ресурсы приёма между процессами на узле",
+     "quote": "ibv_create_xrc_rcv_qp creates an XRC queue pair (QP) to serve as a receive side only QP … Any process which wishes to receive on an XRC SRQ via this QP must call ibv_reg_xrc_rcv_qp for this QP to ensure that the QP will not be destroyed while they are still using it."},
+    {"src": "m-mlx5dv-qp",
+     "en": "vendor-specific (NVIDIA)",
+     "ru": "специфичен для производителя (NVIDIA)",
+     "quote": "dc_type MLX5DV_DCTYPE_DCT QP type: Target DC. MLX5DV_DCTYPE_DCI QP type: Initiator DC."},
+    {"src": ["nv-3-1", "rfc8166-2.3.2"],
+     "en": "and produces a completion on the receiver's CQ.",
+     "ru": "и создаёт завершение в CQ получателя.",
+     "quote": {"nv-3-1": "The send operation allows you to send data to a remote QP's receive queue. The receiver must have previously posted a receive buffer to receive the data.",
+               "rfc8166-2.3.2": "The RDMA provider supports an RDMA Send operation, with completion signaled on the receiving peer after data has been placed in a pre-posted buffer. … The amount of data transferred by a single RDMA Send operation is limited by the size of the remote peer's pre-posted buffers."}},
+    {"src": ["nv-3-3-2", "m-rdma-connect", "k-rxe-comp"],
+     "en": "Seven means retry forever.",
+     "ru": "Значение 7 означает повторять бесконечно.",
+     "quote": {"nv-3-3-2": "If no buffers are defined and a transmitter attempts a send operation or a RDMA Write with immediate, a receive not ready (RNR) error will be sent.",
+               "m-rdma-connect": "rnr_retry_count The maximum number of times that a send operation from the remote peer should be retried on a connection after receiving a receiver not ready (RNR) error.",
+               "k-rxe-comp": "/* we come here if we received an RNR NAK */ if (qp->comp.rnr_retry > 0) { if (qp->comp.rnr_retry != 7) qp->comp.rnr_retry--;"}},
+    {"src": ["redmark-4-2", "nv-3-1", "rfc8166-2.3.2"],
+     "en": "The target's CPU gets no completion and does not know anything happened.",
+     "ru": "Процессор получателя не получает завершения и ничего не знает о произошедшем.",
+     "quote": {"redmark-4-2": "IBA requires that RDMA read/write requests include a remote memory access key rkey, which is negotiated between communicating peers and is checked at the remote RNIC.",
+               "nv-3-1": "RDMA write operations are performed with no notification to the remote host.",
+               "rfc8166-2.3.2": "The local host initiates an RDMA Write, and completion is signaled there. No completion is signaled on the remote peer."}},
+    {"src": ["nv-3-3-2", "m-post-send"],
+     "en": "the same, plus a 32-bit value that consumes one posted RECV on the target and produces a completion there.",
+     "ru": "то же самое плюс 32-битное значение, которое расходует один поставленный RECV у получателя и создаёт там завершение.",
+     "quote": {"nv-3-3-2": "An RR defines buffers where data is to be received for non-RDMA operations. If no buffers are defined and a transmitter attempts a send operation or a RDMA Write with immediate, a receive not ready (RNR) error will be sent.",
+               "m-post-send": "__be32 imm_data; /* Immediate data (in network byte order) */"}},
+    {"src": ["nv-3-1", "m-rdma-connect"],
+     "en": "negotiated at connect time.",
+     "ru": "согласованными при установке соединения.",
+     "quote": {"nv-3-1": "Once these permissions are set, RDMA read operations are conducted with no notification whatsoever to the remote host.",
+               "m-rdma-connect": "initiator_depth The maximum number of outstanding RDMA read and atomic operations that the local side will have to the remote side. … The remote endpoint can adjust this value when accepting the connection."}},
+    {"src": "nv-glossary",
+     "en": "64-bit compare-and-swap and fetch-and-add on remote memory, executed by the target NIC.",
+     "ru": "64-битные compare-and-swap и fetch-and-add над удалённой памятью; их выполняет карта получателя.",
+     "quote": "Compare & Swap Instructs the remote QP to read a 64-bit value, compare it with the compare data provided, and if equal, replace it with the swap data … Fetch & Add Instructs the remote QP to read a 64-bit value and replace it with the sum of the 64-bit value and the added data value"},
+    {"src": ["rfc8166-2.3.2", "rfc5040-5.5"],
+     "en": "the bytes of the earlier WRITE are already in its memory.",
+     "ru": "байты предыдущего WRITE уже лежат в его памяти.",
+     "quote": {"rfc8166-2.3.2": "RDMA Writes are not ordered with respect to one another, but are ordered with respect to RDMA Sends. A subsequent RDMA Send completion obtained at the write initiator guarantees that prior RDMA Write data has been successfully placed in the remote peer's memory.",
+               "rfc5040-5.5": "This means that when the ULP sees the Delivery of the Send, the memory buffers targeted by any preceding RDMA Writes and Sends are available to be accessed locally or remotely as authorized."}},
+    {"src": ["rfc5040-5.5", "m-post-send"],
+     "en": "<code>IBV_SEND_FENCE</code>.)",
+     "ru": "<code>IBV_SEND_FENCE</code>.)",
+     "quote": {"rfc5040-5.5": "RDMA Read Response Messages MAY be generated at the Remote Peer after subsequent RDMA Write Messages or Send Messages have been Placed or Delivered. … If this behavior is not desired, the Local Peer ULP must Fence the later RDMA write (or Send)",
+               "m-post-send": "IBV_SEND_FENCE Set the fence indicator. Valid only for QPs with Transport Service Type IBV_QPT_RC"}},
+    {"src": ["nv-3-3-4", "nprdma-2", "rfc8166-4.4"],
+     "en": "That takes tens of microseconds even for a small buffer and much longer for a large one, which is far too slow to do for each I/O.",
+     "ru": "Даже для небольшого буфера это занимает десятки микросекунд, а для большого намного дольше, что слишком долго для каждой операции ввода-вывода.",
+     "quote": {"nv-3-3-4": "The registration process pins the memory pages (to prevent the pages from being swapped out and to keep physical <-> virtual mapping).",
+               "nprdma-2": "MR registration takes about 120 seconds for 300 GB of memory (see §6.1) … each MR registration takes ∼50 𝜇s, making the end-to-end latency one order of magnitude higher.",
+               "rfc8166-4.4": "The cost of registering and invalidating memory can be a significant proportion of the cost of an RPC-over-RDMA transaction."}},
+    {"src": "ucx-memhooks",
+     "en": "because a stale registration still points at the old pages.",
+     "ru": "устаревшая регистрация всё ещё указывает на старые страницы.",
+     "quote": "UCX includes the libucm library, which provides methods to intercept events which map and unmap memory to/from the current process. … Maintain memory registration cache (and get notification when cached memory is unmapped)"},
+    {"src": ["k-frwr-ops", "rfc8797-3.2", "k-transport-memreg"],
+     "en": "The Linux NFS/RDMA client uses FRWR by default.",
+     "ru": "Клиент NFS/RDMA в Linux по умолчанию использует FRWR.",
+     "quote": {"k-frwr-ops": "A Memory Region is prepared for RDMA Read or Write using a FAST_REG Work Request (frwr_map). When the RDMA operation is finished, this Memory Region is invalidated using a LOCAL_INV Work Request (frwr_unmap_async and frwr_unmap_sync).",
+               "rfc8797-3.2": "An RDMA consumer requests remote invalidation by posting an RDMA Send with Invalidate operation in place of an RDMA Send operation.",
+               "k-transport-memreg": "unsigned int xprt_rdma_memreg_strategy = RPCRDMA_FRWR;"}},
+    {"src": "redmark-1",
+     "en": "can read or write that memory, within the registered access rights.",
+     "ru": "может читать или писать эту память в пределах зарегистрированных прав.",
+     "quote": "Current RDMA technologies include multiple plaintext access tokens to enforce isolation and prevent unauthorized access to system memory. As these tokens are transmitted in plaintext, any entity that obtains or guesses them can read and write memory locations that have been exposed by using RDMA"},
+    {"src": ["k-ib-verbs-fastreg", "redmark-4-2"],
+     "en": "so treat it as easy to guess rather than secret.",
+     "ru": "поэтому не считайте его секретом: его легко угадать.",
+     "quote": {"k-ib-verbs-fastreg": "ib_update_fast_reg_key - updates the key portion of the fast_reg MR R_Key and L_Key. … mr->rkey = (mr->rkey & 0xffffff00) | newkey;",
+               "redmark-4-2": "Thus, even though the key generation process of devices based on mlx5 driver contains higher entropy than other drivers, the sequence of generated keys is still predictable by an adversary with moderate effort."}},
+    {"src": "rfc8166-8.1.3",
+     "en": "never gives the client an rkey for server memory at all (see below).",
+     "ru": "вообще никогда не выдаёт клиенту rkey для памяти сервера (см. ниже).",
+     "quote": "Requesters should register memory regions for remote access only when they are about to be the target of an RPC operation that involves an RDMA Read or Write. Registered memory regions should be invalidated as soon as related RPC operations are complete."},
+    {"src": ["nv-3-3-5", "nv-glossary"],
+     "en": "Network isolation (InfiniBand partition keys, VLANs for RoCE) is the outer fence.",
+     "ru": "Внешняя ограда — изоляция сети (ключи разделов InfiniBand, VLAN для RoCE).",
+     "quote": {"nv-3-3-5": "wants to grant and revoke remote access rights to a registered Region in a dynamic fashion with less of a performance penalty than using deregistration/registration or reregistration.",
+               "nv-glossary": "pkey (Partition key) The pkey identifies a partition that the port belongs to. A pkey is roughly analogous to a VLAN ID in ethernet networking."}},
+    {"src": "nv-glossary",
+     "en": "(a shared receive queue, SRQ, lets many QPs draw from one pool).",
+     "ru": "(общая очередь приёма, SRQ, позволяет многим QP брать буферы из одного пула).",
+     "quote": "SRQ (Shared Receive Queue) A queue which holds WQEs for incoming messages from any RC/UC/UD QP which is associated with it. More than one QPs can be associated with one SRQ."},
+    {"src": ["nv-2-4", "rfc8166-3.3.1"],
+     "en": "from the InfiniBand link layer up to RPC-over-RDMA.",
+     "ru": "от канального уровня InfiniBand до RPC-over-RDMA.",
+     "quote": {"nv-2-4": "The IB Link layer offers features such as a credit based flow control mechanism for congestion control.",
+               "rfc8166-3.3.1": "Flow control for RDMA Send operations directed to the Responder is implemented as a simple request/grant protocol in the RPC-over-RDMA header associated with each RPC message."}},
+    {"src": ["m-req-notify", "m-get-cq-event"],
+     "en": "sleeps until an interrupt, which saves the core and adds microseconds.",
+     "ru": "спит до прерывания: ядро процессора свободно, но добавляются микросекунды.",
+     "quote": {"m-req-notify": "Upon the addition of a new CQ entry (CQE) to cq, a completion event will be added to the completion channel associated with the CQ.",
+               "m-get-cq-event": "ibv_get_cq_event() waits for the next completion event in the completion event channel channel."}},
+    {"src": ["fasst-2-2", "kalia-3-4"],
+     "en": "and every miss costs a read across PCIe.",
+     "ru": "и каждый промах стоит чтения через PCIe.",
+     "quote": {"fasst-2-2": "These transports provide one-sided RDMA and end-to-end reliability, but do not scale well to large clusters. This is because NICs have limited memory to cache QP state, and exceeding the size of this state by using too many QPs causes cache thrashing",
+               "kalia-3-4": "NICs cache several types of information; it is critical to maintain a high cache hit rate because a miss translates to a read over PCIe. Cached information includes (1) virtual to physical address translations for RDMA-registered memory, (2) QP state"}},
+    {"src": ["rfc8166-4.5.3", "nvme-3-3"],
+     "en": "initiates against buffers the client described in its request.",
+     "ru": "над буферами, описанными клиентом в запросе.",
+     "quote": {"rfc8166-4.5.3": "In RPC-over-RDMA version 1, the Responder initiates RDMA Read and Write operations that target the Requester's memory.",
+               "nvme-3-3": "All RDMA_READ and RDMA_WRITE operations are initiated by the controller. … Host Memory Buffer Addresses are communicated in the command’s SGL entries."}},
+    {"src": "rfc7145-abs",
+     "en": "SCSI commands as messages, data by RDMA",
+     "ru": "команды SCSI в сообщениях, данные через RDMA",
+     "quote": "Internet Small Computer System Interface (iSCSI) Extensions for Remote Direct Memory Access (RDMA) provides the RDMA data transfer capability to iSCSI by layering iSCSI on top of an RDMA-Capable Protocol."},
+    {"src": "k-srp-kconfig",
+     "en": "SCSI RDMA Protocol, an older InfiniBand-era block protocol",
+     "ru": "SCSI RDMA Protocol, более старый блочный протокол эпохи InfiniBand",
+     "quote": "tristate \"InfiniBand SCSI RDMA Protocol\" … Support for the SCSI RDMA Protocol over InfiniBand. This allows you to access storage devices that speak SRP over InfiniBand."},
+    {"src": "nvme-3-3",
+     "en": "the target does RDMA READ for host writes and RDMA WRITE for host reads",
+     "ru": "цель делает RDMA READ для записей хоста и RDMA WRITE для его чтений",
+     "quote": "Data transfers from a controller to a host are performed using the RDMA_WRITE operation. Data transfers from a host buffer to a controller buffer are performed using the RDMA_READ operation."},
+    {"src": ["ms-smbdirect", "k-cifs-kconfig", "ksmbd-doc"],
+     "en": "SMB 3 over RDMA; Windows Server, the Linux SMB client and ksmbd",
+     "ru": "SMB 3 поверх RDMA; Windows Server, клиент SMB в Linux и ksmbd",
+     "quote": {"ms-smbdirect": "Windows Server includes a feature called Server Message Block (SMB) Direct, which supports the use of network adapters that have Remote Direct Memory Access (RDMA) capability.",
+               "k-cifs-kconfig": "Enables SMB Direct support for SMB 3.0, 3.02 and 3.1.1. SMB Direct allows transferring SMB packets over RDMA.",
+               "ksmbd-doc": "SMB direct(RDMA) Supported."}},
+    {"src": "lustre-lnet",
+     "en": "the o2ib driver (<code>ko2iblnd</code>) runs it over verbs",
+     "ru": "драйвер o2ib (<code>ko2iblnd</code>) работает поверх verbs",
+     "quote": "The most commonly used LNet drivers are the ksocklnd.ko module for TCP/IP networks, and the ko2iblnd.ko module for RDMA networks that make use of the OpenFabrics Enterprise Distribution (OFED) network driver."},
+    {"src": "ibm-redp5658",
+     "en": "verbs RDMA between clients and NSD servers",
+     "ru": "RDMA через verbs между клиентами и серверами NSD",
+     "quote": "IBM Spectrum Scale supports Remote Direct Memory Access (RDMA) on Linux only. IBM Spectrum Scale uses the VERBS programming interface to provide RDMA support."},
+    {"src": "beegfs-rdma",
+     "en": "native RDMA transport between clients and its servers",
+     "ru": "собственный транспорт RDMA между клиентами и серверами",
+     "quote": "RDMA support for InfiniBand, RoCE (RDMA over Converged Ethernet), and Omni-Path in BeeGFS are based on the Open Fabrics Enterprise Distribution ibverbs API"},
+    {"src": "gds-intro",
+     "en": "so a training job's input skips the CPU's RAM entirely.",
+     "ru": "так что входные данные обучающей задачи вообще не проходят через оперативную память процессора.",
+     "quote": "GPUDirect® Storage (GDS) enables a direct data path for direct memory access (DMA) transfers between GPU memory and storage, which avoids a bounce buffer through the CPU."},
+    {"src": "gds-explicit",
+     "en": "It depends on vendor-specific kernel components, so check what your stack supports.",
+     "ru": "Всё это зависит от компонентов ядра конкретного производителя, поэтому проверяйте, что поддерживает ваш стек.",
+     "quote": "The direct data path that GDS provides relies on the availability of file system drivers that are enabled with GDS. These drivers run on the CPU and implement the control path that sets up the direct data path."},
+    {"src": ["k-xprtsock", "k-xprtrdma-makefile", "k-module"],
+     "en": "Both RDMA halves live in the <code>rpcrdma</code> kernel module.",
+     "ru": "Обе половины RDMA живут в модуле ядра <code>rpcrdma</code>.",
+     "quote": {"k-xprtsock": "linux/net/sunrpc/xprtsock.c Client-side transport implementation for sockets.",
+               "k-xprtrdma-makefile": "obj-$(CONFIG_SUNRPC_XPRT_RDMA) += rpcrdma.o rpcrdma-y := transport.o rpc_rdma.o verbs.o frwr_ops.o ib_client.o svc_rdma.o svc_rdma_backchannel.o svc_rdma_transport.o svc_rdma_sendto.o svc_rdma_recvfrom.o svc_rdma_rw.o",
+               "k-module": "MODULE_DESCRIPTION(\"RPC/RDMA Transport\"); … MODULE_ALIAS(\"svcrdma\"); MODULE_ALIAS(\"xprtrdma\");"}},
+    {"src": "rfc8166-abs",
+     "en": "defined in RFC 8166.",
+     "ru": "и описан в RFC 8166.",
+     "quote": "This document specifies a protocol for conveying Remote Procedure Call (RPC) messages on physical transports capable of Remote Direct Memory Access (RDMA). This protocol is referred to as the RPC-over-RDMA version 1 protocol in this document."},
+    {"src": ["rfc8267-9", "rfc8267-6.3"],
+     "en": "which NFSv4 servers must use for RDMA.",
+     "ru": "который серверы NFSv4 обязаны использовать для RDMA.",
+     "quote": {"rfc8267-9": "nfsrdma 20049 tcp Network File System (NFS) over RDMA",
+               "rfc8267-6.3": "Therefore, an NFS version 4 server supporting RPC-over-RDMA version 1 MUST use the alternative well-known port number for its RPC-over-RDMA service (see Section 9)."}},
+    {"src": "rfc8797-4",
+     "en": "in the rdma_cm private data at connect time.",
+     "ru": "реальные размеры своих буферов в private data rdma_cm.",
+     "quote": "the client (which actively establishes connections) and the server (which passively accepts connections) populate the CM Private Data field … Receive Size: This 8-bit field contains an encoded value corresponding to the maximum number of bytes this peer is prepared to receive"},
+    {"src": ["rfc8166-4", "rfc8166-3.5.1"],
+     "en": "prefixed by a small XDR header",
+     "ru": "и перед ним идёт небольшой заголовок в XDR",
+     "quote": {"rfc8166-4": "Every RPC-over-RDMA version 1 message has a header that includes a copy of the message's transaction ID, data for managing RDMA flow-control credits, and lists of RDMA segments describing chunks. All RPC-over-RDMA header content is contained in the Transport stream; thus, it MUST be XDR encoded.",
+               "rfc8166-3.5.1": "Since all RPC messages conveyed via RPC-over-RDMA require an RDMA Send operation"}},
+    {"src": ["rfc8166-3.4.3", "rfc8166-3.4.4"],
+     "en": "is one or more segments that together hold one XDR data item.",
+     "ru": "один или несколько сегментов, которые вместе содержат один элемент данных XDR.",
+     "quote": {"rfc8166-3.4.3": "Handle Steering tag (STag) or R_key generated by registering this memory with the RDMA provider. Length The length of the RDMA segment's memory region, in octets. … Offset The offset or beginning memory address of the RDMA segment's memory region.",
+               "rfc8166-3.4.4": "Each chunk is comprised of RDMA segments. … Except in special cases (covered in Section 3.5.3), a chunk MUST contain exactly one XDR data item."}},
+    {"src": ["rfc8166-3.3.2", "rfc8166-3.3.3"],
+     "en": "RFC 8166 says both sides must assume 1024 bytes unless they learn otherwise.",
+     "ru": "RFC 8166 требует, чтобы обе стороны считали его равным 1024 байтам, пока не узнают иное.",
+     "quote": {"rfc8166-3.3.2": "The inline threshold value is the smaller of the largest number of bytes the sender can post via a single RDMA Send operation and the largest number of bytes the receiver can accept via a single RDMA Receive operation.",
+               "rfc8166-3.3.3": "In the absence of such a mechanism, senders and receives MUST assume the inline thresholds are 1024 bytes."}},
+    {"src": ["k-xprtrdma-h", "k-verbs-private"],
+     "en": "Linux uses larger buffers and advertises them through the RFC 8797 private data.",
+     "ru": "Linux использует буферы побольше и объявляет их через private data из RFC 8797.",
+     "quote": {"k-xprtrdma-h": "#define RPCRDMA_MIN_INLINE (1024) /* min inline thresh */ #define RPCRDMA_DEF_INLINE (4096) /* default inline thresh */",
+               "k-verbs-private": "pmsg->cp_send_size = rpcrdma_encode_buffer_size(ep->re_inline_send); pmsg->cp_recv_size = rpcrdma_encode_buffer_size(ep->re_inline_recv);"}},
+    {"src": "rfc8166-3.5.3",
+     "en": "Anything that does not goes through a chunk.",
+     "ru": "Всё, что не помещается, идёт через чанк.",
+     "quote": "When a Payload stream is larger than the receiver's inline threshold, the Payload stream is reduced by removing DDP-eligible data items and placing them in chunks to be moved separately."},
+    {"src": "rfc8166-3.3.1",
+     "en": "A grant of zero is forbidden, because it would deadlock the connection.",
+     "ru": "Выдавать ноль кредитов запрещено: соединение бы заблокировалось.",
+     "quote": "Each RPC-over-RDMA message sent from Requester to Responder requests a number of credits from the Responder. … A Requester MUST NOT send unacknowledged requests in excess of the Responder's granted credit limit. … The granted value MUST NOT be zero"},
+    {"src": "rfc8166-3.4.5",
+     "en": "an argument the server must pull",
+     "ru": "аргумент, который сервер должен забрать",
+     "quote": "A \"Read chunk\" represents an XDR data item that is to be pulled from the Requester to the Responder. … a Responder transfers the chunk data from the Requester using RDMA Read operations."},
+    {"src": "rfc8166-3.5.3",
+     "en": "(a \"Position Zero Read chunk\")",
+     "ru": "(так называемый Position Zero Read chunk)",
+     "quote": "To send a Long Call message, the Requester provides a special Read chunk that contains the RPC Call message's Payload stream. Every RDMA read segment in this chunk MUST contain zero in its Position field. Thus, this chunk is known as a \"Position Zero Read chunk\"."},
+    {"src": "rfc8166-3.4.6",
+     "en": "a result the server must push",
+     "ru": "результат, который сервер должен доставить",
+     "quote": "A \"Write chunk\" represents an XDR data item that is to be pushed from a Responder to a Requester."},
+    {"src": "rfc8166-3.5.3",
+     "en": "a whole reply that may not fit inline",
+     "ru": "целый ответ, который может не поместиться inline",
+     "quote": "To send a Long Reply, the Requester provides a single special Write chunk in advance, known as the \"Reply chunk\", that will contain the RPC Reply message's Payload stream."},
+    {"src": "rfc8267-6.1",
+     "en": "and the link text of READLINK and of a symlink CREATE.",
+     "ru": "и текст ссылки в READLINK и в CREATE для символической ссылки.",
+     "quote": "DDP-eligible: o The opaque data field in the WRITE4args structure o The linkdata field of the NF4LNK arm in the createtype4 union o The opaque data field in the READ4resok structure o The linkdata field in the READLINK4resok structure"},
+    {"src": ["rfc8166-3.4.2", "rfc8166-3.5.3"],
+     "en": "or inside a whole call or reply moved through a Position Zero Read chunk or a Reply chunk.",
+     "ru": "переданного через Position Zero Read chunk или reply-чанк.",
+     "quote": {"rfc8166-3.4.2": "Such data items are referred to as \"DDP-eligible\". All other XDR data items MUST NOT be reduced.",
+               "rfc8166-3.5.3": "XDR data items may appear in these special chunks without regard to their DDP-eligibility."}},
+    {"src": ["rfc8166-4.5.3", "k-verbs-private"],
+     "en": "The server performs every RDMA READ and RDMA WRITE.",
+     "ru": "Все RDMA READ и RDMA WRITE выполняет сервер.",
+     "quote": {"rfc8166-4.5.3": "In RPC-over-RDMA version 1, the Responder initiates RDMA Read and Write operations that target the Requester's memory.",
+               "k-verbs-private": "/* Client offers RDMA Read but does not initiate */ ep->re_remote_cma.initiator_depth = 0;"}},
+    {"src": "rfc8166-3.4.3",
+     "en": "and the server decides how much RDMA traffic it has in flight.",
+     "ru": "а сервер сам решает, сколько трафика RDMA у него в полёте.",
+     "quote": "The Requester provides location information for DDP-eligible data items in both RPC Call and Reply messages. The Responder uses this information to retrieve arguments contained in the specified region of the Requester's memory or place results in that memory region."},
+    {"src": ["rfc8166-2.3.2", "k-svc-sendto"],
+     "en": "RC ordering guarantees the RDMA WRITEs land before the reply's SEND completes.",
+     "ru": "Порядок доставки в RC гарантирует, что RDMA WRITE окажутся в памяти раньше, чем завершится SEND с ответом.",
+     "quote": {"rfc8166-2.3.2": "RDMA Writes are not ordered with respect to one another, but are ordered with respect to RDMA Sends.",
+               "k-svc-sendto": "The logic here depends on Send Queue and completion ordering. Since the Send WR is always posted last, it will always complete last. Thus when it completes, it is guaranteed that all previous Write WRs have also completed."}},
+    {"src": ["rfc8797-3.2", "k-svc-inv"],
+     "en": "so the client does not need a separate invalidation step.",
+     "ru": "так что отдельный шаг аннулирования клиенту не нужен.",
+     "quote": {"rfc8797-3.2": "The receiver of an RDMA Send with Invalidate performs the requested invalidation and then reports that invalidation as part of the completion of a waiting Receive operation.",
+               "k-svc-inv": "if (rctxt->rc_inv_rkey) { send_wr->opcode = IB_WR_SEND_WITH_INV; send_wr->ex.invalidate_rkey = rctxt->rc_inv_rkey;"}},
+    {"src": "rfc8166-3.4.5",
+     "en": "so the server can rebuild the full RPC call before handing it to nfsd.",
+     "ru": "так что сервер может восстановить полный вызов RPC, прежде чем передать его nfsd.",
+     "quote": "Position The byte offset in the unreduced Payload stream where the receiver reinserts the data item conveyed in a chunk."},
+    {"src": ["rfc8797-3.1", "rfc8166-3.5.1"],
+     "en": "fit inline both ways and use only SEND/RECV.",
+     "ru": "в обе стороны помещаются inline и используют только SEND/RECV.",
+     "quote": {"rfc8797-3.1": "NFS version 4 COMPOUND operations [RFC7530] are larger on average than NFS version 3 procedures [RFC1813], forcing clients to use explicit RDMA operations for frequently issued requests such as LOOKUP and GETATTR.",
+               "rfc8166-3.5.1": "An RPC-over-RDMA header with a small RPC Call or Reply message immediately following is transferred using a single RDMA Send operation. No other operations are needed."}},
+    {"src": ["dt-v2", "rfc8797-1"],
+     "en": "whose last revision (-07, June 2022) has expired.",
+     "ru": "последняя редакция которого (-07, июнь 2022 года) истекла.",
+     "quote": {"dt-v2": "draft-ietf-nfsv4-rpcrdma-version-two-07 - RPC-over-RDMA Version 2 Protocol … Expired Internet-Draft … (Latest revision 2022-06-28) … This version of the protocol is extensible.",
+               "rfc8797-1": "The small default size of messages transmitted using RDMA Send forces the use of RDMA Read or Write operations even for relatively small messages and data payloads."}},
+    {"src": ["k-nfsrdma-doc", "m-rpc-nfsd"],
+     "en": "an RDMA connection has no privileged source port for the server to check)",
+     "ru": "у RDMA-соединения нет привилегированного порта источника, который сервер мог бы проверить)",
+     "quote": {"k-nfsrdma-doc": "The \"insecure\" option must be used because the NFS/RDMA client does not use a reserved port. … Instruct the server to listen on the RDMA transport: $ echo rdma 20049 > /proc/fs/nfsd/portlist",
+               "m-rpc-nfsd": "rdma Enable RDMA port (with \"on\" or \"yes\" etc) on the standard port (\"nfsrdma\", port 20049). rdma-port Set an alternate RDMA port."}},
+    {"src": ["m-nfs5", "k-nfsrdma-doc"],
+     "en": "ask for the RDMA transport and the RDMA port",
+     "ru": "запросите транспорт RDMA и порт RDMA",
+     "quote": {"m-nfs5": "proto=netid The netid determines the transport that is used to communicate with the NFS server. Supported options are tcp, tcp6, rdma, and rdma6.",
+               "k-nfsrdma-doc": "$ mount -o rdma,port=20049 <IPoIB-server-name-or-address>:/<export> /mnt"}},
+    {"src": "k-transport-stats",
+     "en": "and replies that had to wait for their Send to complete.",
+     "ru": "и ответы, которым пришлось ждать завершения своего Send.",
+     "quote": "seq_puts(seq, \"\\txprt:\\trdma \"); … r_xprt->rx_stats.read_chunk_count, r_xprt->rx_stats.write_chunk_count, r_xprt->rx_stats.reply_chunk_count, … r_xprt->rx_stats.local_inv_needed, r_xprt->rx_stats.empty_sendctx_q, r_xprt->rx_stats.reply_waits_for_send);"},
+    {"src": "rdmacore-rxe",
+     "en": "Create an RDMA device on top of the VM's Ethernet interface",
+     "ru": "Создайте RDMA-устройство поверх Ethernet-интерфейса ВМ",
+     "quote": "Create RXE device over network interface (e.g. eth0): # rdma link add rxe_eth0 type rxe netdev eth0"},
+    {"src": ["k-sunrpc-kconfig", "k-ib-useraccess", "wslconfig"],
+     "en": "That changes the kernel for every WSL distribution on the machine",
+     "ru": "Это меняет ядро для всех дистрибутивов WSL на машине",
+     "quote": {"k-sunrpc-kconfig": "config SUNRPC_XPRT_RDMA tristate \"RPC-over-RDMA transport\" depends on SUNRPC && INFINIBAND && INFINIBAND_ADDR_TRANS … This option allows the NFS client and server to use RDMA transports (InfiniBand, iWARP, or RoCE).",
+               "k-ib-useraccess": "config INFINIBAND_USER_ACCESS tristate \"InfiniBand userspace access (verbs and CM)\"",
+               "wslconfig": "The .wslconfig file configures settings globally for all Linux distributions running with WSL 2. … kernel … An absolute Windows path to a custom Linux kernel."}}
+  ]
+}

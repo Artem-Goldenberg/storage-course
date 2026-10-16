@@ -1,0 +1,2053 @@
+{
+ "page": "07-nfs-caching.html",
+ "sources": {
+  "nfs5-ac": {
+   "url": "https://man7.org/linux/man-pages/man5/nfs.5.html#MOUNT_OPTIONS",
+   "title": "nfs(5), Linux manual page",
+   "where": {
+    "en": "MOUNT OPTIONS, ac / noac, acregmin, acregmax, acdirmin, acdirmax, actimeo",
+    "ru": "раздел MOUNT OPTIONS, ac / noac, acregmin, acregmax, acdirmin, acdirmax, actimeo"
+   }
+  },
+  "nfs5-lookupcache": {
+   "url": "https://man7.org/linux/man-pages/man5/nfs.5.html#MOUNT_OPTIONS",
+   "title": "nfs(5), Linux manual page",
+   "where": {
+    "en": "MOUNT OPTIONS, lookupcache=mode",
+    "ru": "раздел MOUNT OPTIONS, lookupcache=mode"
+   }
+  },
+  "nfs5-cto-opt": {
+   "url": "https://man7.org/linux/man-pages/man5/nfs.5.html#MOUNT_OPTIONS",
+   "title": "nfs(5), Linux manual page",
+   "where": {
+    "en": "MOUNT OPTIONS, cto / nocto (NFS versions 2 and 3)",
+    "ru": "раздел MOUNT OPTIONS, cto / nocto (NFS versions 2 and 3)"
+   }
+  },
+  "nfs5-local-lock": {
+   "url": "https://man7.org/linux/man-pages/man5/nfs.5.html#MOUNT_OPTIONS",
+   "title": "nfs(5), Linux manual page",
+   "where": {
+    "en": "MOUNT OPTIONS, local_lock=mechanism",
+    "ru": "раздел MOUNT OPTIONS, local_lock=mechanism"
+   }
+  },
+  "nfs5-hardsoft": {
+   "url": "https://man7.org/linux/man-pages/man5/nfs.5.html#MOUNT_OPTIONS",
+   "title": "nfs(5), Linux manual page",
+   "where": {
+    "en": "MOUNT OPTIONS, soft / softerr / hard, softreval, intr",
+    "ru": "раздел MOUNT OPTIONS, soft / softerr / hard, softreval, intr"
+   }
+  },
+  "nfs5-sharecache": {
+   "url": "https://man7.org/linux/man-pages/man5/nfs.5.html#MOUNT_OPTIONS",
+   "title": "nfs(5), Linux manual page",
+   "where": {
+    "en": "MOUNT OPTIONS, sharecache / nosharecache",
+    "ru": "раздел MOUNT OPTIONS, sharecache / nosharecache"
+   }
+  },
+  "nfs5-fsc": {
+   "url": "https://man7.org/linux/man-pages/man5/nfs.5.html#MOUNT_OPTIONS",
+   "title": "nfs(5), Linux manual page",
+   "where": {
+    "en": "MOUNT OPTIONS, fsc / nofsc",
+    "ru": "раздел MOUNT OPTIONS, fsc / nofsc"
+   }
+  },
+  "nfs5-cto": {
+   "url": "https://man7.org/linux/man-pages/man5/nfs.5.html#DATA_AND_METADATA_COHERENCE",
+   "title": "nfs(5), Linux manual page",
+   "where": {
+    "en": "DATA AND METADATA COHERENCE, Close-to-open cache consistency",
+    "ru": "раздел DATA AND METADATA COHERENCE, Close-to-open cache consistency"
+   }
+  },
+  "nfs5-timestamps": {
+   "url": "https://man7.org/linux/man-pages/man5/nfs.5.html#DATA_AND_METADATA_COHERENCE",
+   "title": "nfs(5), Linux manual page",
+   "where": {
+    "en": "DATA AND METADATA COHERENCE, File timestamp maintenance",
+    "ru": "раздел DATA AND METADATA COHERENCE, File timestamp maintenance"
+   }
+  },
+  "nfs5-dentry": {
+   "url": "https://man7.org/linux/man-pages/man5/nfs.5.html#DATA_AND_METADATA_COHERENCE",
+   "title": "nfs(5), Linux manual page",
+   "where": {
+    "en": "DATA AND METADATA COHERENCE, Directory entry caching",
+    "ru": "раздел DATA AND METADATA COHERENCE, Directory entry caching"
+   }
+  },
+  "nfs5-sync": {
+   "url": "https://man7.org/linux/man-pages/man5/nfs.5.html#DATA_AND_METADATA_COHERENCE",
+   "title": "nfs(5), Linux manual page",
+   "where": {
+    "en": "DATA AND METADATA COHERENCE, The sync mount option",
+    "ru": "раздел DATA AND METADATA COHERENCE, The sync mount option"
+   }
+  },
+  "nfs5-locks": {
+   "url": "https://man7.org/linux/man-pages/man5/nfs.5.html#DATA_AND_METADATA_COHERENCE",
+   "title": "nfs(5), Linux manual page",
+   "where": {
+    "en": "DATA AND METADATA COHERENCE, Using file locks with NFS",
+    "ru": "раздел DATA AND METADATA COHERENCE, Using file locks with NFS"
+   }
+  },
+  "nfs5-v4": {
+   "url": "https://man7.org/linux/man-pages/man5/nfs.5.html#DATA_AND_METADATA_COHERENCE",
+   "title": "nfs(5), Linux manual page",
+   "where": {
+    "en": "DATA AND METADATA COHERENCE, NFS version 4 caching features",
+    "ru": "раздел DATA AND METADATA COHERENCE, NFS version 4 caching features"
+   }
+  },
+  "open2-append": {
+   "url": "https://man7.org/linux/man-pages/man2/open.2.html#DESCRIPTION",
+   "title": "open(2), Linux manual page",
+   "where": {
+    "en": "DESCRIPTION, O_APPEND",
+    "ru": "раздел DESCRIPTION, O_APPEND"
+   }
+  },
+  "open2-direct": {
+   "url": "https://man7.org/linux/man-pages/man2/open.2.html#NOTES",
+   "title": "open(2), Linux manual page",
+   "where": {
+    "en": "NOTES, O_DIRECT",
+    "ru": "раздел NOTES, O_DIRECT"
+   }
+  },
+  "close2-errors": {
+   "url": "https://man7.org/linux/man-pages/man2/close.2.html#ERRORS",
+   "title": "close(2), Linux manual page",
+   "where": {
+    "en": "ERRORS, ENOSPC, EDQUOT",
+    "ru": "раздел ERRORS, ENOSPC, EDQUOT"
+   }
+  },
+  "close2-caveats": {
+   "url": "https://man7.org/linux/man-pages/man2/close.2.html#CAVEATS",
+   "title": "close(2), Linux manual page",
+   "where": {
+    "en": "CAVEATS, Dealing with error returns from close()",
+    "ru": "раздел CAVEATS, Dealing with error returns from close()"
+   }
+  },
+  "time7": {
+   "url": "https://man7.org/linux/man-pages/man7/time.7.html#DESCRIPTION",
+   "title": "time(7), Linux manual page",
+   "where": {
+    "en": "DESCRIPTION, The software clock, HZ, and jiffies",
+    "ru": "раздел DESCRIPTION, The software clock, HZ, and jiffies"
+   }
+  },
+  "nfsd7": {
+   "url": "https://man7.org/linux/man-pages/man7/nfsd.7.html#DETAILS",
+   "title": "nfsd(7), Linux manual page",
+   "where": {
+    "en": "DETAILS, clients/ and the /proc/net/rpc caches",
+    "ru": "раздел DETAILS, clients/ and the /proc/net/rpc caches"
+   }
+  },
+  "exports5": {
+   "url": "https://man7.org/linux/man-pages/man5/exports.5.html#DESCRIPTION",
+   "title": "exports(5), Linux manual page",
+   "where": {
+    "en": "DESCRIPTION, General Options, async and sync",
+    "ru": "раздел DESCRIPTION, General Options, async and sync"
+   }
+  },
+  "setlease2": {
+   "url": "https://man7.org/linux/man-pages/man2/F_SETLEASE.2const.html#DESCRIPTION",
+   "title": "F_GETLEASE(2const), F_SETLEASE, Linux manual page",
+   "where": {
+    "en": "DESCRIPTION",
+    "ru": "раздел DESCRIPTION"
+   }
+  },
+  "nfsstat8": {
+   "url": "https://man7.org/linux/man-pages/man8/nfsstat.8.html#OPTIONS",
+   "title": "nfsstat(8), Linux manual page",
+   "where": {
+    "en": "OPTIONS, -m, --mounts",
+    "ru": "раздел OPTIONS, -m, --mounts"
+   }
+  },
+  "rfc8881-changeinfo": {
+   "url": "https://www.rfc-editor.org/rfc/rfc8881#section-3.3.8",
+   "title": "RFC 8881: Network File System (NFS) Version 4 Minor Version 1 Protocol",
+   "where": {
+    "en": "Section 3.3.8, change_info4",
+    "ru": "раздел 3.3.8, change_info4"
+   }
+  },
+  "rfc8881-attrtable": {
+   "url": "https://www.rfc-editor.org/rfc/rfc8881#section-5.6",
+   "title": "RFC 8881: Network File System (NFS) Version 4 Minor Version 1 Protocol",
+   "where": {
+    "en": "Section 5.6, REQUIRED Attributes, table",
+    "ru": "раздел 5.6, REQUIRED Attributes, таблица"
+   }
+  },
+  "rfc8881-change": {
+   "url": "https://www.rfc-editor.org/rfc/rfc8881#section-5.8.1.4",
+   "title": "RFC 8881: Network File System (NFS) Version 4 Minor Version 1 Protocol",
+   "where": {
+    "en": "Section 5.8.1.4, Attribute 3: change",
+    "ru": "раздел 5.8.1.4, Attribute 3: change"
+   }
+  },
+  "rfc8881-callbacks": {
+   "url": "https://www.rfc-editor.org/rfc/rfc8881#section-10.2",
+   "title": "RFC 8881: Network File System (NFS) Version 4 Minor Version 1 Protocol",
+   "where": {
+    "en": "Section 10.2, Delegation and Callbacks",
+    "ru": "раздел 10.2, Delegation and Callbacks"
+   }
+  },
+  "rfc8881-opendeleg": {
+   "url": "https://www.rfc-editor.org/rfc/rfc8881#section-10.4",
+   "title": "RFC 8881: Network File System (NFS) Version 4 Minor Version 1 Protocol",
+   "where": {
+    "en": "Section 10.4, Open Delegation",
+    "ru": "раздел 10.4, Open Delegation"
+   }
+  },
+  "rfc8881-deleg-cache": {
+   "url": "https://www.rfc-editor.org/rfc/rfc8881#section-10.4.1",
+   "title": "RFC 8881: Network File System (NFS) Version 4 Minor Version 1 Protocol",
+   "where": {
+    "en": "Section 10.4.1, Open Delegation and Data Caching",
+    "ru": "раздел 10.4.1, Open Delegation and Data Caching"
+   }
+  },
+  "rfc8881-deleg-locks": {
+   "url": "https://www.rfc-editor.org/rfc/rfc8881#section-10.4.2",
+   "title": "RFC 8881: Network File System (NFS) Version 4 Minor Version 1 Protocol",
+   "where": {
+    "en": "Section 10.4.2, Open Delegation and File Locks",
+    "ru": "раздел 10.4.2, Open Delegation and File Locks"
+   }
+  },
+  "rfc8881-recall": {
+   "url": "https://www.rfc-editor.org/rfc/rfc8881#section-10.4.4",
+   "title": "RFC 8881: Network File System (NFS) Version 4 Minor Version 1 Protocol",
+   "where": {
+    "en": "Section 10.4.4, Recall of Open Delegation",
+    "ru": "раздел 10.4.4, Recall of Open Delegation"
+   }
+  },
+  "rfc8881-failhonor": {
+   "url": "https://www.rfc-editor.org/rfc/rfc8881#section-10.4.5",
+   "title": "RFC 8881: Network File System (NFS) Version 4 Minor Version 1 Protocol",
+   "where": {
+    "en": "Section 10.4.5, Clients That Fail to Honor Delegation Recalls",
+    "ru": "раздел 10.4.5, Clients That Fail to Honor Delegation Recalls"
+   }
+  },
+  "rfc8881-revocation": {
+   "url": "https://www.rfc-editor.org/rfc/rfc8881#section-10.5",
+   "title": "RFC 8881: Network File System (NFS) Version 4 Minor Version 1 Protocol",
+   "where": {
+    "en": "Section 10.5, Data Caching and Revocation",
+    "ru": "раздел 10.5, Data Caching and Revocation"
+   }
+  },
+  "rfc8881-attrcache": {
+   "url": "https://www.rfc-editor.org/rfc/rfc8881#section-10.6",
+   "title": "RFC 8881: Network File System (NFS) Version 4 Minor Version 1 Protocol",
+   "where": {
+    "en": "Section 10.6, Attribute Caching",
+    "ru": "раздел 10.6, Attribute Caching"
+   }
+  },
+  "rfc8881-dirdeleg-intro": {
+   "url": "https://www.rfc-editor.org/rfc/rfc8881#section-10.9.1",
+   "title": "RFC 8881: Network File System (NFS) Version 4 Minor Version 1 Protocol",
+   "where": {
+    "en": "Section 10.9.1, Introduction to Directory Delegations",
+    "ru": "раздел 10.9.1, Introduction to Directory Delegations"
+   }
+  },
+  "rfc8881-dirdeleg-design": {
+   "url": "https://www.rfc-editor.org/rfc/rfc8881#section-10.9.2",
+   "title": "RFC 8881: Network File System (NFS) Version 4 Minor Version 1 Protocol",
+   "where": {
+    "en": "Section 10.9.2, Directory Delegation Design",
+    "ru": "раздел 10.9.2, Directory Delegation Design"
+   }
+  },
+  "rfc8881-delay": {
+   "url": "https://www.rfc-editor.org/rfc/rfc8881#section-15.1.1.3",
+   "title": "RFC 8881: Network File System (NFS) Version 4 Minor Version 1 Protocol",
+   "where": {
+    "en": "Section 15.1.1.3, NFS4ERR_DELAY",
+    "ru": "раздел 15.1.1.3, NFS4ERR_DELAY"
+   }
+  },
+  "rfc8881-open": {
+   "url": "https://www.rfc-editor.org/rfc/rfc8881#section-18.16.3",
+   "title": "RFC 8881: Network File System (NFS) Version 4 Minor Version 1 Protocol",
+   "where": {
+    "en": "Section 18.16.3, OPEN, DESCRIPTION",
+    "ru": "раздел 18.16.3, OPEN, DESCRIPTION"
+   }
+  },
+  "rfc8881-cbgetattr": {
+   "url": "https://www.rfc-editor.org/rfc/rfc8881#section-20.1",
+   "title": "RFC 8881: Network File System (NFS) Version 4 Minor Version 1 Protocol",
+   "where": {
+    "en": "Section 20.1, CB_GETATTR",
+    "ru": "раздел 20.1, CB_GETATTR"
+   }
+  },
+  "rfc8881-cbrecall": {
+   "url": "https://www.rfc-editor.org/rfc/rfc8881#section-20.2",
+   "title": "RFC 8881: Network File System (NFS) Version 4 Minor Version 1 Protocol",
+   "where": {
+    "en": "Section 20.2, CB_RECALL",
+    "ru": "раздел 20.2, CB_RECALL"
+   }
+  },
+  "rfc1813-26": {
+   "url": "https://www.rfc-editor.org/rfc/rfc1813#section-2.6",
+   "title": "RFC 1813: NFS Version 3 Protocol Specification",
+   "where": {
+    "en": "Section 2.6, NFS3ERR_STALE, wcc_attr and wcc_data",
+    "ru": "раздел 2.6, NFS3ERR_STALE, wcc_attr и wcc_data"
+   }
+  },
+  "rfc1813-read": {
+   "url": "https://www.rfc-editor.org/rfc/rfc1813#section-3.3.6",
+   "title": "RFC 1813: NFS Version 3 Protocol Specification",
+   "where": {
+    "en": "Section 3.3.6, READ",
+    "ru": "раздел 3.3.6, READ"
+   }
+  },
+  "rfc1813-rename": {
+   "url": "https://www.rfc-editor.org/rfc/rfc1813#section-3.3.14",
+   "title": "RFC 1813: NFS Version 3 Protocol Specification",
+   "where": {
+    "en": "Section 3.3.14, RENAME",
+    "ru": "раздел 3.3.14, RENAME"
+   }
+  },
+  "rfc1813-commit": {
+   "url": "https://www.rfc-editor.org/rfc/rfc1813#section-3.3.21",
+   "title": "RFC 1813: NFS Version 3 Protocol Specification",
+   "where": {
+    "en": "Section 3.3.21, COMMIT",
+    "ru": "раздел 3.3.21, COMMIT"
+   }
+  },
+  "rfc1813-stable": {
+   "url": "https://www.rfc-editor.org/rfc/rfc1813#section-4.12",
+   "title": "RFC 1813: NFS Version 3 Protocol Specification",
+   "where": {
+    "en": "Section 4.12, Stable versus unstable writes",
+    "ru": "раздел 4.12, Stable versus unstable writes"
+   }
+  },
+  "rfc7862-cat": {
+   "url": "https://www.rfc-editor.org/rfc/rfc7862#section-12.2.3",
+   "title": "RFC 7862: Network File System (NFS) Version 4 Minor Version 2 Protocol",
+   "where": {
+    "en": "Section 12.2.3, Attribute 79: change_attr_type",
+    "ru": "раздел 12.2.3, Attribute 79: change_attr_type"
+   }
+  },
+  "rfc9754-times": {
+   "url": "https://www.rfc-editor.org/rfc/rfc9754#section-5",
+   "title": "RFC 9754: Extensions for Opening and Delegating Files in NFSv4.2",
+   "where": {
+    "en": "Section 5, Proxying of Times",
+    "ru": "раздел 5, Proxying of Times"
+   }
+  },
+  "k-inode-chattr": {
+   "url": "https://elixir.bootlin.com/linux/v6.12/source/fs/nfs/inode.c#L2245",
+   "title": "Linux kernel source, fs/nfs/inode.c (v6.12)",
+   "where": {
+    "en": "nfs_update_inode(), change attribute check",
+    "ru": "nfs_update_inode(), проверка атрибута change"
+   }
+  },
+  "k-inode-attrtimeo": {
+   "url": "https://elixir.bootlin.com/linux/v6.12/source/fs/nfs/inode.c#L2377",
+   "title": "Linux kernel source, fs/nfs/inode.c (v6.12)",
+   "where": {
+    "en": "nfs_update_inode(), attrtimeo update",
+    "ru": "nfs_update_inode(), обновление attrtimeo"
+   }
+  },
+  "k-inode-invmap": {
+   "url": "https://elixir.bootlin.com/linux/v6.12/source/fs/nfs/inode.c#L1373",
+   "title": "Linux kernel source, fs/nfs/inode.c (v6.12)",
+   "where": {
+    "en": "nfs_invalidate_mapping()",
+    "ru": "nfs_invalidate_mapping()"
+   }
+  },
+  "k-nfsfs-attrtimeo": {
+   "url": "https://elixir.bootlin.com/linux/v6.12/source/include/linux/nfs_fs.h#L146",
+   "title": "Linux kernel source, include/linux/nfs_fs.h (v6.12)",
+   "where": {
+    "en": "struct nfs_inode, comment on attrtimeo",
+    "ru": "struct nfs_inode, комментарий к attrtimeo"
+   }
+  },
+  "k-nfsfs-access": {
+   "url": "https://elixir.bootlin.com/linux/v6.12/source/include/linux/nfs_fs.h#L58",
+   "title": "Linux kernel source, include/linux/nfs_fs.h (v6.12)",
+   "where": {
+    "en": "struct nfs_access_entry",
+    "ru": "struct nfs_access_entry"
+   }
+  },
+  "k-dir-readdir": {
+   "url": "https://elixir.bootlin.com/linux/v6.12/source/fs/nfs/dir.c#L1066",
+   "title": "Linux kernel source, fs/nfs/dir.c (v6.12)",
+   "where": {
+    "en": "readdir_search_pagecache()",
+    "ru": "readdir_search_pagecache()"
+   }
+  },
+  "k-dir-unlink": {
+   "url": "https://elixir.bootlin.com/linux/v6.12/source/fs/nfs/dir.c#L2545",
+   "title": "Linux kernel source, fs/nfs/dir.c (v6.12)",
+   "where": {
+    "en": "nfs_unlink()",
+    "ru": "nfs_unlink()"
+   }
+  },
+  "k-xattr": {
+   "url": "https://elixir.bootlin.com/linux/v6.12/source/fs/nfs/nfs42xattr.c#L19",
+   "title": "Linux kernel source, fs/nfs/nfs42xattr.c (v6.12)",
+   "where": {
+    "en": "user xattr cache, header comment",
+    "ru": "кэш пользовательских xattr, комментарий в начале файла"
+   }
+  },
+  "k-fscache-h": {
+   "url": "https://elixir.bootlin.com/linux/v6.12/source/fs/nfs/fscache.h#L29",
+   "title": "Linux kernel source, fs/nfs/fscache.h (v6.12)",
+   "where": {
+    "en": "struct nfs_fscache_inode_auxdata",
+    "ru": "struct nfs_fscache_inode_auxdata"
+   }
+  },
+  "k-fscache-init": {
+   "url": "https://elixir.bootlin.com/linux/v6.12/source/fs/nfs/fscache.c#L163",
+   "title": "Linux kernel source, fs/nfs/fscache.c (v6.12)",
+   "where": {
+    "en": "nfs_fscache_init_inode()",
+    "ru": "nfs_fscache_init_inode()"
+   }
+  },
+  "k-fscache-open": {
+   "url": "https://elixir.bootlin.com/linux/v6.12/source/fs/nfs/fscache.c#L197",
+   "title": "Linux kernel source, fs/nfs/fscache.c (v6.12)",
+   "where": {
+    "en": "nfs_fscache_open_file() and its comment",
+    "ru": "nfs_fscache_open_file() и комментарий к ней"
+   }
+  },
+  "k-fscache-netfs": {
+   "url": "https://elixir.bootlin.com/linux/v6.12/source/fs/nfs/fscache.c#L244",
+   "title": "Linux kernel source, fs/nfs/fscache.c (v6.12)",
+   "where": {
+    "en": "nfs_netfs_read_folio()",
+    "ru": "nfs_netfs_read_folio()"
+   }
+  },
+  "k-nfsd-filecache": {
+   "url": "https://elixir.bootlin.com/linux/v6.12/source/fs/nfsd/filecache.c#L3",
+   "title": "Linux kernel source, fs/nfsd/filecache.c (v6.12)",
+   "where": {
+    "en": "header comment (the NFSD open file cache)",
+    "ru": "комментарий в начале файла (кэш открытых файлов NFSD)"
+   }
+  },
+  "k-nfs4xdr-open": {
+   "url": "https://elixir.bootlin.com/linux/v6.12/source/fs/nfs/nfs4xdr.c#L2387",
+   "title": "Linux kernel source, fs/nfs/nfs4xdr.c (v6.12)",
+   "where": {
+    "en": "nfs4_xdr_enc_open()",
+    "ru": "nfs4_xdr_enc_open()"
+   }
+  },
+  "k-nfs4xdr-write": {
+   "url": "https://elixir.bootlin.com/linux/v6.12/source/fs/nfs/nfs4xdr.c#L2660",
+   "title": "Linux kernel source, fs/nfs/nfs4xdr.c (v6.12)",
+   "where": {
+    "en": "nfs4_xdr_enc_write()",
+    "ru": "nfs4_xdr_enc_write()"
+   }
+  },
+  "k-file-flush": {
+   "url": "https://elixir.bootlin.com/linux/v6.12/source/fs/nfs/file.c#L136",
+   "title": "Linux kernel source, fs/nfs/file.c (v6.12)",
+   "where": {
+    "en": "nfs_file_flush()",
+    "ru": "nfs_file_flush()"
+   }
+  },
+  "k-write-wball": {
+   "url": "https://elixir.bootlin.com/linux/v6.12/source/fs/nfs/write.c#L2018",
+   "title": "Linux kernel source, fs/nfs/write.c (v6.12)",
+   "where": {
+    "en": "nfs_wb_all()",
+    "ru": "nfs_wb_all()"
+   }
+  },
+  "k-file-setlk": {
+   "url": "https://elixir.bootlin.com/linux/v6.12/source/fs/nfs/file.c#L786",
+   "title": "Linux kernel source, fs/nfs/file.c (v6.12)",
+   "where": {
+    "en": "do_setlk()",
+    "ru": "do_setlk()"
+   }
+  },
+  "k-file-unlk": {
+   "url": "https://elixir.bootlin.com/linux/v6.12/source/fs/nfs/file.c#L750",
+   "title": "Linux kernel source, fs/nfs/file.c (v6.12)",
+   "where": {
+    "en": "do_unlk()",
+    "ru": "do_unlk()"
+   }
+  },
+  "k-nfs4file-flush": {
+   "url": "https://elixir.bootlin.com/linux/v6.12/source/fs/nfs/nfs4file.c#L111",
+   "title": "Linux kernel source, fs/nfs/nfs4file.c (v6.12)",
+   "where": {
+    "en": "nfs4_file_flush()",
+    "ru": "nfs4_file_flush()"
+   }
+  },
+  "k-direct-commit": {
+   "url": "https://elixir.bootlin.com/linux/v6.12/source/fs/nfs/direct.c#L748",
+   "title": "Linux kernel source, fs/nfs/direct.c (v6.12)",
+   "where": {
+    "en": "nfs_direct_write_completion()",
+    "ru": "nfs_direct_write_completion()"
+   }
+  },
+  "k-nfsd-verf": {
+   "url": "https://elixir.bootlin.com/linux/v6.12/source/fs/nfsd/vfs.c#L341",
+   "title": "Linux kernel source, fs/nfsd/vfs.c (v6.12)",
+   "where": {
+    "en": "commit_reset_write_verifier()",
+    "ru": "commit_reset_write_verifier()"
+   }
+  },
+  "k-nfsd-commit": {
+   "url": "https://elixir.bootlin.com/linux/v6.12/source/fs/nfsd/vfs.c#L1363",
+   "title": "Linux kernel source, fs/nfsd/vfs.c (v6.12)",
+   "where": {
+    "en": "nfsd_commit()",
+    "ru": "nfsd_commit()"
+   }
+  },
+  "k-nfsd-breaklease": {
+   "url": "https://elixir.bootlin.com/linux/v6.12/source/fs/nfsd/vfs.c#L847",
+   "title": "Linux kernel source, fs/nfsd/vfs.c (v6.12)",
+   "where": {
+    "en": "nfsd_open_break_lease()",
+    "ru": "nfsd_open_break_lease()"
+   }
+  },
+  "k-nfsd-jukebox": {
+   "url": "https://elixir.bootlin.com/linux/v6.12/source/fs/nfsd/vfs.c#L91",
+   "title": "Linux kernel source, fs/nfsd/vfs.c (v6.12)",
+   "where": {
+    "en": "nfserrno() table, -EWOULDBLOCK",
+    "ru": "таблица nfserrno(), -EWOULDBLOCK"
+   }
+  },
+  "k-nfsd-setlease": {
+   "url": "https://elixir.bootlin.com/linux/v6.12/source/fs/nfsd/nfs4state.c#L5873",
+   "title": "Linux kernel source, fs/nfsd/nfs4state.c (v6.12)",
+   "where": {
+    "en": "nfs4_set_delegation(), kernel_setlease()",
+    "ru": "nfs4_set_delegation(), kernel_setlease()"
+   }
+  },
+  "k-nfsd-bloom": {
+   "url": "https://elixir.bootlin.com/linux/v6.12/source/fs/nfsd/nfs4state.c#L1073",
+   "title": "Linux kernel source, fs/nfsd/nfs4state.c (v6.12)",
+   "where": {
+    "en": "comment on blocked delegations (bloom filters)",
+    "ru": "комментарий о блокировке делегирований (фильтры Блума)"
+   }
+  },
+  "k-nfsd-states": {
+   "url": "https://elixir.bootlin.com/linux/v6.12/source/fs/nfsd/nfs4state.c#L2887",
+   "title": "Linux kernel source, fs/nfsd/nfs4state.c (v6.12)",
+   "where": {
+    "en": "nfs4_show_deleg()",
+    "ru": "nfs4_show_deleg()"
+   }
+  },
+  "k-nfsd-lease": {
+   "url": "https://elixir.bootlin.com/linux/v6.12/source/fs/nfsd/nfs4state.c#L4684",
+   "title": "Linux kernel source, fs/nfsd/nfs4state.c (v6.12)",
+   "where": {
+    "en": "default lease time",
+    "ru": "срок аренды по умолчанию"
+   }
+  },
+  "k-nfsd-getattr": {
+   "url": "https://elixir.bootlin.com/linux/v6.12/source/fs/nfsd/nfs4state.c#L8865",
+   "title": "Linux kernel source, fs/nfsd/nfs4state.c (v6.12)",
+   "where": {
+    "en": "nfsd4_deleg_getattr_conflict()",
+    "ru": "nfsd4_deleg_getattr_conflict()"
+   }
+  },
+  "k-nfsfh-chattr": {
+   "url": "https://elixir.bootlin.com/linux/v6.12/source/fs/nfsd/nfsfh.c#L824",
+   "title": "Linux kernel source, fs/nfsd/nfsfh.c (v6.12)",
+   "where": {
+    "en": "nfsd4_change_attribute()",
+    "ru": "nfsd4_change_attribute()"
+   }
+  },
+  "k-iversion": {
+   "url": "https://elixir.bootlin.com/linux/v6.12/source/include/linux/iversion.h#L8",
+   "title": "Linux kernel source, include/linux/iversion.h (v6.12)",
+   "where": {
+    "en": "comment on the inode->i_version field",
+    "ru": "комментарий о поле inode->i_version"
+   }
+  },
+  "k-nfs4proc-delay": {
+   "url": "https://elixir.bootlin.com/linux/v6.12/source/fs/nfs/nfs4proc.c#L419",
+   "title": "Linux kernel source, fs/nfs/nfs4proc.c (v6.12)",
+   "where": {
+    "en": "nfs4_update_delay()",
+    "ru": "nfs4_update_delay()"
+   }
+  },
+  "k-nfs4proc-recall": {
+   "url": "https://elixir.bootlin.com/linux/v6.12/source/fs/nfs/nfs4proc.c#L2380",
+   "title": "Linux kernel source, fs/nfs/nfs4proc.c (v6.12)",
+   "where": {
+    "en": "nfs4_open_delegation_recall()",
+    "ru": "nfs4_open_delegation_recall()"
+   }
+  },
+  "k-nfs4proc-preserve": {
+   "url": "https://elixir.bootlin.com/linux/v6.12/source/fs/nfs/nfs4proc.c#L3139",
+   "title": "Linux kernel source, fs/nfs/nfs4proc.c (v6.12)",
+   "where": {
+    "en": "OPEN4_RESULT_PRESERVE_UNLINKED in the OPEN reply",
+    "ru": "OPEN4_RESULT_PRESERVE_UNLINKED в ответе на OPEN"
+   }
+  },
+  "k-uapi-jukebox": {
+   "url": "https://elixir.bootlin.com/linux/v6.12/source/include/uapi/linux/nfs.h#L77",
+   "title": "Linux kernel source, include/uapi/linux/nfs.h (v6.12)",
+   "where": {
+    "en": "NFSERR_JUKEBOX",
+    "ru": "NFSERR_JUKEBOX"
+   }
+  },
+  "k-unlink-silly": {
+   "url": "https://elixir.bootlin.com/linux/v6.12/source/fs/nfs/unlink.c#L413",
+   "title": "Linux kernel source, fs/nfs/unlink.c (v6.12)",
+   "where": {
+    "en": "SILLYNAME_* and nfs_sillyrename()",
+    "ru": "SILLYNAME_* и nfs_sillyrename()"
+   }
+  },
+  "k-nfs4state-lost": {
+   "url": "https://elixir.bootlin.com/linux/v6.12/source/fs/nfs/nfs4state.c#L998",
+   "title": "Linux kernel source, fs/nfs/nfs4state.c (v6.12)",
+   "where": {
+    "en": "nfs4_copy_lock_stateid(), NFS_LOCK_LOST",
+    "ru": "nfs4_copy_lock_stateid(), NFS_LOCK_LOST"
+   }
+  },
+  "k-namei-estale": {
+   "url": "https://elixir.bootlin.com/linux/v6.12/source/include/linux/namei.h#L123",
+   "title": "Linux kernel source, include/linux/namei.h (v6.12)",
+   "where": {
+    "en": "retry_estale()",
+    "ru": "retry_estale()"
+   }
+  },
+  "k-iostat": {
+   "url": "https://elixir.bootlin.com/linux/v6.12/source/include/linux/nfs_iostat.h#L92",
+   "title": "Linux kernel source, include/linux/nfs_iostat.h (v6.12)",
+   "where": {
+    "en": "enum nfs_stat_eventcounters",
+    "ru": "enum nfs_stat_eventcounters"
+   }
+  },
+  "k-nfstrace": {
+   "url": "https://elixir.bootlin.com/linux/v6.12/source/fs/nfs/nfstrace.h#L144",
+   "title": "Linux kernel source, fs/nfs/nfstrace.h (v6.12)",
+   "where": {
+    "en": "inode tracepoints",
+    "ru": "точки трассировки inode"
+   }
+  },
+  "k-nfs4trace": {
+   "url": "https://elixir.bootlin.com/linux/v6.12/source/fs/nfs/nfs4trace.h#L1449",
+   "title": "Linux kernel source, fs/nfs/nfs4trace.h (v6.12)",
+   "where": {
+    "en": "nfs4_cb_recall tracepoint",
+    "ru": "точка трассировки nfs4_cb_recall"
+   }
+  },
+  "k-clnt-timeout": {
+   "url": "https://elixir.bootlin.com/linux/v6.12/source/net/sunrpc/clnt.c#L2553",
+   "title": "Linux kernel source, net/sunrpc/clnt.c (v6.12)",
+   "where": {
+    "en": "rpc_check_timeout()",
+    "ru": "rpc_check_timeout()"
+   }
+  },
+  "k-nfsd-66": {
+   "url": "https://elixir.bootlin.com/linux/v6.6/source/fs/nfsd/nfs4state.c#L5485",
+   "title": "Linux kernel source, fs/nfsd/nfs4state.c (v6.6)",
+   "where": {
+    "en": "nfs4_set_delegation()",
+    "ru": "nfs4_set_delegation()"
+   }
+  },
+  "k-kconfig-618": {
+   "url": "https://elixir.bootlin.com/linux/v6.18/source/fs/nfsd/Kconfig#L180",
+   "title": "Linux kernel source, fs/nfsd/Kconfig (v6.18)",
+   "where": {
+    "en": "NFSD_V4_DELEG_TIMESTAMPS",
+    "ru": "NFSD_V4_DELEG_TIMESTAMPS"
+   }
+  },
+  "k-commit-mgtime": {
+   "url": "https://github.com/torvalds/linux/commit/6ac81fd55e8af8e78a716b4ba213c8c6381d94fd",
+   "title": "Linux kernel commit 6ac81fd55e8a, Merge tag 'vfs-6.13.mgtime'",
+   "where": {
+    "en": "commit message",
+    "ru": "сообщение коммита"
+   }
+  },
+  "k-commit-611": {
+   "url": "https://github.com/torvalds/linux/commit/4f40c636b291deeae7d1f4c9fb5db5f0aac54267",
+   "title": "Linux kernel commit 4f40c636b291, Merge tag 'nfs-for-6.11-1'",
+   "where": {
+    "en": "commit message",
+    "ru": "сообщение коммита"
+   }
+  },
+  "k-commit-619": {
+   "url": "https://github.com/torvalds/linux/commit/6bb34aff1ebdd4ee8ea1721068f74d476d707f01",
+   "title": "Linux kernel commit 6bb34aff1ebd, Merge tag 'nfs-for-6.19-1'",
+   "where": {
+    "en": "commit message",
+    "ru": "сообщение коммита"
+   }
+  },
+  "k-commit-e7a8": {
+   "url": "https://github.com/torvalds/linux/commit/e7a8ebc305f26cab608e59a916a4ae89d6656c5f",
+   "title": "Linux kernel commit e7a8ebc305f2, NFSD: Offer write delegation for OPEN with OPEN4_SHARE_ACCESS_WRITE",
+   "where": {
+    "en": "commit message (first released in v6.17)",
+    "ru": "сообщение коммита (впервые вошёл в v6.17)"
+   }
+  },
+  "kn-66": {
+   "url": "https://kernelnewbies.org/Linux_6.6",
+   "title": "Linux 6.6, Linux Kernel Newbies",
+   "where": {
+    "en": "File systems, NFS",
+    "ru": "раздел File systems, NFS"
+   }
+  },
+  "kn-519": {
+   "url": "https://kernelnewbies.org/Linux_5.19",
+   "title": "Linux 5.19, Linux Kernel Newbies",
+   "where": {
+    "en": "NFS Courteous Server",
+    "ru": "раздел NFS Courteous Server"
+   }
+  },
+  "lwn-killable": {
+   "url": "https://lwn.net/Articles/288056/",
+   "title": "TASK_KILLABLE, LWN.net (2008)",
+   "where": {
+    "en": "whole article",
+    "ru": "статья целиком"
+   }
+  },
+  "lwn-iversion": {
+   "url": "https://lwn.net/Articles/937247/",
+   "title": "Improving i_version, LWN.net (2023)",
+   "where": {
+    "en": "whole article",
+    "ru": "статья целиком"
+   }
+  },
+  "mgts-intro": {
+   "url": "https://docs.kernel.org/filesystems/multigrain-ts.html#introduction",
+   "title": "Multigrain Timestamps, The Linux Kernel documentation",
+   "where": {
+    "en": "Introduction",
+    "ru": "раздел Introduction"
+   }
+  },
+  "mgts-impl": {
+   "url": "https://docs.kernel.org/filesystems/multigrain-ts.html#multigrain-timestamp-implementation",
+   "title": "Multigrain Timestamps, The Linux Kernel documentation",
+   "where": {
+    "en": "Multigrain Timestamp Implementation",
+    "ru": "раздел Multigrain Timestamp Implementation"
+   }
+  },
+  "mgts-notes": {
+   "url": "https://docs.kernel.org/filesystems/multigrain-ts.html#implementation-notes",
+   "title": "Multigrain Timestamps, The Linux Kernel documentation",
+   "where": {
+    "en": "Implementation Notes",
+    "ru": "раздел Implementation Notes"
+   }
+  },
+  "kparams": {
+   "url": "https://docs.kernel.org/admin-guide/kernel-parameters.html",
+   "title": "The kernel's command-line parameters, The Linux Kernel documentation",
+   "where": {
+    "en": "nfs.recover_lost_locks",
+    "ru": "параметр nfs.recover_lost_locks"
+   }
+  },
+  "kd-fscache": {
+   "url": "https://docs.kernel.org/filesystems/caching/fscache.html#overview",
+   "title": "General Filesystem Caching, The Linux Kernel documentation",
+   "where": {
+    "en": "Overview",
+    "ru": "раздел Overview"
+   }
+  },
+  "kd-cachefiles": {
+   "url": "https://docs.kernel.org/filesystems/caching/cachefiles.html#overview",
+   "title": "Cache on Already Mounted Filesystem (CacheFiles), The Linux Kernel documentation",
+   "where": {
+    "en": "Overview",
+    "ru": "раздел Overview"
+   }
+  },
+  "kd-netfs": {
+   "url": "https://docs.kernel.org/filesystems/netfs_library.html#overview",
+   "title": "Network Filesystem Services Library, The Linux Kernel documentation",
+   "where": {
+    "en": "Overview",
+    "ru": "раздел Overview"
+   }
+  },
+  "kd-vm": {
+   "url": "https://docs.kernel.org/admin-guide/sysctl/vm.html#drop-caches",
+   "title": "Documentation for /proc/sys/vm/, The Linux Kernel documentation",
+   "where": {
+    "en": "drop_caches",
+    "ru": "раздел drop_caches"
+   }
+  },
+  "rh-fscache": {
+   "url": "https://docs.redhat.com/en/documentation/red_hat_enterprise_linux/7/html/storage_administration_guide/fscachesetup",
+   "title": "Red Hat Enterprise Linux 7 Storage Administration Guide",
+   "where": {
+    "en": "10.2. Setting up a Cache",
+    "ru": "раздел 10.2. Setting up a Cache"
+   }
+  },
+  "smbconf": {
+   "url": "https://www.samba.org/samba/docs/current/man-html/smb.conf.5.html#KERNELOPLOCKS",
+   "title": "smb.conf(5), Samba manual page",
+   "where": {
+    "en": "kernel oplocks",
+    "ru": "параметр kernel oplocks"
+   }
+  },
+  "faq-a8": {
+   "url": "https://nfs.sourceforge.net/#faq_a8",
+   "title": "Linux NFS FAQ",
+   "where": {
+    "en": "A8. What is close-to-open cache consistency?",
+    "ru": "вопрос A8. What is close-to-open cache consistency?"
+   }
+  },
+  "faq-a9": {
+   "url": "https://nfs.sourceforge.net/#faq_a9",
+   "title": "Linux NFS FAQ",
+   "where": {
+    "en": "A9. Why does opening files with O_APPEND on multiple clients cause the files to become corrupted?",
+    "ru": "вопрос A9. Why does opening files with O_APPEND on multiple clients cause the files to become corrupted?"
+   }
+  },
+  "faq-d2": {
+   "url": "https://nfs.sourceforge.net/#faq_d2",
+   "title": "Linux NFS FAQ",
+   "where": {
+    "en": "D2. What is a \"silly rename\"?",
+    "ru": "вопрос D2. What is a \"silly rename\"?"
+   }
+  },
+  "faq-d8": {
+   "url": "https://nfs.sourceforge.net/#faq_d8",
+   "title": "Linux NFS FAQ",
+   "where": {
+    "en": "D8. When my application uses memory-mapped NFS files, it breaks. Why?",
+    "ru": "вопрос D8. When my application uses memory-mapped NFS files, it breaks. Why?"
+   }
+  },
+  "howard-31": {
+   "url": "https://www.cs.cmu.edu/~satya/docdir/howard-tocs-afs-1988.pdf",
+   "title": "Howard et al., Scale and Performance in a Distributed File System, ACM TOCS 6(1), 1988",
+   "where": {
+    "en": "Section 3.1, Cache Management",
+    "ru": "раздел 3.1, Cache Management"
+   }
+  },
+  "howard-35": {
+   "url": "https://www.cs.cmu.edu/~satya/docdir/howard-tocs-afs-1988.pdf",
+   "title": "Howard et al., Scale and Performance in a Distributed File System, ACM TOCS 6(1), 1988",
+   "where": {
+    "en": "Section 3.5, Overall Design",
+    "ru": "раздел 3.5, Overall Design"
+   }
+  },
+  "afsd": {
+   "url": "https://docs.openafs.org/Reference/8/afsd.html#OPTIONS",
+   "title": "afsd(8), OpenAFS reference page",
+   "where": {
+    "en": "OPTIONS, -chunksize",
+    "ru": "раздел OPTIONS, -chunksize"
+   }
+  },
+  "ms-oplock": {
+   "url": "https://learn.microsoft.com/en-us/archive/blogs/openspecification/client-caching-features-oplock-vs-lease",
+   "title": "Client caching features: Oplock vs. Lease, Microsoft Open Specifications blog (2009)",
+   "where": {
+    "en": "Oplocks in SMB/SMB2; Lease in SMB 2.1",
+    "ru": "разделы Oplocks in SMB/SMB2 и Lease in SMB 2.1"
+   }
+  },
+  "ceph-types": {
+   "url": "https://docs.ceph.com/en/latest/cephfs/capabilities/#types-of-capabilities",
+   "title": "Capabilities in CephFS, Ceph documentation",
+   "where": {
+    "en": "Types of Capabilities",
+    "ru": "раздел Types of Capabilities"
+   }
+  },
+  "ceph-locks": {
+   "url": "https://docs.ceph.com/en/latest/cephfs/capabilities/#the-relation-between-the-lock-states-and-the-capabilities",
+   "title": "Capabilities in CephFS, Ceph documentation",
+   "where": {
+    "en": "The relation between the lock states and the capabilities",
+    "ru": "раздел The relation between the lock states and the capabilities"
+   }
+  },
+  "lustre-11": {
+   "url": "https://doc.lustre.org/lustre_manual.xhtml#understandinglustre.whatislustre",
+   "title": "Lustre Software Release 2.x Operations Manual",
+   "where": {
+    "en": "Section 1.1, What a Lustre File System Is (and What It Isn't)",
+    "ru": "раздел 1.1, What a Lustre File System Is (and What It Isn't)"
+   }
+  },
+  "lustre-gloss": {
+   "url": "https://doc.lustre.org/lustre_manual.xhtml#revocation",
+   "title": "Lustre Software Release 2.x Operations Manual",
+   "where": {
+    "en": "Glossary, Revocation callback",
+    "ru": "глоссарий, Revocation callback"
+   }
+  },
+  "gpfs-32": {
+   "url": "https://www.usenix.org/legacy/events/fast02/full_papers/schmuck/schmuck.pdf",
+   "title": "Schmuck and Haskin, GPFS: A Shared-Disk File System for Large Computing Clusters, FAST 2002",
+   "where": {
+    "en": "Section 3.2, The GPFS Distributed Lock Manager",
+    "ru": "раздел 3.2, The GPFS Distributed Lock Manager"
+   }
+  },
+  "gpfs-33": {
+   "url": "https://www.usenix.org/legacy/events/fast02/full_papers/schmuck/schmuck.pdf",
+   "title": "Schmuck and Haskin, GPFS: A Shared-Disk File System for Large Computing Clusters, FAST 2002",
+   "where": {
+    "en": "Section 3.3, Parallel Data Access",
+    "ru": "раздел 3.3, Parallel Data Access"
+   }
+  },
+  "gpfs-34": {
+   "url": "https://www.usenix.org/legacy/events/fast02/full_papers/schmuck/schmuck.pdf",
+   "title": "Schmuck and Haskin, GPFS: A Shared-Disk File System for Large Computing Clusters, FAST 2002",
+   "where": {
+    "en": "Section 3.4, Synchronizing Access to File Metadata",
+    "ru": "раздел 3.4, Synchronizing Access to File Metadata"
+   }
+  },
+  "gnu-make": {
+   "url": "https://git.savannah.gnu.org/cgit/make.git/tree/src/main.c?h=4.4.1#n2939",
+   "title": "GNU Make source, src/main.c (4.4.1)",
+   "where": {
+    "en": "clock skew warning",
+    "ru": "предупреждение о расхождении часов"
+   }
+  },
+  "git-courtesy-limit": {
+   "url": "https://git.kernel.org/pub/scm/linux/kernel/git/torvalds/linux.git/commit/?id=4271c2c0887562318a0afef97d32d8a71cbe0743",
+   "title": "Linux commit 4271c2c08875: NFSD: limit the number of v4 clients to 1024 per 1GB of system memory",
+   "where": {
+    "en": "commit message",
+    "ru": "сообщение коммита"
+   }
+  },
+  "git-courtesy-shrinker": {
+   "url": "https://git.kernel.org/pub/scm/linux/kernel/git/torvalds/linux.git/commit/?id=7746b32f467b3813fb61faaab3258de35806a7ac",
+   "title": "Linux commit 7746b32f467b: NFSD: add shrinker to reap courtesy clients on low memory condition",
+   "where": {
+    "en": "commit message",
+    "ru": "сообщение коммита"
+   }
+  },
+  "nfs5-cto-v4": {
+   "url": "https://man7.org/linux/man-pages/man5/nfs.5.html#MOUNT_OPTIONS",
+   "title": "nfs(5), Linux manual page",
+   "where": {
+    "en": "MOUNT OPTIONS, cto / nocto (NFS version 4)",
+    "ru": "раздел MOUNT OPTIONS, cto / nocto (NFS version 4)"
+   }
+  }
+ },
+ "cites": [
+  {
+   "src": "nfs5-v4",
+   "en": "NFS chose polling as its base and added promises later.",
+   "ru": "NFS взяла за основу опрос, а обещания добавила позже.",
+   "quote": "The data and metadata caching behavior of NFS version 4 clients is similar to that of earlier versions. However, NFS version 4 adds two features that improve cache behavior: change attributes and file delegation."
+  },
+  {
+   "src": [
+    "k-inode-chattr",
+    "k-inode-invmap"
+   ],
+   "en": "the whole file's pages are dropped",
+   "ru": "сбрасываются страницы всего файла",
+   "quote": {
+    "k-inode-chattr": "if (!inode_eq_iversion_raw(inode, fattr->change_attr)) { /* Could it be a race with writeback? */ if (!(have_writers || have_delegation)) { invalid |= NFS_INO_INVALID_DATA",
+    "k-inode-invmap": "static int nfs_invalidate_mapping(struct inode *inode, struct address_space *mapping) ... ret = invalidate_inode_pages2(mapping);"
+   }
+  },
+  {
+   "src": "nfs5-ac",
+   "en": "(3 to 60 s for files by default)",
+   "ru": "(по умолчанию от 3 до 60 с для файлов)",
+   "quote": "acregmin=n The minimum time (in seconds) that the NFS client caches attributes of a regular file ... the NFS client uses a 3-second minimum. ... acregmax=n ... the NFS client uses a 60-second maximum."
+  },
+  {
+   "src": "nfs5-dentry",
+   "en": "checked by NFS's <code>d_revalidate</code> on each use",
+   "ru": "проверяется методом NFS <code>d_revalidate</code> при каждом использовании",
+   "quote": "To detect when directory entries have been added or removed on the server, the Linux NFS client watches a directory's mtime. If the client detects a change in a directory's mtime, the client drops all cached LOOKUP results for that directory."
+  },
+  {
+   "src": "k-nfsfs-access",
+   "en": "results of ACCESS calls, per user credential",
+   "ru": "результаты вызовов ACCESS для каждого набора учётных данных пользователя",
+   "quote": "NFSv3/v4 Access mode cache entry */ struct nfs_access_entry { struct rb_node rb_node; struct list_head lru; kuid_t fsuid; kgid_t fsgid; struct group_info *group_info; u64 timestamp; __u32 mask;"
+  },
+  {
+   "src": "k-dir-readdir",
+   "en": "directory listings, stored as pages of the directory inode",
+   "ru": "содержимое каталогов, хранится как страницы inode каталога",
+   "quote": "/* Search for desc->dir_cookie from the beginning of the page cache */ static int readdir_search_pagecache(struct nfs_readdir_descriptor *desc)"
+  },
+  {
+   "src": "k-xattr",
+   "en": "user xattrs (NFSv4.2) and ACLs",
+   "ru": "пользовательские xattr (NFSv4.2) и ACL",
+   "quote": "User extended attributes client side caching is implemented by having a cache structure attached to NFS inodes."
+  },
+  {
+   "src": "k-fscache-h",
+   "en": "(change attribute, times, size) no longer matches the server's",
+   "ru": "(атрибут change, времена, размер) больше не совпадают с серверными",
+   "quote": "struct nfs_fscache_inode_auxdata { s64 mtime_sec; s64 mtime_nsec; s64 ctime_sec; s64 ctime_nsec; u64 change_attr; };"
+  },
+  {
+   "src": [
+    "k-nfsd-filecache",
+    "nfsd7"
+   ],
+   "en": "and it caches export decisions it got from <code>rpc.mountd</code>.",
+   "ru": "а решения об экспорте, полученные от <code>rpc.mountd</code>, он тоже запоминает.",
+   "quote": {
+    "k-nfsd-filecache": "The NFSD open file cache. ... garbage-collected: When a consumer does not control the lifetime of open state, it acquires a garbage-collected nfsd_file. The final nfsd_file_put allows the open state to linger for a period during which it may be re-used.",
+    "nfsd7": "The directories contain information about various caches that the NFS server maintains to keep track of access permissions that different clients have for different filesystems. ... nfsd.export This cache contains a mapping from directory and domain to export options."
+   }
+  },
+  {
+   "src": [
+    "rfc1813-read",
+    "k-nfs4xdr-open",
+    "k-nfs4xdr-write"
+   ],
+   "en": "the Linux NFSv4 client appends GETATTR to many COMPOUNDs, such as OPEN and WRITE.",
+   "ru": "добавляет GETATTR во многие COMPOUND-запросы, например в OPEN и WRITE.",
+   "quote": {
+    "rfc1813-read": "struct READ3resok { post_op_attr file_attributes; count3 count; bool eof; opaque data<>; };",
+    "k-nfs4xdr-open": "encode_open(xdr, args, &hdr); encode_getfh(xdr, &hdr); if (args->access) encode_access(xdr, args->access, &hdr); encode_getfattr_open(xdr, args->bitmask, args->open_bitmap, &hdr);",
+    "k-nfs4xdr-write": "encode_write(xdr, args, &hdr); req->rq_snd_buf.flags |= XDRBUF_WRITE; if (args->bitmask) encode_getfattr(xdr, args->bitmask, &hdr);"
+   }
+  },
+  {
+   "src": "nfs5-ac",
+   "en": "<th>Mount option</th><th>Default",
+   "ru": "<th>Опция монтирования</th><th>По умолчанию",
+   "quote": "acregmin ... uses a 3-second minimum. ... acregmax ... uses a 60-second maximum. ... acdirmin ... uses a 30-second minimum. ... acdirmax ... uses a 60-second maximum. ... Using actimeo sets all of acregmin, acregmax, acdirmin, and acdirmax to the same value."
+  },
+  {
+   "src": "nfs5-ac",
+   "en": "no attribute caching at all, and every write becomes synchronous",
+   "ru": "атрибуты не кэшируются вообще, и каждая запись становится синхронной",
+   "quote": "The noac option prevents clients from caching file attributes ... In addition to preventing the client from caching file attributes, the noac option forces application writes to become synchronous"
+  },
+  {
+   "src": "k-nfsfs-attrtimeo",
+   "en": "As soon as a refetch shows a change, the timeout drops back to the minimum.",
+   "ru": "Как только очередной запрос показывает изменение, таймаут сбрасывается обратно к минимуму.",
+   "quote": "attrtimeo is for how long the cached information is assumed to be valid. A successful attribute revalidation doubles attrtimeo (up to acregmax/acdirmax), a failure resets it to acregmin/acdirmin."
+  },
+  {
+   "src": "k-inode-attrtimeo",
+   "en": "operating on <code>nfsi-&gt;attrtimeo</code>.",
+   "ru": "и работает с полем <code>nfsi-&gt;attrtimeo</code>.",
+   "quote": "/* Update attrtimeo value if we're out of the unstable period */ if (attr_changed) { ... nfsi->attrtimeo = NFS_MINATTRTIMEO(inode); ... } else { if (cache_revalidated) { ... nfsi->attrtimeo <<= 1; if (nfsi->attrtimeo > NFS_MAXATTRTIMEO(inode)) nfsi->attrtimeo = NFS_MAXATTRTIMEO(inode);"
+  },
+  {
+   "src": "nfs5-ac",
+   "en": "for up to <code>acregmax</code> seconds (60 by default) after another machine changed the file.",
+   "ru": "до <code>acregmax</code> секунд (по умолчанию 60) после того, как файл изменила другая машина.",
+   "quote": "Every few seconds, an NFS client checks the server's version of each file's attributes for updates. Changes that occur on the server in those small intervals remain undetected until the client checks the server again."
+  },
+  {
+   "src": "nfs5-dentry",
+   "en": "can take 30 to 60 seconds to appear in a cached listing.",
+   "ru": "может появиться в закэшированном списке только через 30–60 секунд.",
+   "quote": "Since the directory's mtime is a cached attribute, it may take some time before a client notices it has changed. See the descriptions of the acdirmin, acdirmax, and noac mount options for more information about how long a directory's mtime is cached."
+  },
+  {
+   "src": "k-inode-chattr",
+   "en": "it sets <code>NFS_INO_INVALID_DATA</code> on the inode.",
+   "ru": "клиент выставляет на inode флаг <code>NFS_INO_INVALID_DATA</code>.",
+   "quote": "if (!inode_eq_iversion_raw(inode, fattr->change_attr)) { /* Could it be a race with writeback? */ if (!(have_writers || have_delegation)) { invalid |= NFS_INO_INVALID_DATA"
+  },
+  {
+   "src": "k-inode-invmap",
+   "en": "with <code>invalidate_inode_pages2()</code>, then rereads from the server.",
+   "ru": "через <code>invalidate_inode_pages2()</code> и перечитывает данные с сервера.",
+   "quote": "static int nfs_invalidate_mapping(struct inode *inode, struct address_space *mapping) ... ret = invalidate_inode_pages2(mapping); ... nfs_inc_stats(inode, NFSIOS_DATAINVALIDATE);"
+  },
+  {
+   "src": "rfc1813-26",
+   "en": "and the client can simply adopt the \"after\" values.",
+   "ru": "и клиент может просто принять значения «после».",
+   "quote": "struct wcc_attr { size3 size; nfstime3 mtime; nfstime3 ctime; }; ... A wcc_data structure consists of certain key fields from the object attributes before the operation, together with the object attributes after the operation."
+  },
+  {
+   "src": "rfc8881-changeinfo",
+   "en": "(<code>change_info4</code>) for the same purpose.",
+   "ru": "до и после операции (<code>change_info4</code>).",
+   "quote": "struct change_info4 { bool atomic; changeid4 before; changeid4 after; }; This data type is used with the CREATE, LINK, OPEN, REMOVE, and RENAME operations to let the client know the value of the change attribute for the directory"
+  },
+  {
+   "src": "nfs5-ac",
+   "en": "and expect a large slowdown.",
+   "ru": "и рассчитывайте на сильное замедление.",
+   "quote": "Using the noac option provides greater cache coherence among NFS clients accessing the same files, but it extracts a significant performance penalty."
+  },
+  {
+   "src": "nfs5-lookupcache",
+   "en": "<code>lookupcache=none</code> revalidates every lookup with the server.",
+   "ru": "<code>lookupcache=none</code> перепроверяет на сервере каждый поиск имени.",
+   "quote": "If this option is not specified, or if all is specified, the client assumes both types of directory cache entries are valid ... If pos or positive is specified, the client ... always revalidates negative entries ... If none is specified, the client revalidates both types"
+  },
+  {
+   "src": "rfc1813-26",
+   "en": "That only works if every change produces a different value.",
+   "ru": "Это работает, только если каждое изменение даёт новое значение.",
+   "quote": "The use of mtime by clients to detect changes to file system objects residing on a server is dependent on the granularity of the time base on the server."
+  },
+  {
+   "src": [
+    "time7",
+    "mgts-intro"
+   ],
+   "en": "because reading a fine-grained clock on every write is expensive.",
+   "ru": "потому что читать точные часы при каждой записи дорого.",
+   "quote": {
+    "time7": "Since Linux 2.6.13, the HZ value is a kernel configuration parameter and can be 100, 250 (the default) or 1000, yielding a jiffies value of, respectively, 0.01, 0.004, or 0.001 seconds.",
+    "mgts-intro": "Historically, the kernel has always used coarse time values to stamp inodes. This value is updated every jiffy ... Coarse timestamps are therefore good from a performance standpoint, since they reduce the need for metadata updates"
+   }
+  },
+  {
+   "src": "mgts-intro",
+   "en": "Its cache stays wrong until something else changes the file.",
+   "ru": "Его кэш останется неверным, пока файл не изменится снова.",
+   "quote": "any change that happens within that jiffy will end up with the same timestamp. ... They are particularly troublesome with NFSv3, where unchanging timestamps can make it difficult to tell whether to invalidate caches."
+  },
+  {
+   "src": [
+    "rfc8881-change",
+    "rfc8881-attrtable"
+   ],
+   "en": "a 64-bit value that the server must change every time the file's data or metadata changes.",
+   "ru": "это 64-битное значение, которое сервер обязан менять при каждом изменении данных или метаданных файла.",
+   "quote": {
+    "rfc8881-change": "A value created by the server that the client can use to determine if file data, directory contents, or attributes of the object have been modified.",
+    "rfc8881-attrtable": "| change | 3 | uint64_t | R | Section 5.8.1.4 |"
+   }
+  },
+  {
+   "src": [
+    "k-iversion",
+    "lwn-iversion"
+   ],
+   "en": "ext4, XFS and btrfs maintain a real counter, and <code>nfsd</code> returns it.",
+   "ru": "ext4, XFS и btrfs ведут настоящий счётчик, и <code>nfsd</code> возвращает именно его.",
+   "quote": {
+    "k-iversion": "The change attribute (i_version) is mandated by NFSv4 and is mostly for knfsd, but is also used for other purposes (e.g. IMA).",
+    "lwn-iversion": "There is VFS infrastructure that filesystems can opt into using the SB_I_VERSION flag; so far, ext4, Btrfs, XFS, and tmpfs are using it."
+   }
+  },
+  {
+   "src": [
+    "k-nfsfh-chattr",
+    "mgts-intro"
+   ],
+   "en": "builds the change attribute from ctime, which brings back the granularity problem.",
+   "ru": "строит атрибут change из ctime, и проблема разрешения возвращается.",
+   "quote": {
+    "k-nfsfh-chattr": "if (stat->result_mask & STATX_CHANGE_COOKIE) { chattr = stat->change_cookie; ... } else { chattr = time_to_chattr(&stat->ctime); }",
+    "mgts-intro": "NFSv4 provides a dedicated change attribute that should always show a visible change, but not all filesystems implement this properly, causing the NFS server to substitute the ctime in many cases."
+   }
+  },
+  {
+   "src": "rfc7862-cat",
+   "en": "so a reply that arrives late cannot roll its cache back to old attributes.",
+   "ru": "и запоздавший ответ не откатит его кэш к старым атрибутам.",
+   "quote": "If either NFS4_CHANGE_TYPE_IS_MONOTONIC_INCR, NFS4_CHANGE_TYPE_IS_VERSION_COUNTER, or NFS4_CHANGE_TYPE_IS_TIME_METADATA is set, then the client knows at the very least that the change attribute is monotonically increasing, which is sufficient to resolve the question of which value is the most recent"
+  },
+  {
+   "src": "mgts-impl",
+   "en": "That keeps ctime-based change detection reliable without paying the fine-grained cost on every write.",
+   "ru": "Так обнаружение изменений по ctime остаётся надёжным, а за точность не приходится платить при каждой записи.",
+   "quote": "It uses an unused bit in the i_ctime_nsec field to indicate whether the mtime or ctime has been queried. If either or both have, then the kernel takes special care to ensure the next timestamp update will display a visible change."
+  },
+  {
+   "src": [
+    "mgts-notes",
+    "k-commit-mgtime"
+   ],
+   "en": "ext4, XFS, btrfs and tmpfs were converted in 6.13.",
+   "ru": "ext4, XFS, btrfs и tmpfs были переведены на новый механизм в 6.13.",
+   "quote": {
+    "mgts-notes": "For most filesystems, it's sufficient to just set the FS_MGTIME flag in the fstype->fs_flags in order to opt-in",
+    "k-commit-mgtime": "Merge tag 'vfs-6.13.mgtime' ... tmpfs: add support for multigrain timestamps / btrfs: convert to multigrain timestamps / ext4: switch to multigrain timestamps / xfs: switch to multigrain timestamps"
+   }
+  },
+  {
+   "src": "rfc8881-attrcache",
+   "en": "a change shows up \"eventually, usually within a minute\".",
+   "ru": "изменение появится «когда-нибудь, обычно в течение минуты».",
+   "quote": "The result of local caching of attributes is that the attribute caches maintained on individual clients will not be coherent. Changes made in one order on the server may be seen in a different order on one client and in a third order on another client."
+  },
+  {
+   "src": "nfs5-cto",
+   "en": "B sees everything A wrote.",
+   "ru": "B увидит всё, что записал A.",
+   "quote": "Typically file sharing is completely sequential. First client A opens a file, writes something to it, then closes it. Then client B opens the same file, and reads the changes."
+  },
+  {
+   "src": [
+    "k-file-flush",
+    "k-write-wball"
+   ],
+   "en": "does not return until the server has the data on stable storage.",
+   "ru": "не вернёт управление, пока данные не окажутся на сервере в надёжном хранилище.",
+   "quote": {
+    "k-file-flush": "Flush all dirty pages, and check for write errors. ... /* Flush writes to the server and return any errors */ since = filemap_sample_wb_err(file->f_mapping); nfs_wb_all(inode); return filemap_check_wb_err(file->f_mapping, since);",
+    "k-write-wball": "ret = filemap_write_and_wait(inode->i_mapping); if (ret) goto out; ret = nfs_commit_inode(inode, FLUSH_SYNC);"
+   }
+  },
+  {
+   "src": "nfs5-cto",
+   "en": "NFSv3 sends a GETATTR (or ACCESS, which returns attributes too).",
+   "ru": "NFSv3 отправляет GETATTR (или ACCESS, который тоже возвращает атрибуты).",
+   "quote": "When an application opens a file stored on an NFS version 3 server, the NFS client checks that the file exists on the server and is permitted to the opener by sending a GETATTR or ACCESS request. The NFS client sends these requests regardless of the freshness of the file's cached attributes."
+  },
+  {
+   "src": "k-nfs4xdr-open",
+   "en": "NFSv4 asks for the attributes inside the OPEN COMPOUND, so this costs no extra round trip.",
+   "ru": "NFSv4 запрашивает атрибуты внутри COMPOUND-запроса с OPEN, так что лишнего обмена с сервером нет.",
+   "quote": "encode_putfh(xdr, args->fh, &hdr); encode_open(xdr, args, &hdr); encode_getfh(xdr, &hdr); if (args->access) encode_access(xdr, args->access, &hdr); encode_getfattr_open(xdr, args->bitmask, args->open_bitmap, &hdr);"
+  },
+  {
+   "src": "faq-a8",
+   "en": "If the change attribute differs from B's cached value, B's cached pages are invalidated.",
+   "ru": "Если атрибут change отличается от закэшированного у B, закэшированные страницы B инвалидируются.",
+   "quote": "Linux implements close-to-open cache consistency by comparing the results of a GETATTR operation done just after the file is closed to the results of a GETATTR operation done when the file is next opened. ... otherwise, the cache is purged."
+  },
+  {
+   "src": "rfc1813-rename",
+   "en": "the rename is atomic on the server, and any reader that opens the name afterwards gets the complete new file.",
+   "ru": "переименование на сервере атомарно, и любой читатель, открывший имя после этого, получит новый файл целиком.",
+   "quote": "The RENAME operation must be atomic to the client."
+  },
+  {
+   "src": "nfs5-cto-opt",
+   "en": "That suits read-only or single-writer data and makes <code>open()</code> cheaper.",
+   "ru": "Это подходит для данных только для чтения или с единственным писателем и удешевляет <code>open()</code>.",
+   "quote": "If the nocto option is specified, the client uses a non-standard heuristic to determine when files on the server have changed. Using the nocto option may improve performance for read-only mounts, but should be used only if the data on the server changes only occasionally."
+  },
+  {
+   "src": [
+    "faq-d8",
+    "faq-a9"
+   ],
+   "en": "and appends are not atomic across clients.",
+   "ru": "а дописывание в конец файла не атомарно между клиентами.",
+   "quote": {
+    "faq-d8": "Although some implementations of munmap(2) happen to write dirty pages to local file systems, the NFS version of munmap(2) does not. An msync(2) call is always required to guarantee that dirty mapped data is written to permanent storage.",
+    "faq-a9": "The NFS protocol does not support atomic append writes, so append writes are never atomic on NFS for any platform."
+   }
+  },
+  {
+   "src": [
+    "open2-append",
+    "faq-a9"
+   ],
+   "en": "so two clients can write to the same offset.",
+   "ru": "и два клиента могут записать по одному и тому же смещению.",
+   "quote": {
+    "open2-append": "O_APPEND may lead to corrupted files on NFS filesystems if more than one process appends data to a file at once. This is because NFS does not support appending to a file, so the client kernel has to simulate it, which can't be done without a race condition.",
+    "faq-a9": "This style of cache consistency does not provide strict coherence of the file size attribute among multiple clients, which would be necessary to ensure that append writes are always placed at the end of a file."
+   }
+  },
+  {
+   "src": "k-file-setlk",
+   "en": "Before asking the server for the lock, the client writes back the file's dirty pages.",
+   "ru": "Прежде чем запросить блокировку у сервера, клиент записывает на сервер грязные страницы файла.",
+   "quote": "do_setlk(struct file *filp, int cmd, struct file_lock *fl, int is_local) ... /* Flush all pending writes before doing anything with locks.. */ status = nfs_sync_mapping(filp->f_mapping);"
+  },
+  {
+   "src": "nfs5-locks",
+   "en": "It sends LOCK (NFSv4) or an NLM request (NFSv3) and waits until the server grants it.",
+   "ru": "Он отправляет LOCK (NFSv4) или запрос NLM (NFSv3) и ждёт, пока сервер её выдаст.",
+   "quote": "The Network Lock Manager protocol is a separate sideband protocol used to manage file locks in NFS version 3. ... In NFS version 4, file locking is supported directly in the main NFS protocol, and the NLM and NSM sideband protocols are not used."
+  },
+  {
+   "src": "k-file-setlk",
+   "en": "The next read refetches attributes, and if the file changed, rereads the data.",
+   "ru": "Следующее чтение заново запросит атрибуты и, если файл изменился, перечитает данные.",
+   "quote": "Invalidate cache to prevent missing any changes. ... This makes locking act as a cache coherency point. */ nfs_sync_mapping(filp->f_mapping); if (!nfs_have_read_or_write_delegation(inode)) { nfs_zap_caches(inode);"
+  },
+  {
+   "src": [
+    "k-file-unlk",
+    "nfs5-sync"
+   ],
+   "en": "Unlocking flushes dirty data first, so the next locker on another client sees it.",
+   "ru": "Снятие блокировки сначала сбрасывает грязные данные, поэтому следующий владелец блокировки на другом клиенте их увидит.",
+   "quote": {
+    "k-file-unlk": "do_unlk(struct file *filp, int cmd, struct file_lock *fl, int is_local) ... /* Flush all pending writes before doing anything with locks.. */ nfs_wb_all(inode);",
+    "nfs5-sync": "the NFS client delays sending application writes to the server until any of these events occur: ... The file is locked/unlocked via fcntl(2)."
+   }
+  },
+  {
+   "src": [
+    "k-file-setlk",
+    "k-inode-invmap"
+   ],
+   "en": "still discards cached pages for the rest of the file if the change attribute moved.",
+   "ru": "всё равно сбрасывает закэшированные страницы остальной части файла, если атрибут change сдвинулся.",
+   "quote": {
+    "k-file-setlk": "if (!nfs_have_read_or_write_delegation(inode)) { nfs_zap_caches(inode); if (mapping_mapped(filp->f_mapping)) nfs_revalidate_mapping(inode, filp->f_mapping); }",
+    "k-inode-invmap": "if (mapping->nrpages != 0) { ... ret = invalidate_inode_pages2(mapping);"
+   }
+  },
+  {
+   "src": "nfs5-local-lock",
+   "en": "because the server and other clients never see those locks.",
+   "ru": "потому что сервер и другие клиенты таких блокировок не видят.",
+   "quote": "The Linux NFS client provides a way to make locks local. This means, the applications can lock files, but such locks provide exclusion only against other applications running on the same client. Remote applications are not affected by these locks."
+  },
+  {
+   "src": "nfs5-sync",
+   "en": "returns as soon as the data is in the client's page cache, exactly as on a local filesystem.",
+   "ru": "возвращает управление, как только данные оказались в страничном кэше клиента, точно так же, как на локальной файловой системе.",
+   "quote": "If neither sync nor async is specified (or if the async option is specified), the NFS client delays sending application writes to the server until any of these events occur"
+  },
+  {
+   "src": [
+    "rfc1813-stable",
+    "rfc1813-commit"
+   ],
+   "en": "as the client's page states.",
+   "ru": "в виде состояний страницы на клиенте.",
+   "quote": {
+    "rfc1813-stable": "Note that this algorithm introduces a new state for buffers, thus there are now three states for buffers. The three states are dirty, done but needs to be committed, and done.",
+    "rfc1813-commit": "verf This is a cookie that the client can use to determine whether the server has rebooted between a call to WRITE and a subsequent call to COMMIT."
+   }
+  },
+  {
+   "src": "nfs5-sync",
+   "en": "each <code>write()</code> waits for stable storage",
+   "ru": "каждый <code>write()</code> ждёт надёжной записи",
+   "quote": "Applications can use the O_SYNC open flag to force application writes to individual files to go to the server immediately without the use of the sync mount option."
+  },
+  {
+   "src": [
+    "open2-direct",
+    "k-direct-commit"
+   ],
+   "en": "if the WRITEs were unstable, the client sends the COMMIT itself",
+   "ru": "если WRITE были нестабильными, клиент сам отправляет COMMIT",
+   "quote": {
+    "open2-direct": "The NFS protocol does not support passing the flag to the server, so O_DIRECT I/O will bypass the page cache only on the client; the server may still cache the I/O. The client asks the server to make the I/O synchronous to preserve the synchronous semantics of O_DIRECT.",
+    "k-direct-commit": "if (test_bit(NFS_IOHDR_UNSTABLE_WRITES, &hdr->flags) && !test_bit(NFS_IOHDR_ERROR, &hdr->flags)) { if (!dreq->flags) dreq->flags = NFS_ODIRECT_DO_COMMIT;"
+   }
+  },
+  {
+   "src": [
+    "nfs5-sync",
+    "nfs5-ac"
+   ],
+   "en": "like <code>O_SYNC</code> for every file",
+   "ru": "как <code>O_SYNC</code> для каждого файла",
+   "quote": {
+    "nfs5-sync": "If the sync option is specified on a mount point, any system call that writes data to files on that mount point causes that data to be flushed to the server before the system call returns control to user space.",
+    "nfs5-ac": "the noac option forces application writes to become synchronous so that local changes to a file become visible on the server immediately."
+   }
+  },
+  {
+   "src": [
+    "close2-errors",
+    "k-file-flush"
+   ],
+   "en": "The application sees them on the next <code>fsync()</code> or on <code>close()</code>.",
+   "ru": "Приложение увидит их при следующем <code>fsync()</code> или при <code>close()</code>.",
+   "quote": {
+    "close2-errors": "ENOSPC EDQUOT On NFS, these errors are not normally reported against the first write which exceeds the available storage space, but instead against a subsequent write(2), fsync(2), or close().",
+    "k-file-flush": "since = filemap_sample_wb_err(file->f_mapping); nfs_wb_all(inode); return filemap_check_wb_err(file->f_mapping, since);"
+   }
+  },
+  {
+   "src": "nfs5-cto",
+   "en": "and it is often the first and only place a write error is reported.",
+   "ru": "и часто это первое и единственное место, где сообщается об ошибке записи.",
+   "quote": "When the application closes the file, the NFS client writes back any pending changes to the file so that the next opener can view the changes. This also gives the NFS client an opportunity to report write errors to the application via the return code from close(2)."
+  },
+  {
+   "src": "close2-caveats",
+   "en": "may have saved nothing.",
+   "ru": "могла не сохранить ничего.",
+   "quote": "it is quite possible that errors on a previous write(2) operation are reported only on the final close() that releases the open file description. Failing to check the return value when closing a file may lead to silent loss of data. This can especially be observed with NFS and with disk quota."
+  },
+  {
+   "src": "k-nfsd-verf",
+   "en": "it changes its write verifier.",
+   "ru": "он меняет свой верификатор записи.",
+   "quote": "commit_reset_write_verifier(struct nfsd_net *nn, struct svc_rqst *rqstp, int err) { switch (err) { case -EAGAIN: case -ESTALE: ... break; default: nfsd_reset_write_verifier(nn);"
+  },
+  {
+   "src": "k-nfsd-commit",
+   "en": "without waiting for its disk, with the same verifier as always.",
+   "ru": "не дожидаясь своего диска, и с прежним верификатором.",
+   "quote": "if (EX_ISSYNC(fhp->fh_export)) { ... err2 = vfs_fsync_range(nf->nf_file, start, end, 0); ... } else nfsd_copy_write_verifier(verf, nn);"
+  },
+  {
+   "src": "exports5",
+   "en": "but COMMIT really waits for the disk.",
+   "ru": "но COMMIT действительно ждёт диска.",
+   "quote": "async This option allows the NFS server to violate the NFS protocol and reply to requests before any changes made by that request have been committed to stable storage ... sync Reply to requests only after the changes have been committed to stable storage ... sync is the default"
+  },
+  {
+   "src": [
+    "rfc8881-open",
+    "rfc8881-opendeleg"
+   ],
+   "en": "and whether it can reach the client's callback channel.",
+   "ru": "и может ли он достучаться до канала обратных вызовов (callback) клиента.",
+   "quote": {
+    "rfc8881-open": "NFSv4.1 gives more precise control to clients over acquisition of delegations via the following new flags for the share_access field of OPEN4args ... Otherwise, the client is neither indicating a desire nor a non-desire for a delegation, and the server MAY or MAY not return a delegation",
+    "rfc8881-opendeleg": "Making a delegation is up to the server ... The client must be able to respond to the server's callback requests. ... There must be no current OPEN conflicting with the requested delegation."
+   }
+  },
+  {
+   "src": "nfs5-v4",
+   "en": "for writing without the holder being told first.",
+   "ru": "не откроет файл на запись, не предупредив сначала держателя.",
+   "quote": "A read delegation means that the server notifies the client about any other clients that want to write to the file."
+  },
+  {
+   "src": "rfc8881-opendeleg",
+   "en": "and may trust its cached attributes and data indefinitely.",
+   "ru": "и бессрочно доверять закэшированным атрибутам и данным.",
+   "quote": "When a client has an OPEN_DELEGATE_READ delegation, it is assured that neither the contents, the attributes (with the exception of time_access), nor the names of any links to the file will change without its knowledge, so long as the delegation is held."
+  },
+  {
+   "src": "nfs5-v4",
+   "en": "will open the file at all without the holder being told first.",
+   "ru": "вообще не откроет файл, не предупредив сначала держателя.",
+   "quote": "A write delegation means that the client gets notified about either read or write accessors."
+  },
+  {
+   "src": [
+    "k-nfs4file-flush",
+    "rfc8881-deleg-cache"
+   ],
+   "en": "and the recall forces the flush.",
+   "ru": "а отзыв принудительно сбрасывает данные.",
+   "quote": {
+    "k-nfs4file-flush": "If we're holding a write delegation, then check if we're required to flush the i/o on close. If not, then just start the i/o now. */ if (!nfs4_delegation_flush_on_close(inode)) return filemap_fdatawrite(file->f_mapping);",
+    "rfc8881-deleg-cache": "when closing a file opened for OPEN4_SHARE_ACCESS_WRITE/OPEN4_SHARE_ACCESS_BOTH and if an OPEN_DELEGATE_WRITE delegation is in effect, the data written does not have to be written to the server until the OPEN delegation is recalled."
+   }
+  },
+  {
+   "src": "rfc8881-deleg-locks",
+   "en": "It can also handle locks locally.",
+   "ru": "Блокировки он тоже может обслуживать локально.",
+   "quote": "When a client holds an OPEN_DELEGATE_WRITE delegation, lock operations are performed locally."
+  },
+  {
+   "src": "rfc8881-opendeleg",
+   "en": "and reads of cached data generate no RPCs at all.",
+   "ru": "и чтения закэшированных данных не порождают ни одного RPC.",
+   "quote": "When a client has an OPEN delegation, it does not need to send OPENs or CLOSEs to the server. Instead, the client may update the appropriate status internally."
+  },
+  {
+   "src": "rfc8881-callbacks",
+   "en": "CB_RECALL travels on A's own connection through the session backchannel.",
+   "ru": "CB_RECALL идёт по собственному соединению A через обратный канал сессии (backchannel).",
+   "quote": "The backchannel is established by CREATE_SESSION and BIND_CONN_TO_SESSION, and the client is required to maintain it."
+  },
+  {
+   "src": "rfc8881-delay",
+   "en": "so a slow or dead A cannot tie up a server thread.",
+   "ru": "поэтому медленный или мёртвый A не может занять поток сервера.",
+   "quote": "In such cases, returning the error NFS4ERR_DELAY allows necessary preparatory operations to proceed without holding up requester resources such as a session slot."
+  },
+  {
+   "src": [
+    "rfc8881-delay",
+    "k-uapi-jukebox",
+    "k-nfs4proc-delay"
+   ],
+   "en": "which tells B to retry after a short pause that grows on each retry.",
+   "ru": "которая велит B повторить запрос после короткой паузы, растущей с каждой попыткой.",
+   "quote": {
+    "rfc8881-delay": "NFS4ERR_DELAY (Error Code 10008) ... The client should wait and then try the request with a new slot and sequence value. ... An operation requires a delegation recall to proceed",
+    "k-uapi-jukebox": "NFSERR_JUKEBOX = 10008, /* v3 v4 */",
+    "k-nfs4proc-delay": "static long nfs4_update_delay(long *timeout) { ... if (*timeout <= 0) *timeout = NFS4_POLL_RETRY_MIN; if (*timeout > NFS4_POLL_RETRY_MAX) *timeout = NFS4_POLL_RETRY_MAX; ret = *timeout; *timeout <<= 1;"
+   }
+  },
+  {
+   "src": "rfc8881-cbrecall",
+   "en": "A replies at once to acknowledge it.",
+   "ru": "A сразу отвечает, подтверждая получение.",
+   "quote": "struct CB_RECALL4args { stateid4 stateid; bool truncate; nfs_fh4 fh; }; ... The client SHOULD reply to the callback immediately. ... The recall is not complete until the delegation is returned using a DELEGRETURN operation."
+  },
+  {
+   "src": [
+    "rfc8881-recall",
+    "rfc8881-open",
+    "k-nfs4proc-recall"
+   ],
+   "en": "Then it sends <b>DELEGRETURN</b>.",
+   "ru": "После этого он отправляет <b>DELEGRETURN</b>.",
+   "quote": {
+    "rfc8881-recall": "If a file has other open references at the client, then OPEN operations must be sent to the server. ... These OPEN requests are done with the claim type of CLAIM_DELEGATE_CUR. ... If there are granted byte-range locks, the corresponding LOCK operations need to be performed.",
+    "rfc8881-open": "CLAIM_DELEGATE_CUR, CLAIM_DELEG_CUR_FH: The client is claiming a delegation for OPEN as granted by the server. Generally, this is done as part of recalling a delegation. ... With CLAIM_DELEG_CUR_FH (new to NFSv4.1), the file is identified by just the current filehandle.",
+    "k-nfs4proc-recall": "int nfs4_open_delegation_recall(struct nfs_open_context *ctx, struct nfs4_state *state, const nfs4_stateid *stateid) { ... opendata = nfs4_open_recoverdata_alloc(ctx, state, NFS4_OPEN_CLAIM_DELEG_CUR_FH);"
+   }
+  },
+  {
+   "src": [
+    "rfc8881-failhonor",
+    "k-nfsd-lease"
+   ],
+   "en": "the server revokes it and lets B proceed.",
+   "ru": "сервер отзывает его принудительно и пропускает B.",
+   "quote": {
+    "rfc8881-failhonor": "In this situation, servers SHOULD revoke delegations that are not returned in a period of time equal to the lease period.",
+    "k-nfsd-lease": "nn->nfsd4_lease = 90; /* default lease time */"
+   }
+  },
+  {
+   "src": [
+    "rfc8881-failhonor",
+    "rfc8881-revocation"
+   ],
+   "en": "must assume any of its unflushed changes conflict with B.",
+   "ru": "должен считать, что любые его несброшенные изменения конфликтуют с B.",
+   "quote": {
+    "rfc8881-failhonor": "When delegations are revoked, the server will return with the SEQ4_STATUS_RECALLABLE_STATE_REVOKED status bit set on subsequent SEQUENCE operations.",
+    "rfc8881-revocation": "In the case of modified data existing in the client's cache, that data must be removed from the client without being written to the server."
+   }
+  },
+  {
+   "src": "rfc8881-cbgetattr",
+   "en": "to learn the current values and answer the other client without taking the delegation away.",
+   "ru": "чтобы узнать текущие значения, и ответить другому клиенту, не отбирая делегирования.",
+   "quote": "The CB_GETATTR operation is used by the server to obtain the current modified state of a file that has been OPEN_DELEGATE_WRITE delegated. The size and change attributes are the only ones guaranteed to be serviced by the client."
+  },
+  {
+   "src": "k-nfsd-getattr",
+   "en": "Recent Linux <code>nfsd</code> does this.",
+   "ru": "Свежие версии <code>nfsd</code> в Linux так и делают.",
+   "quote": "This function is called when there is a conflict between a write delegation and a change/size GETATTR from another client. The server must either use the CB_GETATTR to get the current values of the attributes from the client that holds the delegation or recall the delegation"
+  },
+  {
+   "src": [
+    "k-nfsd-setlease",
+    "setlease2",
+    "smbconf"
+   ],
+   "en": "which Samba also uses).",
+   "ru": "которым пользуется и Samba).",
+   "quote": {
+    "k-nfsd-setlease": "fl = nfs4_alloc_init_lease(dp, dl_type); ... status = kernel_setlease(fp->fi_deleg_file->nf_file,",
+    "setlease2": "A file lease provides a mechanism whereby the process holding the lease (the \"lease holder\") is notified (via delivery of a signal) when a process (the \"lease breaker\") tries to open(2) or truncate(2) the file",
+    "smbconf": "Kernel oplocks support allows Samba oplocks to be broken whenever a local UNIX process or NFS operation accesses a file that smbd(8) has oplocked."
+   }
+  },
+  {
+   "src": [
+    "k-nfsd-breaklease",
+    "k-nfsd-jukebox"
+   ],
+   "en": "and a local process on the server opening the file for writing.",
+   "ru": "и локальный процесс на сервере, открывший файл на запись.",
+   "quote": {
+    "k-nfsd-breaklease": "int nfsd_open_break_lease(struct inode *inode, int access) { ... mode = (access & NFSD_MAY_WRITE) ? O_WRONLY : O_RDONLY; return break_lease(inode, mode | O_NONBLOCK); }",
+    "k-nfsd-jukebox": "{ nfserr_jukebox, -EWOULDBLOCK },"
+   }
+  },
+  {
+   "src": "setlease2",
+   "en": "the echo blocks until the client returns the delegation.",
+   "ru": "echo блокируется, пока клиент не вернёт делегирование.",
+   "quote": "When a process (the \"lease breaker\") performs an open(2) or truncate(2) that conflicts with a lease established via F_SETLEASE, the system call is blocked by the kernel and the kernel notifies the lease holder by sending it a signal"
+  },
+  {
+   "src": [
+    "kn-66",
+    "k-nfsd-66",
+    "k-commit-e7a8"
+   ],
+   "en": "(before that, only OPENs for both reading and writing).",
+   "ru": "(до этого — только OPEN на чтение и запись одновременно).",
+   "quote": {
+    "kn-66": "Add support for NFSv4.1+ write delegation. A write delegation enables a client to cache data and metadata for a single file more aggressively, reducing network round trips and server workload",
+    "k-nfsd-66": "Offer a write delegation in the case of a BOTH open, and ensure we get the O_RDWR descriptor. */ if ((open->op_share_access & NFS4_SHARE_ACCESS_BOTH) == NFS4_SHARE_ACCESS_BOTH) {",
+    "k-commit-e7a8": "NFSD: Offer write delegation for OPEN with OPEN4_SHARE_ACCESS_WRITE ... This patch allows READ using write delegation stateid granted on OPENs with OPEN4_SHARE_ACCESS_WRITE only"
+   }
+  },
+  {
+   "src": "nfs5-v4",
+   "en": "It only grants delegations to clients whose callback path works.",
+   "ru": "Он выдаёт делегирование только клиентам, у которых работает путь обратных вызовов.",
+   "quote": "In order to support delegation callback, the server checks the network return path to the client during the client's initial contact with the server. If contact with the client cannot be established, the server simply does not grant any delegations to that client."
+  },
+  {
+   "src": "k-nfsd-bloom",
+   "en": "to avoid recall storms on contended files.",
+   "ru": "чтобы избежать лавины отзывов на спорных файлах.",
+   "quote": "When we recall a delegation, we should be careful not to hand it out again straight away. ... This results in delegations for a given filehandle being blocked for between 30 and 60 seconds."
+  },
+  {
+   "src": [
+    "k-nfsd-states",
+    "nfsd7"
+   ],
+   "en": "with <code>type: deleg</code>.",
+   "ru": "с пометкой <code>type: deleg</code>.",
+   "quote": {
+    "k-nfsd-states": "static int nfs4_show_deleg(struct seq_file *s, struct nfs4_stid *st) ... seq_puts(s, \": { type: deleg, \");",
+    "nfsd7": "clients/ This directory contains a subdirectory for each NFSv4 client. Each file under that subdirectory gives some details about the client in YAML format."
+   }
+  },
+  {
+   "src": [
+    "rfc9754-times",
+    "nfs5-timestamps"
+   ],
+   "en": "or forces a flush to get the real one.",
+   "ru": "либо вынуждает сбросить данные, чтобы получить настоящий.",
+   "quote": {
+    "rfc9754-times": "There is no current provision to obtain these values before delegation return using CB_GETATTR. As a result, it cannot pass on these times to an application expecting POSIX compliance",
+    "nfs5-timestamps": "the Linux NFS client relies on NFS servers to keep a file's mtime and ctime timestamps properly up to date. It does this by flushing local data changes to the server before reporting mtime to applications via system calls such as stat(2)."
+   }
+  },
+  {
+   "src": "rfc9754-times",
+   "en": "and sends them with SETATTR when it returns the delegation.",
+   "ru": "и отправляет их в SETATTR при возврате делегирования.",
+   "quote": "the client and server can negotiate that the client will be the authority for these values, and upon return of the delegation stateid via a DELEGRETURN, the times will be passed back to the server. ... it will need to use a CB_GETATTR to query the client that holds the delegation."
+  },
+  {
+   "src": "k-commit-611",
+   "en": "The Linux client supports this since 6.11.",
+   "ru": "Клиент Linux поддерживает это начиная с 6.11.",
+   "quote": "Merge tag 'nfs-for-6.11-1' ... New Features: ... - Add client support for attribute delegations"
+  },
+  {
+   "src": "k-kconfig-618",
+   "en": "the server side is compiled out (<code>CONFIG_NFSD_V4_DELEG_TIMESTAMPS</code>).",
+   "ru": "серверная часть отключена при сборке (<code>CONFIG_NFSD_V4_DELEG_TIMESTAMPS</code>).",
+   "quote": "config NFSD_V4_DELEG_TIMESTAMPS bool \"Support delegated timestamps\" depends on NFSD_V4 default n ... This is currently an experimental feature and is therefore left disabled by default."
+  },
+  {
+   "src": "rfc8881-dirdeleg-design",
+   "en": "stays true until the server says otherwise.",
+   "ru": "остаётся верным, пока сервер не скажет иначе.",
+   "quote": "NFSv4.1 introduces the GET_DIR_DELEGATION (Section 18.39) operation to allow the client to ask for a directory delegation. The delegation covers directory attributes and all entries in the directory. If either of these change, the delegation will be recalled synchronously."
+  },
+  {
+   "src": "rfc8881-dirdeleg-intro",
+   "en": "probe dozens of non-existent paths for every import benefit most.",
+   "ru": "Больше всего выигрывают инструменты сборки и среды выполнения языков, которые на каждый импорт проверяют десятки несуществующих путей.",
+   "quote": "However, it does not address environments where there are numerous queries for files that do not exist. ... Examples of high miss activity are compilation in software development environments."
+  },
+  {
+   "src": "rfc8881-dirdeleg-design",
+   "en": "instead of recalling the whole delegation.",
+   "ru": "вместо того чтобы отзывать всё делегирование.",
+   "quote": "If a client asks for notification for a certain event, the server will notify the client when that event occurs. This will not result in the delegation being recalled for that client."
+  },
+  {
+   "src": "k-commit-619",
+   "en": "with a module option to disable it.",
+   "ru": "и её можно отключить параметром модуля.",
+   "quote": "Merge tag 'nfs-for-6.19-1' ... Add initial support for basic directory delegations ... NFS: Add a module option to disable directory delegations ... NFS: Request a directory delegation during RENAME / NFS: Request a directory delegation on ACCESS, CREATE, and UNLINK"
+  },
+  {
+   "src": [
+    "howard-31",
+    "afsd"
+   ],
+   "en": "plus a whole-file or large-chunk cache on local disk",
+   "ru": "плюс кэш целых файлов или крупных фрагментов на локальном диске",
+   "quote": {
+    "howard-31": "When a workstation caches a file or directory, the server promises to notify it before allowing a modification by any other workstation. This promise, called a Callback, dramatically reduces the number of cache validation requests received by servers.",
+    "afsd": "If not supplied, a default chunksize will be determined based on the cache type and cache size, and will range from 13 (8KB) for memory cache and 18 to 20 (256 KB to 1MB) for disk cache."
+   }
+  },
+  {
+   "src": "howard-35",
+   "en": "other clients see a change when the writer closes and they next open",
+   "ru": "другие клиенты видят изменение, когда писатель закрыл файл, а они открыли его заново",
+   "quote": "Once a file is closed, the changes made to it are visible to new opens anywhere on the network. Already open instances of the file do not reflect these changes. ... BreakCallback Revokes the callback on a file or directory. Made by a server to Venus."
+  },
+  {
+   "src": "ms-oplock",
+   "en": "since SMB 2.1 <b>leases</b> with R, W and H (handle) bits",
+   "ru": "а начиная с SMB 2.1 — <b>аренды</b> (leases) с битами R, W и H (handle)",
+   "quote": "In SMB2.1, which is the new SMB2 dialect implemented in Windows 7, Lease is introduced as a new type of client caching mechanism. ... The valid leases Windows 7 can grant are R (READ_CACHING) RW(READ_CACHING|WRITE_CACHING) RH(READ_CACHING|HANDLE_CACHING) RWH"
+  },
+  {
+   "src": "ms-oplock",
+   "en": "oplock or lease break; the client flushes and acknowledges",
+   "ru": "разрыв oplock или аренды (break); клиент сбрасывает данные и подтверждает",
+   "quote": "if the server receives another operation that conflicts with the current opLock held by the client, an oplock break notification will be sent to the client. The client should send an acknowledgement for the oplock break to the server before the server can proceed."
+  },
+  {
+   "src": "ceph-types",
+   "en": "w (write), b (buffer)",
+   "ru": "w (write), b (buffer)",
+   "quote": "#define CEPH_CAP_GSHARED 1 /* (metadata) client can read (s) */ #define CEPH_CAP_GEXCL 2 /* (metadata) client can read and update (x) */ #define CEPH_CAP_GCACHE 4 /* (file) client can cache reads (c) */ ... pAsLsXsFs The 'p' represents the pin."
+  },
+  {
+   "src": "ceph-locks",
+   "en": "reads and writes go synchronously to the data servers",
+   "ru": "чтения и записи идут синхронно на серверы данных",
+   "quote": "If multiple clients read from and write to the same file, then the lock state will be transferred to LOCK_MIX stable state finally ... The Fcb capabilities won't be granted to all the clients and the clients will do sync read/write."
+  },
+  {
+   "src": "lustre-11",
+   "en": "inode-bit locks on metadata",
+   "ru": "блокировки битов inode на метаданные",
+   "quote": "The Lustre distributed lock manager (LDLM) ensures that files are coherent between all clients and servers in the file system. The MDT LDLM manages locks on inode permissions and pathnames. Each OST has its own LDLM for locks on file stripes stored thereon"
+  },
+  {
+   "src": "lustre-gloss",
+   "en": "the client flushes, drops pages and cancels",
+   "ru": "клиент сбрасывает данные, выбрасывает страницы и отменяет блокировку",
+   "quote": "Revocation callback Also called a \"blocking callback\". An RPC request made by the lock server (typically for an OST or MDT) to a lock client to revoke a granted DLM lock."
+  },
+  {
+   "src": "lustre-11",
+   "en": "a read sees the latest completed write from any client",
+   "ru": "чтение видит последнюю завершённую запись от любого клиента",
+   "quote": "POSIX standard compliance: The full POSIX test suite passes in an identical manner to a local ext4 file system, with limited exceptions on Lustre clients. In a cluster, most operations are atomic so that clients never see stale data or metadata."
+  },
+  {
+   "src": [
+    "gpfs-32",
+    "gpfs-33",
+    "gpfs-34"
+   ],
+   "en": "acts as <b>metanode</b> for its inode",
+   "ru": "служит <b>metanode</b> для его inode",
+   "quote": {
+    "gpfs-32": "The global lock manager coordinates locks between local lock managers by handing out lock tokens ... A token allows a node to cache data it has read from disk, because the data cannot be modified elsewhere without revoking the token first.",
+    "gpfs-33": "Byte-range tokens are negotiated as follows. The first node to write to a file will acquire a byte-range token for the whole file (zero to infinity).",
+    "gpfs-34": "One of the nodes accessing the file is designated as the metanode for the file; only the metanode reads or writes the inode from or to disk."
+   }
+  },
+  {
+   "src": "gpfs-33",
+   "en": "POSIX, including fine-grained shared writes to one file",
+   "ru": "POSIX, включая мелкозернистую совместную запись в один файл",
+   "quote": "GPFS uses byte-range locking to synchronize reads and writes to file data. This approach allows parallel applications to write concurrently to different parts of the same file, while maintaining POSIX read/write atomicity semantics."
+  },
+  {
+   "src": [
+    "nfs5-fsc",
+    "kd-fscache"
+   ],
+   "en": "and later reads of the same file can come from local disk instead of the network.",
+   "ru": "и последующие чтения того же файла могут идти с локального диска, а не по сети.",
+   "quote": {
+    "nfs5-fsc": "fsc / nofsc Enable/Disables the cache of (read-only) data pages to the local disk using the FS-Cache facility.",
+    "kd-fscache": "This facility is a general purpose cache for network filesystems ... FS-Cache mediates between cache backends (such as CacheFiles) and network filesystems"
+   }
+  },
+  {
+   "src": [
+    "kd-cachefiles",
+    "rh-fscache"
+   ],
+   "en": "and culls old data when free space falls below thresholds.",
+   "ru": "и вычищает старые данные, когда свободное место падает ниже порогов.",
+   "quote": {
+    "kd-cachefiles": "CacheFiles is a caching backend that's meant to use as a cache a directory on an already mounted filesystem of a local type ... CacheFiles attempts to maintain at least a certain percentage of free space on the filesystem, shrinking the cache by culling the objects it contains",
+    "rh-fscache": "The /etc/cachefilesd.conf file controls how cachefiles provides caching services. ... Typically, the cache back end directory is set in /etc/cachefilesd.conf as /var/cache/fscache"
+   }
+  },
+  {
+   "src": [
+    "k-fscache-netfs",
+    "kd-netfs"
+   ],
+   "en": "helper library, which several network filesystems share.",
+   "ru": "общую для нескольких сетевых файловых систем.",
+   "quote": {
+    "k-fscache-netfs": "int nfs_netfs_read_folio(struct file *file, struct folio *folio) { ... return netfs_read_folio(file, folio);",
+    "kd-netfs": "The network filesystem services library, netfslib, is a set of functions designed to aid a network filesystem in implementing VM/VFS API operations. ... as well as local caching"
+   }
+  },
+  {
+   "src": [
+    "k-fscache-init",
+    "k-inode-invmap"
+   ],
+   "en": "the disk copy is discarded with the page cache.",
+   "ru": "копия на диске выбрасывается вместе со страничным кэшем.",
+   "quote": {
+    "k-fscache-init": "netfs_inode(inode)->cache = fscache_acquire_cookie( nfss->fscache, 0, nfsi->fh.data, /* index_key */ nfsi->fh.size, &auxdata, /* aux_data */ sizeof(auxdata), i_size_read(inode));",
+    "k-inode-invmap": "static int nfs_invalidate_mapping(struct inode *inode, struct address_space *mapping) { int ret; nfs_fscache_invalidate(inode, 0);"
+   }
+  },
+  {
+   "src": "k-fscache-open",
+   "en": "FS-Cache is a read cache.",
+   "ru": "FS-Cache — кэш для чтения.",
+   "quote": "For now, with NFS, only regular files that are open read-only will be able to use the cache. ... if (open_for_write) { nfs_fscache_update_auxdata(&auxdata, inode); fscache_invalidate(cookie, &auxdata, i_size_read(inode), FSCACHE_INVAL_DIO_WRITE);"
+  },
+  {
+   "src": [
+    "nfs5-hardsoft",
+    "k-clnt-timeout"
+   ],
+   "en": "then continues as if nothing happened.",
+   "ru": "а затем продолжает работу, как будто ничего не случилось.",
+   "quote": {
+    "nfs5-hardsoft": "If no option is specified (or if the hard option is specified), NFS requests are retried indefinitely.",
+    "k-clnt-timeout": "pr_notice_ratelimited( \"%s: server %s not responding, still trying\\n\", clnt->cl_program->name, task->tk_xprt->servername);"
+   }
+  },
+  {
+   "src": [
+    "nfs5-hardsoft",
+    "lwn-killable"
+   ],
+   "en": "so <code>kill -9</code> ends a stuck process.",
+   "ru": "так что <code>kill -9</code> завершит зависший процесс.",
+   "quote": {
+    "nfs5-hardsoft": "intr / nointr This option is provided for backward compatibility. It is ignored after kernel 2.6.25.",
+    "lwn-killable": "So Matthew created a new sleeping state, called TASK_KILLABLE; it behaves like TASK_UNINTERRUPTIBLE with the exception that fatal signals will interrupt the sleep. ... The TASK_KILLABLE patch was merged for the 2.6.25 kernel ... The NFS client code has been converted"
+   }
+  },
+  {
+   "src": "nfs5-hardsoft",
+   "en": "but nfs(5) warns that it can silently corrupt data.",
+   "ru": "но nfs(5) предупреждает, что так можно незаметно испортить данные.",
+   "quote": "the NFS client fails an NFS request after retrans retransmissions have been sent, causing the NFS client to return either the error EIO (for the soft option) or ETIMEDOUT (for the softerr option) to the calling application. NB: A so-called \"soft\" timeout can cause silent data corruption"
+  },
+  {
+   "src": "nfs5-hardsoft",
+   "en": "keep serving cached attributes and names while the server is down.",
+   "ru": "продолжать отдавать закэшированные атрибуты и имена, пока сервер недоступен.",
+   "quote": "softreval / nosoftreval In cases where the NFS server is down, it may be useful to allow the NFS client to continue to serve up paths and attributes from cache after retrans attempts to revalidate that cache have timed out."
+  },
+  {
+   "src": "k-unlink-silly",
+   "en": "and sends the real REMOVE when the last local user closes it.",
+   "ru": "и отправляет настоящий REMOVE, когда последний локальный пользователь его закроет.",
+   "quote": "#define SILLYNAME_PREFIX \".nfs\" ... #define SILLYNAME_FILEID_LEN ((unsigned)sizeof(u64) << 1) #define SILLYNAME_COUNTER_LEN ((unsigned)sizeof(unsigned int) << 1) ... it renames the file to a hidden file in the same directory, and only performs the unlink once the last reference to it is put."
+  },
+  {
+   "src": "k-dir-unlink",
+   "en": "fails with \"Device or resource busy\" while it is in use.",
+   "ru": "завершается ошибкой «Device or resource busy», пока файл используется.",
+   "quote": "We do silly rename. In case sillyrename() returns -EBUSY, the inode belongs to an active \".nfs...\" file and we return -EBUSY."
+  },
+  {
+   "src": "faq-d2",
+   "en": "stays on the server forever and must be cleaned up by hand.",
+   "ru": "навсегда останется на сервере, и убирать его придётся вручную.",
+   "quote": "Generally this is effective, but if the client crashes before the file is removed, it will leave the .nfsXXXXX file. If you are sure that the applications using these files are no longer running, it is safe to delete these files manually."
+  },
+  {
+   "src": "rfc8881-open",
+   "en": "flag in the OPEN reply.",
+   "ru": "флаг <code>OPEN4_RESULT_PRESERVE_UNLINKED</code>.",
+   "quote": "OPEN4_RESULT_PRESERVE_UNLINKED indicates that the server will preserve the open file if the client (or any other client) removes the file as long as it is open. ... allows a client to avoid the common implementation practice of renaming an open file to \".nfs<unique value>\""
+  },
+  {
+   "src": [
+    "k-dir-unlink",
+    "k-nfs4proc-preserve"
+   ],
+   "en": "Recent Linux clients skip the silly rename when the server sets it.",
+   "ru": "Свежие клиенты Linux пропускают silly rename, если сервер выставил этот флаг.",
+   "quote": {
+    "k-dir-unlink": "if (d_count(dentry) > 1 && !test_bit(NFS_INO_PRESERVE_UNLINKED, &NFS_I(d_inode(dentry))->flags)) { ... error = nfs_sillyrename(dir, dentry);",
+    "k-nfs4proc-preserve": "if (opendata->o_res.rflags & NFS4_OPEN_RESULT_PRESERVE_UNLINKED) set_bit(NFS_INO_PRESERVE_UNLINKED, &NFS_I(state->inode)->flags);"
+   }
+  },
+  {
+   "src": "rfc1813-26",
+   "en": "so the inode behind the handle is gone.",
+   "ru": "и inode за этим хэндлом исчез.",
+   "quote": "NFS3ERR_STALE Invalid file handle. The file handle given in the arguments was invalid. The file referred to by that file handle no longer exists or access to it has been revoked."
+  },
+  {
+   "src": "k-namei-estale",
+   "en": "after another client replaced the file normally just works.",
+   "ru": "после замены файла другим клиентом обычно просто работает.",
+   "quote": "retry_estale - determine whether the caller should retry an operation ... Check to see if the error code was -ESTALE, and then determine whether to retry the call based on whether \"flags\" already has LOOKUP_REVAL set."
+  },
+  {
+   "src": [
+    "kn-519",
+    "git-courtesy-limit",
+    "git-courtesy-shrinker"
+   ],
+   "en": "so short partitions usually cost nothing.",
+   "ru": "поэтому короткие разрывы связи обычно ничего не стоят.",
+   "quote": {
+    "kn-519": "Previously NFSD would purge open and lock state for an unresponsive client after one lease (typically 90 seconds). ... if the unresponsive client's open and lock is uncontended, the server retains that open and lock state for to 24 hours",
+    "git-courtesy-limit": "Since there is now a limit of the number of clients, the 24-hr idle time limit of courtesy client is no longer needed and was removed.",
+    "git-courtesy-shrinker": "Add courtesy_client_reaper to react to low memory condition triggered by the system memory shrinker."
+   }
+  },
+  {
+   "src": "kparams",
+   "en": "because the file may have changed in between.",
+   "ru": "потому что файл за это время мог измениться.",
+   "quote": "nfs.recover_lost_locks= [NFSv4] Attempt to recover locks that were lost due to a lease timeout on the server. Please note that doing this risks data corruption, since there are no guarantees that the file will remain unchanged after the locks are lost."
+  },
+  {
+   "src": "k-nfs4state-lost",
+   "en": "Operations that depend on the lost lock fail with <code>EIO</code>.",
+   "ru": "Операции, зависящие от потерянной блокировки, завершаются ошибкой <code>EIO</code>.",
+   "quote": "lsp = __nfs4_find_lock_state(state, owner, fl_flock_owner); if (lsp && test_bit(NFS_LOCK_LOST, &lsp->ls_flags)) ret = -EIO;"
+  },
+  {
+   "src": "kparams",
+   "en": "restores the old, riskier behaviour of re-requesting them.",
+   "ru": "возвращает старое, более рискованное поведение с повторным запросом блокировок.",
+   "quote": "If you want to enable the kernel legacy behaviour of attempting to recover these locks, then set this parameter to '1'. The default parameter value of '0' causes the kernel not to attempt recovery of lost locks."
+  },
+  {
+   "src": "nfs5-timestamps",
+   "en": "The server stamps mtime with its own clock.",
+   "ru": "Сервер ставит mtime по своим часам.",
+   "quote": "NFS servers are responsible for managing file and directory timestamps (atime, ctime, and mtime). When a file is accessed or updated on an NFS server, the file's timestamps are updated just like they would be on a filesystem local to an application."
+  },
+  {
+   "src": "gnu-make",
+   "en": "and tools that skip \"recently modified\" files misjudge them.",
+   "ru": "а инструменты, пропускающие «недавно изменённые» файлы, оценивают их неверно.",
+   "quote": "_(\"warning:  Clock skew detected.  Your build may be incomplete.\"));"
+  },
+  {
+   "src": "nfsstat8",
+   "en": "<code>nfsstat -m</code> on both machines.",
+   "ru": "<code>nfsstat -m</code> на обеих машинах.",
+   "quote": "-m, --mounts Print information about each of the mounted NFS file systems."
+  },
+  {
+   "src": "nfs5-sharecache",
+   "en": "(without <code>nosharecache</code>) set the options first.",
+   "ru": "того же экспорта (без <code>nosharecache</code>).",
+   "quote": "a single cache is used for all mount points that access the same export. ... Note that when data and attribute caches are shared, the mount options from the first mount point take effect for subsequent concurrent mounts of the same export."
+  },
+  {
+   "src": "nfs5-lookupcache",
+   "en": "<code>lookupcache=positive</code> fixes that.",
+   "ru": "<code>lookupcache=positive</code> это исправляет.",
+   "quote": "If pos or positive is specified, the client assumes positive entries are valid until their parent directory's cached attributes expire, but always revalidates negative entries before an application can use them."
+  },
+  {
+   "src": "k-iostat",
+   "en": "<code>sillyrenames</code> and 22 more.",
+   "ru": "<code>sillyrenames</code> и ещё 22.",
+   "quote": "NFSIOS_INODEREVALIDATE = 0, NFSIOS_DENTRYREVALIDATE, NFSIOS_DATAINVALIDATE, NFSIOS_ATTRINVALIDATE, NFSIOS_VFSOPEN, ... NFSIOS_SILLYRENAME, NFSIOS_SHORTREAD, NFSIOS_SHORTWRITE, NFSIOS_DELAY, NFSIOS_PNFS_READ, NFSIOS_PNFS_WRITE, __NFSIOS_COUNTSMAX,"
+  },
+  {
+   "src": [
+    "k-nfstrace",
+    "k-nfs4trace"
+   ],
+   "en": "The client has tracepoints for exactly these decisions:",
+   "ru": "У клиента есть точки трассировки именно для этих решений:",
+   "quote": {
+    "k-nfstrace": "DEFINE_NFS_INODE_EVENT(nfs_refresh_inode_enter); ... DEFINE_NFS_INODE_EVENT(nfs_revalidate_inode_enter); ... DEFINE_NFS_INODE_EVENT(nfs_invalidate_mapping_enter);",
+    "k-nfs4trace": "DEFINE_NFS4_INODE_STATEID_CALLBACK_EVENT(nfs4_cb_recall); ... TRACE_EVENT(nfs4_delegreturn_exit,"
+   }
+  },
+  {
+   "src": "kd-vm",
+   "en": "so the next access shows the server's current state.",
+   "ru": "так что следующее обращение покажет текущее состояние сервера.",
+   "quote": "To free slab objects and pagecache: echo 3 > /proc/sys/vm/drop_caches ... This is a non-destructive operation and will not free any dirty objects. To increase the number of objects freed by this operation, the user may run sync prior to writing to /proc/sys/vm/drop_caches."
+  },
+  {
+   "src": "nfs5-cto-v4",
+   "en": "for NFSv4 mounts nfs(5) documents it as affecting directories only, not file data.",
+   "ru": "для монтирований NFSv4 nfs(5) описывает её действие только на каталоги, а не на данные файлов.",
+   "quote": "Selects whether to use close-to-open cache coherence semantics for NFS directories on this mount point. [...] File data caching behavior is not affected by this option."
+  }
+ ]
+}

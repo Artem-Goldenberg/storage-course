@@ -1,0 +1,1587 @@
+{
+  "page": "03-ondisk.html",
+  "sources": {
+    "k-about": {
+      "url": "https://docs.kernel.org/filesystems/ext4/about.html#about-this-book",
+      "title": "ext4 Data Structures and Algorithms: About this Book, The Linux Kernel documentation",
+      "where": {
+        "en": "section 1, About this Book",
+        "ru": "раздел 1, About this Book"
+      }
+    },
+    "k-overview": {
+      "url": "https://docs.kernel.org/filesystems/ext4/overview.html#high-level-design",
+      "title": "ext4 Data Structures and Algorithms: High Level Design, The Linux Kernel documentation",
+      "where": {
+        "en": "section 2, opening paragraphs",
+        "ru": "раздел 2, вводные абзацы"
+      }
+    },
+    "k-layout": {
+      "url": "https://docs.kernel.org/filesystems/ext4/blockgroup.html#layout",
+      "title": "ext4 Data Structures and Algorithms: Block Groups, The Linux Kernel documentation",
+      "where": {
+        "en": "section 2.2.1, Layout",
+        "ru": "раздел 2.2.1, Layout"
+      }
+    },
+    "k-flexbg": {
+      "url": "https://docs.kernel.org/filesystems/ext4/blockgroup.html#flexible-block-groups",
+      "title": "ext4 Data Structures and Algorithms: Block Groups, The Linux Kernel documentation",
+      "where": {
+        "en": "section 2.2.2, Flexible Block Groups",
+        "ru": "раздел 2.2.2, Flexible Block Groups"
+      }
+    },
+    "k-special": {
+      "url": "https://docs.kernel.org/filesystems/ext4/special_inodes.html#special-inodes",
+      "title": "ext4 Data Structures and Algorithms: Special inodes, The Linux Kernel documentation",
+      "where": {
+        "en": "section 2.3, table of reserved inode numbers",
+        "ru": "раздел 2.3, таблица зарезервированных номеров inode"
+      }
+    },
+    "k-alloc": {
+      "url": "https://docs.kernel.org/filesystems/ext4/allocators.html#block-and-inode-allocation-policy",
+      "title": "ext4 Data Structures and Algorithms: Block and Inode Allocation Policy, The Linux Kernel documentation",
+      "where": {
+        "en": "section 2.4",
+        "ru": "раздел 2.4"
+      }
+    },
+    "k-super": {
+      "url": "https://docs.kernel.org/filesystems/ext4/super.html#super-block",
+      "title": "ext4 Data Structures and Algorithms: Super Block, The Linux Kernel documentation",
+      "where": {
+        "en": "section 3.1, introduction and the field table of struct ext4_super_block",
+        "ru": "раздел 3.1, введение и таблица полей struct ext4_super_block"
+      }
+    },
+    "k-features": {
+      "url": "https://docs.kernel.org/filesystems/ext4/super.html#super-compat",
+      "title": "ext4 Data Structures and Algorithms: Super Block, The Linux Kernel documentation",
+      "where": {
+        "en": "section 3.1, tables of compatible, incompatible and read-only compatible feature flags",
+        "ru": "раздел 3.1, таблицы флагов compat, incompat и ro_compat"
+      }
+    },
+    "k-gdt": {
+      "url": "https://docs.kernel.org/filesystems/ext4/group_descr.html#block-group-descriptors",
+      "title": "ext4 Data Structures and Algorithms: Block Group Descriptors, The Linux Kernel documentation",
+      "where": {
+        "en": "section 3.2, struct ext4_group_desc and block group flags",
+        "ru": "раздел 3.2, struct ext4_group_desc и флаги группы блоков"
+      }
+    },
+    "k-bitmaps": {
+      "url": "https://docs.kernel.org/filesystems/ext4/bitmaps.html#block-and-inode-bitmaps",
+      "title": "ext4 Data Structures and Algorithms: Block and inode Bitmaps, The Linux Kernel documentation",
+      "where": {
+        "en": "section 3.3",
+        "ru": "раздел 3.3"
+      }
+    },
+    "k-journal": {
+      "url": "https://docs.kernel.org/filesystems/ext4/journal.html#journal-jbd2",
+      "title": "ext4 Data Structures and Algorithms: Journal (jbd2), The Linux Kernel documentation",
+      "where": {
+        "en": "section 3.6, introduction",
+        "ru": "раздел 3.6, введение"
+      }
+    },
+    "k-journal-layout": {
+      "url": "https://docs.kernel.org/filesystems/ext4/journal.html#layout",
+      "title": "ext4 Data Structures and Algorithms: Journal (jbd2), The Linux Kernel documentation",
+      "where": {
+        "en": "section 3.6.1, Layout",
+        "ru": "раздел 3.6.1, Layout"
+      }
+    },
+    "k-orphan": {
+      "url": "https://docs.kernel.org/filesystems/ext4/orphan.html#orphan-file",
+      "title": "ext4 Data Structures and Algorithms: Orphan file, The Linux Kernel documentation",
+      "where": {
+        "en": "section 3.7, first two paragraphs",
+        "ru": "раздел 3.7, первые два абзаца"
+      }
+    },
+    "k-inodes": {
+      "url": "https://docs.kernel.org/filesystems/ext4/inodes.html#index-nodes",
+      "title": "ext4 Data Structures and Algorithms: Index Nodes, The Linux Kernel documentation",
+      "where": {
+        "en": "section 4.1, introduction and the field table of struct ext4_inode",
+        "ru": "раздел 4.1, введение и таблица полей struct ext4_inode"
+      }
+    },
+    "k-imode": {
+      "url": "https://docs.kernel.org/filesystems/ext4/inodes.html#i-mode",
+      "title": "ext4 Data Structures and Algorithms: Index Nodes, The Linux Kernel documentation",
+      "where": {
+        "en": "section 4.1, table of i_mode values",
+        "ru": "раздел 4.1, таблица значений i_mode"
+      }
+    },
+    "k-iflags": {
+      "url": "https://docs.kernel.org/filesystems/ext4/inodes.html#i-flags",
+      "title": "ext4 Data Structures and Algorithms: Index Nodes, The Linux Kernel documentation",
+      "where": {
+        "en": "section 4.1, table of i_flags values",
+        "ru": "раздел 4.1, таблица значений i_flags"
+      }
+    },
+    "k-inode-size": {
+      "url": "https://docs.kernel.org/filesystems/ext4/inodes.html#inode-size",
+      "title": "ext4 Data Structures and Algorithms: Index Nodes, The Linux Kernel documentation",
+      "where": {
+        "en": "section 4.1.1, Inode Size",
+        "ru": "раздел 4.1.1, Inode Size"
+      }
+    },
+    "k-inode-find": {
+      "url": "https://docs.kernel.org/filesystems/ext4/inodes.html#finding-an-inode",
+      "title": "ext4 Data Structures and Algorithms: Index Nodes, The Linux Kernel documentation",
+      "where": {
+        "en": "section 4.1.2, Finding an Inode",
+        "ru": "раздел 4.1.2, Finding an Inode"
+      }
+    },
+    "k-inode-ts": {
+      "url": "https://docs.kernel.org/filesystems/ext4/inodes.html#inode-timestamps",
+      "title": "ext4 Data Structures and Algorithms: Index Nodes, The Linux Kernel documentation",
+      "where": {
+        "en": "section 4.1.3, Inode Timestamps",
+        "ru": "раздел 4.1.3, Inode Timestamps"
+      }
+    },
+    "k-symlink": {
+      "url": "https://docs.kernel.org/filesystems/ext4/ifork.html#symbolic-links",
+      "title": "ext4 Data Structures and Algorithms: The Contents of inode.i_block, The Linux Kernel documentation",
+      "where": {
+        "en": "section 4.2.1, Symbolic Links",
+        "ru": "раздел 4.2.1, Symbolic Links"
+      }
+    },
+    "k-blockmap": {
+      "url": "https://docs.kernel.org/filesystems/ext4/ifork.html#direct-indirect-block-addressing",
+      "title": "ext4 Data Structures and Algorithms: The Contents of inode.i_block, The Linux Kernel documentation",
+      "where": {
+        "en": "section 4.2.2, Direct/Indirect Block Addressing",
+        "ru": "раздел 4.2.2, Direct/Indirect Block Addressing"
+      }
+    },
+    "k-extent": {
+      "url": "https://docs.kernel.org/filesystems/ext4/ifork.html#extent-tree",
+      "title": "ext4 Data Structures and Algorithms: The Contents of inode.i_block, The Linux Kernel documentation",
+      "where": {
+        "en": "section 4.2.3, Extent Tree",
+        "ru": "раздел 4.2.3, Extent Tree"
+      }
+    },
+    "k-dir-intro": {
+      "url": "https://docs.kernel.org/filesystems/ext4/directory.html#directory-entries",
+      "title": "ext4 Data Structures and Algorithms: Directory Entries, The Linux Kernel documentation",
+      "where": {
+        "en": "section 4.3, introduction",
+        "ru": "раздел 4.3, введение"
+      }
+    },
+    "k-dirent": {
+      "url": "https://docs.kernel.org/filesystems/ext4/directory.html#linear-classic-directories",
+      "title": "ext4 Data Structures and Algorithms: Directory Entries, The Linux Kernel documentation",
+      "where": {
+        "en": "section 4.3.1, Linear (Classic) Directories",
+        "ru": "раздел 4.3.1, Linear (Classic) Directories"
+      }
+    },
+    "k-htree": {
+      "url": "https://docs.kernel.org/filesystems/ext4/directory.html#hash-tree-directories",
+      "title": "ext4 Data Structures and Algorithms: Directory Entries, The Linux Kernel documentation",
+      "where": {
+        "en": "section 4.3.2, Hash Tree Directories",
+        "ru": "раздел 4.3.2, Hash Tree Directories"
+      }
+    },
+    "k-admin-opts": {
+      "url": "https://docs.kernel.org/admin-guide/ext4.html#options",
+      "title": "ext4 General Information, The Linux Kernel documentation",
+      "where": {
+        "en": "Options: data=ordered, commit=, auto_da_alloc",
+        "ru": "раздел Options: data=ordered, commit=, auto_da_alloc"
+      }
+    },
+    "k-admin-datamode": {
+      "url": "https://docs.kernel.org/admin-guide/ext4.html#data-mode",
+      "title": "ext4 General Information, The Linux Kernel documentation",
+      "where": {
+        "en": "Data Mode",
+        "ru": "раздел Data Mode"
+      }
+    },
+    "k-pathlookup": {
+      "url": "https://docs.kernel.org/filesystems/path-lookup.html#more-than-just-a-cache",
+      "title": "Pathname lookup, The Linux Kernel documentation",
+      "where": {
+        "en": "More than just a cache",
+        "ru": "раздел More than just a cache"
+      }
+    },
+    "src-ialloc-orlov": {
+      "url": "https://elixir.bootlin.com/linux/v6.12/source/fs/ext4/ialloc.c#L401",
+      "title": "fs/ext4/ialloc.c, Linux v6.12",
+      "where": {
+        "en": "lines 401–418, comment above find_group_orlov()",
+        "ru": "строки 401–418, комментарий над find_group_orlov()"
+      }
+    },
+    "src-ialloc-gen": {
+      "url": "https://elixir.bootlin.com/linux/v6.12/source/fs/ext4/ialloc.c#L1281",
+      "title": "fs/ext4/ialloc.c, Linux v6.12",
+      "where": {
+        "en": "line 1281, __ext4_new_inode()",
+        "ru": "строка 1281, __ext4_new_inode()"
+      }
+    },
+    "src-ialloc-enospc": {
+      "url": "https://elixir.bootlin.com/linux/v6.12/source/fs/ext4/ialloc.c#L1112",
+      "title": "fs/ext4/ialloc.c, Linux v6.12",
+      "where": {
+        "en": "lines 1112–1118, __ext4_new_inode(): no group has a free inode",
+        "ru": "строки 1112–1118, __ext4_new_inode(): ни в одной группе нет свободного inode"
+      }
+    },
+    "src-inode-evict": {
+      "url": "https://elixir.bootlin.com/linux/v6.12/source/fs/ext4/inode.c#L262",
+      "title": "fs/ext4/inode.c, Linux v6.12",
+      "where": {
+        "en": "lines 262–308, ext4_evict_inode()",
+        "ru": "строки 262–308, ext4_evict_inode()"
+      }
+    },
+    "src-namei-insert": {
+      "url": "https://elixir.bootlin.com/linux/v6.12/source/fs/ext4/namei.c#L2053",
+      "title": "fs/ext4/namei.c, Linux v6.12",
+      "where": {
+        "en": "lines 2053–2111, ext4_find_dest_de() and ext4_insert_dentry()",
+        "ru": "строки 2053–2111, ext4_find_dest_de() и ext4_insert_dentry()"
+      }
+    },
+    "src-namei-add": {
+      "url": "https://elixir.bootlin.com/linux/v6.12/source/fs/ext4/namei.c#L2448",
+      "title": "fs/ext4/namei.c, Linux v6.12",
+      "where": {
+        "en": "lines 2448–2462, ext4_add_entry()",
+        "ru": "строки 2448–2462, ext4_add_entry()"
+      }
+    },
+    "src-namei-delete": {
+      "url": "https://elixir.bootlin.com/linux/v6.12/source/fs/ext4/namei.c#L2660",
+      "title": "fs/ext4/namei.c, Linux v6.12",
+      "where": {
+        "en": "lines 2660–2700, ext4_generic_delete_entry()",
+        "ru": "строки 2660–2700, ext4_generic_delete_entry()"
+      }
+    },
+    "src-namei-nlink": {
+      "url": "https://elixir.bootlin.com/linux/v6.12/source/fs/ext4/namei.c#L2755",
+      "title": "fs/ext4/namei.c, Linux v6.12",
+      "where": {
+        "en": "lines 2755–2772, ext4_inc_count()",
+        "ru": "строки 2755–2772, ext4_inc_count()"
+      }
+    },
+    "src-namei-symlink": {
+      "url": "https://elixir.bootlin.com/linux/v6.12/source/fs/ext4/namei.c#L3424",
+      "title": "fs/ext4/namei.c, Linux v6.12",
+      "where": {
+        "en": "lines 3419–3428, ext4_symlink(): fast symlink branch",
+        "ru": "строки 3419–3428, ext4_symlink(): ветка быстрой ссылки"
+      }
+    },
+    "src-dirpad": {
+      "url": "https://elixir.bootlin.com/linux/v6.12/source/fs/ext4/ext4.h#L2385",
+      "title": "fs/ext4/ext4.h, Linux v6.12",
+      "where": {
+        "en": "lines 2385–2406, EXT4_DIR_PAD and ext4_dir_rec_len()",
+        "ru": "строки 2385–2406, EXT4_DIR_PAD и ext4_dir_rec_len()"
+      }
+    },
+    "src-extents-space": {
+      "url": "https://elixir.bootlin.com/linux/v6.12/source/fs/ext4/extents.c#L277",
+      "title": "fs/ext4/extents.c, Linux v6.12",
+      "where": {
+        "en": "lines 277–288, ext4_ext_space_block()",
+        "ru": "строки 277–288, ext4_ext_space_block()"
+      }
+    },
+    "src-extents-grow": {
+      "url": "https://elixir.bootlin.com/linux/v6.12/source/fs/ext4/extents.c#L1303",
+      "title": "fs/ext4/extents.c, Linux v6.12",
+      "where": {
+        "en": "lines 1303–1310, comment above ext4_ext_grow_indepth()",
+        "ru": "строки 1303–1310, комментарий над ext4_ext_grow_indepth()"
+      }
+    },
+    "src-mballoc": {
+      "url": "https://elixir.bootlin.com/linux/v6.12/source/fs/ext4/mballoc.c#L43",
+      "title": "fs/ext4/mballoc.c, Linux v6.12",
+      "where": {
+        "en": "lines 43–104, comment describing the allocator",
+        "ru": "строки 43–104, комментарий с описанием распределителя"
+      }
+    },
+    "src-balloc-count": {
+      "url": "https://elixir.bootlin.com/linux/v6.12/source/fs/ext4/balloc.c#L764",
+      "title": "fs/ext4/balloc.c, Linux v6.12",
+      "where": {
+        "en": "lines 764–830, ext4_count_free_clusters()",
+        "ru": "строки 764–830, ext4_count_free_clusters()"
+      }
+    },
+    "src-super-percpu": {
+      "url": "https://elixir.bootlin.com/linux/v6.12/source/fs/ext4/super.c#L1206",
+      "title": "fs/ext4/super.c, Linux v6.12",
+      "where": {
+        "en": "lines 1206–1214, ext4_percpu_param_init()",
+        "ru": "строки 1206–1214, ext4_percpu_param_init()"
+      }
+    },
+    "src-super-statfs": {
+      "url": "https://elixir.bootlin.com/linux/v6.12/source/fs/ext4/super.c#L6796",
+      "title": "fs/ext4/super.c, Linux v6.12",
+      "where": {
+        "en": "lines 6796–6820, ext4_statfs()",
+        "ru": "строки 6796–6820, ext4_statfs()"
+      }
+    },
+    "src-fsync": {
+      "url": "https://elixir.bootlin.com/linux/v6.12/source/fs/ext4/fsync.c#L118",
+      "title": "fs/ext4/fsync.c, Linux v6.12",
+      "where": {
+        "en": "lines 118–129, comment above ext4_sync_file()",
+        "ru": "строки 118–129, комментарий над ext4_sync_file()"
+      }
+    },
+    "commit-wipe": {
+      "url": "https://github.com/torvalds/linux/commit/6c0912739699d8e4b6a87086401bf3ad3c59502d",
+      "title": "ext4: wipe ext4_dir_entry2 upon file deletion, Linux commit 6c0912739699",
+      "where": {
+        "en": "commit message and the list of tags that contain it (earliest release tag: v5.13-rc1)",
+        "ru": "описание коммита и список тегов, в которые он входит (самый ранний релизный тег — v5.13-rc1)"
+      }
+    },
+    "e2-flexbg": {
+      "url": "https://github.com/tytso/e2fsprogs/blob/v1.47.0/misc/mke2fs.c#L2615-L2617",
+      "title": "misc/mke2fs.c, e2fsprogs v1.47.0",
+      "where": {
+        "en": "lines 2615–2617, default flex_bg_size",
+        "ru": "строки 2615–2617, flex_bg_size по умолчанию"
+      }
+    },
+    "e2-y2038": {
+      "url": "https://github.com/tytso/e2fsprogs/blob/v1.47.0/misc/mke2fs.c#L2652-L2663",
+      "title": "misc/mke2fs.c, e2fsprogs v1.47.0",
+      "where": {
+        "en": "lines 2652–2663, warning about 128-byte inodes",
+        "ru": "строки 2652–2663, предупреждение о 128-байтовых inode"
+      }
+    },
+    "e2-resgdt": {
+      "url": "https://github.com/tytso/e2fsprogs/blob/v1.47.0/lib/ext2fs/res_gdt.c#L109-L130",
+      "title": "lib/ext2fs/res_gdt.c, e2fsprogs v1.47.0",
+      "where": {
+        "en": "lines 109–130, ext2fs_create_resize_inode()",
+        "ru": "строки 109–130, ext2fs_create_resize_inode()"
+      }
+    },
+    "ubuntu-conf": {
+      "url": "https://git.launchpad.net/ubuntu/+source/e2fsprogs/tree/misc/mke2fs.conf.in?h=applied/ubuntu/noble-updates",
+      "title": "misc/mke2fs.conf.in, Ubuntu 24.04 (noble) e2fsprogs package 1.47.0-2.4~exp1ubuntu4.1",
+      "where": {
+        "en": "lines 1–15, [defaults] and the ext4 fs_type",
+        "ru": "строки 1–15, [defaults] и тип ext4"
+      }
+    },
+    "deb-install": {
+      "url": "https://www.debian.org/releases/stable/amd64/ch06s03.en.html#partman-fs",
+      "title": "Debian GNU/Linux Installation Guide, 6.3. Using Individual Components",
+      "where": {
+        "en": "6.3.4.1, Supported partitioning options",
+        "ru": "раздел 6.3.4.1, Supported partitioning options"
+      }
+    },
+    "subiquity": {
+      "url": "https://github.com/canonical/subiquity/blob/24.04.1/subiquity/server/controllers/filesystem.py#L516-L563",
+      "title": "subiquity/server/controllers/filesystem.py, Subiquity 24.04.1 (the Ubuntu 24.04 installer)",
+      "where": {
+        "en": "lines 516–563, guided_direct() and guided_lvm()",
+        "ru": "строки 516–563, guided_direct() и guided_lvm()"
+      }
+    },
+    "man-mke2fs": {
+      "url": "https://man7.org/linux/man-pages/man8/mke2fs.8.html#OPTIONS",
+      "title": "mke2fs(8), Linux manual page",
+      "where": {
+        "en": "OPTIONS: -d, -i, -I",
+        "ru": "раздел OPTIONS: -d, -i, -I"
+      }
+    },
+    "man-debugfs": {
+      "url": "https://man7.org/linux/man-pages/man8/debugfs.8.html#COMMANDS",
+      "title": "debugfs(8), Linux manual page",
+      "where": {
+        "en": "COMMANDS: icheck",
+        "ru": "раздел COMMANDS: icheck"
+      }
+    },
+    "man-dumpe2fs": {
+      "url": "https://man7.org/linux/man-pages/man8/dumpe2fs.8.html#DESCRIPTION",
+      "title": "dumpe2fs(8), Linux manual page",
+      "where": {
+        "en": "DESCRIPTION",
+        "ru": "раздел DESCRIPTION"
+      }
+    },
+    "man-unlink": {
+      "url": "https://man7.org/linux/man-pages/man2/unlink.2.html#DESCRIPTION",
+      "title": "unlink(2), Linux manual page",
+      "where": {
+        "en": "DESCRIPTION",
+        "ru": "раздел DESCRIPTION"
+      }
+    },
+    "man-link": {
+      "url": "https://man7.org/linux/man-pages/man2/link.2.html#DESCRIPTION",
+      "title": "link(2), Linux manual page",
+      "where": {
+        "en": "DESCRIPTION",
+        "ru": "раздел DESCRIPTION"
+      }
+    },
+    "man-rename": {
+      "url": "https://man7.org/linux/man-pages/man2/rename.2.html#DESCRIPTION",
+      "title": "rename(2), Linux manual page",
+      "where": {
+        "en": "DESCRIPTION",
+        "ru": "раздел DESCRIPTION"
+      }
+    },
+    "man-inode": {
+      "url": "https://man7.org/linux/man-pages/man7/inode.7.html#DESCRIPTION",
+      "title": "inode(7), Linux manual page",
+      "where": {
+        "en": "DESCRIPTION: File size, Allocated blocks",
+        "ru": "раздел DESCRIPTION: File size, Allocated blocks"
+      }
+    },
+    "man-statx": {
+      "url": "https://man7.org/linux/man-pages/man2/statx.2.html#DESCRIPTION",
+      "title": "statx(2), Linux manual page",
+      "where": {
+        "en": "DESCRIPTION: stx_btime",
+        "ru": "раздел DESCRIPTION: stx_btime"
+      }
+    },
+    "man-readdir": {
+      "url": "https://man7.org/linux/man-pages/man3/readdir.3.html#DESCRIPTION",
+      "title": "readdir(3), Linux manual page",
+      "where": {
+        "en": "DESCRIPTION: d_type",
+        "ru": "раздел DESCRIPTION: d_type"
+      }
+    },
+    "man-pathres": {
+      "url": "https://man7.org/linux/man-pages/man7/path_resolution.7.html#DESCRIPTION",
+      "title": "path_resolution(7), Linux manual page",
+      "where": {
+        "en": "DESCRIPTION: Step 2 and Mount points",
+        "ru": "раздел DESCRIPTION: Step 2 и Mount points"
+      }
+    },
+    "man-lseek": {
+      "url": "https://man7.org/linux/man-pages/man2/lseek.2.html#DESCRIPTION",
+      "title": "lseek(2), Linux manual page",
+      "where": {
+        "en": "DESCRIPTION, paragraph on seeking past the end of the file",
+        "ru": "раздел DESCRIPTION, абзац о позиции за концом файла"
+      }
+    },
+    "man-fallocate": {
+      "url": "https://man7.org/linux/man-pages/man2/fallocate.2.html#DESCRIPTION",
+      "title": "fallocate(2), Linux manual page",
+      "where": {
+        "en": "DESCRIPTION: Allocating disk space",
+        "ru": "раздел DESCRIPTION: Allocating disk space"
+      }
+    },
+    "man-fsync": {
+      "url": "https://man7.org/linux/man-pages/man2/fsync.2.html#DESCRIPTION",
+      "title": "fsync(2), Linux manual page",
+      "where": {
+        "en": "DESCRIPTION",
+        "ru": "раздел DESCRIPTION"
+      }
+    },
+    "man-statfs": {
+      "url": "https://man7.org/linux/man-pages/man2/statfs.2.html#DESCRIPTION",
+      "title": "statfs(2), Linux manual page",
+      "where": {
+        "en": "DESCRIPTION",
+        "ru": "раздел DESCRIPTION"
+      }
+    },
+    "man-du": {
+      "url": "https://man7.org/linux/man-pages/man1/du.1.html#DESCRIPTION",
+      "title": "du(1), Linux manual page",
+      "where": {
+        "en": "DESCRIPTION and --apparent-size",
+        "ru": "раздел DESCRIPTION и --apparent-size"
+      }
+    },
+    "man-df": {
+      "url": "https://man7.org/linux/man-pages/man1/df.1.html#OPTIONS",
+      "title": "df(1), Linux manual page",
+      "where": {
+        "en": "OPTIONS: -i",
+        "ru": "раздел OPTIONS: -i"
+      }
+    },
+    "man-filefrag": {
+      "url": "https://man7.org/linux/man-pages/man8/filefrag.8.html#DESCRIPTION",
+      "title": "filefrag(8), Linux manual page",
+      "where": {
+        "en": "DESCRIPTION",
+        "ru": "раздел DESCRIPTION"
+      }
+    },
+    "man-e4defrag": {
+      "url": "https://man7.org/linux/man-pages/man8/e4defrag.8.html#DESCRIPTION",
+      "title": "e4defrag(8), Linux manual page",
+      "where": {
+        "en": "DESCRIPTION",
+        "ru": "раздел DESCRIPTION"
+      }
+    },
+    "man-rm": {
+      "url": "https://man7.org/linux/man-pages/man1/rm.1.html#OPTIONS",
+      "title": "rm(1), Linux manual page",
+      "where": {
+        "en": "closing paragraph of OPTIONS",
+        "ru": "последний абзац раздела OPTIONS"
+      }
+    },
+    "ext2intro": {
+      "url": "https://web.mit.edu/tytso/www/linux/ext2intro.html",
+      "title": "Card, Ts'o, Tweedie, “Design and Implementation of the Second Extended Filesystem”",
+      "where": {
+        "en": "section History of Linux filesystems",
+        "ru": "раздел History of Linux filesystems"
+      }
+    },
+    "ols-extents": {
+      "url": "https://www.kernel.org/doc/ols/2007/ols2007v2-pages-21-34.pdf",
+      "title": "Mathur et al., “The new ext4 filesystem: current status and future plans”, Proceedings of the Linux Symposium 2007, vol. 2",
+      "where": {
+        "en": "section 2.2, Extents (p. 23)",
+        "ru": "раздел 2.2, Extents (с. 23)"
+      }
+    },
+    "ols-prealloc": {
+      "url": "https://www.kernel.org/doc/ols/2007/ols2007v2-pages-21-34.pdf",
+      "title": "Mathur et al., “The new ext4 filesystem: current status and future plans”, Proceedings of the Linux Symposium 2007, vol. 2",
+      "where": {
+        "en": "section 3.1, Persistent preallocation (p. 27)",
+        "ru": "раздел 3.1, Persistent preallocation (с. 27)"
+      }
+    },
+    "ols-delalloc": {
+      "url": "https://www.kernel.org/doc/ols/2007/ols2007v2-pages-21-34.pdf",
+      "title": "Mathur et al., “The new ext4 filesystem: current status and future plans”, Proceedings of the Linux Symposium 2007, vol. 2",
+      "where": {
+        "en": "section 3.2, Delayed and multiple block allocation (pp. 27–28)",
+        "ru": "раздел 3.2, Delayed and multiple block allocation (с. 27–28)"
+      }
+    },
+    "ostep-1": {
+      "url": "https://pages.cs.wisc.edu/~remzi/OSTEP/file-journaling.pdf",
+      "title": "Arpaci-Dusseau, Operating Systems: Three Easy Pieces, ch. 42 “Crash Consistency: FSCK and Journaling”",
+      "where": {
+        "en": "section 42.1, A Detailed Example",
+        "ru": "раздел 42.1, A Detailed Example"
+      }
+    },
+    "ostep-2": {
+      "url": "https://pages.cs.wisc.edu/~remzi/OSTEP/file-journaling.pdf",
+      "title": "Arpaci-Dusseau, Operating Systems: Three Easy Pieces, ch. 42 “Crash Consistency: FSCK and Journaling”",
+      "where": {
+        "en": "section 42.2, The File System Checker",
+        "ru": "раздел 42.2, The File System Checker"
+      }
+    },
+    "ostep-3": {
+      "url": "https://pages.cs.wisc.edu/~remzi/OSTEP/file-journaling.pdf",
+      "title": "Arpaci-Dusseau, Operating Systems: Three Easy Pieces, ch. 42 “Crash Consistency: FSCK and Journaling”",
+      "where": {
+        "en": "section 42.3, Journaling (or Write-Ahead Logging)",
+        "ru": "раздел 42.3, Journaling (or Write-Ahead Logging)"
+      }
+    },
+    "ostep-4": {
+      "url": "https://pages.cs.wisc.edu/~remzi/OSTEP/file-journaling.pdf",
+      "title": "Arpaci-Dusseau, Operating Systems: Three Easy Pieces, ch. 42 “Crash Consistency: FSCK and Journaling”",
+      "where": {
+        "en": "section 42.4, Other Approaches",
+        "ru": "раздел 42.4, Other Approaches"
+      }
+    },
+    "ostep-5": {
+      "url": "https://pages.cs.wisc.edu/~remzi/OSTEP/file-journaling.pdf",
+      "title": "Arpaci-Dusseau, Operating Systems: Three Easy Pieces, ch. 42 “Crash Consistency: FSCK and Journaling”",
+      "where": {
+        "en": "section 42.5, Summary",
+        "ru": "раздел 42.5, Summary"
+      }
+    },
+    "lwn-dataloss": {
+      "url": "https://lwn.net/Articles/322823/",
+      "title": "Jonathan Corbet, “ext4 and data loss”, LWN.net, March 11, 2009",
+      "where": {
+        "en": "opening paragraph",
+        "ru": "первый абзац"
+      }
+    },
+    "rhel-xfs": {
+      "url": "https://docs.redhat.com/en/documentation/red_hat_enterprise_linux/10/html/managing_file_systems/getting-started-with-xfs#the-xfs-file-system_getting-started-with-xfs",
+      "title": "Red Hat Enterprise Linux 10, Managing file systems, ch. 9 “Getting started with XFS”",
+      "where": {
+        "en": "section 9.1, The XFS file system",
+        "ru": "раздел 9.1, The XFS file system"
+      }
+    },
+    "xfs-overview": {
+      "url": "https://mirrors.edge.kernel.org/pub/linux/utils/fs/xfs/docs/xfs_filesystem_structure.pdf",
+      "title": "XFS Algorithms & Data Structures, 3rd edition",
+      "where": {
+        "en": "chapter 1, Overview",
+        "ru": "глава 1, Overview"
+      }
+    },
+    "xfs-recon": {
+      "url": "https://mirrors.edge.kernel.org/pub/linux/utils/fs/xfs/docs/xfs_filesystem_structure.pdf",
+      "title": "XFS Algorithms & Data Structures, 3rd edition",
+      "where": {
+        "en": "chapter 5, Metadata Reconstruction",
+        "ru": "глава 5, Metadata Reconstruction"
+      }
+    },
+    "xfs-ag": {
+      "url": "https://mirrors.edge.kernel.org/pub/linux/utils/fs/xfs/docs/xfs_filesystem_structure.pdf",
+      "title": "XFS Algorithms & Data Structures, 3rd edition",
+      "where": {
+        "en": "chapter 13, Allocation Groups (introduction)",
+        "ru": "глава 13, Allocation Groups (введение)"
+      }
+    },
+    "xfs-free": {
+      "url": "https://mirrors.edge.kernel.org/pub/linux/utils/fs/xfs/docs/xfs_filesystem_structure.pdf",
+      "title": "XFS Algorithms & Data Structures, 3rd edition",
+      "where": {
+        "en": "section 13.2, AG Free Space Management",
+        "ru": "раздел 13.2, AG Free Space Management"
+      }
+    },
+    "xfs-inodes": {
+      "url": "https://mirrors.edge.kernel.org/pub/linux/utils/fs/xfs/docs/xfs_filesystem_structure.pdf",
+      "title": "XFS Algorithms & Data Structures, 3rd edition",
+      "where": {
+        "en": "sections 13.3.1 Inode Numbers and 13.4 Inode B+trees",
+        "ru": "разделы 13.3.1 Inode Numbers и 13.4 Inode B+trees"
+      }
+    },
+    "xfs-extents": {
+      "url": "https://mirrors.edge.kernel.org/pub/linux/utils/fs/xfs/docs/xfs_filesystem_structure.pdf",
+      "title": "XFS Algorithms & Data Structures, 3rd edition",
+      "where": {
+        "en": "section 19.2, B+tree Extent List",
+        "ru": "раздел 19.2, B+tree Extent List"
+      }
+    },
+    "btrfs-ondisk": {
+      "url": "https://btrfs.readthedocs.io/en/latest/dev/On-disk-format.html#overview",
+      "title": "On-disk Format, BTRFS documentation",
+      "where": {
+        "en": "Overview",
+        "ru": "раздел Overview"
+      }
+    },
+    "btrfs-intro": {
+      "url": "https://btrfs.readthedocs.io/en/latest/Introduction.html",
+      "title": "Introduction, BTRFS documentation",
+      "where": {
+        "en": "list of main features",
+        "ru": "список основных возможностей"
+      }
+    },
+    "btrfs-defrag": {
+      "url": "https://btrfs.readthedocs.io/en/latest/Defragmentation.html",
+      "title": "Defragmentation, BTRFS documentation",
+      "where": {
+        "en": "first paragraph and warning",
+        "ru": "первый абзац и предупреждение"
+      }
+    },
+    "zfs-uberblock": {
+      "url": "https://github.com/openzfs/zfs/blob/zfs-2.2.6/include/sys/uberblock_impl.h#L78-L84",
+      "title": "include/sys/uberblock_impl.h, OpenZFS 2.2.6",
+      "where": {
+        "en": "lines 78–84, struct uberblock",
+        "ru": "строки 78–84, struct uberblock"
+      }
+    },
+    "zfs-label": {
+      "url": "https://github.com/openzfs/zfs/blob/zfs-2.2.6/module/zfs/vdev_label.c#L110-L113",
+      "title": "module/zfs/vdev_label.c, OpenZFS 2.2.6",
+      "where": {
+        "en": "lines 110–113, comment on the label layout",
+        "ru": "строки 110–113, комментарий о структуре метки"
+      }
+    },
+    "zfs-bp": {
+      "url": "https://github.com/openzfs/zfs/blob/zfs-2.2.6/include/sys/spa.h#L125-L186",
+      "title": "include/sys/spa.h, OpenZFS 2.2.6",
+      "where": {
+        "en": "lines 125–186, block pointer layout",
+        "ru": "строки 125–186, формат указателя на блок"
+      }
+    }
+  },
+  "cites": [
+    {
+      "src": [
+        "deb-install",
+        "subiquity"
+      ],
+      "en": "We use ext4 as the worked example because it is the default on Debian and Ubuntu,",
+      "ru": "Мы разбираем ext4, потому что это файловая система по умолчанию в Debian и Ubuntu,",
+      "quote": {
+        "deb-install": "The default file system selected in most cases is ext4.",
+        "subiquity": "def guided_direct(self, gap): spec = dict(fstype=\"ext4\", mount=\"/\") … name=\"ubuntu-lv\", fstype=\"ext4\", mount=\"/\","
+      }
+    },
+    {
+      "src": "k-about",
+      "en": "its format is documented down to the byte in the kernel tree.",
+      "ru": "а её формат описан в дереве исходников ядра с точностью до байта.",
+      "quote": "This document attempts to describe the on-disk format for ext4 filesystems."
+    },
+    {
+      "src": [
+        "k-overview",
+        "k-bitmaps"
+      ],
+      "en": "A 1 TiB disk has 8,192 groups.",
+      "ru": "На диске в 1 ТиБ 8192 группы.",
+      "quote": {
+        "k-overview": "The size of a block group is specified in sb.s_blocks_per_group blocks, though it can also calculated as 8 * block_size_in_bytes. With the default block size of 4KiB, each group will contain 32,768 blocks, for a length of 128MiB.",
+        "k-bitmaps": "As with most bitmaps, one bit represents the usage status of one data block or inode table entry. This implies a block group size of 8 * number_of_bytes_in_a_logical_block."
+      }
+    },
+    {
+      "src": "k-super",
+      "en": "only groups 0, 1 and powers of 3, 5 and 7 carry them);",
+      "ru": "группы, номера которых — степени 3, 5 и 7);",
+      "quote": "If the sparse_super feature flag is set, redundant copies of the superblock and group descriptors are kept only in the groups whose group number is either 0 or a power of 3, 5, or 7."
+    },
+    {
+      "src": [
+        "k-layout",
+        "k-bitmaps"
+      ],
+      "en": "data blocks: everything else, including file contents, directory contents and extent tree blocks.",
+      "ru": "блоки данных: всё остальное, включая содержимое файлов, содержимое каталогов и блоки дерева экстентов.",
+      "quote": {
+        "k-layout": "Group 0 Padding | ext4 Super Block | Group Descriptors | Reserved GDT Blocks | Data Block Bitmap | inode Bitmap | inode Table | Data Blocks … Leftover space is used for file data blocks, indirect block maps, extent tree blocks, and extended attributes.",
+        "k-bitmaps": "The data block bitmap tracks the usage of data blocks within the block group. The inode bitmap records which entries in the inode table are in use."
+      }
+    },
+    {
+      "src": "k-alloc",
+      "en": "so a spinning disk does not seek across the platter to read one file.",
+      "ru": "чтобы вращающемуся диску не приходилось гонять головку через всю пластину ради одного файла.",
+      "quote": "The third trick that ext4 (and ext3) uses is that it tries to keep a file’s data blocks in the same block group as its inode. … The fourth trick is that all the inodes in a directory are placed in the same block group as the directory, when feasible."
+    },
+    {
+      "src": [
+        "k-flexbg",
+        "e2-flexbg"
+      ],
+      "en": "are not chopped up by metadata every 128 MiB.",
+      "ru": "большие экстенты данных не разрезаются метаданными каждые 128 МиБ.",
+      "quote": {
+        "k-flexbg": "the bitmap spaces and the inode table space in the first block group of the flex_bg are expanded to include the bitmaps and inode tables of all other block groups in the flex_bg. … to enable large files to be continuous on disk.",
+        "e2-flexbg": "flex_bg_size = get_uint_from_profile(fs_types, \"flex_bg_size\", 16);"
+      }
+    },
+    {
+      "src": [
+        "man-dumpe2fs",
+        "man-debugfs"
+      ],
+      "en": "(which inode owns block <var>N</var>):",
+      "ru": "(какому inode принадлежит блок <var>N</var>):",
+      "quote": {
+        "man-dumpe2fs": "dumpe2fs prints the super block and blocks group information for the file system present on device.",
+        "man-debugfs": "icheck block ... Print a listing of the inodes which use the one or more blocks specified on the command line."
+      }
+    },
+    {
+      "src": [
+        "k-layout",
+        "k-special",
+        "e2-resgdt"
+      ],
+      "en": "which tracks those reserved blocks.",
+      "ru": "который учитывает эти зарезервированные блоки.",
+      "quote": {
+        "k-layout": "when the filesystem is freshly formatted, mkfs will allocate “reserve GDT block” space after the block group descriptors and before the start of the block bitmaps to allow for future expansion of the filesystem.",
+        "k-special": "7 | Reserved group descriptors inode. (“resize inode”)",
+        "e2-resgdt": "retval = ext2fs_alloc_block(fs, goal, 0, &dindir_blk); … inode.i_block[EXT2_DIND_BLOCK] = dindir_blk;"
+      }
+    },
+    {
+      "src": [
+        "k-layout",
+        "k-super"
+      ],
+      "en": "With 1 KiB blocks it fills block 1, and <code>s_first_data_block</code> is 1.",
+      "ru": "При блоках по 1 КиБ он занимает блок 1, и <code>s_first_data_block</code> равно 1.",
+      "quote": {
+        "k-layout": "the first 1024 bytes are unused, to allow for the installation of x86 boot sectors and other oddities. The superblock will start at offset 1024 bytes, whichever block that happens to be (usually 0). However, if for some reason the block size = 1024, … the superblock goes in block 1.",
+        "k-super": "s_first_data_block | First data block. This must be at least 1 for 1k-block filesystems and is typically 0 for all other block sizes."
+      }
+    },
+    {
+      "src": [
+        "k-overview",
+        "k-super"
+      ],
+      "en": "as the two bytes <code>53 ef</code>:",
+      "ru": "в виде двух байтов <code>53 ef</code>:",
+      "quote": {
+        "k-overview": "All fields in ext4 are written to disk in little-endian order.",
+        "k-super": "0x38 | __le16 | s_magic | Magic signature, 0xEF53"
+      }
+    },
+    {
+      "src": "k-super",
+      "en": "The fields a reader needs to find everything else:",
+      "ru": "Поля, по которым находится всё остальное:",
+      "quote": "0x0 | __le32 | s_inodes_count | Total inode count. … 0x18 | __le32 | s_log_block_size | Block size is 2 ^ (10 + s_log_block_size). … 0xFE | __le16 | s_desc_size | Size of group descriptors, in bytes, if the 64bit incompat feature flag is set. … 0x150 | __le32 | s_blocks_count_hi |"
+    },
+    {
+      "src": [
+        "ext2intro",
+        "k-journal",
+        "k-features"
+      ],
+      "en": "without breaking old kernels unsafely:",
+      "ru": "так, чтобы старые ядра не могли по незнанию его испортить:",
+      "quote": {
+        "ext2intro": "two new filesytems were released in Alpha version in January 1993: the Xia filesystem and the Second Extended File System.",
+        "k-journal": "Introduced in ext3, the ext4 filesystem employs a journal to protect the filesystem against metadata inconsistencies in the case of a system crash.",
+        "k-features": "Files in this filesystem use extents (INCOMPAT_EXTENTS). … Enable a filesystem size of 2^64 blocks (INCOMPAT_64BIT). … This filesystem supports metadata checksumming. (RO_COMPAT_METADATA_CSUM; implies RO_COMPAT_GDT_CSUM, though GDT_CSUM must not be set)"
+      }
+    },
+    {
+      "src": [
+        "k-super",
+        "k-features"
+      ],
+      "en": "an old driver must refuse, because it would misread the data.",
+      "ru": "старый драйвер обязан отказаться, потому что прочитал бы данные неправильно.",
+      "quote": {
+        "k-super": "Kernel can still read/write this fs even if it doesn’t understand a flag … Incompatible feature set. If the kernel or fsck doesn’t understand one of these bits, it should stop. … Readonly-compatible feature set. If the kernel doesn’t understand one of these bits, it can still mount read-only.",
+        "k-features": "(COMPAT_HAS_JOURNAL) … (COMPAT_EXT_ATTR) … (COMPAT_DIR_INDEX) … (INCOMPAT_FILETYPE) … (INCOMPAT_EXTENTS) … (INCOMPAT_64BIT) … (INCOMPAT_FLEX_BG) … (RO_COMPAT_HUGE_FILE) … (RO_COMPAT_DIR_NLINK) … (RO_COMPAT_METADATA_CSUM; implies RO_COMPAT_GDT_CSUM, though GDT_CSUM must not be set)"
+      }
+    },
+    {
+      "src": "ubuntu-conf",
+      "en": "(see <code>/etc/mke2fs.conf</code>).",
+      "ru": "(см. <code>/etc/mke2fs.conf</code>).",
+      "quote": "base_features = sparse_super,large_file,filetype,resize_inode,dir_index,ext_attr … ext4 = { features = has_journal,extent,huge_file,flex_bg,metadata_csum,64bit,dir_nlink,extra_isize"
+    },
+    {
+      "src": [
+        "k-layout",
+        "k-gdt"
+      ],
+      "en": "carry the high halves of the block numbers.",
+      "ru": "лежат старшие половины номеров блоков.",
+      "quote": {
+        "k-layout": "Group 0 Padding | ext4 Super Block | Group Descriptors | … 1024 bytes | 1 block | many blocks",
+        "k-gdt": "In ext2, ext3, and ext4 (when the 64bit feature is not enabled), the block group descriptor was only 32 bytes long … On an ext4 filesystem with the 64bit feature enabled, the block group descriptor expands to at least the 64 bytes described below; the size is stored in the superblock."
+      }
+    },
+    {
+      "src": "src-ialloc-orlov",
+      "en": "(the allocator uses it to spread them)",
+      "ru": "(по этому счётчику распределитель разносит каталоги)",
+      "quote": "We always try to spread first-level directories. If there are blockgroups with both free inodes and free clusters counts not worse than average we return one with smallest directory count."
+    },
+    {
+      "src": "k-gdt",
+      "en": "high 32 bits of the inode table block",
+      "ru": "старшие 32 бита номера блока таблицы inode",
+      "quote": "0x0 | __le32 | bg_block_bitmap_lo | Lower 32-bits of location of block bitmap. … 0x12 | __le16 | bg_flags | Block group flags. … 0x1E | __le16 | bg_checksum | … 0x28 | __le32 | bg_inode_table_hi | Upper 32-bits of location of inodes table. … 0x4 | inode table is zeroed (EXT4_BG_INODE_ZEROED)."
+    },
+    {
+      "src": "k-bitmaps",
+      "en": "The inode bitmap does the same for inode slots.",
+      "ru": "Битовая карта inode делает то же самое для ячеек inode.",
+      "quote": "The data block bitmap tracks the usage of data blocks within the block group. The inode bitmap records which entries in the inode table are in use. As with most bitmaps, one bit represents the usage status of one data block or inode table entry."
+    },
+    {
+      "src": [
+        "src-balloc-count",
+        "src-super-percpu",
+        "src-super-statfs",
+        "man-statfs"
+      ],
+      "en": "so <code>df</code> gets them in constant time instead of scanning every bitmap,",
+      "ru": "так что <code>df</code> получает их за постоянное время, а не сканирует все битовые карты.",
+      "quote": {
+        "src-balloc-count": "ext4_count_free_clusters() -- count filesystem free clusters … Adds up the number of free clusters from each block group. … desc_count += ext4_free_group_clusters(sb, gdp);",
+        "src-super-percpu": "block = ext4_count_free_clusters(sbi->s_sb); … err = percpu_counter_init(&sbi->s_freeclusters_counter, block,",
+        "src-super-statfs": "bfree = percpu_counter_sum_positive(&sbi->s_freeclusters_counter) - percpu_counter_sum_positive(&sbi->s_dirtyclusters_counter);",
+        "man-statfs": "The statfs() system call returns information about a mounted filesystem. … fsblkcnt_t f_bfree; /* Free blocks in filesystem */"
+      }
+    },
+    {
+      "src": "man-du",
+      "en": "while <code>du</code> on the same volume takes minutes.",
+      "ru": "а <code>du</code> на том же томе работает минутами.",
+      "quote": "Summarize device usage of the set of FILEs, recursively for directories."
+    },
+    {
+      "src": "k-inode-find",
+      "en": "Two divisions and a multiply find it:",
+      "ru": "Чтобы найти inode, хватает двух делений и одного умножения:",
+      "quote": "Because inode 0 is defined not to exist, this formula can be used to find the block group that an inode lives in: bg = (inode_num - 1) / sb->s_inodes_per_group. The particular inode can be found within the block group’s inode table at index = (inode_num - 1) % sb->s_inodes_per_group."
+    },
+    {
+      "src": "k-special",
+      "en": "which <code>mkfs</code> gives to <code>lost+found</code>.",
+      "ru": "его <code>mkfs</code> отдаёт каталогу <code>lost+found</code>.",
+      "quote": "1 | List of defective blocks. 2 | Root directory. … 7 | Reserved group descriptors inode. (“resize inode”) 8 | Journal inode. … 11 | Traditional first non-reserved inode. Usually this is the lost+found directory. See s_first_ino in the superblock."
+    },
+    {
+      "src": [
+        "man-mke2fs",
+        "ubuntu-conf"
+      ],
+      "en": "only enlarging the filesystem adds inodes.",
+      "ru": "добавить inode можно, только увеличив саму файловую систему.",
+      "quote": {
+        "man-mke2fs": "Be warned that it is not possible to change this ratio on a file system after it is created, so be careful deciding the correct value for this parameter. Note that resizing a file system changes the number of inodes to maintain this ratio.",
+        "ubuntu-conf": "[defaults] … inode_ratio = 16384"
+      }
+    },
+    {
+      "src": [
+        "src-ialloc-enospc",
+        "man-df"
+      ],
+      "en": "<code>df -i</code> shows the inode count running out.",
+      "ru": "<code>df -i</code> покажет, что кончились inode.",
+      "quote": {
+        "src-ialloc-enospc": "next_group: if (++group == ngroups) group = 0; } err = -ENOSPC; goto out;",
+        "man-df": "-i, --inodes list inode information instead of block usage"
+      }
+    },
+    {
+      "src": "xfs-inodes",
+      "en": "XFS avoids this by allocating inodes dynamically, as we will see at the end of the lesson.",
+      "ru": "XFS обходит эту проблему, выделяя inode динамически, как мы увидим в конце урока.",
+      "quote": "Inodes are traditionally allocated in chunks of 64, and a B+tree is used to track these chunks of inodes as they are allocated and freed."
+    },
+    {
+      "src": [
+        "k-inodes",
+        "k-inode-size",
+        "k-inode-ts"
+      ],
+      "en": "such as nanosecond timestamps, creation time and small extended attributes.",
+      "ru": "наносекундные временные метки, время создания и небольшие расширенные атрибуты.",
+      "quote": {
+        "k-inodes": "In a regular UNIX filesystem, the inode stores all the metadata pertaining to the file (time stamps, block maps, extended attributes, etc), not the directory entry.",
+        "k-inode-size": "In ext2 and ext3, the inode structure size was fixed at 128 bytes (EXT2_GOOD_OLD_INODE_SIZE) … By default, ext4 inode records are 256 bytes … The extra space between the end of the inode structure and the end of the inode record can be used to store extended attributes.",
+        "k-inode-ts": "the upper 30 bits are used to provide nanosecond timestamp accuracy. … There is also a fifth timestamp to record inode creation time (crtime)"
+      }
+    },
+    {
+      "src": [
+        "k-inodes",
+        "k-imode"
+      ],
+      "en": "<code>0x81A4</code> = regular file, 0644",
+      "ru": "<code>0x81A4</code> = обычный файл, 0644",
+      "quote": {
+        "k-inodes": "0x0 | __le16 | i_mode | File mode. See the table i_mode below. 0x2 | __le16 | i_uid | Lower 16-bits of Owner UID. 0x4 | __le32 | i_size_lo | Lower 32-bits of size in bytes.",
+        "k-imode": "0x100 | S_IRUSR (Owner may read) … 0x8000 | S_IFREG (Regular file)"
+      }
+    },
+    {
+      "src": "k-inodes",
+      "en": "(so 8 = one 4 KiB block)",
+      "ru": "(8 = один блок 4 КиБ)",
+      "quote": "0x1C | __le32 | i_blocks_lo | Lower 32-bits of “block” count. If the huge_file feature flag is not set on the filesystem, the file consumes i_blocks_lo 512-byte blocks on disk."
+    },
+    {
+      "src": "k-iflags",
+      "en": "<code>0x1000</code> INDEX_FL (htree directory), ...",
+      "ru": "<code>0x1000</code> INDEX_FL (каталог с htree), ...",
+      "quote": "0x1000 | Directory has hashed indexes (EXT4_INDEX_FL). … 0x80000 | Inode uses extents (EXT4_EXTENTS_FL)."
+    },
+    {
+      "src": [
+        "k-inodes",
+        "src-ialloc-gen"
+      ],
+      "en": "set to a new random value when the inode number is reused (NFS file handles use it: <a href=\"06-nfs.html\">lesson 06</a>)",
+      "ru": "получает новое случайное значение при повторном использовании номера inode (его используют хэндлы файлов NFS: <a href=\"06-nfs.html\">урок 06</a>)",
+      "quote": {
+        "k-inodes": "0x64 | __le32 | i_generation | File version (for NFS).",
+        "src-ialloc-gen": "inode->i_generation = get_random_u32();"
+      }
+    },
+    {
+      "src": [
+        "k-inodes",
+        "man-statx"
+      ],
+      "en": "(what <code>statx</code> calls birth time)",
+      "ru": "(то, что <code>statx</code> называет birth time)",
+      "quote": {
+        "k-inodes": "0x80 | __le16 | i_extra_isize | Size of this inode - 128. … 0x90 | __le32 | i_crtime | File creation time, in seconds since the epoch.",
+        "man-statx": "stx_btime The file's creation timestamp."
+      }
+    },
+    {
+      "src": "k-dir-intro",
+      "en": "Names live only in directories.",
+      "ru": "Имена живут только в каталогах.",
+      "quote": "In an ext4 filesystem, a directory is more or less a flat file that maps an arbitrary byte string (usually ASCII) to an inode number on the filesystem."
+    },
+    {
+      "src": [
+        "man-rename",
+        "man-unlink"
+      ],
+      "en": "and explains why a file can stay alive after its last name is removed.",
+      "ru": "и объясняет, почему файл может продолжать жить после удаления его последнего имени.",
+      "quote": {
+        "man-rename": "rename() renames a file, moving it between directories if required. Any other hard links to the file (as created using link(2)) are unaffected.",
+        "man-unlink": "If the name was the last link to a file but any processes still have the file open, the file will remain in existence until the last file descriptor referring to it is closed."
+      }
+    },
+    {
+      "src": "k-inode-ts",
+      "en": "which push the limit out to the year 2446.",
+      "ru": "что отодвигает предел до 2446 года.",
+      "quote": "which means that the fields will overflow in January 2038. … the lower two bits are used to extend the 32-bit seconds field to be 34 bit wide; the upper 30 bits are used to provide nanosecond timestamp accuracy. Therefore, timestamps should not overflow until May 2446."
+    },
+    {
+      "src": [
+        "man-mke2fs",
+        "e2-y2038"
+      ],
+      "en": "and newer <code>mkfs</code> versions warn about it.",
+      "ru": "и новые версии <code>mkfs</code> об этом предупреждают.",
+      "quote": {
+        "man-mke2fs": "File systems with an inode size of 128 bytes do not support timestamps beyond January 19, 2038.",
+        "e2-y2038": "128-byte inodes cannot handle dates beyond 2038 and are deprecated"
+      }
+    },
+    {
+      "src": "k-blockmap",
+      "en": "ext2 and ext3 used them as 15 block pointers of 4 bytes each:",
+      "ru": "ext2 и ext3 использовали их как 15 указателей на блоки, по 4 байта каждый:",
+      "quote": "0 to 11 | Direct map to file blocks 0 to 11. 12 | Indirect block: (file blocks 12 to ($block_size / 4) + 11, or 12 to 1035 if 4KiB blocks) … 13 | Double-indirect block … 14 | Triple-indirect block"
+    },
+    {
+      "src": "k-extent",
+      "en": "An extent stores one record per contiguous run.",
+      "ru": "Экстент хранит одну запись на непрерывный участок.",
+      "quote": "Under the old scheme, allocating a contiguous run of 1,000 blocks requires an indirect block to map all 1,000 entries; with extents, the mapping is reduced to a single struct ext4_extent with ee_len = 1000."
+    },
+    {
+      "src": [
+        "k-blockmap",
+        "ols-extents"
+      ],
+      "en": "The scheme also tops out at 2<sup>32</sup> blocks.",
+      "ru": "Кроме того, схема упирается в предел 2<sup>32</sup> блоков.",
+      "quote": {
+        "k-blockmap": "Note that with this block mapping scheme, it is necessary to fill out a lot of mapping data even for a large contiguous file! … Notice also that a file using this mapping scheme cannot be placed higher than 2^32 blocks.",
+        "ols-extents": "This scheme is very efficient for sparse or small files, but has high overhead for larger files, performing poorly especially on large file delete and truncate operations [3]."
+      }
+    },
+    {
+      "src": "k-extent",
+      "en": "ext4 packs that into 12 bytes:",
+      "ru": "ext4 упаковывает это в 12 байт:",
+      "quote": "Each node of the tree begins with a struct ext4_extent_header. … which is 12 bytes long … 0x0 | __le16 | eh_magic | Magic number, 0xF30A. … struct ext4_extent_idx, and are 12 bytes long … Leaf nodes of the extent tree are recorded as struct ext4_extent, and are also 12 bytes long"
+    },
+    {
+      "src": [
+        "k-extent",
+        "ols-extents",
+        "ols-prealloc",
+        "man-fallocate"
+      ],
+      "en": "so reads return zeros without touching the disk.",
+      "ru": "поэтому чтение возвращает нули, не обращаясь к диску.",
+      "quote": {
+        "k-extent": "If the value of this field is <= 32768, the extent is initialized. If the value of the field is > 32768, the extent is uninitialized and the actual extent length is ee_len - 32768. Therefore, the maximum length of a initialized extent is 32768 blocks",
+        "ols-extents": "A single extent can represent 2^15 contiguous blocks, or 128 MB, with 4 KB block size.",
+        "ols-prealloc": "Ext4 implements this by using the MSB of the extent length field to indicate whether a given extent contains uninitialized data, as shown in Figure 1. During reads, an uninitialized extent is treated just like a hole, so that the VFS returns zero-filled blocks.",
+        "man-fallocate": "Any subregion within the range specified by offset and size that did not contain data before the call will be initialized to zero."
+      }
+    },
+    {
+      "src": [
+        "k-extent",
+        "src-extents-grow",
+        "src-extents-space"
+      ],
+      "en": "and the inode's root becomes an index node pointing to it.",
+      "ru": "а корень в inode становится индексным узлом, который указывает на этот блок.",
+      "quote": {
+        "k-extent": "The root node of the extent tree is stored in inode.i_block, which allows for the first four extents to be recorded without the use of extra metadata blocks.",
+        "src-extents-grow": "implements tree growing procedure: - allocates new block - moves top-level data (index block or leaf) into the new block - initializes new top-level, creating index that points to the just created block",
+        "src-extents-space": "size = (inode->i_sb->s_blocksize - sizeof(struct ext4_extent_header)) / sizeof(struct ext4_extent);"
+      }
+    },
+    {
+      "src": "ols-extents",
+      "en": "<a href=\"04-btrees.html\">lesson 04</a>.",
+      "ru": "<a href=\"04-btrees.html\">урок 04</a>.",
+      "quote": "In this case a constant depth extent tree is used to store the extents map of a file. Figure 2 shows the layout of the extents tree. The root of this tree is stored in the ext4 inode structure and extents are stored in the leaf nodes"
+    },
+    {
+      "src": "man-lseek",
+      "en": "It has no disk block, and reading it returns zeros.",
+      "ru": "У него нет блока на диске, и при чтении он возвращает нули.",
+      "quote": "subsequent reads of the data in the gap (a \"hole\") return null bytes ('\\0') until data is actually written into the gap."
+    },
+    {
+      "src": [
+        "man-inode",
+        "man-du"
+      ],
+      "en": "<code>du</code> reports the second, and <code>ls -l</code> the first.",
+      "ru": "<code>du</code> сообщает второе, а <code>ls -l</code> — первое.",
+      "quote": {
+        "man-inode": "This field indicates the number of blocks allocated to the file, 512-byte units, (This may be smaller than st_size/512 when the file has holes.)",
+        "man-du": "print apparent sizes rather than device usage; although the apparent size is usually smaller, it may be larger due to holes in ('sparse') files"
+      }
+    },
+    {
+      "src": [
+        "k-symlink",
+        "src-namei-symlink"
+      ],
+      "en": "Longer targets get a data block like any file.",
+      "ru": "Более длинные пути получают блок данных, как любой файл.",
+      "quote": {
+        "k-symlink": "The target of a symbolic link will be stored in this field if the target string is less than 60 bytes long. Otherwise, either extents or block maps will be used to allocate data blocks to store the link target.",
+        "src-namei-symlink": "/* clear the extent format for fast symlink */ ext4_clear_inode_flag(inode, EXT4_INODE_EXTENTS);"
+      }
+    },
+    {
+      "src": "k-dirent",
+      "en": "Each entry is an <code>ext4_dir_entry_2</code>:",
+      "ru": "Каждая запись — это <code>ext4_dir_entry_2</code>:",
+      "quote": "0x0 | __le32 | inode | Number of the inode that this directory entry points to. 0x4 | __le16 | rec_len | Length of this directory entry. 0x6 | __u8 | name_len | Length of the file name. 0x7 | __u8 | file_type | File type code, see ftype table below."
+    },
+    {
+      "src": "k-dirent",
+      "en": "0 means \"unused entry\"",
+      "ru": "0 означает «неиспользуемая запись»",
+      "quote": "Unused directory entries are signified by inode = 0."
+    },
+    {
+      "src": "k-dirent",
+      "en": "6 socket, 7 symlink",
+      "ru": "6 сокет, 7 символическая ссылка",
+      "quote": "0x1 | Regular file. 0x2 | Directory. 0x3 | Character device file. 0x4 | Block device file. 0x5 | FIFO. 0x6 | Socket. 0x7 | Symbolic link."
+    },
+    {
+      "src": "src-dirpad",
+      "en": "the entry is padded to a 4-byte boundary",
+      "ru": "запись дополняется до границы 4 байт",
+      "quote": "EXT4_DIR_PAD defines the directory entries boundaries … int rec_len = (name_len + 8 + EXT4_DIR_ROUND); … return (rec_len & ~EXT4_DIR_ROUND);"
+    },
+    {
+      "src": "k-dirent",
+      "en": "and the last entry's <code>rec_len</code> stretches to the end of the block.",
+      "ru": "а <code>rec_len</code> последней записи растягивается до конца блока.",
+      "quote": "The end of each per-block array is signified by reaching the end of the block; the last entry in the block has a record length that takes it all the way to the end of the block."
+    },
+    {
+      "src": "k-dirent",
+      "en": "so software that predates checksums skips it.",
+      "ru": "чтобы программы, написанные до появления контрольных сумм, её пропускали.",
+      "quote": "a phony struct ext4_dir_entry is placed at the end of each leaf block to hold the checksum. The directory entry is 12 bytes long. The inode number and name_len fields are set to zero to fool old software into ignoring an apparently empty directory entry"
+    },
+    {
+      "src": [
+        "src-namei-delete",
+        "commit-wipe"
+      ],
+      "en": "and since Linux 5.13 the kernel also zeroes the deleted entry's bytes.",
+      "ru": "а начиная с Linux 5.13 ядро ещё и обнуляет байты удалённой записи.",
+      "quote": {
+        "src-namei-delete": "ext4_generic_delete_entry deletes a directory entry by merging it with the previous entry … /* wipe entire dir_entry */",
+        "commit-wipe": "Upon file deletion, zero out all fields in ext4_dir_entry2 besides rec_len. … v5.13-rc2, v5.13-rc1"
+      }
+    },
+    {
+      "src": [
+        "src-namei-insert",
+        "src-namei-add"
+      ],
+      "en": "splitting its <code>rec_len</code>, or appending a new block.",
+      "ru": "и разделение её <code>rec_len</code> либо добавление нового блока.",
+      "quote": {
+        "src-namei-insert": "if ((de->inode ? rlen - nlen : rlen) >= reclen) break; … de1->rec_len = ext4_rec_len_to_disk(rlen - nlen, buf_size); de->rec_len = ext4_rec_len_to_disk(nlen, buf_size);",
+        "src-namei-add": "retval = add_dirent_to_buf(handle, &fname, dir, inode, NULL, bh); … bh = ext4_append(handle, dir, &block);"
+      }
+    },
+    {
+      "src": [
+        "k-dirent",
+        "man-readdir"
+      ],
+      "en": "which makes <code>find -type d</code> and <code>ls --color</code> much cheaper.",
+      "ru": "и это делает <code>find -type d</code> и <code>ls --color</code> намного дешевле.",
+      "quote": {
+        "k-dirent": "the new directory entry format shortens the name_len field and uses the space for a file type flag, probably to avoid having to load every inode during directory tree traversal.",
+        "man-readdir": "This field contains a value indicating the file type, making it possible to avoid the expense of calling lstat(2) if further actions depend on the type of the file."
+      }
+    },
+    {
+      "src": "k-htree",
+      "en": "<a href=\"04-btrees.html#htree\">lesson 04</a>.",
+      "ru": "<a href=\"04-btrees.html#htree\">урок 04</a>.",
+      "quote": "A linear array of directory entries isn’t great for performance, so a new feature was added to ext3 to provide a faster (but peculiar) balanced tree keyed off a hash of the directory entry name."
+    },
+    {
+      "src": "k-pathlookup",
+      "en": "and the <b>inode cache</b>.",
+      "ru": "и <b>кэшу inode</b>.",
+      "quote": "The “dcache” caches information about names in each filesystem to make them quickly available for lookup. Each entry (known as a “dentry”) contains three significant fields: a component name, a pointer to a parent dentry, and a pointer to the “inode”"
+    },
+    {
+      "src": "man-pathres",
+      "en": "To pass through a directory you need execute (search) permission on it.",
+      "ru": "Чтобы пройти через каталог, нужно право на выполнение (поиск) в нём.",
+      "quote": "If the process does not have search permission on the current lookup directory, an EACCES error is returned (\"Permission denied\")."
+    },
+    {
+      "src": [
+        "man-pathres",
+        "k-pathlookup"
+      ],
+      "en": "the VFS switches to that filesystem's root inode.",
+      "ru": "VFS переключается на корневой inode этой файловой системы.",
+      "quote": {
+        "man-pathres": "After a mount dev path command, the pathname \"path\" refers to the root of the filesystem hierarchy on the device \"dev\", and no longer to whatever it referred to earlier.",
+        "k-pathlookup": "What the mount table actually stores is which dentry is mounted on top of which other dentry."
+      }
+    },
+    {
+      "src": [
+        "man-link",
+        "k-dir-intro"
+      ],
+      "en": "Neither name is the original.",
+      "ru": "Ни одно из имён не является «оригиналом».",
+      "quote": {
+        "man-link": "both names refer to the same file (and so have the same permissions and ownership) and it is impossible to tell which name was the \"original\".",
+        "k-dir-intro": "There can be many directory entries across the filesystem that reference the same inode number--these are known as hard links"
+      }
+    },
+    {
+      "src": "k-inodes",
+      "en": "and each subdirectory's <code>..</code> adds one.",
+      "ru": "и запись <code>..</code> каждого подкаталога добавляет по одной.",
+      "quote": "there cannot be more than 64,998 subdirectories in a directory (each subdirectory’s ‘..’ entry counts as a hard link, as does the ‘.’ entry in the directory itself)."
+    },
+    {
+      "src": [
+        "k-inodes",
+        "src-namei-nlink"
+      ],
+      "en": "meaning \"not tracked\".)",
+      "ru": "что означает «не отслеживается».)",
+      "quote": {
+        "k-inodes": "With the DIR_NLINK feature enabled, ext4 supports more than 64,998 subdirectories by setting this field to 1 to indicate that the number of hard links is not known.",
+        "src-namei-nlink": "if (is_dx(inode) && (inode->i_nlink > EXT4_LINK_MAX || inode->i_nlink == 2)) set_nlink(inode, 1);"
+      }
+    },
+    {
+      "src": [
+        "man-unlink",
+        "src-inode-evict"
+      ],
+      "en": "and update the free counts.",
+      "ru": "и обновить счётчики свободного места.",
+      "quote": {
+        "man-unlink": "unlink() deletes a name from the filesystem. If that name was the last link to a file and no processes have the file open, the file is deleted and the space it was using is made available for reuse.",
+        "src-inode-evict": "err = ext4_truncate(inode); … EXT4_I(inode)->i_dtime = (__u32)ktime_get_real_seconds(); … ext4_free_inode(handle, inode);"
+      }
+    },
+    {
+      "src": [
+        "man-unlink",
+        "k-orphan"
+      ],
+      "en": "so the space does not leak.",
+      "ru": "так что место не утечёт.",
+      "quote": {
+        "man-unlink": "If the name was the last link to a file but any processes still have the file open, the file will remain in existence until the last file descriptor referring to it is closed.",
+        "k-orphan": "In unix there can inodes that are unlinked from directory hierarchy but that are still alive because they are open. In case of crash the filesystem has to clean up these inodes as otherwise they (and the blocks referenced from them) would leak."
+      }
+    },
+    {
+      "src": "man-rm",
+      "en": "why secure deletion needs more than <code>rm</code>.",
+      "ru": "для надёжного удаления одного <code>rm</code> мало.",
+      "quote": "If you use rm to remove a file, it might be possible to recover some of its contents, given sufficient expertise and/or time."
+    },
+    {
+      "src": [
+        "k-alloc",
+        "src-ialloc-orlov"
+      ],
+      "en": "in or near their parent's group.",
+      "ru": "в группу родителя или рядом с ней.",
+      "quote": {
+        "k-alloc": "when a directory is created in the root directory, the inode allocator scans the block groups and puts that directory into the least heavily loaded block group that it can find.",
+        "src-ialloc-orlov": "Orlov's allocator for directories. We always try to spread first-level directories. … Parent's group is preferred, if it doesn't satisfy these conditions we search cyclically through the rest."
+      }
+    },
+    {
+      "src": [
+        "src-mballoc",
+        "ols-delalloc"
+      ],
+      "en": "so that small appends land next to each other.",
+      "ru": "чтобы небольшие дописывания ложились рядом друг с другом.",
+      "quote": {
+        "src-mballoc": "The allocation request involve request for multiple number of blocks near to the goal(block) value specified. … First stage the allocator looks at the inode prealloc list … These are per CPU prealloc list … The buddy cache inode is not stored on disk.",
+        "ols-delalloc": "This free extent information is generated at filesystem mount time and stored in memory using a buddy structure."
+      }
+    },
+    {
+      "src": [
+        "k-alloc",
+        "ols-delalloc"
+      ],
+      "en": "instead of a series of small ones.",
+      "ru": "вместо серии маленьких.",
+      "quote": {
+        "k-alloc": "Under this scheme, when a file needs more blocks to absorb file writes, the filesystem defers deciding the exact placement on the disk until all the dirty buffers are being written out to disk.",
+        "ols-delalloc": "Delayed allocation is a well-known technique in which block allocations are postponed to page flush time, rather than during the write() operation [3]. … An entire extent, containing multiple contiguous blocks, is allocated at once rather than one block at a time."
+      }
+    },
+    {
+      "src": "lwn-dataloss",
+      "en": "without calling <code>fsync()</code>.",
+      "ru": "не вызывая <code>fsync()</code>.",
+      "quote": "After a clean reboot pretty much any file written to by any application (during the previous boot) was 0 bytes. … this patch forces block allocation when one file is renamed on top of another."
+    },
+    {
+      "src": "k-admin-opts",
+      "en": "that forces allocation in that pattern.",
+      "ru": "которая в этом сценарии принудительно выделяет блоки.",
+      "quote": "If auto_da_alloc is enabled, ext4 will detect the replace-via-rename and replace-via-truncate patterns and force that any delayed allocation blocks are allocated … and avoids the “zero-length” problem that can happen when a system crashes before the delayed allocation blocks are forced to disk."
+    },
+    {
+      "src": [
+        "man-filefrag",
+        "man-e4defrag"
+      ],
+      "en": "and <code>e4defrag</code> rewrites fragmented files.",
+      "ru": "а <code>e4defrag</code> переписывает фрагментированные файлы.",
+      "quote": {
+        "man-filefrag": "filefrag reports on how badly fragmented a particular file might be.",
+        "man-e4defrag": "e4defrag reduces fragmentation of extent based file. … The targeted file gets more contiguous blocks and improves the file access speed."
+      }
+    },
+    {
+      "src": "ostep-3",
+      "en": "and the free counts in the group descriptor.",
+      "ru": "и счётчики свободного места в дескрипторе группы.",
+      "quote": "To create one file, one has to update a number of on-disk structures, minimally including: the inode bitmap (to allocate a new inode), the newly-created inode of the file, the data block of the parent directory containing the new directory entry, and the parent directory inode"
+    },
+    {
+      "src": [
+        "ostep-1",
+        "ostep-3"
+      ],
+      "en": "or a block might be marked used with no file owning it.",
+      "ru": "или блок может быть помечен занятым, хотя ни один файл им не владеет.",
+      "quote": {
+        "ostep-1": "we can have inconsistency in file system data structures; we can have space leaks; … we can’t do this easily because the disk only commits one write at a time, and crashes or power loss may occur between these updates.",
+        "ostep-3": "In a real system, completion time is determined by the I/O subsystem, which may reorder writes to improve performance."
+      }
+    },
+    {
+      "src": "ostep-2",
+      "en": "which means hours on large disks.",
+      "ru": "то есть часы на больших дисках.",
+      "quote": "With a very large disk volume, scanning the entire disk to find all the allocated blocks and read the entire directory tree may take many minutes or hours."
+    },
+    {
+      "src": "k-journal",
+      "en": "the change is first written to the journal:",
+      "ru": "изменение сначала записывается в журнал:",
+      "quote": "Introduced in ext3 … a place to land “important” data writes on-disk as quickly as possible. … At some later point in time, the journal code writes the transactions to their final locations on disk … The journal inode is typically inode 8. … NOTE: Both ext4 and ocfs2 use jbd2."
+    },
+    {
+      "src": [
+        "k-journal-layout",
+        "ostep-3",
+        "ostep-5"
+      ],
+      "en": "That takes seconds, regardless of the disk's size.",
+      "ru": "Это занимает секунды независимо от размера диска.",
+      "quote": {
+        "k-journal-layout": "A finished transaction always ends with a commit. If there is no commit record (or the checksums don’t match), the transaction will be discarded during replay.",
+        "ostep-3": "the file system recovery process will scan the log and look for transactions that have committed to the disk; these transactions are thus replayed (in order)",
+        "ostep-5": "Journaling reduces recovery time from O(size-of-the-disk-volume) to O(size-of-the-log), thus speeding recovery substantially after a crash and restart."
+      }
+    },
+    {
+      "src": [
+        "k-admin-opts",
+        "ostep-3",
+        "src-fsync"
+      ],
+      "en": "or sooner when a program calls <code>fsync()</code>.",
+      "ru": "или раньше, когда программа вызывает <code>fsync()</code>.",
+      "quote": {
+        "k-admin-opts": "commit=nrsec (*) This setting limits the maximum age of the running transaction to ‘nrsec’ seconds. The default value is 5 seconds.",
+        "ostep-3": "some file systems do not commit each update to disk one at a time (e.g., Linux ext3); rather, one can buffer all updates into a global transaction.",
+        "src-fsync": "What we do is just kick off a commit and wait on it."
+      }
+    },
+    {
+      "src": "k-admin-datamode",
+      "en": "ext4 offers three data modes:",
+      "ru": "ext4 предлагает три режима для данных:",
+      "quote": "In data=writeback mode, ext4 does not journal data at all. … A crash+recovery can cause incorrect data to appear in files which were written shortly before the crash. … the associated data blocks are written first. … All new data is written to the journal first, and then to its final location."
+    },
+    {
+      "src": "k-admin-opts",
+      "en": "<code>data=ordered</code> (default)",
+      "ru": "<code>data=ordered</code> (по умолчанию)",
+      "quote": "the following option are accepted: (*) == default … data=ordered (*) All data are forced directly out to the main file system prior to its metadata being committed to the journal."
+    },
+    {
+      "src": "man-fsync",
+      "en": "Durability is the application's job, through <code>fsync()</code>,",
+      "ru": "Долговечность (durability) — задача приложения, через <code>fsync()</code>,",
+      "quote": "fsync() transfers (\"flushes\") all modified in-core data of (i.e., modified buffer cache pages for) the file referred to by the file descriptor fd to the disk device (or other permanent storage device) so that all changed information can be retrieved even if the system crashes or is rebooted."
+    },
+    {
+      "src": [
+        "ostep-4",
+        "btrfs-ondisk",
+        "zfs-uberblock",
+        "zfs-label"
+      ],
+      "en": "in one atomic write.",
+      "ru": "одной атомарной записью.",
+      "quote": {
+        "ostep-4": "This technique never overwrites files or directories in place; rather, it places new updates to previously unused locations on disk. After a number of updates are completed, COW file systems flip the root structure of the file system to include pointers to the newly updated structures.",
+        "btrfs-ondisk": "Aside from the superblock, Btrfs consists entirely of several trees. The trees use copy-on-write. … The superblock also contains a logical reference to root nodes in the root and chunk trees",
+        "zfs-uberblock": "struct uberblock { … blkptr_t ub_rootbp; /* MOS objset_phys_t */",
+        "zfs-label": "The latter half of the label consists of a redundant array of uberblocks. These uberblocks are updated whenever a transaction group is committed, or when the configuration is updated."
+      }
+    },
+    {
+      "src": [
+        "btrfs-intro",
+        "zfs-bp"
+      ],
+      "en": "so silent corruption is detected on read.",
+      "ru": "поэтому тихое повреждение данных обнаруживается при чтении.",
+      "quote": {
+        "btrfs-intro": "Snapshots which do not make a full copy of the files … Self-healing - checksums for data and metadata, automatic detection of silent data corruptions",
+        "zfs-bp": "Each block is described by its DVAs, time of birth, checksum, etc. … checksum[4] 256-bit checksum of the data this bp describes"
+      }
+    },
+    {
+      "src": "btrfs-defrag",
+      "en": "because a block may be shared by several snapshots.",
+      "ru": "потому что блок может принадлежать сразу нескольким снимкам.",
+      "quote": "The fragmentation is caused by rewrites of the same file data in-place, that has to be handled by creating a new copy that may lie on a distant location on the physical device. … Defragmentation does not preserve extent sharing, e.g. files created by cp --reflink or existing on multiple snapshots."
+    },
+    {
+      "src": "rhel-xfs",
+      "en": "XFS, the default filesystem on Red Hat Enterprise Linux, answers the same questions with trees where ext4 uses arrays.",
+      "ru": "XFS, файловая система по умолчанию в Red Hat Enterprise Linux, отвечает на те же вопросы деревьями там, где ext4 использует массивы.",
+      "quote": "XFS is a scalable, high-performance, 64-bit journaling file system. It supports very large files and file systems and is default in RHEL 10."
+    },
+    {
+      "src": [
+        "xfs-ag",
+        "xfs-overview"
+      ],
+      "en": "so many threads can allocate in parallel.",
+      "ru": "так что много потоков могут выделять место параллельно.",
+      "quote": {
+        "xfs-ag": "Each AG can almost be thought of as an individual filesystem that maintains its own space usage. Each AG can be up to one terabyte in size (512 bytes × 2^31), regardless of the underlying device’s sector size.",
+        "xfs-overview": "Having multiple AGs allows XFS to handle most operations in parallel without degrading performance as the number of concurrent accesses increases."
+      }
+    },
+    {
+      "src": "xfs-inodes",
+      "en": "so it is still an address.",
+      "ru": "так что это по-прежнему адрес.",
+      "quote": "The number of bits actually used is determined by the sum of the superblock’s sb_inoplog and sb_agblklog values. … Absolute inode numbers include the AG number in the high bits … Inodes are traditionally allocated in chunks of 64, and a B+tree is used to track these chunks"
+    },
+    {
+      "src": "xfs-free",
+      "en": "Free space is tracked by two B+trees per AG instead of a bitmap.",
+      "ru": "Свободное место учитывается не битовой картой, а двумя B+-деревьями на каждую AG.",
+      "quote": "The XFS filesystem tracks free space in an allocation group using two B+trees. One B+tree tracks space by block number, the second by the size of the free space block."
+    },
+    {
+      "src": [
+        "xfs-extents",
+        "xfs-recon"
+      ],
+      "en": "and large directories are B+trees keyed by name hash.",
+      "ru": "и большие каталоги — это B+-деревья с ключом по хешу имени.",
+      "quote": {
+        "xfs-extents": "To manage extent maps that cannot fit in the inode fork area, XFS uses long format B+trees. The root node of the B+tree is stored in the inode’s data fork.",
+        "xfs-recon": "Still larger directories use high-offset data blocks to store a B+tree of hashes to directory entries;"
+      }
+    },
+    {
+      "src": "xfs-overview",
+      "en": "Metadata is journaled, data is not.",
+      "ru": "Метаданные журналируются, данные — нет.",
+      "quote": "XFS employs a journalling log in which metadata changes are collected so that filesystem operations can be carried out atomically in the case of a crash."
+    },
+    {
+      "src": "man-mke2fs",
+      "en": "(<code>mkfs.ext4 -d</code> copies a directory tree in while formatting),",
+      "ru": "(<code>mkfs.ext4 -d</code> копирует дерево каталогов прямо при форматировании),",
+      "quote": "-d root-directory|tarball|- Copy the contents of the given directory or tarball into the root directory of the file system."
+    }
+  ]
+}

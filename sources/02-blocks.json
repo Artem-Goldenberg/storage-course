@@ -1,0 +1,1735 @@
+{
+ "page": "02-blocks.html",
+ "sources": {
+  "ldd3": {
+   "url": "https://lwn.net/images/pdf/LDD3/ch03.pdf#page=2",
+   "title": "Linux Device Drivers, Third Edition, Chapter 3: Char Drivers",
+   "where": {
+    "en": "section “Major and Minor Numbers”, pp. 43–44",
+    "ru": "раздел «Major and Minor Numbers», с. 43–44"
+   }
+  },
+  "devices": {
+   "url": "https://docs.kernel.org/admin-guide/devices.html#linux-allocated-devices-4-x-version",
+   "title": "Linux allocated devices (4.x+ version), The Linux Kernel documentation",
+   "where": {
+    "en": "entry for block major 8, SCSI disk devices",
+    "ru": "запись о блочном major 8, SCSI disk devices"
+   }
+  },
+  "libata": {
+   "url": "https://docs.kernel.org/driver-api/libata.html#introduction",
+   "title": "libATA Developer’s Guide, The Linux Kernel documentation",
+   "where": {
+    "en": "Introduction",
+    "ru": "раздел Introduction"
+   }
+  },
+  "usbstor": {
+   "url": "https://elixir.bootlin.com/linux/v6.12/source/drivers/usb/storage/Kconfig#L9",
+   "title": "drivers/usb/storage/Kconfig, Linux v6.12 source",
+   "where": {
+    "en": "config USB_STORAGE, lines 9–22",
+    "ru": "config USB_STORAGE, строки 9–22"
+   }
+  },
+  "vmbus": {
+   "url": "https://docs.kernel.org/virt/hyperv/vmbus.html#vmbus",
+   "title": "VMBus, The Linux Kernel documentation",
+   "where": {
+    "en": "VMBus, list of synthetic devices",
+    "ru": "раздел VMBus, список синтетических устройств"
+   }
+  },
+  "virtioblk": {
+   "url": "https://elixir.bootlin.com/linux/v6.12/source/drivers/block/virtio_blk.c#L1516",
+   "title": "drivers/block/virtio_blk.c, Linux v6.12 source",
+   "where": {
+    "en": "virtblk_probe(), line 1516",
+    "ru": "virtblk_probe(), строка 1516"
+   }
+  },
+  "nvme-ns": {
+   "url": "https://nvmexpress.org/wp-content/uploads/NVM-Express-Base-Specification-Revision-2.1-2024.08.05-Ratified.pdf#page=97",
+   "title": "NVM Express Base Specification, Revision 2.1",
+   "where": {
+    "en": "section 3.2.1, Namespaces: Namespace Overview",
+    "ru": "раздел 3.2.1, Namespaces: Namespace Overview"
+   }
+  },
+  "loop4": {
+   "url": "https://man7.org/linux/man-pages/man4/loop.4.html#DESCRIPTION",
+   "title": "loop(4), Linux manual page",
+   "where": {
+    "en": "DESCRIPTION",
+    "ru": "раздел DESCRIPTION"
+   }
+  },
+  "dmkconfig": {
+   "url": "https://elixir.bootlin.com/linux/v6.12/source/drivers/md/Kconfig#L190",
+   "title": "drivers/md/Kconfig, Linux v6.12 source",
+   "where": {
+    "en": "config BLK_DEV_DM, help text, lines 190–195",
+    "ru": "config BLK_DEV_DM, текст справки, строки 190–195"
+   }
+  },
+  "dmindex": {
+   "url": "https://docs.kernel.org/admin-guide/device-mapper/index.html#device-mapper",
+   "title": "Device Mapper, The Linux Kernel documentation",
+   "where": {
+    "en": "list of device-mapper targets",
+    "ru": "список целей (targets) device-mapper"
+   }
+  },
+  "md4": {
+   "url": "https://man7.org/linux/man-pages/man4/md.4.html#DESCRIPTION",
+   "title": "md(4), Linux manual page",
+   "where": {
+    "en": "DESCRIPTION",
+    "ru": "раздел DESCRIPTION"
+   }
+  },
+  "nbd": {
+   "url": "https://docs.kernel.org/admin-guide/blockdev/nbd.html#overview",
+   "title": "Network Block Device (TCP version), The Linux Kernel documentation",
+   "where": {
+    "en": "1) Overview",
+    "ru": "раздел 1) Overview"
+   }
+  },
+  "abi-lbs": {
+   "url": "https://docs.kernel.org/admin-guide/abi-stable.html#abi-sys-block-disk-queue-logical-block-size",
+   "title": "ABI stable symbols, The Linux Kernel documentation",
+   "where": {
+    "en": "/sys/block/<disk>/queue/logical_block_size",
+    "ru": "запись /sys/block/<disk>/queue/logical_block_size"
+   }
+  },
+  "abi-pbs": {
+   "url": "https://docs.kernel.org/admin-guide/abi-stable.html#abi-sys-block-disk-queue-physical-block-size",
+   "title": "ABI stable symbols, The Linux Kernel documentation",
+   "where": {
+    "en": "/sys/block/<disk>/queue/physical_block_size",
+    "ru": "запись /sys/block/<disk>/queue/physical_block_size"
+   }
+  },
+  "abi-minio": {
+   "url": "https://docs.kernel.org/admin-guide/abi-stable.html#abi-sys-block-disk-queue-minimum-io-size",
+   "title": "ABI stable symbols, The Linux Kernel documentation",
+   "where": {
+    "en": "/sys/block/<disk>/queue/minimum_io_size",
+    "ru": "запись /sys/block/<disk>/queue/minimum_io_size"
+   }
+  },
+  "abi-rot": {
+   "url": "https://docs.kernel.org/admin-guide/abi-stable.html#abi-sys-block-disk-queue-rotational",
+   "title": "ABI stable symbols, The Linux Kernel documentation",
+   "where": {
+    "en": "/sys/block/<disk>/queue/rotational",
+    "ru": "запись /sys/block/<disk>/queue/rotational"
+   }
+  },
+  "abi-maxsec": {
+   "url": "https://docs.kernel.org/admin-guide/abi-stable.html#abi-sys-block-disk-queue-max-sectors-kb",
+   "title": "ABI stable symbols, The Linux Kernel documentation",
+   "where": {
+    "en": "/sys/block/<disk>/queue/max_sectors_kb",
+    "ru": "запись /sys/block/<disk>/queue/max_sectors_kb"
+   }
+  },
+  "abi-sched": {
+   "url": "https://docs.kernel.org/admin-guide/abi-stable.html#abi-sys-block-disk-queue-scheduler",
+   "title": "ABI stable symbols, The Linux Kernel documentation",
+   "where": {
+    "en": "/sys/block/<disk>/queue/scheduler",
+    "ru": "запись /sys/block/<disk>/queue/scheduler"
+   }
+  },
+  "abi-wcache": {
+   "url": "https://docs.kernel.org/admin-guide/abi-stable.html#abi-sys-block-disk-queue-write-cache",
+   "title": "ABI stable symbols, The Linux Kernel documentation",
+   "where": {
+    "en": "/sys/block/<disk>/queue/write_cache",
+    "ru": "запись /sys/block/<disk>/queue/write_cache"
+   }
+  },
+  "btrfs": {
+   "url": "https://btrfs.readthedocs.io/en/latest/Administration.html#btrfs-specific-mount-options",
+   "title": "Administration, BTRFS documentation",
+   "where": {
+    "en": "BTRFS-specific mount options: ssd, nossd",
+    "ru": "раздел BTRFS-specific mount options: ssd, nossd"
+   }
+  },
+  "osd-37-2": {
+   "url": "https://pages.cs.wisc.edu/~remzi/OSTEP/file-disks.pdf#page=2",
+   "title": "Operating Systems: Three Easy Pieces, chapter 37: Hard Disk Drives",
+   "where": {
+    "en": "section 37.2, Basic Geometry",
+    "ru": "раздел 37.2, Basic Geometry"
+   }
+  },
+  "ruem-mech": {
+   "url": "https://pages.cs.wisc.edu/~dusseau/Classes/CS537-F05/Readings/ruemmler94introduction.pdf#page=4",
+   "title": "Chris Ruemmler, John Wilkes. An Introduction to Disk Drive Modeling. IEEE Computer, 1994",
+   "where": {
+    "en": "section on disk drive mechanism: recording and positioning components, pp. 2–3",
+    "ru": "раздел о механике диска: recording и positioning components, с. 2–3"
+   }
+  },
+  "ruem-zone": {
+   "url": "https://pages.cs.wisc.edu/~dusseau/Classes/CS537-F05/Readings/ruemmler94introduction.pdf#page=7",
+   "title": "Chris Ruemmler, John Wilkes. An Introduction to Disk Drive Modeling. IEEE Computer, 1994",
+   "where": {
+    "en": "section on data layout: Zoning, p. 5",
+    "ru": "раздел о раскладке данных: Zoning, с. 5"
+   }
+  },
+  "ldh-4": {
+   "url": "https://tldp.org/HOWTO/Large-Disk-HOWTO-4.html",
+   "title": "Large Disk HOWTO (Andries Brouwer)",
+   "where": {
+    "en": "section 4, History of BIOS and IDE limits: The 8.4 GB limit",
+    "ru": "раздел 4, History of BIOS and IDE limits: The 8.4 GB limit"
+   }
+  },
+  "osd-37-3": {
+   "url": "https://pages.cs.wisc.edu/~remzi/OSTEP/file-disks.pdf#page=5",
+   "title": "Operating Systems: Three Easy Pieces, chapter 37: Hard Disk Drives",
+   "where": {
+    "en": "section 37.3, A Simple Disk Drive: Some Other Details",
+    "ru": "раздел 37.3, A Simple Disk Drive: Some Other Details"
+   }
+  },
+  "ldh-3": {
+   "url": "https://tldp.org/HOWTO/Large-Disk-HOWTO-3.html#ss3.1",
+   "title": "Large Disk HOWTO (Andries Brouwer)",
+   "where": {
+    "en": "section 3.1, Cylinders, heads and sectors",
+    "ru": "раздел 3.1, Cylinders, heads and sectors"
+   }
+  },
+  "osd-37-4": {
+   "url": "https://pages.cs.wisc.edu/~remzi/OSTEP/file-disks.pdf#page=7",
+   "title": "Operating Systems: Three Easy Pieces, chapter 37: Hard Disk Drives",
+   "where": {
+    "en": "section 37.4, I/O Time: Doing The Math (figures 37.5 and 37.6)",
+    "ru": "раздел 37.4, I/O Time: Doing The Math (рисунки 37.5 и 37.6)"
+   }
+  },
+  "barracuda": {
+   "url": "https://www.seagate.com/content/dam/seagate/en/content-fragments/products/datasheets/barracuda-3-5-hdd/barracuda-3-5-hdd-DS17-2-2603US-en_US.pdf",
+   "title": "Seagate BarraCuda 3.5 HDD Data Sheet",
+   "where": {
+    "en": "Specifications table, 7200 RPM models",
+    "ru": "таблица Specifications, модели на 7200 об/мин"
+   }
+  },
+  "osd-37-5": {
+   "url": "https://pages.cs.wisc.edu/~remzi/OSTEP/file-disks.pdf#page=10",
+   "title": "Operating Systems: Three Easy Pieces, chapter 37: Hard Disk Drives",
+   "where": {
+    "en": "section 37.5, Disk Scheduling",
+    "ru": "раздел 37.5, Disk Scheduling"
+   }
+  },
+  "oss-44-2": {
+   "url": "https://pages.cs.wisc.edu/~remzi/OSTEP/file-ssd.pdf#page=2",
+   "title": "Operating Systems: Three Easy Pieces, chapter 44: Flash-based SSDs",
+   "where": {
+    "en": "section 44.2, From Bits to Banks/Planes",
+    "ru": "раздел 44.2, From Bits to Banks/Planes"
+   }
+  },
+  "luo-block": {
+   "url": "https://arxiv.org/pdf/1808.04016#page=46",
+   "title": "Yixin Luo. Architectural Techniques for Improving NAND Flash Memory Reliability. PhD thesis, Carnegie Mellon University, 2018",
+   "where": {
+    "en": "section 2.2.2, Flash Block Design",
+    "ru": "раздел 2.2.2, Flash Block Design"
+   }
+  },
+  "oss-44-3": {
+   "url": "https://pages.cs.wisc.edu/~remzi/OSTEP/file-ssd.pdf#page=3",
+   "title": "Operating Systems: Three Easy Pieces, chapter 44: Flash-based SSDs",
+   "where": {
+    "en": "section 44.3, Basic Flash Operations",
+    "ru": "раздел 44.3, Basic Flash Operations"
+   }
+  },
+  "oss-44-4": {
+   "url": "https://pages.cs.wisc.edu/~remzi/OSTEP/file-ssd.pdf#page=5",
+   "title": "Operating Systems: Three Easy Pieces, chapter 44: Flash-based SSDs",
+   "where": {
+    "en": "section 44.4, Flash Performance And Reliability",
+    "ru": "раздел 44.4, Flash Performance And Reliability"
+   }
+  },
+  "oss-44-7": {
+   "url": "https://pages.cs.wisc.edu/~remzi/OSTEP/file-ssd.pdf#page=8",
+   "title": "Operating Systems: Three Easy Pieces, chapter 44: Flash-based SSDs",
+   "where": {
+    "en": "section 44.7, A Log-Structured FTL",
+    "ru": "раздел 44.7, A Log-Structured FTL"
+   }
+  },
+  "oss-44-8": {
+   "url": "https://pages.cs.wisc.edu/~remzi/OSTEP/file-ssd.pdf#page=11",
+   "title": "Operating Systems: Three Easy Pieces, chapter 44: Flash-based SSDs",
+   "where": {
+    "en": "section 44.8, Garbage Collection (including the aside on trim)",
+    "ru": "раздел 44.8, Garbage Collection (включая врезку о trim)"
+   }
+  },
+  "luo-wa": {
+   "url": "https://arxiv.org/pdf/1808.04016#page=42",
+   "title": "Yixin Luo. Architectural Techniques for Improving NAND Flash Memory Reliability. PhD thesis, Carnegie Mellon University, 2018",
+   "where": {
+    "en": "section 2.1.4, Design Tradeoffs for Reliability",
+    "ru": "раздел 2.1.4, Design Tradeoffs for Reliability"
+   }
+  },
+  "hellwig": {
+   "url": "https://events.static.linuxfound.org/sites/events/files/slides/discard_0.pdf#page=3",
+   "title": "Christoph Hellwig. Improving Block Discard Support throughout the Linux Storage Stack. Storage Developer Conference 2014",
+   "where": {
+    "en": "slides 3–7, Different implementations of the discard concept",
+    "ru": "слайды 3–7, Different implementations of the discard concept"
+   }
+  },
+  "fstrim8": {
+   "url": "https://man7.org/linux/man-pages/man8/fstrim.8.html#DESCRIPTION",
+   "title": "fstrim(8), Linux manual page",
+   "where": {
+    "en": "DESCRIPTION",
+    "ru": "раздел DESCRIPTION"
+   }
+  },
+  "fstrimtimer": {
+   "url": "https://github.com/util-linux/util-linux/blob/v2.40/sys-utils/fstrim.timer",
+   "title": "sys-utils/fstrim.timer, util-linux v2.40",
+   "where": {
+    "en": "whole file",
+    "ru": "файл целиком"
+   }
+  },
+  "nvme-ovw": {
+   "url": "https://nvmexpress.org/wp-content/uploads/NVMe_Overview.pdf",
+   "title": "NVM Express Overview, NVM Express, Inc.",
+   "where": {
+    "en": "sections History and NVMe Protocol Advantages",
+    "ru": "разделы History и NVMe Protocol Advantages"
+   }
+  },
+  "nvme-2-1": {
+   "url": "https://nvmexpress.org/wp-content/uploads/NVM-Express-Base-Specification-Revision-2.1-2024.08.05-Ratified.pdf#page=41",
+   "title": "NVM Express Base Specification, Revision 2.1",
+   "where": {
+    "en": "section 2.1, Memory-Based Transport Model (PCIe)",
+    "ru": "раздел 2.1, Memory-Based Transport Model (PCIe)"
+   }
+  },
+  "nvme-cqe": {
+   "url": "https://nvmexpress.org/wp-content/uploads/NVM-Express-Base-Specification-Revision-2.1-2024.08.05-Ratified.pdf#page=160",
+   "title": "NVM Express Base Specification, Revision 2.1",
+   "where": {
+    "en": "section 4.2.1, Admin Command and I/O Command Common CQE",
+    "ru": "раздел 4.2.1, Admin Command and I/O Command Common CQE"
+   }
+  },
+  "nvme-qattr": {
+   "url": "https://nvmexpress.org/wp-content/uploads/NVM-Express-Base-Specification-Revision-2.1-2024.08.05-Ratified.pdf#page=119",
+   "title": "NVM Express Base Specification, Revision 2.1",
+   "where": {
+    "en": "section 3.3.3, Queueing Attributes",
+    "ru": "раздел 3.3.3, Queueing Attributes"
+   }
+  },
+  "nvme-pci": {
+   "url": "https://elixir.bootlin.com/linux/v6.12/source/drivers/nvme/host/pci.c#L2294",
+   "title": "drivers/nvme/host/pci.c, Linux v6.12 source",
+   "where": {
+    "en": "nvme_max_io_queues(), lines 2294–2303",
+    "ru": "nvme_max_io_queues(), строки 2294–2303"
+   }
+  },
+  "nvme-ch2": {
+   "url": "https://nvmexpress.org/wp-content/uploads/NVM-Express-Base-Specification-Revision-2.1-2024.08.05-Ratified.pdf#page=39",
+   "title": "NVM Express Base Specification, Revision 2.1",
+   "where": {
+    "en": "section 2, Theory of Operation (key attributes)",
+    "ru": "раздел 2, Theory of Operation (ключевые свойства)"
+   }
+  },
+  "ibvqp": {
+   "url": "https://man7.org/linux/man-pages/man3/ibv_create_qp.3.html#DESCRIPTION",
+   "title": "ibv_create_qp(3), Linux manual page",
+   "where": {
+    "en": "DESCRIPTION",
+    "ru": "раздел DESCRIPTION"
+   }
+  },
+  "norvig": {
+   "url": "https://norvig.com/21-days.html#answers",
+   "title": "Peter Norvig. Teach Yourself Programming in Ten Years",
+   "where": {
+    "en": "Answers: approximate timing for various operations",
+    "ru": "раздел Answers: примерное время операций"
+   }
+  },
+  "kalia": {
+   "url": "https://www.usenix.org/system/files/conference/atc16/atc16_paper-kalia.pdf#page=3",
+   "title": "Anuj Kalia, Michael Kaminsky, David G. Andersen. Design Guidelines for High Performance RDMA Systems. USENIX ATC 2016",
+   "where": {
+    "en": "section 2.2, RDMA",
+    "ru": "раздел 2.2, RDMA"
+   }
+  },
+  "haas": {
+   "url": "https://www.vldb.org/pvldb/vol16/p2090-haas.pdf#page=3",
+   "title": "Gabriel Haas, Viktor Leis. What Modern NVMe Storage Can Do, And How To Exploit It: High-Performance I/O for High-Performance Storage Engines. PVLDB 16, 2023",
+   "where": {
+    "en": "section 2.3, SSD Parallelism",
+    "ru": "раздел 2.3, SSD Parallelism"
+   }
+  },
+  "homa": {
+   "url": "https://www.usenix.org/system/files/atc21-ousterhout.pdf#page=8",
+   "title": "John Ousterhout. A Linux Kernel Implementation of the Homa Transport Protocol. USENIX ATC 2021",
+   "where": {
+    "en": "sections 5.1, Basic latency and throughput, and 5.2",
+    "ru": "разделы 5.1, Basic latency and throughput, и 5.2"
+   }
+  },
+  "ext4-ovw": {
+   "url": "https://docs.kernel.org/filesystems/ext4/overview.html#high-level-design",
+   "title": "ext4 Data Structures and Algorithms, 2. High Level Design, The Linux Kernel documentation",
+   "where": {
+    "en": "2. High Level Design",
+    "ru": "раздел 2. High Level Design"
+   }
+  },
+  "mkfsxfs": {
+   "url": "https://man7.org/linux/man-pages/man8/mkfs.xfs.8.html#OPTIONS",
+   "title": "mkfs.xfs(8), Linux manual page",
+   "where": {
+    "en": "OPTIONS, -b size=",
+    "ru": "раздел OPTIONS, -b size="
+   }
+  },
+  "blktypes-sector": {
+   "url": "https://elixir.bootlin.com/linux/v6.12/source/include/linux/blk_types.h#L25",
+   "title": "include/linux/blk_types.h, Linux v6.12 source",
+   "where": {
+    "en": "comment above SECTOR_SHIFT, lines 24–32",
+    "ru": "комментарий перед SECTOR_SHIFT, строки 24–32"
+   }
+  },
+  "bvec-sector": {
+   "url": "https://elixir.bootlin.com/linux/v6.12/source/include/linux/bvec.h#L78",
+   "title": "include/linux/bvec.h, Linux v6.12 source",
+   "where": {
+    "en": "struct bvec_iter, line 78",
+    "ru": "struct bvec_iter, строка 78"
+   }
+  },
+  "genhd-size": {
+   "url": "https://elixir.bootlin.com/linux/v6.12/source/block/genhd.c#L945",
+   "title": "block/genhd.c, Linux v6.12 source",
+   "where": {
+    "en": "part_size_show(), lines 945–949",
+    "ru": "part_size_show(), строки 945–949"
+   }
+  },
+  "stat-sectors": {
+   "url": "https://docs.kernel.org/block/stat.html#read-sectors-write-sectors-discard-sectors",
+   "title": "Block layer statistics in /sys/block/<dev>/stat, The Linux Kernel documentation",
+   "where": {
+    "en": "read sectors, write sectors, discard_sectors",
+    "ru": "раздел read sectors, write sectors, discard_sectors"
+   }
+  },
+  "seaaf-ovw": {
+   "url": "https://www.seagate.com/blog/advanced-format-4k-sector-hard-drives-master-ti/",
+   "title": "Transition to Advanced Format 4K Sector Hard Drives, Seagate",
+   "where": {
+    "en": "Overview",
+    "ru": "раздел Overview"
+   }
+  },
+  "seaaf-imp": {
+   "url": "https://www.seagate.com/blog/advanced-format-4k-sector-hard-drives-master-ti/",
+   "title": "Transition to Advanced Format 4K Sector Hard Drives, Seagate",
+   "where": {
+    "en": "section Understanding the Impacts to the 4K Transition",
+    "ru": "раздел Understanding the Impacts to the 4K Transition"
+   }
+  },
+  "dell-q1": {
+   "url": "https://dl.dell.com/manuals/all-products/esuprt_ser_stor_net/esuprt_poweredge/poweredge-c4130_reference%20guide_en-us.pdf#page=2",
+   "title": "4K Sector HDD FAQ, Dell Enterprise Disk Engineering, 2014",
+   "where": {
+    "en": "question 1, What is a 4k sector HDD?",
+    "ru": "вопрос 1, What is a 4k sector HDD?"
+   }
+  },
+  "dell-q3": {
+   "url": "https://dl.dell.com/manuals/all-products/esuprt_ser_stor_net/esuprt_poweredge/poweredge-c4130_reference%20guide_en-us.pdf#page=3",
+   "title": "4K Sector HDD FAQ, Dell Enterprise Disk Engineering, 2014",
+   "where": {
+    "en": "question 3, Why do 512 emulation HDD has performance issue and potential data integrity risk?",
+    "ru": "вопрос 3, Why do 512 emulation HDD has performance issue and potential data integrity risk?"
+   }
+  },
+  "msalign": {
+   "url": "https://learn.microsoft.com/en-us/previous-versions/sql/sql-server-2008/dd758814(v=sql.100)",
+   "title": "Disk Partition Alignment Best Practices for SQL Server, Microsoft",
+   "where": {
+    "en": "section Valid Starting Partition Offsets",
+    "ru": "раздел Valid Starting Partition Offsets"
+   }
+  },
+  "libfdisk": {
+   "url": "https://github.com/util-linux/util-linux/blob/v2.40/libfdisk/src/alignment.c#L14-L24",
+   "title": "libfdisk/src/alignment.c, util-linux v2.40",
+   "where": {
+    "en": "SECTION: alignment, lines 14–24",
+    "ru": "SECTION: alignment, строки 14–24"
+   }
+  },
+  "vfs": {
+   "url": "https://docs.kernel.org/filesystems/vfs.html#struct-address-space-operations",
+   "title": "Overview of the Linux Virtual File System, The Linux Kernel documentation",
+   "where": {
+    "en": "struct address_space_operations: write_begin",
+    "ru": "раздел struct address_space_operations: write_begin"
+   }
+  },
+  "osr-38-7": {
+   "url": "https://pages.cs.wisc.edu/~remzi/OSTEP/file-raid.pdf#page=15",
+   "title": "Operating Systems: Three Easy Pieces, chapter 38: Redundant Arrays of Inexpensive Disks (RAIDs)",
+   "where": {
+    "en": "section 38.7, RAID Level 5: Rotating Parity",
+    "ru": "раздел 38.7, RAID Level 5: Rotating Parity"
+   }
+  },
+  "mq-bg": {
+   "url": "https://docs.kernel.org/block/blk-mq.html#background",
+   "title": "Multi-Queue Block IO Queueing Mechanism (blk-mq), The Linux Kernel documentation",
+   "where": {
+    "en": "Introduction: Background",
+    "ru": "раздел Introduction: Background"
+   }
+  },
+  "mq-op": {
+   "url": "https://docs.kernel.org/block/blk-mq.html#operation",
+   "title": "Multi-Queue Block IO Queueing Mechanism (blk-mq), The Linux Kernel documentation",
+   "where": {
+    "en": "Operation",
+    "ru": "раздел Operation"
+   }
+  },
+  "mq-swq": {
+   "url": "https://docs.kernel.org/block/blk-mq.html#software-staging-queues",
+   "title": "Multi-Queue Block IO Queueing Mechanism (blk-mq), The Linux Kernel documentation",
+   "where": {
+    "en": "Software staging queues",
+    "ru": "раздел Software staging queues"
+   }
+  },
+  "mq-sched": {
+   "url": "https://docs.kernel.org/block/blk-mq.html#io-schedulers",
+   "title": "Multi-Queue Block IO Queueing Mechanism (blk-mq), The Linux Kernel documentation",
+   "where": {
+    "en": "IO Schedulers",
+    "ru": "раздел IO Schedulers"
+   }
+  },
+  "mq-hwq": {
+   "url": "https://docs.kernel.org/block/blk-mq.html#hardware-dispatch-queues",
+   "title": "Multi-Queue Block IO Queueing Mechanism (blk-mq), The Linux Kernel documentation",
+   "where": {
+    "en": "Hardware dispatch queues",
+    "ru": "раздел Hardware dispatch queues"
+   }
+  },
+  "blktypes-bio": {
+   "url": "https://elixir.bootlin.com/linux/v6.12/source/include/linux/blk_types.h#L214",
+   "title": "include/linux/blk_types.h, Linux v6.12 source",
+   "where": {
+    "en": "struct bio, lines 214–278",
+    "ru": "struct bio, строки 214–278"
+   }
+  },
+  "bvec-biovec": {
+   "url": "https://elixir.bootlin.com/linux/v6.12/source/include/linux/bvec.h#L20",
+   "title": "include/linux/bvec.h, Linux v6.12 source",
+   "where": {
+    "en": "struct bio_vec, lines 19–35",
+    "ru": "struct bio_vec, строки 19–35"
+   }
+  },
+  "submitbio": {
+   "url": "https://elixir.bootlin.com/linux/v6.12/source/block/blk-core.c#L874",
+   "title": "block/blk-core.c, Linux v6.12 source",
+   "where": {
+    "en": "submit_bio(), comment at lines 873–885",
+    "ru": "submit_bio(), комментарий в строках 873–885"
+   }
+  },
+  "plug": {
+   "url": "https://elixir.bootlin.com/linux/v6.12/source/block/blk-core.c#L1125",
+   "title": "block/blk-core.c, Linux v6.12 source",
+   "where": {
+    "en": "blk_start_plug(), comment at lines 1124–1146",
+    "ru": "blk_start_plug(), комментарий в строках 1124–1146"
+   }
+  },
+  "kn313": {
+   "url": "https://kernelnewbies.org/Linux_3.13#A_scalable_block_layer_for_high_performance_SSD_storage",
+   "title": "Linux 3.13, Linux Kernel Newbies",
+   "where": {
+    "en": "release date; 1.1, A scalable block layer for high performance SSD storage",
+    "ru": "дата выпуска; 1.1, A scalable block layer for high performance SSD storage"
+   }
+  },
+  "merge421": {
+   "url": "https://github.com/torvalds/linux/commit/0e9da3fbf7d81f0f913b491c8de1ba7883d4f217",
+   "title": "Merge tag 'for-4.21/block-20181221' of git://git.kernel.dk/linux-block (Linux commit 0e9da3fb)",
+   "where": {
+    "en": "commit message; the merge is first contained in tag v5.0-rc1 (the 4.21 cycle was released as 5.0)",
+    "ru": "сообщение коммита; слияние впервые входит в тег v5.0-rc1 (цикл 4.21 вышел как 5.0)"
+   }
+  },
+  "lwnpoll": {
+   "url": "https://lwn.net/Articles/663879/",
+   "title": "Block-layer I/O polling, LWN.net (Jonathan Corbet, 2015)",
+   "where": {
+    "en": "article text",
+    "ru": "текст статьи"
+   }
+  },
+  "iouring": {
+   "url": "https://man7.org/linux/man-pages/man2/io_uring_setup.2.html#DESCRIPTION",
+   "title": "io_uring_setup(2), Linux manual page",
+   "where": {
+    "en": "DESCRIPTION, IORING_SETUP_IOPOLL",
+    "ru": "раздел DESCRIPTION, IORING_SETUP_IOPOLL"
+   }
+  },
+  "elevator": {
+   "url": "https://elixir.bootlin.com/linux/v6.12/source/block/elevator.c#L559",
+   "title": "block/elevator.c, Linux v6.12 source",
+   "where": {
+    "en": "elevator_get_default(), lines 558–572",
+    "ru": "elevator_get_default(), строки 558–572"
+   }
+  },
+  "deadline": {
+   "url": "https://docs.kernel.org/block/deadline-iosched.html#read-expire-in-ms",
+   "title": "Deadline IO scheduler tunables, The Linux Kernel documentation",
+   "where": {
+    "en": "read_expire, fifo_batch, writes_starved",
+    "ru": "разделы read_expire, fifo_batch, writes_starved"
+   }
+  },
+  "ioschedk": {
+   "url": "https://elixir.bootlin.com/linux/v6.12/source/block/Kconfig.iosched#L10",
+   "title": "block/Kconfig.iosched, Linux v6.12 source",
+   "where": {
+    "en": "config MQ_IOSCHED_KYBER and IOSCHED_BFQ, lines 10–28",
+    "ru": "config MQ_IOSCHED_KYBER и IOSCHED_BFQ, строки 10–28"
+   }
+  },
+  "bfqdoc": {
+   "url": "https://docs.kernel.org/block/bfq-iosched.html#bfq-budget-fair-queueing",
+   "title": "BFQ (Budget Fair Queueing), The Linux Kernel documentation",
+   "where": {
+    "en": "introduction (before section 1)",
+    "ru": "вводная часть (до раздела 1)"
+   }
+  },
+  "rhsched": {
+   "url": "https://docs.redhat.com/en/documentation/red_hat_enterprise_linux/9/html/monitoring_and_managing_system_status_and_performance/setting-the-disk-scheduler_monitoring-and-managing-system-status-and-performance#available-disk-schedulers_setting-the-disk-scheduler",
+   "title": "Red Hat Enterprise Linux 9, Monitoring and managing system status and performance, Chapter 13. Setting the disk scheduler",
+   "where": {
+    "en": "section 13.1, Available disk schedulers",
+    "ru": "раздел 13.1, Available disk schedulers"
+   }
+  },
+  "kyber": {
+   "url": "https://docs.kernel.org/block/kyber-iosched.html",
+   "title": "Kyber I/O scheduler tunables, The Linux Kernel documentation",
+   "where": {
+    "en": "introduction",
+    "ru": "вводная часть"
+   }
+  },
+  "iostat": {
+   "url": "https://man7.org/linux/man-pages/man1/iostat.1.html#REPORTS",
+   "title": "iostat(1), Linux manual page",
+   "where": {
+    "en": "REPORTS, Device Utilization Report: rrqm/s, wrqm/s",
+    "ru": "раздел REPORTS, Device Utilization Report: rrqm/s, wrqm/s"
+   }
+  },
+  "wbc-intro": {
+   "url": "https://docs.kernel.org/block/writeback_cache_control.html#introduction",
+   "title": "Explicit volatile write back cache control, The Linux Kernel documentation",
+   "where": {
+    "en": "Introduction",
+    "ru": "раздел Introduction"
+   }
+  },
+  "wbc-flush": {
+   "url": "https://docs.kernel.org/block/writeback_cache_control.html#explicit-cache-flushes",
+   "title": "Explicit volatile write back cache control, The Linux Kernel documentation",
+   "where": {
+    "en": "Explicit cache flushes",
+    "ru": "раздел Explicit cache flushes"
+   }
+  },
+  "wbc-fua": {
+   "url": "https://docs.kernel.org/block/writeback_cache_control.html#forced-unit-access",
+   "title": "Explicit volatile write back cache control, The Linux Kernel documentation",
+   "where": {
+    "en": "Forced Unit Access",
+    "ru": "раздел Forced Unit Access"
+   }
+  },
+  "wbc-drv": {
+   "url": "https://docs.kernel.org/block/writeback_cache_control.html#feature-settings-for-block-drivers",
+   "title": "Explicit volatile write back cache control, The Linux Kernel documentation",
+   "where": {
+    "en": "Feature settings for block drivers",
+    "ru": "раздел Feature settings for block drivers"
+   }
+  },
+  "pgrel": {
+   "url": "https://www.postgresql.org/docs/18/wal-reliability.html",
+   "title": "PostgreSQL 18 Documentation, 28.1. Reliability",
+   "where": {
+    "en": "section 28.1, Reliability",
+    "ru": "раздел 28.1, Reliability"
+   }
+  },
+  "libataflush": {
+   "url": "https://elixir.bootlin.com/linux/v6.12/source/drivers/ata/libata-scsi.c#L1295",
+   "title": "drivers/ata/libata-scsi.c, Linux v6.12 source",
+   "where": {
+    "en": "ata_scsi_flush_xlat(), comment at lines 1294–1306",
+    "ru": "ata_scsi_flush_xlat(), комментарий в строках 1294–1306"
+   }
+  },
+  "nvme-flush": {
+   "url": "https://nvmexpress.org/wp-content/uploads/NVM-Express-Base-Specification-Revision-2.1-2024.08.05-Ratified.pdf#page=485",
+   "title": "NVM Express Base Specification, Revision 2.1",
+   "where": {
+    "en": "section 7.2, Flush command",
+    "ru": "раздел 7.2, Flush command"
+   }
+  },
+  "jbd2": {
+   "url": "https://elixir.bootlin.com/linux/v6.12/source/fs/jbd2/commit.c#L152",
+   "title": "fs/jbd2/commit.c, Linux v6.12 source",
+   "where": {
+    "en": "journal_submit_commit_record(), lines 152–156",
+    "ru": "journal_submit_commit_record(), строки 152–156"
+   }
+  },
+  "ext4fsync": {
+   "url": "https://elixir.bootlin.com/linux/v6.12/source/fs/ext4/fsync.c#L169",
+   "title": "fs/ext4/fsync.c, Linux v6.12 source",
+   "where": {
+    "en": "ext4_sync_file(), lines 169–174",
+    "ru": "ext4_sync_file(), строки 169–174"
+   }
+  },
+  "samsungplp": {
+   "url": "https://download.semiconductor.samsung.com/resources/others/Samsung_SSD_845DC_05_Power_loss_protection_PLP.pdf",
+   "title": "Power loss protection (PLP): Protect your data against sudden power loss, Samsung SSD Application Note for Data Centers",
+   "where": {
+    "en": "section 1, What is power loss protection (PLP)?",
+    "ru": "раздел 1, What is power loss protection (PLP)?"
+   }
+  },
+  "callaghan": {
+   "url": "https://smalldatum.blogspot.com/2026/01/ssds-power-loss-protection-and-fsync.html",
+   "title": "Mark Callaghan. SSDs, power loss protection and fsync latency. Small Datum, 2026",
+   "where": {
+    "en": "section Power loss protection",
+    "ru": "раздел Power loss protection"
+   }
+  },
+  "qemu": {
+   "url": "https://www.qemu.org/docs/master/system/invocation.html#hxtool-1",
+   "title": "Invocation, QEMU documentation",
+   "where": {
+    "en": "Block device options: -drive cache.no-flush and cache=unsafe",
+    "ru": "раздел Block device options: -drive cache.no-flush и cache=unsafe"
+   }
+  },
+  "osd-37-1": {
+   "url": "https://pages.cs.wisc.edu/~remzi/OSTEP/file-disks.pdf#page=1",
+   "title": "Operating Systems: Three Easy Pieces, chapter 37: Hard Disk Drives",
+   "where": {
+    "en": "section 37.1, The Interface",
+    "ru": "раздел 37.1, The Interface"
+   }
+  },
+  "nvm-awupf": {
+   "url": "https://nvmexpress.org/wp-content/uploads/NVM-Express-NVM-Command-Set-Specification-Revision-1.1-2024.08.05-Ratified.pdf#page=16",
+   "title": "NVM Express NVM Command Set Specification, Revision 1.1",
+   "where": {
+    "en": "section 2.1.4.3, AWUPF/NAWUPF",
+    "ru": "раздел 2.1.4.3, AWUPF/NAWUPF"
+   }
+  },
+  "readv": {
+   "url": "https://man7.org/linux/man-pages/man2/readv.2.html#DESCRIPTION",
+   "title": "readv(2), Linux manual page",
+   "where": {
+    "en": "DESCRIPTION, preadv2() and pwritev2(): RWF_ATOMIC",
+    "ru": "раздел DESCRIPTION, preadv2() и pwritev2(): RWF_ATOMIC"
+   }
+  },
+  "pgfpw": {
+   "url": "https://www.postgresql.org/docs/18/runtime-config-wal.html#GUC-FULL-PAGE-WRITES",
+   "title": "PostgreSQL 18 Documentation, 19.5. Write Ahead Log",
+   "where": {
+    "en": "full_page_writes",
+    "ru": "параметр full_page_writes"
+   }
+  },
+  "innodb": {
+   "url": "https://dev.mysql.com/doc/refman/8.4/en/innodb-doublewrite-buffer.html",
+   "title": "MySQL 8.4 Reference Manual, 17.6.4 Doublewrite Buffer",
+   "where": {
+    "en": "first paragraph",
+    "ru": "первый абзац"
+   }
+  },
+  "fops": {
+   "url": "https://elixir.bootlin.com/linux/v6.12/source/block/fops.c#L749",
+   "title": "block/fops.c, Linux v6.12 source",
+   "where": {
+    "en": "blkdev_read_iter(), lines 749–765",
+    "ru": "blkdev_read_iter(), строки 749–765"
+   }
+  },
+  "open2": {
+   "url": "https://man7.org/linux/man-pages/man2/open.2.html#DESCRIPTION",
+   "title": "open(2), Linux manual page",
+   "where": {
+    "en": "DESCRIPTION, O_DIRECT",
+    "ru": "раздел DESCRIPTION, O_DIRECT"
+   }
+  },
+  "rfc7143": {
+   "url": "https://www.rfc-editor.org/rfc/rfc7143.html",
+   "title": "RFC 7143: Internet Small Computer System Interface (iSCSI) Protocol (Consolidated)",
+   "where": {
+    "en": "Abstract",
+    "ru": "Abstract"
+   }
+  },
+  "rfc7145": {
+   "url": "https://www.rfc-editor.org/rfc/rfc7145.html",
+   "title": "RFC 7145: Internet Small Computer System Interface (iSCSI) Extensions for the Remote Direct Memory Access (RDMA) Specification",
+   "where": {
+    "en": "Abstract",
+    "ru": "Abstract"
+   }
+  },
+  "rfc8267": {
+   "url": "https://www.rfc-editor.org/rfc/rfc8267.html",
+   "title": "RFC 8267: Network File System (NFS) Upper-Layer Binding to RPC-over-RDMA Version 1",
+   "where": {
+    "en": "Abstract",
+    "ru": "Abstract"
+   }
+  },
+  "mke2fs": {
+   "url": "https://man7.org/linux/man-pages/man8/mke2fs.8.html#DESCRIPTION",
+   "title": "mke2fs(8), Linux manual page",
+   "where": {
+    "en": "DESCRIPTION",
+    "ru": "раздел DESCRIPTION"
+   }
+  },
+  "ext4-bg": {
+   "url": "https://docs.kernel.org/filesystems/ext4/blockgroup.html#layout",
+   "title": "ext4 Data Structures and Algorithms, 2.2. Block Groups, The Linux Kernel documentation",
+   "where": {
+    "en": "2.2.1, Layout",
+    "ru": "раздел 2.2.1, Layout"
+   }
+  },
+  "ext4-sb": {
+   "url": "https://docs.kernel.org/filesystems/ext4/super.html#super-block",
+   "title": "ext4 Data Structures and Algorithms, 3.1. Super Block, The Linux Kernel documentation",
+   "where": {
+    "en": "3.1, Super Block: field table, offset 0x38",
+    "ru": "раздел 3.1, Super Block: таблица полей, смещение 0x38"
+   }
+  }
+ },
+ "cites": [
+  {
+   "src": [
+    "ldd3",
+    "devices"
+   ],
+   "en": "and the minor number picks the device within it.",
+   "ru": "младший (minor) — устройство внутри него.",
+   "quote": {
+    "ldd3": "Traditionally, the major number identifies the driver associated with the device. … The minor number is used by the kernel to determine exactly which device is being referred to.",
+    "devices": "8 block SCSI disk devices (0-15) 0 = /dev/sda First SCSI disk whole disk"
+   }
+  },
+  {
+   "src": "devices",
+   "en": "which is why <code>sda</code> is 8:0, <code>sdb</code> 8:16 and <code>sdd</code> 8:48.",
+   "ru": "Поэтому <code>sda</code> — это 8:0, <code>sdb</code> — 8:16, а <code>sdd</code> — 8:48.",
+   "quote": "0 = /dev/sda First SCSI disk whole disk 16 = /dev/sdb Second SCSI disk whole disk 32 = /dev/sdc Third SCSI disk whole disk … Partitions are handled in the same way as for IDE disks (see major number 3) except that the limit on partitions is 15."
+  },
+  {
+   "src": [
+    "libata",
+    "usbstor",
+    "vmbus",
+    "virtioblk"
+   ],
+   "en": "Hyper-V and many virtual disks), and its first partition.",
+   "ru": "Hyper-V и многие виртуальные диски), и его первый раздел.",
+   "quote": {
+    "libata": "libATA provides an ATA driver API, class transports for ATA and ATAPI devices, and SCSI<->ATA translation for ATA devices according to the T10 SAT specification.",
+    "usbstor": "tristate \"USB Mass Storage support\" depends on SCSI",
+    "vmbus": "the Linux driver for the synthetic SCSI controller is “storvsc”.",
+    "virtioblk": "virtblk_name_format(\"vd\", index, vblk->disk->disk_name, DISK_NAME_LEN);"
+   }
+  },
+  {
+   "src": "nvme-ns",
+   "en": "A namespace is a slice of an NVMe drive that looks like a whole disk.",
+   "ru": "Пространство имён — это часть NVMe-накопителя, которая выглядит как целый диск.",
+   "quote": "A namespace is a formatted quantity of non-volatile memory that may be directly accessed by a host."
+  },
+  {
+   "src": "loop4",
+   "en": "A loop device: a regular file presented as a block device.",
+   "ru": "Loop-устройство: обычный файл, представленный как блочное устройство.",
+   "quote": "The loop device is a block device that maps its data blocks not to a physical device such as a hard disk or optical disk drive, but to the blocks of a regular file in a filesystem or to another block device."
+  },
+  {
+   "src": [
+    "dmkconfig",
+    "dmindex",
+    "md4"
+   ],
+   "en": "device-mapper (LVM, encryption, thin provisioning) and software RAID.",
+   "ru": "device-mapper (LVM, шифрование, тонкое выделение) и программный RAID.",
+   "quote": {
+    "dmkconfig": "Device-mapper is a low level volume manager. It works by allowing people to specify mappings for ranges of logical sectors. … Higher level volume managers such as LVM2 use this driver.",
+    "dmindex": "Device Mapper … dm-crypt … Thin provisioning",
+    "md4": "The md driver provides virtual devices that are created from one or more independent underlying devices. This array of devices often contains redundancy and the devices are often disk drives, hence the acronym RAID"
+   }
+  },
+  {
+   "src": "nbd",
+   "en": "Block devices whose sectors live on another machine.",
+   "ru": "Блочные устройства, чьи секторы находятся на другой машине.",
+   "quote": "With this compiled in the kernel (or as a module), Linux can use a remote server as one of its block devices."
+  },
+  {
+   "src": "abi-lbs",
+   "en": "the smallest unit the device accepts. 512 or 4096.",
+   "ru": "наименьшая единица, которую принимает устройство. 512 или 4096.",
+   "quote": "This is the smallest unit the storage device can address. It is typically 512 bytes."
+  },
+  {
+   "src": [
+    "abi-pbs",
+    "abi-minio"
+   ],
+   "en": "Writes smaller than this, or not aligned to it, cost extra.",
+   "ru": "Записи меньшего размера или не выровненные по ней обходятся дороже.",
+   "quote": {
+    "abi-pbs": "This is the smallest unit a physical storage device can write atomically. It is usually the same as the logical block size but may be bigger.",
+    "abi-minio": "Storage devices may report a granularity or preferred minimum I/O size which is the smallest request the device can perform without incurring a performance penalty. For disk drives this is often the physical block size."
+   }
+  },
+  {
+   "src": [
+    "abi-rot",
+    "btrfs"
+   ],
+   "en": "The kernel tunes some behaviour on this.",
+   "ru": "Ядро подстраивает под это часть своего поведения.",
+   "quote": {
+    "abi-rot": "This file is used to stat if the device is of rotational type or non-rotational type.",
+    "btrfs": "By default, BTRFS will enable or disable SSD optimizations depending on status of a device with respect to rotational or non-rotational type. This is determined by the contents of /sys/block/DEV/queue/rotational)."
+   }
+  },
+  {
+   "src": "abi-maxsec",
+   "en": "The largest single request the kernel will send, in KiB.",
+   "ru": "Самый большой одиночный запрос, который отправит ядро, в КиБ.",
+   "quote": "This is the maximum number of kilobytes that the block layer will allow for a filesystem request."
+  },
+  {
+   "src": "abi-sched",
+   "en": "The available I/O schedulers; the active one is in brackets.",
+   "ru": "Доступные планировщики ввода-вывода; активный указан в квадратных скобках.",
+   "quote": "When read, this file will display the current and available IO schedulers for this block device. The currently active IO scheduler will be enclosed in [] brackets."
+  },
+  {
+   "src": "abi-wcache",
+   "en": "<code>write through</code> if not.",
+   "ru": "и <code>write through</code>, если нет.",
+   "quote": "When read, this file will display whether the device has write back caching enabled or not. It will return “write back” for the former case, and “write through” for the latter."
+  },
+  {
+   "src": [
+    "osd-37-2",
+    "ruem-mech"
+   ],
+   "en": "is a <strong>cylinder</strong>.",
+   "ru": "— это <strong>цилиндр</strong> (cylinder).",
+   "quote": {
+    "osd-37-2": "Data is encoded on each surface in concentric circles of sectors; we call one such concentric circle a track. … there is one such head per surface of the drive. The disk head is attached to a single disk arm",
+    "ruem-mech": "A single stack of tracks at a common distance from the spindle is called a cylinder."
+   }
+  },
+  {
+   "src": "ruem-mech",
+   "en": "Only one head reads or writes at a time.",
+   "ru": "Читает или пишет в каждый момент только одна головка.",
+   "quote": "The disk drive has a single read-write data channel that can be switched between the heads. … All the disk arms are attached to the same rotation pivot, so that moving one head causes the others to move as well."
+  },
+  {
+   "src": "ruem-zone",
+   "en": "so a real disk has no single “sectors per track” number.",
+   "ru": "поэтому у настоящего диска нет одного числа «секторов на дорожку».",
+   "quote": "Tracks are longer at the outside of a platter than at the inside. … Zones near the outer edge have more sectors per track than zones on the inside."
+  },
+  {
+   "src": "ldh-4",
+   "en": "which caps a disk at about 8.4 GB.",
+   "ru": "что ограничивает диск примерно 8,4 ГБ.",
+   "quote": "uses 255 heads and 63 sectors/track (`assisted LBA' or just `LBA') it may reach 1024*255*63*512=8422686720 bytes, slightly less than the earlier 8.5 GB limit because the geometries with 256 heads must be avoided."
+  },
+  {
+   "src": "osd-37-3",
+   "en": "outer tracks are longer and hold more sectors than inner ones.",
+   "ru": "внешние дорожки длиннее и вмещают больше секторов, чем внутренние.",
+   "quote": "Another reality is that outer tracks tend to have more sectors than inner tracks, which is a result of geometry; there is simply more room out there."
+  },
+  {
+   "src": "ldh-3",
+   "en": "<code>LBA = (C × heads + H) × sectors_per_track + (S − 1)</code>.",
+   "ru": "<code>LBA = (C × heads + H) × sectors_per_track + (S − 1)</code>.",
+   "quote": "A disk has sectors numbered 0, 1, 2, ... This is called LBA addressing. … position (c,h,s) in 3D or CHS notation is the same as position c*H*S + h*S + (s-1) in linear or LBA notation."
+  },
+  {
+   "src": "osd-37-4",
+   "en": "moving the arm to the right track, typically several milliseconds.",
+   "ru": "перемещение рычага на нужную дорожку, обычно несколько миллисекунд.",
+   "quote": "The average seek time (4 milliseconds) is just taken as the average time reported by the manufacturer; note that a full seek (from one end of the surface to the other) would likely take two or three times longer."
+  },
+  {
+   "src": "osd-37-4",
+   "en": "one disk manages on the order of 100 random reads per second, under 1 MB/s.",
+   "ru": "один диск выполняет порядка 100 случайных чтений в секунду — меньше 1 МБ/с.",
+   "quote": "The same calculation for the Barracuda yields a TI/O of about 13.2 ms, more than twice as slow, and thus a rate of about 0.31 MB/s."
+  },
+  {
+   "src": "barracuda",
+   "en": "Read sequentially, the same disk streams around 200 MB/s.",
+   "ru": "При последовательном чтении тот же диск выдаёт около 200 МБ/с.",
+   "quote": "Max Sustained Data Rate, OD Read (MB/s) 190MB/s 190MB/s 190MB/s 190MB/s … Rotational Speed (RPM) 7200RPM 7200RPM 7200RPM 7200RPM"
+  },
+  {
+   "src": [
+    "osd-37-4",
+    "osd-37-5"
+   ],
+   "en": "why I/O schedulers were invented to sort requests by position.",
+   "ru": "почему изобрели планировщики ввода-вывода, сортирующие запросы по положению на диске.",
+   "quote": {
+    "osd-37-4": "there is a huge gap in drive performance between random and sequential workloads, almost a factor of 200 or so for the Cheetah and more than a factor 300 difference for the Barracuda.",
+    "osd-37-5": "Because of the high cost of I/O, the OS has historically played a role in deciding the order of I/Os issued to the disk. … SSTF orders the queue of I/O requests by track, picking requests on the nearest track to complete first."
+   }
+  },
+  {
+   "src": [
+    "oss-44-2",
+    "luo-block"
+   ],
+   "en": "typically 4 to 16 KiB.",
+   "ru": "обычно от 4 до 16 КиБ.",
+   "quote": {
+    "oss-44-2": "A bank is accessed in two different sized units: blocks (sometimes called erase blocks), which are typically of size 128 KB or 256 KB, and pages, which are a few KB in size (e.g., 4KB).",
+    "luo-block": "In MLC NAND flash memory, each flash block contains 256–1024 flash pages, each of which are typically 8 kB to 16 kB in size."
+   }
+  },
+  {
+   "src": [
+    "oss-44-3",
+    "luo-block"
+   ],
+   "en": "megabytes in all.",
+   "ru": "всего это мегабайты.",
+   "quote": {
+    "oss-44-3": "Before writing to a page within a flash, the nature of the device requires that you first erase the entire block the page lies within.",
+    "luo-block": "each flash block contains 256–1024 flash pages, each of which are typically 8 kB to 16 kB in size."
+   }
+  },
+  {
+   "src": "oss-44-4",
+   "en": "which survive a limited number of program/erase cycles.",
+   "ru": "которые выдерживают ограниченное число циклов программирования и стирания.",
+   "quote": "Manufacturers rate MLC-based blocks as having a 10,000 P/E (Program/Erase) cycle lifetime; that is, each block can be erased and programmed 10,000 times before failing."
+  },
+  {
+   "src": "oss-44-7",
+   "en": "Internally, then, an SSD is a log-structured store with a giant lookup table.",
+   "ru": "Так что внутри SSD — это хранилище с журнальной структурой (log-structured) и гигантской таблицей поиска.",
+   "quote": "most FTLs today are log structured … Upon a write to logical block N, the device appends the write to the next free spot in the currently-being-written-to block … this table stores the physical address of each logical block in the system."
+  },
+  {
+   "src": "oss-44-8",
+   "en": "Those copies are writes the host never asked for.",
+   "ru": "Эти копии — записи, о которых хост никогда не просил.",
+   "quote": "The basic process is simple: find a block that contains one or more garbage pages, read in the live (non-garbage) pages from that block, write out those live pages to the log, and (finally) reclaim the entire block for use in writing."
+  },
+  {
+   "src": [
+    "luo-wa",
+    "oss-44-7"
+   ],
+   "en": "or under heavy random writes.",
+   "ru": "или работают под интенсивной случайной записью.",
+   "quote": {
+    "luo-wa": "WA (write amplification) is the ratio between the amount of data written into NAND flash memory by the controller over the amount of data written by the host machine.",
+    "oss-44-7": "The device has to periodically perform garbage collection (GC) to find said blocks and free space for future writes; excessive garbage collection drives up write amplification and lowers performance."
+   }
+  },
+  {
+   "src": [
+    "oss-44-8",
+    "luo-wa"
+   ],
+   "en": "to give garbage collection room to work.",
+   "ru": "чтобы у сборки мусора было пространство для работы.",
+   "quote": {
+    "oss-44-8": "To reduce GC costs, some SSDs overprovision the device [A+08]; by adding extra flash capacity, cleaning can be delayed and pushed to the background",
+    "luo-wa": "Overprovisioning improves performance and endurance, by providing additional free space in the SSD so that maintenance operations can take place without stalling host requests."
+   }
+  },
+  {
+   "src": [
+    "hellwig",
+    "oss-44-8"
+   ],
+   "en": "so garbage collection can skip copying it.",
+   "ru": "и сборка мусора может его не копировать.",
+   "quote": {
+    "hellwig": "ATA supports the TRIM operation in the DSM command … SBC supports the UNMAP command … NVMe supports the Deallocate operation in the DSM command",
+    "oss-44-8": "The trim operation takes an address (and possibly a length) and simply informs the device that the block(s) specified by the address (and length) have been deleted"
+   }
+  },
+  {
+   "src": [
+    "fstrim8",
+    "fstrimtimer"
+   ],
+   "en": "(<code>fstrim</code>, usually from a weekly timer).",
+   "ru": "(<code>fstrim</code>, обычно по еженедельному таймеру).",
+   "quote": {
+    "fstrim8": "Running fstrim frequently, or even using mount -o discard, might negatively affect the lifetime of poor-quality SSD devices. For most desktop and server systems a sufficient trimming frequency is once a week.",
+    "fstrimtimer": "Description=Discard unused filesystem blocks once a week … OnCalendar=weekly"
+   }
+  },
+  {
+   "src": "nvme-ovw",
+   "en": "its central idea is many independent queues in host memory.",
+   "ru": "его центральная идея — множество независимых очередей в памяти хоста.",
+   "quote": "SATA devices support up to 32 commands in a single queue. These were adequate for hard disk drive technologies, but cannot take full advantage of current and next-generation NVM technologies. In contrast, NVMe supports 64K commands per queue and up to 64K queues."
+  },
+  {
+   "src": [
+    "nvme-2-1",
+    "nvme-cqe"
+   ],
+   "en": "the controller puts 16-byte completion entries into the CQ.",
+   "ru": "контроллер кладёт в CQ 16-байтные записи о завершении.",
+   "quote": {
+    "nvme-2-1": "In the memory-based model, Submission and Completion Queues are allocated in memory. … A Submission Queue (SQ) is a circular buffer with a fixed slot size … Commands are 64 bytes in size. … A Completion Queue (CQ) is a circular buffer with a fixed slot size",
+    "nvme-cqe": "The Common Completion Queue Entry Layout is at least 16 bytes in size."
+   }
+  },
+  {
+   "src": "nvme-qattr",
+   "en": "65,536 entries each,",
+   "ru": "по 65 536 элементов в каждой,",
+   "quote": "The maximum size for either an I/O Submission Queue or an I/O Completion Queue is defined as 65,536 slots … Both I/O Submission Queue identifiers and I/O Completion Queue identifiers are a value from 1 to 65,535."
+  },
+  {
+   "src": [
+    "nvme-pci",
+    "nvme-2-1"
+   ],
+   "en": "so cores submit I/O without sharing a lock.",
+   "ru": "так что ядра отправляют ввод-вывод, не деля между собой блокировку.",
+   "quote": {
+    "nvme-pci": "return num_possible_cpus() + dev->nr_write_queues + dev->nr_poll_queues;",
+    "nvme-2-1": "on a four core processor based system, there may be a queue pair per core to avoid locking and ensure data structures are created in the appropriate processor core’s cache."
+   }
+  },
+  {
+   "src": [
+    "nvme-ch2",
+    "nvme-2-1"
+   ],
+   "en": "that the driver writes to say \"the tail of my queue has moved\".",
+   "ru": "в который драйвер пишет, чтобы сказать «хвост моей очереди сдвинулся».",
+   "quote": {
+    "nvme-ch2": "Does not require uncacheable / MMIO register reads in the command submission or completion path; A maximum of one MMIO register write or one 64B message is necessary in the command submission path",
+    "nvme-2-1": "The host software updates the appropriate SQ Tail doorbell register when there are one to n new commands to execute."
+   }
+  },
+  {
+   "src": "nvme-2-1",
+   "en": "and the device does the transfer itself by DMA.",
+   "ru": "а устройство само выполняет передачу через DMA.",
+   "quote": "The physical memory locations in memory to use for data transfers are specified using Physical Region Page (PRP) entries or Scatter Gather Lists (SGL)."
+  },
+  {
+   "src": "ibvqp",
+   "en": "a network card that can reach another machine's memory.",
+   "ru": "это сетевая карта, которая может дотянуться до памяти другой машины.",
+   "quote": "ibv_create_qp() creates a queue pair (QP) … struct ibv_cq *send_cq; /* CQ to be associated with the Send Queue (SQ) */ struct ibv_cq *recv_cq; /* CQ to be associated with the Receive Queue (RQ) */"
+  },
+  {
+   "src": "norvig",
+   "en": "<td>CPU L1 cache hit</td><td>~1 ns",
+   "ru": "<td>Попадание в кэш L1 процессора</td><td>~1 нс",
+   "quote": "fetch from L1 cache memory 0.5 nanosec"
+  },
+  {
+   "src": "norvig",
+   "en": "<td>DRAM access</td><td>~100 ns",
+   "ru": "<td>Доступ к DRAM</td><td>~100 нс",
+   "quote": "fetch from main memory 100 nanosec"
+  },
+  {
+   "src": "kalia",
+   "en": "<td>~1–3 µs",
+   "ru": "<td>~1–3 мкс",
+   "quote": "RDMA networks usually provide high bandwidth and low latency: NICs with 100 Gbps of per-port bandwidth and ∼ 2µs round-trip latency are commercially available."
+  },
+  {
+   "src": [
+    "haas",
+    "oss-44-4"
+   ],
+   "en": "<td>NVMe SSD random read</td><td>~10–100 µs",
+   "ru": "<td>Случайное чтение с NVMe SSD</td><td>~10–100 мкс",
+   "quote": {
+    "haas": "Flash random read latency is on the order of 100 microseconds, which is 100× faster than disk, but still 1000× slower than DRAM.",
+    "oss-44-4": "As we can see from the table, read latencies are quite good, taking just 10s of microseconds to complete."
+   }
+  },
+  {
+   "src": "homa",
+   "en": "~10–100 µs and up",
+   "ru": "~10–100 мкс и выше",
+   "quote": "Homa/Linux round-trip-times for short messages are about one-third lower than those of TCP or DCTCP (15.1 µs vs. 23.4/24.1 µs). … Homa’s P99 latencies for short messages are 19–72x lower than those for TCP"
+  },
+  {
+   "src": "haas",
+   "en": "<td>SATA SSD random read</td><td>~100 µs",
+   "ru": "<td>Случайное чтение с SATA SSD</td><td>~100 мкс",
+   "quote": "Flash random read latency is on the order of 100 microseconds, which is 100× faster than disk, but still 1000× slower than DRAM."
+  },
+  {
+   "src": "osd-37-4",
+   "en": "<td>~5–10 ms",
+   "ru": "<td>~5–10 мс",
+   "quote": "Thus, from our equation above, TI/O for the Cheetah roughly equals 6 ms. … The same calculation for the Barracuda yields a TI/O of about 13.2 ms"
+  },
+  {
+   "src": [
+    "ext4-ovw",
+    "mkfsxfs"
+   ],
+   "en": "almost always 4096 bytes on Linux.",
+   "ru": "в Linux это почти всегда 4096 байт.",
+   "quote": {
+    "ext4-ovw": "With the default block size of 4KiB, each group will contain 32,768 blocks, for a length of 128MiB.",
+    "mkfsxfs": "The filesystem block size is specified with a value in bytes. The default value is 4096 bytes (4 KiB), the minimum is 512, and the maximum is 65536 (64 KiB)."
+   }
+  },
+  {
+   "src": [
+    "blktypes-sector",
+    "bvec-sector",
+    "genhd-size",
+    "stat-sectors"
+   ],
+   "en": "all use 512-byte sectors,",
+   "ru": "используют 512-байтные секторы,",
+   "quote": {
+    "blktypes-sector": "The basic unit of block I/O is a sector. It is used in a number of contexts in Linux (blk, bio, genhd). The size of one sector is 512 = 2**9 bytes.",
+    "bvec-sector": "sector_t bi_sector; /* device address in 512 byte sectors */",
+    "genhd-size": "ssize_t part_size_show(struct device *dev, struct device_attribute *attr, char *buf) { return sprintf(buf, \"%llu\\n\", bdev_nr_sectors(dev_to_bdev(dev)));",
+    "stat-sectors": "The “sectors” in question are the standard UNIX 512-byte sectors, not any device- or filesystem-specific block size."
+   }
+  },
+  {
+   "src": [
+    "seaaf-ovw",
+    "dell-q1"
+   ],
+   "en": "because larger sectors need less error-correction overhead per byte.",
+   "ru": "большим секторам нужно меньше служебных данных для коррекции ошибок в расчёте на байт.",
+   "quote": {
+    "seaaf-ovw": "Around 2010, hard drive companies began migrating away from the legacy sector size of 512 bytes",
+    "dell-q1": "By increasing the physical sector size to 4k bytes, the ratio is reduced therefore the ECC burden per physical sector is also reduced. The larger physical sector not only improve format efficiency but also improve media defect correction ability"
+   }
+  },
+  {
+   "src": [
+    "seaaf-imp",
+    "abi-pbs"
+   ],
+   "en": "but the media writes 4 KiB at a time.",
+   "ru": "но носитель записывает по 4 КиБ за раз.",
+   "quote": {
+    "seaaf-imp": "The introduction of 4K-sized sectors had depended heavily on 512-byte sector emulation.",
+    "abi-pbs": "One example is SATA drives with 4KB sectors that expose a 512-byte logical block size to the operating system."
+   }
+  },
+  {
+   "src": [
+    "seaaf-imp",
+    "dell-q3"
+   ],
+   "en": "a window in which a power cut can damage the neighbouring 3.5 KiB.",
+   "ru": "окно, в течение которого отключение питания может повредить соседние 3,5 КиБ.",
+   "quote": {
+    "seaaf-imp": "the hard drive must first read the entire 4K sector containing the targeted location … This process is called a read-modify-write cycle, which is undesirable",
+    "dell-q3": "a sudden power loss during READ-MODIFY-WRITE operation could corrupt the physical sector causing data loss/corruption on adjacent logical sectors within the affected physical sector."
+   }
+  },
+  {
+   "src": "msalign",
+   "en": "byte 32,256, which is not a multiple of 4096.",
+   "ru": "то есть с байта 32 256, а это число не кратно 4096.",
+   "quote": "Because versions of Windows earlier than and including Windows Server 2003 comply with the 63 hidden sectors reported by disk hardware, and because the most common sector size 512-byte sectors, the default (and suboptimal) starting partition offset is 32,256 bytes, exactly 31.5 KB."
+  },
+  {
+   "src": "seaaf-imp",
+   "en": "and every block write became two read-modify-writes:",
+   "ru": "и каждая запись блока превращалась в два read-modify-write:",
+   "quote": "this results in read-modify-write cycles that can slow hard drive performance. … Write requests that are misaligned because of logical-to-physical partition misalignment"
+  },
+  {
+   "src": [
+    "libfdisk",
+    "msalign"
+   ],
+   "en": "SSD page size and RAID stripe unit.",
+   "ru": "страниц SSD и единиц полосы RAID.",
+   "quote": {
+    "libfdisk": "The grain is usually 1MiB (or more for devices where optimal I/O is greater than 1MiB). … If you copy disk layout from 512-sector to 4K-sector device, all partitions are still aligned to physical sectors. … LBA of the first partition is 2048 sectors everywhere",
+    "msalign": "Windows Server 2008 partition alignment defaults to 1024 KB (that is, 1,048,576 bytes). … It correlates well (as described later) with common stripe unit sizes such as 64 KB, 128 KB, and 256 KB as well as the less frequently used values of 512 KB and 1024 KB."
+   }
+  },
+  {
+   "src": "vfs",
+   "en": "it reads the 4 KiB page first.",
+   "ru": "сначала он читает 4-КиБ страницу.",
+   "quote": "If the write will update parts of any basic-blocks on storage, then those blocks should be pre-read (if they haven’t been read already) so that the updated blocks can be written out properly."
+  },
+  {
+   "src": "osr-38-7",
+   "en": "RAID 5 does it for writes smaller than a stripe.",
+   "ru": "RAID 5 делает это для записей меньше полосы (stripe).",
+   "quote": "The factor of four loss is due to the fact that each RAID-5 write still generates 4 total I/O operations, which is simply the cost of using parity-based RAID."
+  },
+  {
+   "src": [
+    "mq-op",
+    "mq-swq"
+   ],
+   "en": "Its unit of work is the <code>bio</code>.",
+   "ru": "Его единица работы — <code>bio</code>.",
+   "quote": {
+    "mq-op": "it will store and manage IO requests to the block device, acting as middleware between the userspace (and a file system, if present) and the block device driver.",
+    "mq-swq": "A request is one or more BIOs. They arrived at the block layer through the data structure struct bio."
+   }
+  },
+  {
+   "src": [
+    "blktypes-bio",
+    "bvec-sector"
+   ],
+   "en": "and call <code>bi_end_io</code> when done\".",
+   "ru": "а по окончании вызови <code>bi_end_io</code>».",
+   "quote": {
+    "blktypes-bio": "struct bio { … struct block_device *bi_bdev; blk_opf_t bi_opf; … struct bvec_iter bi_iter; … bio_end_io_t *bi_end_io; … struct bio_vec *bi_io_vec; /* the actual vec list */",
+    "bvec-sector": "sector_t bi_sector; /* device address in 512 byte sectors */ unsigned int bi_size; /* residual I/O count */"
+   }
+  },
+  {
+   "src": [
+    "bvec-biovec",
+    "nvme-2-1"
+   ],
+   "en": "and the device's DMA engine gathers or scatters them.",
+   "ru": "и DMA-движок устройства сам собирает или раскладывает их (scatter/gather).",
+   "quote": {
+    "bvec-biovec": "struct bio_vec - a contiguous range of physical memory addresses … @bv_page: First page associated with the address range.",
+    "nvme-2-1": "The physical memory locations in memory to use for data transfers are specified using Physical Region Page (PRP) entries or Scatter Gather Lists (SGL)."
+   }
+  },
+  {
+   "src": "submitbio",
+   "en": "from then on it is the block layer's job.",
+   "ru": "дальше это забота блочного уровня.",
+   "quote": "submit_bio() is used to submit I/O requests to block devices. … The success/failure status of the request, along with notification of completion, is delivered asynchronously through the ->bi_end_io() callback in @bio."
+  },
+  {
+   "src": "plug",
+   "en": "This creates batches large enough to merge.",
+   "ru": "Так получаются пакеты, достаточно большие для слияния.",
+   "quote": "blk_start_plug() indicates to the block layer an intent by the caller to submit multiple I/O requests in a batch. The block layer may use this hint to defer submitting I/Os from the caller until blk_finish_plug() is called. … By flushing the pending I/O when the process goes to sleep"
+  },
+  {
+   "src": [
+    "mq-swq",
+    "mq-bg"
+   ],
+   "en": "much cheaper for a spinning disk.",
+   "ru": "намного дешевле для вращающегося диска.",
+   "quote": {
+    "mq-swq": "The staging queue can be used to merge requests for adjacent sectors. For instance, requests for sector 3-6, 6-7, 7-9 can become one request for 3-9.",
+    "mq-bg": "The Block IO subsystem aimed to achieve the best performance possible for those devices with a high penalty when doing random access"
+   }
+  },
+  {
+   "src": "kn313",
+   "en": "released in Linux 3.13 in January 2014;",
+   "ru": "вышел в Linux 3.13 в январе 2014 года;",
+   "quote": "Linux 3.13 was released on Sun, 19 Jan 2014. … This release includes a new design for the Linux block layer, based on two levels of queues: one level of per-CPU queues for submitting IO, which then funnel down into a second level of hardware submission queues."
+  },
+  {
+   "src": "merge421",
+   "en": "the old single-queue path was removed in 5.0)",
+   "ru": "старый одноочередной путь удалён в 5.0)",
+   "quote": "Most notable is the removal of the old IO stack, which has been a long time coming. … - Removal of legacy IO path in SCSI (me, Christoph) - Removal of legacy IO stack and schedulers (me)"
+  },
+  {
+   "src": [
+    "mq-bg",
+    "mq-swq",
+    "mq-op"
+   ],
+   "en": "and it decides their order.",
+   "ru": "и он решает, в каком порядке их выполнять.",
+   "quote": {
+    "mq-bg": "the blk-mq API spawns multiple queues with individual entry points local to the CPU, removing the need for a lock.",
+    "mq-swq": "Each queue has its own lock and the number of queues is defined by a per-CPU or per-node basis.",
+    "mq-op": "there are two cases that it might not do that: if there’s an IO scheduler attached at the layer or if we want to try to merge requests. In both cases, requests will be sent to the software queue."
+   }
+  },
+  {
+   "src": "mq-hwq",
+   "en": "or the single queue of a SATA disk.",
+   "ru": "или единственной очереди SATA-диска.",
+   "quote": "The hardware queue (represented by struct blk_mq_hw_ctx) is a struct used by device drivers to map the device submission queues (or device DMA ring buffer) … The number of hardware queues depends on the number of hardware contexts supported by the hardware and its device driver"
+  },
+  {
+   "src": "lwnpoll",
+   "en": "the completion queue in a loop;",
+   "ru": "(poll) очередь завершений.",
+   "quote": "Servicing interrupts is expensive … I/O completion times are tiny and even a low-end drive can complete huge numbers of operations per second. With such a drive, the case for doing some other work while waiting for an I/O completion interrupt is rather weaker."
+  },
+  {
+   "src": [
+    "iouring",
+    "merge421"
+   ],
+   "en": "on NVMe poll queues does this.",
+   "ru": "на poll-очередях NVMe.",
+   "quote": {
+    "iouring": "IORING_SETUP_IOPOLL Perform busy-waiting for an I/O completion, as opposed to getting notifications via an asynchronous IRQ (Interrupt Request).",
+    "merge421": "blk-mq adds support for multiple queue maps, which enables us to have a map per type. This in turn enables nvme to have separate completion queues for polling, which can then be interrupt-less."
+   }
+  },
+  {
+   "src": [
+    "mq-sched",
+    "elevator"
+   ],
+   "en": "virtual disks, whose host does its own scheduling.",
+   "ru": "виртуальные диски, хост которых сам планирует ввод-вывод.",
+   "quote": {
+    "mq-sched": "One of the possible schedulers to be selected is the NONE scheduler, the most straightforward one. It will just place requests on whatever software queue the process is running on, without any reordering.",
+    "elevator": "For single queue devices, default to using mq-deadline. If we have multiple queues or mq-deadline is not available, default to \"none\"."
+   }
+  },
+  {
+   "src": [
+    "deadline",
+    "elevator"
+   ],
+   "en": "SATA HDDs and SSDs, many server defaults.",
+   "ru": "SATA HDD и SSD, значение по умолчанию на многих серверах.",
+   "quote": {
+    "deadline": "When a read request first enters the io scheduler, it is assigned a deadline that is the current time + the read_expire value … serviced in increasing sector order. … we always give a preference to reads. However, we don’t want to starve writes indefinitely either.",
+    "elevator": "For single queue devices, default to using mq-deadline. If we have multiple queues or mq-deadline is not available, default to \"none\"."
+   }
+  },
+  {
+   "src": [
+    "ioschedk",
+    "bfqdoc"
+   ],
+   "en": "favouring interactive ones.",
+   "ru": "отдавая предпочтение интерактивным.",
+   "quote": {
+    "ioschedk": "BFQ distributes the bandwidth of of the device among all processes according to their weights, regardless of the device parameters and with any workload. It also guarantees a low latency to interactive and soft real-time applications.",
+    "bfqdoc": "BFQ distributes bandwidth, not just time, among processes or groups (switching back to time distribution when needed to keep throughput high)."
+   }
+  },
+  {
+   "src": [
+    "rhsched",
+    "bfqdoc"
+   ],
+   "en": "Desktops, slow devices, per-cgroup fairness.",
+   "ru": "Настольные системы, медленные устройства, справедливость между cgroup.",
+   "quote": {
+    "rhsched": "Targets desktop systems and interactive tasks.",
+    "bfqdoc": "In addition to cgroups support (blkio or io controllers), BFQ’s main features are: … Scheduling overhead further limits the maximum IOPS that a CPU can process"
+   }
+  },
+  {
+   "src": [
+    "kyber",
+    "ioschedk"
+   ],
+   "en": "Fast multi-queue devices where latency matters.",
+   "ru": "Быстрые многоочередные устройства, где важна задержка.",
+   "quote": {
+    "kyber": "The only two tunables for the Kyber scheduler are the target latencies for reads and synchronous writes. Kyber will throttle requests in order to meet these target latencies.",
+    "ioschedk": "The Kyber I/O scheduler is a low-overhead scheduler suitable for multiqueue and other fast devices."
+   }
+  },
+  {
+   "src": "iostat",
+   "en": "columns count merges.",
+   "ru": "считают слияния.",
+   "quote": "rrqm/s The number of read requests merged per second that were queued to the device. wrqm/s The number of write requests merged per second that were queued to the device."
+  },
+  {
+   "src": [
+    "wbc-intro",
+    "pgrel",
+    "osd-37-3"
+   ],
+   "en": "If power fails first, the data in that cache is lost.",
+   "ru": "Если питание пропадёт раньше, данные в этом кэше потеряны.",
+   "quote": {
+    "wbc-intro": "Many storage devices, especially in the consumer market, come with volatile write back caches. That means the devices signal I/O completion to the operating system before data actually has hit the non-volatile storage.",
+    "pgrel": "most disk drives have caches. Some are write-through while some are write-back … Consumer-grade IDE and SATA drives are particularly likely to have write-back caches that will not survive a power failure. Many solid-state drives (SSD) also have volatile write-back caches.",
+    "osd-37-3": "if the file system or applications require that data be written to disk in a certain order for correctness, write-back caching can lead to problems"
+   }
+  },
+  {
+   "src": [
+    "libataflush",
+    "nvme-flush"
+   ],
+   "en": "and only then report completion.",
+   "ru": "и только после этого сообщить о завершении.",
+   "quote": {
+    "libataflush": "ata_scsi_flush_xlat - Translate SCSI SYNCHRONIZE CACHE command … Sets up an ATA taskfile to issue FLUSH CACHE or FLUSH CACHE EXT.",
+    "nvme-flush": "The Flush command is used to request that the contents of volatile write cache be made non-volatile. … The flush applies to all commands for the specified namespace(s) completed by the controller prior to the submission of the Flush command."
+   }
+  },
+  {
+   "src": "wbc-flush",
+   "en": "In Linux this is a bio with <code>REQ_PREFLUSH</code>.",
+   "ru": "В Linux это bio с флагом <code>REQ_PREFLUSH</code>.",
+   "quote": "The REQ_PREFLUSH flag can be OR ed into the r/w flags of a bio submitted from the filesystem and will make sure the volatile cache of the storage device has been flushed before the actual I/O operation is started."
+  },
+  {
+   "src": "wbc-fua",
+   "en": "In Linux, <code>REQ_FUA</code>.",
+   "ru": "В Linux это <code>REQ_FUA</code>.",
+   "quote": "The REQ_FUA flag can be OR ed into the r/w flags of a bio submitted from the filesystem and will make sure that I/O completion for this request is only signaled after the data has been committed to non-volatile storage."
+  },
+  {
+   "src": "jbd2",
+   "en": "then write the commit record with FUA.",
+   "ru": "затем записать запись фиксации с FUA.",
+   "quote": "if (journal->j_flags & JBD2_BARRIER && !jbd2_has_feature_async_commit(journal)) write_flags |= REQ_PREFLUSH | REQ_FUA;"
+  },
+  {
+   "src": [
+    "wbc-intro",
+    "ext4fsync"
+   ],
+   "en": "<code>fsync</code> ends in a flush.",
+   "ru": "<code>fsync</code> заканчивается сбросом кэша.",
+   "quote": {
+    "wbc-intro": "it means the operating system needs to force data out to the non-volatile storage when it performs a data integrity operation like fsync, sync or an unmount.",
+    "ext4fsync": "issue_flush: if (needs_barrier) { err = blkdev_issue_flush(inode->i_sb->s_bdev);"
+   }
+  },
+  {
+   "src": "wbc-drv",
+   "en": "because there is nothing to flush.",
+   "ru": "потому что сбрасывать нечего.",
+   "quote": "For devices that do not support volatile write caches there is no driver support required, the block layer completes empty REQ_PREFLUSH requests before entering the driver and strips off the REQ_PREFLUSH and REQ_FUA bits from requests that have a payload."
+  },
+  {
+   "src": "abi-wcache",
+   "en": "It only tells the kernel to stop sending flushes.",
+   "ru": "Она лишь говорит ядру больше не отправлять сбросы кэша.",
+   "quote": "Writing to this file can change the kernels view of the device, but it doesn’t alter the device state. This means that it might not be safe to toggle the setting from “write back” to “write through”, since that will also eliminate cache flushes issued by the kernel."
+  },
+  {
+   "src": "samsungplp",
+   "en": "capacitors that hold enough energy to write the cache out after power disappears.",
+   "ru": "конденсаторы, в которых хватает энергии, чтобы записать кэш после исчезновения питания.",
+   "quote": "PLP is a way to create more time for the data flushing process under sudden power off situations by using dedicated capacitor components. These capacitors are charged during power on and offer charged power to the SSD circuit when external power is off so that the data flush can be completed."
+  },
+  {
+   "src": "callaghan",
+   "en": "such as databases and NFS servers committing client writes.",
+   "ru": "например у баз данных и NFS-серверов, фиксирующих записи клиентов.",
+   "quote": "Some SSDs, especially those marketed as enterprise SSDs, have a feature called power loss protection that make data loss unlikely. … For devices without power loss protection it is often true that writes are fast but fsync is slow."
+  },
+  {
+   "src": "qemu",
+   "en": "depends on the hypervisor's configuration,",
+   "ru": "зависит от настройки гипервизора.",
+   "quote": "In case you don’t care about data integrity over host failures, you can use cache.no-flush=on. This option tells QEMU that it never needs to write any data to the disk but can instead keep things in cache."
+  },
+  {
+   "src": [
+    "osd-37-1",
+    "nvm-awupf"
+   ],
+   "en": "others old: a <strong>torn write</strong>.",
+   "ru": "а часть — старые: это <strong>рваная запись</strong> (torn write).",
+   "quote": {
+    "osd-37-1": "the only guarantee drive manufacturers make is that a single 512-byte write is atomic (i.e., it will either complete in its entirety or it won’t complete at all); thus, if an untimely power loss occurs, only a portion of a larger write may complete (sometimes called a torn write).",
+    "nvm-awupf": "A torn write is a write operation where only some of the logical blocks that are supposed to be written contiguously are actually stored on the NVM"
+   }
+  },
+  {
+   "src": "nvm-awupf",
+   "en": "(the AWUPF field),",
+   "ru": "(поле AWUPF),",
+   "quote": "AWUPF and NAWUPF indicate the behavior of the controller if a power fail or other error condition interrupts a write operation causing a torn write."
+  },
+  {
+   "src": "readv",
+   "en": "where the device and filesystem support it.",
+   "ru": "там, где их поддерживают устройство и файловая система.",
+   "quote": "RWF_ATOMIC (since Linux 6.11) Requires that writes to regular files in block-based filesystems be issued with torn-write protection."
+  },
+  {
+   "src": "pgfpw",
+   "en": "(<code>full_page_writes</code>),",
+   "ru": "(<code>full_page_writes</code>),",
+   "quote": "When this parameter is on, the PostgreSQL server writes the entire content of each disk page to WAL during the first modification of that page after a checkpoint."
+  },
+  {
+   "src": "innodb",
+   "en": "so a torn page can always be repaired from an intact copy.",
+   "ru": "так что рваную страницу всегда можно восстановить из целой копии.",
+   "quote": "If there is an operating system, storage subsystem, or unexpected mysqld process exit in the middle of a page write, InnoDB can find a good copy of the page from the doublewrite buffer during crash recovery."
+  },
+  {
+   "src": [
+    "dmkconfig",
+    "md4"
+   ],
+   "en": "remaps or splits them, and submits new bios below.",
+   "ru": "переадресует или разбивает их и отправляет новые bio ниже.",
+   "quote": {
+    "dmkconfig": "It works by allowing people to specify mappings for ranges of logical sectors.",
+    "md4": "The md driver provides virtual devices that are created from one or more independent underlying devices."
+   }
+  },
+  {
+   "src": [
+    "fops",
+    "open2"
+   ],
+   "en": "opening it with <code>O_DIRECT</code> bypasses that cache.",
+   "ru": "открытие с <code>O_DIRECT</code> этот кэш обходит.",
+   "quote": {
+    "fops": "if (iocb->ki_flags & IOCB_DIRECT) { … ret = blkdev_direct_IO(iocb, to); … } ret = filemap_read(iocb, to, ret);",
+    "open2": "O_DIRECT (since Linux 2.4.10) Try to minimize cache effects of the I/O to and from this file."
+   }
+  },
+  {
+   "src": [
+    "rfc7143",
+    "nvme-ovw"
+   ],
+   "en": "so a remote disk looks local.",
+   "ru": "так что удалённый диск выглядит локальным.",
+   "quote": {
+    "rfc7143": "This document describes a transport protocol for SCSI that works on top of TCP.",
+    "nvme-ovw": "the NVMe over Fabrics specification extends NVMe onto fabrics such as Ethernet, Fibre Channel and InfiniBand®, providing not only access to individual NVMe devices but also to NVMe storage systems."
+   }
+  },
+  {
+   "src": [
+    "rfc7145",
+    "rfc8267",
+    "nvme-ovw"
+   ],
+   "en": "Both run over RDMA (<a href=\"08-rdma.html\">lesson 08</a>).",
+   "ru": "И те и другие работают поверх RDMA (<a href=\"08-rdma.html\">урок 08</a>).",
+   "quote": {
+    "rfc7145": "Internet Small Computer System Interface (iSCSI) Extensions for Remote Direct Memory Access (RDMA) provides the RDMA data transfer capability to iSCSI by layering iSCSI on top of an RDMA-Capable Protocol.",
+    "rfc8267": "This document specifies Upper-Layer Bindings of Network File System (NFS) protocol versions to RPC-over-RDMA version 1",
+    "nvme-ovw": "By supporting PCI Express and Fabrics such as RDMA and Fibre Channel, NVM Express can support much higher bandwidths than SATA or SAS"
+   }
+  },
+  {
+   "src": "mke2fs",
+   "en": "or <code>disk.img</code>,",
+   "ru": "или <code>disk.img</code>,",
+   "quote": "mke2fs is used to create an ext2, ext3, or ext4 file system, usually in a disk partition (or file) named by device."
+  },
+  {
+   "src": [
+    "ext4-bg",
+    "ext4-sb"
+   ],
+   "en": "and its magic number sits 0x38 bytes in:",
+   "ru": "а его магическое число лежит на 0x38 байт дальше:",
+   "quote": {
+    "ext4-bg": "The superblock will start at offset 1024 bytes, whichever block that happens to be (usually 0).",
+    "ext4-sb": "0x38 __le16 s_magic Magic signature, 0xEF53"
+   }
+  },
+  {
+   "src": "ext4-ovw",
+   "en": "stored little-endian, low byte first.",
+   "ru": "записанное в порядке little-endian, младшим байтом вперёд.",
+   "quote": "All fields in ext4 are written to disk in little-endian order."
+  }
+ ]
+}

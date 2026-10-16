@@ -561,6 +561,20 @@ td code { white-space: nowrap; }
 .lang-switch a { color: var(--ink-2); }
 .lang-switch a:hover { color: var(--ink); background: var(--code-bg); }
 
+/* ---------- source footnotes (tools/cite.py writes them from sources/*.json) ---------- */
+sup.cite { font-family: var(--display); font-size: 0.72em; line-height: 0; color: var(--ink-2); }
+sup.cite::before { content: "\2060["; } /* a word joiner keeps the mark on the line of the word it follows */
+sup.cite::after { content: "]"; }
+sup.cite a { text-decoration: none; padding: 0 0.05em; }
+sup.cite a + a::before { content: ",\2060"; color: var(--ink-2); padding-right: 0.15em; }
+sup.cite a:target, .sources li:target { background: color-mix(in srgb, var(--accent) 18%, transparent); border-radius: 2px; }
+.sources ol { display: grid; gap: 0.45rem; padding-left: 2.2em; font-size: 0.92rem; line-height: 1.5; }
+.sources li { margin: 0; overflow-wrap: anywhere; }
+.sources li::marker { font-family: var(--display); color: var(--ink-2); }
+.sources .where { color: var(--ink-2); }
+.sources .where::before { content: " — "; }
+.sources .back a { text-decoration: none; font-family: var(--display); padding: 0 0.2em; }
+
 /* Russian pages: IBM Plex Sans Condensed has no basic Cyrillic, so headings use PT Sans Narrow */
 html[lang="ru"] { --display: "PT Sans Narrow", "Arial Narrow", "Helvetica Neue", Arial, sans-serif; }
 @media (min-width: 861px) {
